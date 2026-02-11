@@ -145,15 +145,15 @@ const AdminDashboard = () => {
           <TabsList>
             <TabsTrigger value="forms" data-testid="forms-tab">
               <FileText className="w-4 h-4 mr-2" />
-              Forms
+              {t('forms')}
             </TabsTrigger>
             <TabsTrigger value="quotations" data-testid="quotations-tab">
               <DollarSign className="w-4 h-4 mr-2" />
-              Quotations
+              {t('quotations')}
             </TabsTrigger>
             <TabsTrigger value="contracts" data-testid="contracts-tab">
               <FileCheck className="w-4 h-4 mr-2" />
-              Contracts
+              {t('contracts')}
             </TabsTrigger>
           </TabsList>
 
@@ -161,8 +161,8 @@ const AdminDashboard = () => {
           <TabsContent value="forms" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Create New Form</CardTitle>
-                <CardDescription>Create a custom form for a client</CardDescription>
+                <CardTitle>{t('createNewForm')}</CardTitle>
+                <CardDescription>{t('createCustomForm')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateForm} className="space-y-4">

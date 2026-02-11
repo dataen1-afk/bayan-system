@@ -127,8 +127,8 @@ const ClientDashboard = () => {
             {selectedForm ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Submit Form</CardTitle>
-                  <CardDescription>Fill out the form below</CardDescription>
+                  <CardTitle>{t('submitForm')}</CardTitle>
+                  <CardDescription>{t('fillOutForm')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmitForm} className="space-y-4">
@@ -158,9 +158,9 @@ const ClientDashboard = () => {
                       </div>
                     ))}
                     <div className="flex gap-2">
-                      <Button type="submit" data-testid="submit-form-button">Submit Form</Button>
+                      <Button type="submit" data-testid="submit-form-button">{t('submitForm')}</Button>
                       <Button type="button" variant="outline" onClick={() => setSelectedForm(null)} data-testid="cancel-form-button">
-                        Cancel
+                        {t('cancel')}
                       </Button>
                     </div>
                   </form>
@@ -169,27 +169,27 @@ const ClientDashboard = () => {
             ) : (
               <Card>
                 <CardHeader>
-                  <CardTitle>My Forms</CardTitle>
+                  <CardTitle>{t('myForms')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2" data-testid="forms-list">
                     {forms.length === 0 ? (
-                      <p className="text-gray-500">No forms assigned to you yet</p>
+                      <p className="text-gray-500">{t('noFormsAssigned')}</p>
                     ) : (
                       forms.map((form) => (
                         <div key={form.id} className="p-4 border rounded-lg flex justify-between items-center" data-testid={`form-${form.id}`}>
                           <div>
-                            <p className="font-semibold">Form ID: {form.id}</p>
-                            <p className="text-sm text-gray-600">Fields: {form.fields.length}</p>
+                            <p className="font-semibold">{t('formId')}: {form.id}</p>
+                            <p className="text-sm text-gray-600">{t('fields')}: {form.fields.length}</p>
                             <span className={`inline-block mt-1 px-2 py-1 text-xs rounded ${
                               form.status === 'submitted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {form.status}
+                              {t(form.status)}
                             </span>
                           </div>
                           {form.status === 'pending' && (
                             <Button onClick={() => setSelectedForm(form)} data-testid={`fill-form-${form.id}`}>
-                              Fill Form
+                              {t('fillForm')}
                             </Button>
                           )}
                         </div>

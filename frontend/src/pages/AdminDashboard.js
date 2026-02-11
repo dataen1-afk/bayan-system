@@ -116,7 +116,7 @@ const AdminDashboard = () => {
       link.click();
       link.remove();
     } catch (error) {
-      alert('Error downloading contract: ' + error.message);
+      alert(t('errorDownloadingContract') + ' ' + error.message);
     }
   };
 
@@ -126,13 +126,16 @@ const AdminDashboard = () => {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900" data-testid="admin-dashboard-title">Admin Dashboard</h1>
-            <p className="text-sm text-gray-600">Welcome, {user?.name}</p>
+            <h1 className="text-2xl font-bold text-gray-900" data-testid="admin-dashboard-title">{t('adminDashboard')}</h1>
+            <p className="text-sm text-gray-600">{t('welcome')}, {user?.name}</p>
           </div>
-          <Button variant="outline" onClick={logout} data-testid="logout-button">
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex gap-2">
+            <LanguageSwitcher />
+            <Button variant="outline" onClick={logout} data-testid="logout-button">
+              <LogOut className="w-4 h-4 mr-2" />
+              {t('logout')}
+            </Button>
+          </div>
         </div>
       </header>
 

@@ -94,6 +94,73 @@ const LoginPage = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* Demo Credentials Card */}
+      <Card className="w-full lg:w-1/2 bg-gradient-to-br from-blue-50 to-white border-blue-200">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-blue-900">
+            🔐 {t('demoCredentials')}
+          </CardTitle>
+          <CardDescription>{t('useTheseCredentials')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Admin Credentials */}
+          <div className="p-4 bg-white rounded-lg border-2 border-purple-200 hover:border-purple-400 transition-colors cursor-pointer"
+               onClick={() => { setEmail('admin@test.com'); setPassword('admin123'); }}
+               data-testid="admin-credentials-card">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-purple-900">👨‍💼 {t('admin')}</h3>
+              <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+                {t('clickToFill')}
+              </span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-600">{t('email')}:</span>
+                <code className="text-purple-700 bg-purple-50 px-2 py-1 rounded">admin@test.com</code>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-600">{t('password')}:</span>
+                <code className="text-purple-700 bg-purple-50 px-2 py-1 rounded">admin123</code>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {t('adminAccess')}
+            </p>
+          </div>
+
+          {/* Client Credentials */}
+          <div className="p-4 bg-white rounded-lg border-2 border-green-200 hover:border-green-400 transition-colors cursor-pointer"
+               onClick={() => { setEmail('client@test.com'); setPassword('client123'); }}
+               data-testid="client-credentials-card">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-green-900">👤 {t('client')}</h3>
+              <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                {t('clickToFill')}
+              </span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-600">{t('email')}:</span>
+                <code className="text-green-700 bg-green-50 px-2 py-1 rounded">client@test.com</code>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-600">{t('password')}:</span>
+                <code className="text-green-700 bg-green-50 px-2 py-1 rounded">client123</code>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {t('clientAccess')}
+            </p>
+          </div>
+
+          <div className="pt-2 border-t border-blue-200">
+            <p className="text-xs text-center text-gray-600">
+              💡 {t('clickCredentialsTip')}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -35,16 +35,19 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" data-testid="login-page">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4" data-testid="login-page">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold" data-testid="login-title">{t('login')}</CardTitle>
-          <CardDescription>{t('signInToAccount')}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      
+      <div className="w-full max-w-4xl flex flex-col lg:flex-row gap-4">
+        {/* Login Form Card */}
+        <Card className="w-full lg:w-1/2">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold" data-testid="login-title">{t('login')}</CardTitle>
+            <CardDescription>{t('signInToAccount')}</CardDescription>
+          </CardHeader>
+          <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded" data-testid="login-error">

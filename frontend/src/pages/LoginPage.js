@@ -161,6 +161,7 @@ const LoginPage = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

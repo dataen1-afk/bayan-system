@@ -117,39 +117,21 @@ code {
 /* RTL Support */
 [dir="rtl"] {
     direction: rtl;
+    text-align: right;
 }
 
 [dir="ltr"] {
     direction: ltr;
+    text-align: left;
 }
 
-/* RTL Tabs - Move to right side */
+/* RTL Tabs - Position on right */
 [dir="rtl"] [role="tablist"] {
-    justify-content: flex-start;
+    direction: rtl;
+}
+
+/* RTL - Reverse main flex containers */
+[dir="rtl"] header .flex,
+[dir="rtl"] .justify-between {
     flex-direction: row-reverse;
-}
-
-[dir="ltr"] [role="tablist"] {
-    justify-content: flex-start;
-    flex-direction: row;
-}
-
-/* RTL Icon positioning */
-[dir="rtl"] .lucide {
-    margin-right: 0;
-    margin-left: 0.5rem;
-}
-
-[dir="ltr"] .lucide {
-    margin-left: 0;
-    margin-right: 0.5rem;
-}
-
-/* RTL flex layouts */
-[dir="rtl"] .flex {
-    flex-direction: row-reverse;
-}
-
-[dir="ltr"] .flex {
-    flex-direction: row;
 }

@@ -260,37 +260,37 @@ const AdminDashboard = () => {
           <TabsContent value="quotations" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Create Quotation</CardTitle>
-                <CardDescription>Create a quotation for a submitted form</CardDescription>
+                <CardTitle>{t('createQuotation')}</CardTitle>
+                <CardDescription>{t('createQuotationFor')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateQuotation} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="form_id">Form ID</Label>
+                    <Label htmlFor="form_id">{t('formId')}</Label>
                     <Input
                       id="form_id"
                       value={newQuotation.form_id}
                       onChange={(e) => setNewQuotation({ ...newQuotation, form_id: e.target.value })}
-                      placeholder="Enter form ID"
+                      placeholder={t('enterFormId')}
                       required
                       data-testid="quotation-form-id-input"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="q_client_id">Client ID</Label>
+                    <Label htmlFor="q_client_id">{t('clientId')}</Label>
                     <Input
                       id="q_client_id"
                       value={newQuotation.client_id}
                       onChange={(e) => setNewQuotation({ ...newQuotation, client_id: e.target.value })}
-                      placeholder="Enter client ID"
+                      placeholder={t('enterClientId')}
                       required
                       data-testid="quotation-client-id-input"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="client_email">Client Email</Label>
+                    <Label htmlFor="client_email">{t('clientEmail')}</Label>
                     <Input
                       id="client_email"
                       type="email"
@@ -303,7 +303,7 @@ const AdminDashboard = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price</Label>
+                    <Label htmlFor="price">{t('price')}</Label>
                     <Input
                       id="price"
                       type="number"
@@ -317,26 +317,26 @@ const AdminDashboard = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="details">Details</Label>
+                    <Label htmlFor="details">{t('details')}</Label>
                     <Textarea
                       id="details"
                       value={newQuotation.details}
                       onChange={(e) => setNewQuotation({ ...newQuotation, details: e.target.value })}
-                      placeholder="Service details..."
+                      placeholder={t('serviceDetails')}
                       rows={4}
                       required
                       data-testid="quotation-details-input"
                     />
                   </div>
 
-                  <Button type="submit" data-testid="create-quotation-button">Create Quotation</Button>
+                  <Button type="submit" data-testid="create-quotation-button">{t('createQuotation')}</Button>
                 </form>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>All Quotations</CardTitle>
+                <CardTitle>{t('allQuotations')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2" data-testid="quotations-list">

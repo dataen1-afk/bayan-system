@@ -80,11 +80,11 @@ const AdminDashboard = () => {
     e.preventDefault();
     try {
       await axios.post(`${API}/forms`, newForm);
-      alert('Form created successfully!');
+      alert(t('formCreatedSuccess'));
       setNewForm({ client_id: '', fields: [{ label: '', type: 'text', required: true }] });
       loadData();
     } catch (error) {
-      alert('Error creating form: ' + (error.response?.data?.detail || error.message));
+      alert(t('errorCreatingForm') + ' ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -95,11 +95,11 @@ const AdminDashboard = () => {
         ...newQuotation,
         price: parseFloat(newQuotation.price)
       });
-      alert('Quotation created and email sent!');
+      alert(t('quotationCreatedSuccess'));
       setNewQuotation({ form_id: '', client_id: '', client_email: '', price: '', details: '' });
       loadData();
     } catch (error) {
-      alert('Error creating quotation: ' + (error.response?.data?.detail || error.message));
+      alert(t('errorCreatingQuotation') + ' ' + (error.response?.data?.detail || error.message));
     }
   };
 

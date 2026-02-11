@@ -114,7 +114,7 @@ code {
     }
 }
 
-/* RTL Support - AGGRESSIVE */
+/* RTL Support - FORCE EVERYTHING RIGHT */
 [dir="rtl"] {
     direction: rtl !important;
     text-align: right !important;
@@ -125,20 +125,29 @@ code {
     text-align: left !important;
 }
 
-/* RTL Tabs - FORCE to right side */
+/* RTL TABS - FORCE TO RIGHT SIDE OF PAGE */
 [dir="rtl"] [role="tablist"] {
-    justify-content: flex-end !important;
-    direction: rtl !important;
     display: flex !important;
+    justify-content: flex-end !important;
     width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+[dir="rtl"] .inline-flex[role="tablist"] {
+    display: flex !important;
+    width: auto !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
 }
 
 [dir="ltr"] [role="tablist"] {
     justify-content: flex-start !important;
-    direction: ltr !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
 }
 
-/* RTL Card Headers - align right */
+/* RTL Card Headers and Titles - align right */
 [dir="rtl"] .text-2xl,
 [dir="rtl"] .text-xl,
 [dir="rtl"] h1,
@@ -156,18 +165,11 @@ code {
     flex-direction: row !important;
 }
 
-/* RTL - Make content flow right */
+/* RTL - Align all content right */
 [dir="rtl"] .space-y-2,
-[dir="rtl"] .space-y-4 {
-    text-align: right !important;
-}
-
-/* RTL - Align form content right */
-[dir="rtl"] .p-4 {
-    text-align: right !important;
-}
-
-/* RTL - Align all paragraphs right */
-[dir="rtl"] p {
+[dir="rtl"] .space-y-4,
+[dir="rtl"] .p-4,
+[dir="rtl"] p,
+[dir="rtl"] div {
     text-align: right !important;
 }

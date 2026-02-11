@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { API, AuthContext } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, FileText, DollarSign, FileCheck } from 'lucide-react';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const ClientDashboard = () => {
+  const { t } = useTranslation();
   const { user, logout } = useContext(AuthContext);
   const [forms, setForms] = useState([]);
   const [quotations, setQuotations] = useState([]);

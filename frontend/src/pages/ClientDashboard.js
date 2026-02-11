@@ -49,22 +49,22 @@ const ClientDashboard = () => {
       await axios.post(`${API}/forms/${selectedForm.id}/submit`, {
         responses: formResponses
       });
-      alert('Form submitted successfully!');
+      alert(t('formSubmittedSuccess'));
       setSelectedForm(null);
       setFormResponses({});
       loadData();
     } catch (error) {
-      alert('Error submitting form: ' + (error.response?.data?.detail || error.message));
+      alert(t('errorSubmittingForm') + ' ' + (error.response?.data?.detail || error.message));
     }
   };
 
   const handleRespondToQuotation = async (quotationId, status) => {
     try {
       await axios.post(`${API}/quotations/${quotationId}/respond`, { status });
-      alert(`Quotation ${status}!`);
+      alert(t(status === 'approved' ? 'quotationApproved' : 'quotationRejected'));
       loadData();
     } catch (error) {
-      alert('Error responding to quotation: ' + (error.response?.data?.detail || error.message));
+      alert(t('errorRespondingQuotation') + ' ' + (error.response?.data?.detail || error.message));
     }
   };
 

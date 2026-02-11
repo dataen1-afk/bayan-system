@@ -114,39 +114,60 @@ code {
     }
 }
 
-/* RTL Support */
+/* RTL Support - AGGRESSIVE */
 [dir="rtl"] {
-    direction: rtl;
-    text-align: right;
+    direction: rtl !important;
+    text-align: right !important;
 }
 
 [dir="ltr"] {
-    direction: ltr;
-    text-align: left;
+    direction: ltr !important;
+    text-align: left !important;
 }
 
-/* RTL Tabs - Force position on right */
+/* RTL Tabs - FORCE to right side */
 [dir="rtl"] [role="tablist"] {
     justify-content: flex-end !important;
-    direction: rtl;
+    direction: rtl !important;
+    display: flex !important;
+    width: 100% !important;
 }
 
 [dir="ltr"] [role="tablist"] {
-    justify-content: flex-start;
-    direction: ltr;
+    justify-content: flex-start !important;
+    direction: ltr !important;
 }
 
-/* RTL - Reverse flex containers in header */
-[dir="rtl"] header .flex,
-[dir="rtl"] .justify-between {
+/* RTL Card Headers - align right */
+[dir="rtl"] .text-2xl,
+[dir="rtl"] .text-xl,
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3 {
+    text-align: right !important;
+}
+
+/* RTL - Reverse ALL flex containers */
+[dir="rtl"] .flex {
     flex-direction: row-reverse !important;
 }
 
-/* RTL - Reverse flex in cards */
-[dir="rtl"] .flex.justify-between {
-    flex-direction: row-reverse !important;
+[dir="ltr"] .flex {
+    flex-direction: row !important;
 }
 
-[dir="rtl"] .flex.gap-2 {
-    flex-direction: row-reverse !important;
+/* RTL - Make content flow right */
+[dir="rtl"] .space-y-2,
+[dir="rtl"] .space-y-4 {
+    text-align: right !important;
+}
+
+/* RTL - Align form content right */
+[dir="rtl"] .p-4 {
+    text-align: right !important;
+}
+
+/* RTL - Align all paragraphs right */
+[dir="rtl"] p {
+    text-align: right !important;
 }

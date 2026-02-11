@@ -1,13 +1,16 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { API, AuthContext } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,7 +28,7 @@ const LoginPage = () => {
       login(response.data.token, response.data.user);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError(err.response?.data?.detail || t('errorLogin'));
     } finally {
       setLoading(false);
     }
@@ -33,10 +36,13 @@ const LoginPage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" data-testid="login-page">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold" data-testid="login-title">Login</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardTitle className="text-2xl font-bold" data-testid="login-title">{t('login')}</CardTitle>
+          <CardDescription>{t('signInToAccount')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -47,7 +53,7 @@ const LoginPage = () => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -60,7 +66,7 @@ const LoginPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -73,13 +79,13 @@ const LoginPage = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading} data-testid="login-submit-button">
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? t('signingIn') : t('signIn')}
             </Button>
 
             <p className="text-sm text-center text-gray-600">
-              Don't have an account?{' '}
+              {t('dontHaveAccount')}{' '}
               <Link to="/register" className="text-blue-600 hover:underline" data-testid="register-link">
-                Register here
+                {t('registerHere')}
               </Link>
             </p>
           </form>

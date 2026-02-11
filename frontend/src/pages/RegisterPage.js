@@ -1,14 +1,17 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { API, AuthContext } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const RegisterPage = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -38,7 +41,7 @@ const RegisterPage = () => {
       login(loginResponse.data.token, loginResponse.data.user);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed');
+      setError(err.response?.data?.detail || t('errorRegister'));
     } finally {
       setLoading(false);
     }
@@ -46,10 +49,13 @@ const RegisterPage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" data-testid="register-page">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold" data-testid="register-title">Register</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardTitle className="text-2xl font-bold" data-testid="register-title">{t('register')}</CardTitle>
+          <CardDescription>{t('createNewAccount')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -60,7 +66,7 @@ const RegisterPage = () => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t('fullName')}</Label>
               <Input
                 id="name"
                 type="text"
@@ -73,7 +79,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -86,7 +92,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -100,26 +106,26 @@ const RegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role">{t('role')}</Label>
               <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
                 <SelectTrigger data-testid="register-role-select">
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder={t('role')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="client">Client</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="client">{t('client')}</SelectItem>
+                  <SelectItem value="admin">{t('admin')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading} data-testid="register-submit-button">
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? t('creatingAccount') : t('createAccount')}
             </Button>
 
             <p className="text-sm text-center text-gray-600">
-              Already have an account?{' '}
+              {t('alreadyHaveAccount')}{' '}
               <Link to="/login" className="text-blue-600 hover:underline" data-testid="login-link">
-                Login here
+                {t('loginHere')}
               </Link>
             </p>
           </form>

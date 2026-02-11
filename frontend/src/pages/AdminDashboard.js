@@ -167,24 +167,24 @@ const AdminDashboard = () => {
               <CardContent>
                 <form onSubmit={handleCreateForm} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="client_id">Client ID</Label>
+                    <Label htmlFor="client_id">{t('clientId')}</Label>
                     <Input
                       id="client_id"
                       value={newForm.client_id}
                       onChange={(e) => setNewForm({ ...newForm, client_id: e.target.value })}
-                      placeholder="Enter client user ID"
+                      placeholder={t('enterClientId')}
                       required
                       data-testid="form-client-id-input"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Form Fields</Label>
+                    <Label>{t('formFields')}</Label>
                     {newForm.fields.map((field, index) => (
                       <div key={index} className="flex gap-2 items-end">
                         <div className="flex-1">
                           <Input
-                            placeholder="Field label"
+                            placeholder={t('fieldLabel')}
                             value={field.label}
                             onChange={(e) => updateFormField(index, 'label', e.target.value)}
                             required
@@ -200,10 +200,10 @@ const AdminDashboard = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="text">Text</SelectItem>
-                              <SelectItem value="textarea">Textarea</SelectItem>
-                              <SelectItem value="email">Email</SelectItem>
-                              <SelectItem value="number">Number</SelectItem>
+                              <SelectItem value="text">{t('text')}</SelectItem>
+                              <SelectItem value="textarea">{t('textarea')}</SelectItem>
+                              <SelectItem value="email">{t('email')}</SelectItem>
+                              <SelectItem value="number">{t('number')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -214,38 +214,38 @@ const AdminDashboard = () => {
                             onClick={() => removeFormField(index)}
                             data-testid={`remove-field-${index}`}
                           >
-                            Remove
+                            {t('remove')}
                           </Button>
                         )}
                       </div>
                     ))}
                     <Button type="button" variant="outline" onClick={addFormField} data-testid="add-field-button">
-                      Add Field
+                      {t('addField')}
                     </Button>
                   </div>
 
-                  <Button type="submit" data-testid="create-form-button">Create Form</Button>
+                  <Button type="submit" data-testid="create-form-button">{t('createForm')}</Button>
                 </form>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>All Forms</CardTitle>
+                <CardTitle>{t('allForms')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2" data-testid="forms-list">
                   {forms.length === 0 ? (
-                    <p className="text-gray-500">No forms created yet</p>
+                    <p className="text-gray-500">{t('noFormsCreated')}</p>
                   ) : (
                     forms.map((form) => (
                       <div key={form.id} className="p-4 border rounded-lg" data-testid={`form-${form.id}`}>
                         <div className="flex justify-between">
                           <div>
-                            <p className="font-semibold">Form ID: {form.id}</p>
-                            <p className="text-sm text-gray-600">Client: {form.client_id}</p>
-                            <p className="text-sm text-gray-600">Status: {form.status}</p>
-                            <p className="text-sm text-gray-600">Fields: {form.fields.length}</p>
+                            <p className="font-semibold">{t('formId')}: {form.id}</p>
+                            <p className="text-sm text-gray-600">{t('client')}: {form.client_id}</p>
+                            <p className="text-sm text-gray-600">{t('status')}: {t(form.status)}</p>
+                            <p className="text-sm text-gray-600">{t('fields')}: {form.fields.length}</p>
                           </div>
                         </div>
                       </div>

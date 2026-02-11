@@ -236,7 +236,15 @@ const resources = {
       // Language
       "language": "اللغة",
       "english": "English",
-      "arabic": "العربية"
+      "arabic": "العربية",
+      
+      // Demo Credentials
+      "demoCredentials": "بيانات تجريبية",
+      "useTheseCredentials": "استخدم هذه البيانات لتجربة النظام",
+      "clickToFill": "انقر للملء",
+      "adminAccess": "صلاحية كاملة لإنشاء النماذج وعروض الأسعار والعقود",
+      "clientAccess": "صلاحية لإرسال النماذج ومراجعة عروض الأسعار وتنزيل العقود",
+      "clickCredentialsTip": "انقر على أي بطاقة بيانات لملء نموذج تسجيل الدخول تلقائياً"
     }
   }
 };

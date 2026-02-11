@@ -232,7 +232,7 @@ def generate_contract_pdf(quotation: Quotation, user: dict) -> str:
         y -= 0.25 * inch
     
     # Footer
-    c.setFont("Helvetica-Italic", 10)
+    c.setFont("Helvetica", 10)
     c.drawString(1 * inch, 1 * inch, "This contract is legally binding upon approval by both parties.")
     
     c.save()

@@ -125,13 +125,28 @@ code {
     text-align: left;
 }
 
-/* RTL Tabs - Position on right */
+/* RTL Tabs - Force position on right */
 [dir="rtl"] [role="tablist"] {
+    justify-content: flex-end !important;
     direction: rtl;
 }
 
-/* RTL - Reverse main flex containers */
+[dir="ltr"] [role="tablist"] {
+    justify-content: flex-start;
+    direction: ltr;
+}
+
+/* RTL - Reverse flex containers in header */
 [dir="rtl"] header .flex,
 [dir="rtl"] .justify-between {
-    flex-direction: row-reverse;
+    flex-direction: row-reverse !important;
+}
+
+/* RTL - Reverse flex in cards */
+[dir="rtl"] .flex.justify-between {
+    flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .flex.gap-2 {
+    flex-direction: row-reverse !important;
 }

@@ -26,8 +26,15 @@ export const AuthContext = React.createContext();
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { i18n } = useTranslation();
 
   useEffect(() => {
+    // Set initial direction based on stored or default language
+    const storedLang = localStorage.getItem('language') || 'ar';
+    i18n.changeLanguage(storedLang);
+    document.documentElement.dir = storedLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = storedLang;
+    
     const token = localStorage.getItem('token');
     if (token) {
       // Verify token and get user info
@@ -44,7 +51,7 @@ function App() {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [i18n]);
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);

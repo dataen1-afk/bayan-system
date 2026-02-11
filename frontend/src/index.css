@@ -125,7 +125,13 @@ code {
 
 /* RTL Tabs - Move to right side */
 [dir="rtl"] [role="tablist"] {
-    justify-content: flex-end;
+    justify-content: flex-start;
+    flex-direction: row-reverse;
+}
+
+[dir="ltr"] [role="tablist"] {
+    justify-content: flex-start;
+    flex-direction: row;
 }
 
 /* RTL Icon positioning */
@@ -137,4 +143,13 @@ code {
 [dir="ltr"] .lucide {
     margin-left: 0;
     margin-right: 0.5rem;
+}
+
+/* RTL flex layouts */
+[dir="rtl"] .flex {
+    flex-direction: row-reverse;
+}
+
+[dir="ltr"] .flex {
+    flex-direction: row;
 }

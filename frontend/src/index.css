@@ -113,3 +113,28 @@ code {
         border-bottom-color: inherit;
     }
 }
+
+/* RTL Support */
+[dir="rtl"] {
+    direction: rtl;
+}
+
+[dir="ltr"] {
+    direction: ltr;
+}
+
+/* RTL Tabs - Move to right side */
+[dir="rtl"] [role="tablist"] {
+    justify-content: flex-end;
+}
+
+/* RTL Icon positioning */
+[dir="rtl"] .lucide {
+    margin-right: 0;
+    margin-left: 0.5rem;
+}
+
+[dir="ltr"] .lucide {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}

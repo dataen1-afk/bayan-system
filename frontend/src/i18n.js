@@ -114,7 +114,15 @@ const resources = {
       // Language
       "language": "Language",
       "english": "English",
-      "arabic": "العربية"
+      "arabic": "العربية",
+      
+      // Demo Credentials
+      "demoCredentials": "Demo Credentials",
+      "useTheseCredentials": "Use these credentials to test the system",
+      "clickToFill": "Click to fill",
+      "adminAccess": "Full access to create forms, quotations, and contracts",
+      "clientAccess": "Access to submit forms, review quotations, and download contracts",
+      "clickCredentialsTip": "Click on any credential card to auto-fill the login form"
     }
   },
   ar: {

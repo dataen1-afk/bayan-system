@@ -205,19 +205,19 @@ const ClientDashboard = () => {
           <TabsContent value="quotations">
             <Card>
               <CardHeader>
-                <CardTitle>My Quotations</CardTitle>
+                <CardTitle>{t('myQuotations')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2" data-testid="quotations-list">
                   {quotations.length === 0 ? (
-                    <p className="text-gray-500">No quotations received yet</p>
+                    <p className="text-gray-500">{t('noQuotationsReceived')}</p>
                   ) : (
                     quotations.map((quotation) => (
                       <div key={quotation.id} className="p-4 border rounded-lg" data-testid={`quotation-${quotation.id}`}>
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <p className="font-semibold">Quotation ID: {quotation.id}</p>
-                            <p className="text-sm text-gray-600">Form: {quotation.form_id}</p>
+                            <p className="font-semibold">{t('quotationId')}: {quotation.id}</p>
+                            <p className="text-sm text-gray-600">{t('form')}: {quotation.form_id}</p>
                             <p className="text-2xl font-bold text-green-600 mt-2">${quotation.price}</p>
                             <p className="text-sm mt-2 text-gray-700">{quotation.details}</p>
                             <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${
@@ -225,7 +225,7 @@ const ClientDashboard = () => {
                               quotation.status === 'rejected' ? 'bg-red-100 text-red-800' :
                               'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {quotation.status}
+                              {t(quotation.status)}
                             </span>
                           </div>
                           {quotation.status === 'pending' && (
@@ -234,14 +234,14 @@ const ClientDashboard = () => {
                                 onClick={() => handleRespondToQuotation(quotation.id, 'approved')}
                                 data-testid={`approve-quotation-${quotation.id}`}
                               >
-                                Approve
+                                {t('approve')}
                               </Button>
                               <Button 
                                 variant="destructive"
                                 onClick={() => handleRespondToQuotation(quotation.id, 'rejected')}
                                 data-testid={`reject-quotation-${quotation.id}`}
                               >
-                                Reject
+                                {t('reject')}
                               </Button>
                             </div>
                           )}
@@ -258,22 +258,22 @@ const ClientDashboard = () => {
           <TabsContent value="contracts">
             <Card>
               <CardHeader>
-                <CardTitle>My Contracts</CardTitle>
+                <CardTitle>{t('myContracts')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2" data-testid="contracts-list">
                   {contracts.length === 0 ? (
-                    <p className="text-gray-500">No contracts available yet</p>
+                    <p className="text-gray-500">{t('noContractsAvailable')}</p>
                   ) : (
                     contracts.map((contract) => (
                       <div key={contract.id} className="p-4 border rounded-lg flex justify-between items-center" data-testid={`contract-${contract.id}`}>
                         <div>
-                          <p className="font-semibold">Contract ID: {contract.id}</p>
-                          <p className="text-sm text-gray-600">Quotation: {contract.quotation_id}</p>
-                          <p className="text-sm text-gray-500">Created: {new Date(contract.created_at).toLocaleDateString()}</p>
+                          <p className="font-semibold">{t('contractId')}: {contract.id}</p>
+                          <p className="text-sm text-gray-600">{t('quotation')}: {contract.quotation_id}</p>
+                          <p className="text-sm text-gray-500">{t('created')}: {new Date(contract.created_at).toLocaleDateString()}</p>
                         </div>
                         <Button onClick={() => downloadContract(contract.id)} data-testid={`download-contract-${contract.id}`}>
-                          Download PDF
+                          {t('downloadPdf')}
                         </Button>
                       </div>
                     ))

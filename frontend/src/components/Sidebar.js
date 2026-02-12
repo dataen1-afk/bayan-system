@@ -115,7 +115,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
       <aside
         data-testid="sidebar"
         className={cn(
-          "sidebar-container fixed h-[calc(100vh-72px)] bg-white border-gray-200 shadow-lg z-30 transition-all duration-300 flex flex-col",
+          "sidebar-container fixed h-[calc(100vh-72px)] bg-white border-gray-200 shadow-lg z-30 transition-all duration-300 flex flex-col border-t-4 border-t-blue-700",
           isRTL ? "right-0 border-l" : "left-0 border-r",
           isCollapsed ? "w-16" : "w-64",
           // Mobile styles

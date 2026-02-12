@@ -7,33 +7,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LogOut, FileText, DollarSign, FileCheck } from 'lucide-react';
+import { LogOut, FileText, DollarSign, FileCheck, FolderOpen, BarChart3, Settings } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Sidebar from '@/components/Sidebar';
 
 const AdminDashboard = () => {
   const { t, i18n } = useTranslation();
-  // Initialize with current RTL state
   const [isRTL, setIsRTL] = useState(() => {
     return i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
   });
   const { user, logout } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('forms');
   const [forms, setForms] = useState([]);
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // Track RTL state changes
-  useEffect(() => {
-    const checkRTL = () => {
-      const isArabic = i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
-      setIsRTL(isArabic);
-    };
-    // Listen for language changes
-    i18n.on('languageChanged', checkRTL);
-    return () => i18n.off('languageChanged', checkRTL);
-  }, [i18n]);
 
   // Form creation state
   const [newForm, setNewForm] = useState({
@@ -49,6 +38,16 @@ const AdminDashboard = () => {
     price: '',
     details: ''
   });
+
+  // Track RTL state changes
+  useEffect(() => {
+    const checkRTL = () => {
+      const isArabic = i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
+      setIsRTL(isArabic);
+    };
+    i18n.on('languageChanged', checkRTL);
+    return () => i18n.off('languageChanged', checkRTL);
+  }, [i18n]);
 
   useEffect(() => {
     loadData();
@@ -150,53 +149,26 @@ const AdminDashboard = () => {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" data-testid="admin-dashboard">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg border-b-4 border-blue-700">
-        <div className="dashboard-header max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="dashboard-header-left flex items-center gap-4">
-            <div className="bg-white rounded-lg p-2 shadow-sm">
-              <img src="/bayan-logo.png" alt="Bayan" className="h-10 w-auto object-contain" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white" data-testid="admin-dashboard-title">{t('adminDashboard')}</h1>
-              <p className="text-sm text-blue-100">{t('welcome')}, {user?.name}</p>
-            </div>
-          </div>
-          <div className="dashboard-header-right flex gap-2">
-            <LanguageSwitcher />
-            <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-white text-bayan-blue hover:bg-blue-50 border-2 border-white font-semibold">
-              <LogOut className="btn-icon w-4 h-4" />
-              {t('logout')}
-            </Button>
-          </div>
-        </div>
-      </header>
+  // Coming Soon component for new features
+  const ComingSoon = ({ icon: Icon, title }) => (
+    <div className="text-center py-16">
+      <div className="mb-4">
+        <Icon className="w-20 h-20 mx-auto text-gray-300" />
+      </div>
+      <h3 className="text-xl font-semibold text-gray-700 mb-2">{title}</h3>
+      <p className="text-sm text-gray-500 mb-4">{t('comingSoon')}</p>
+      <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-medium rounded-full">
+        {t('stayTuned')}
+      </div>
+    </div>
+  );
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="forms" className="space-y-6">
-          {/* RTL-aware tabs container */}
-          <div className="tabs-wrapper w-full flex">
-            <TabsList className="bg-white shadow-sm border">
-              <TabsTrigger value="forms" data-testid="forms-tab" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                <span>{t('forms')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="quotations" data-testid="quotations-tab" className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                <span>{t('quotations')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="contracts" data-testid="contracts-tab" className="flex items-center gap-2">
-                <FileCheck className="w-4 h-4" />
-                <span>{t('contracts')}</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Forms Tab */}
-          <TabsContent value="forms" className="space-y-4">
+  // Render content based on active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'forms':
+        return (
+          <div className="space-y-6">
             <Card>
               <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle>{t('createNewForm')}</CardTitle>
@@ -301,10 +273,12 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        );
 
-          {/* Quotations Tab */}
-          <TabsContent value="quotations" className="space-y-4">
+      case 'quotations':
+        return (
+          <div className="space-y-6">
             <Card>
               <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle>{t('createQuotation')}</CardTitle>
@@ -312,61 +286,63 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateQuotation} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="form_id" className={isRTL ? 'block text-right' : ''}>{t('formId')}</Label>
-                    <Input
-                      id="form_id"
-                      value={newQuotation.form_id}
-                      onChange={(e) => setNewQuotation({ ...newQuotation, form_id: e.target.value })}
-                      placeholder={t('enterFormId')}
-                      required
-                      data-testid="quotation-form-id-input"
-                      className={isRTL ? 'text-right' : ''}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    />
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="form_id" className={isRTL ? 'block text-right' : ''}>{t('formId')}</Label>
+                      <Input
+                        id="form_id"
+                        value={newQuotation.form_id}
+                        onChange={(e) => setNewQuotation({ ...newQuotation, form_id: e.target.value })}
+                        placeholder={t('enterFormId')}
+                        required
+                        data-testid="quotation-form-id-input"
+                        className={isRTL ? 'text-right' : ''}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="q_client_id" className={isRTL ? 'block text-right' : ''}>{t('clientId')}</Label>
-                    <Input
-                      id="q_client_id"
-                      value={newQuotation.client_id}
-                      onChange={(e) => setNewQuotation({ ...newQuotation, client_id: e.target.value })}
-                      placeholder={t('enterClientId')}
-                      required
-                      data-testid="quotation-client-id-input"
-                      className={isRTL ? 'text-right' : ''}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="q_client_id" className={isRTL ? 'block text-right' : ''}>{t('clientId')}</Label>
+                      <Input
+                        id="q_client_id"
+                        value={newQuotation.client_id}
+                        onChange={(e) => setNewQuotation({ ...newQuotation, client_id: e.target.value })}
+                        placeholder={t('enterClientId')}
+                        required
+                        data-testid="quotation-client-id-input"
+                        className={isRTL ? 'text-right' : ''}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="client_email" className={isRTL ? 'block text-right' : ''}>{t('clientEmail')}</Label>
-                    <Input
-                      id="client_email"
-                      type="email"
-                      value={newQuotation.client_email}
-                      onChange={(e) => setNewQuotation({ ...newQuotation, client_email: e.target.value })}
-                      placeholder="client@example.com"
-                      required
-                      data-testid="quotation-client-email-input"
-                      dir="ltr"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="client_email" className={isRTL ? 'block text-right' : ''}>{t('clientEmail')}</Label>
+                      <Input
+                        id="client_email"
+                        type="email"
+                        value={newQuotation.client_email}
+                        onChange={(e) => setNewQuotation({ ...newQuotation, client_email: e.target.value })}
+                        placeholder="client@example.com"
+                        required
+                        data-testid="quotation-client-email-input"
+                        dir="ltr"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="price" className={isRTL ? 'block text-right' : ''}>{t('price')}</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={newQuotation.price}
-                      onChange={(e) => setNewQuotation({ ...newQuotation, price: e.target.value })}
-                      placeholder="1000.00"
-                      required
-                      data-testid="quotation-price-input"
-                      dir="ltr"
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="price" className={isRTL ? 'block text-right' : ''}>{t('price')}</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        value={newQuotation.price}
+                        onChange={(e) => setNewQuotation({ ...newQuotation, price: e.target.value })}
+                        placeholder="1000.00"
+                        required
+                        data-testid="quotation-price-input"
+                        dir="ltr"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -428,43 +404,127 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        );
 
-          {/* Contracts Tab */}
-          <TabsContent value="contracts">
-            <Card>
-              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-                <CardTitle>{t('allContracts')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2" data-testid="contracts-list">
-                  {contracts.length === 0 ? (
-                    <EmptyState
-                      icon={FileCheck}
-                      title={t('noContractsYet')}
-                      description={t('contractsAutoGenerated')}
-                      helpText={t('contractsEmptyStateHelp')}
-                    />
-                  ) : (
-                    contracts.map((contract) => (
-                      <div key={contract.id} className={`p-4 border rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`contract-${contract.id}`}>
-                        <div className={isRTL ? 'text-right' : 'text-left'}>
-                          <p className="font-semibold">{t('contractId')}: {contract.id}</p>
-                          <p className="text-sm text-gray-600">{t('quotation')}: {contract.quotation_id}</p>
-                          <p className="text-sm text-gray-600">{t('client')}: {contract.client_id}</p>
-                        </div>
-                        <Button onClick={() => downloadContract(contract.id)} data-testid={`download-contract-${contract.id}`}>
-                          {t('downloadPdf')}
-                        </Button>
+      case 'contracts':
+        return (
+          <Card>
+            <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+              <CardTitle>{t('allContracts')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2" data-testid="contracts-list">
+                {contracts.length === 0 ? (
+                  <EmptyState
+                    icon={FileCheck}
+                    title={t('noContractsYet')}
+                    description={t('contractsAutoGenerated')}
+                    helpText={t('contractsEmptyStateHelp')}
+                  />
+                ) : (
+                  contracts.map((contract) => (
+                    <div key={contract.id} className={`p-4 border rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`contract-${contract.id}`}>
+                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                        <p className="font-semibold">{t('contractId')}: {contract.id}</p>
+                        <p className="text-sm text-gray-600">{t('quotation')}: {contract.quotation_id}</p>
+                        <p className="text-sm text-gray-600">{t('client')}: {contract.client_id}</p>
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
+                      <Button onClick={() => downloadContract(contract.id)} data-testid={`download-contract-${contract.id}`}>
+                        {t('downloadPdf')}
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'templates':
+        return (
+          <Card>
+            <CardContent className="py-8">
+              <ComingSoon icon={FolderOpen} title={t('templates')} />
+            </CardContent>
+          </Card>
+        );
+
+      case 'reports':
+        return (
+          <Card>
+            <CardContent className="py-8">
+              <ComingSoon icon={BarChart3} title={t('reports')} />
+            </CardContent>
+          </Card>
+        );
+
+      case 'settings':
+        return (
+          <Card>
+            <CardContent className="py-8">
+              <ComingSoon icon={Settings} title={t('settings')} />
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" data-testid="admin-dashboard">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg border-b-4 border-blue-700">
+        <div className="dashboard-header max-w-full mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className="dashboard-header-left flex items-center gap-4">
+            <div className="bg-white rounded-lg p-2 shadow-sm">
+              <img src="/bayan-logo.png" alt="Bayan" className="h-10 w-auto object-contain" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white" data-testid="admin-dashboard-title">{t('adminDashboard')}</h1>
+              <p className="text-sm text-blue-100">{t('welcome')}, {user?.name}</p>
+            </div>
+          </div>
+          <div className="dashboard-header-right flex gap-2 items-center">
+            <LanguageSwitcher />
+            <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-white text-bayan-blue hover:bg-blue-50 border-2 border-white font-semibold">
+              <LogOut className="btn-icon w-4 h-4" />
+              {t('logout')}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Layout with Sidebar */}
+      <div className="flex pt-[72px]">
+        <Sidebar 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          userRole="admin"
+        />
+        
+        {/* Main Content */}
+        <main className="flex-1 p-6 lg:p-8 min-h-screen">
+          <div className="max-w-6xl mx-auto">
+            {/* Page Title */}
+            <div className={`mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {activeTab === 'forms' && t('forms')}
+                {activeTab === 'quotations' && t('quotations')}
+                {activeTab === 'contracts' && t('contracts')}
+                {activeTab === 'templates' && t('templates')}
+                {activeTab === 'reports' && t('reports')}
+                {activeTab === 'settings' && t('settings')}
+              </h2>
+            </div>
+            
+            {/* Content */}
+            {renderContent()}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

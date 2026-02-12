@@ -98,13 +98,6 @@ const LoginPage = () => {
             <Button type="submit" className="w-full bg-bayan-blue hover:bg-bayan-blue-dark text-white font-semibold py-6 text-lg shadow-lg" disabled={loading} data-testid="login-submit-button">
               {loading ? t('signingIn') : t('signIn')}
             </Button>
-
-            <p className="text-sm text-center text-gray-600">
-              {t('dontHaveAccount')}{' '}
-              <Link to="/register" className="text-bayan-blue hover:text-bayan-blue-dark font-semibold hover:underline" data-testid="register-link">
-                {t('registerHere')}
-              </Link>
-            </p>
           </form>
         </CardContent>
       </Card>

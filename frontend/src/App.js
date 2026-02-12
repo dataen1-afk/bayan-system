@@ -77,7 +77,6 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
-            <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/dashboard" />} />
             <Route 
               path="/dashboard" 
               element={

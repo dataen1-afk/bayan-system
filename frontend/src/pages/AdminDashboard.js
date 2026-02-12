@@ -21,11 +21,19 @@ const AdminDashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('forms');
   const [forms, setForms] = useState([]);
+  const [applicationForms, setApplicationForms] = useState([]);
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [clients, setClients] = useState([]);
 
-  // Form creation state
+  // Application Form Modal state
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [selectedApplicationForm, setSelectedApplicationForm] = useState(null);
+  const [assignFormModal, setAssignFormModal] = useState(false);
+  const [selectedClientForForm, setSelectedClientForForm] = useState('');
+
+  // Form creation state (legacy simple forms)
   const [newForm, setNewForm] = useState({
     client_id: '',
     fields: [{ label: '', type: 'text', required: true }]

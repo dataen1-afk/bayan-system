@@ -68,7 +68,7 @@ module.exports = {
   				'5': 'hsl(var(--chart-5))'
   			},
   			bayan: {
-  				blue: '#1e40af',
+  				navy: '#1E304E',
   				'blue-light': '#3b82f6',
   				'blue-dark': '#1e3a8a',
   				gold: '#f59e0b',

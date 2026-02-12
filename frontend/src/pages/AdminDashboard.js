@@ -14,13 +14,24 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const AdminDashboard = () => {
   const { t, i18n } = useTranslation();
-  // Check for RTL - handle both 'ar' and 'ar-XX' variants
-  const isRTL = i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
+  const [isRTL, setIsRTL] = useState(false);
   const { user, logout } = useContext(AuthContext);
   const [forms, setForms] = useState([]);
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Track RTL state
+  useEffect(() => {
+    const checkRTL = () => {
+      const isArabic = i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
+      setIsRTL(isArabic);
+    };
+    checkRTL();
+    // Listen for language changes
+    i18n.on('languageChanged', checkRTL);
+    return () => i18n.off('languageChanged', checkRTL);
+  }, [i18n]);
 
   // Form creation state
   const [newForm, setNewForm] = useState({

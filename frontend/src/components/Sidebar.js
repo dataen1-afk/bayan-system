@@ -115,7 +115,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
       <aside
         data-testid="sidebar"
         className={cn(
-          "sidebar-container bg-white border-gray-200 shadow-lg z-30 transition-all duration-300 flex flex-col border-t-4 border-t-blue-700",
+          "sidebar-container bg-white border-gray-200 shadow-lg z-30 transition-all duration-300 flex flex-col border-t border-t-gray-200",
           isRTL ? "border-l" : "border-r",
           isCollapsed ? "w-16" : "w-64",
           // Desktop: fixed position, Mobile: slide in/out
@@ -123,8 +123,8 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
           isMobileOpen ? "translate-x-0" : (isRTL ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"),
         )}
         style={{
-          top: '112px', // Header height (116px) minus border overlap (4px)
-          height: 'calc(100vh - 112px)',
+          top: '88px', // Below header
+          height: 'calc(100vh - 88px)',
           [isRTL ? 'right' : 'left']: 0,
         }}
       >

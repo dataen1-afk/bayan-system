@@ -35,29 +35,31 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4" data-testid="login-page">
-      <div className="absolute top-4 right-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4" data-testid="login-page">
+      <div className="absolute top-4 right-4 z-10">
         <LanguageSwitcher />
       </div>
       
       {/* Logo Section */}
       <div className="mb-8 text-center">
-        <img 
-          src="/bayan-logo.jpeg" 
-          alt="Bayan Auditing & Conformity" 
-          className="h-32 w-auto mx-auto mb-4 object-contain shadow-lg rounded-lg"
-        />
-        <p className="text-gray-600 text-sm">
+        <div className="bg-white p-6 rounded-2xl shadow-lg mb-4 inline-block">
+          <img 
+            src="/bayan-logo.jpeg" 
+            alt="Bayan Auditing & Conformity" 
+            className="h-24 w-auto object-contain"
+          />
+        </div>
+        <p className="text-bayan-gray text-base font-medium">
           {t('serviceContractManagement')}
         </p>
       </div>
       
-      <div className="w-full max-w-4xl flex flex-col lg:flex-row gap-4">
+      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6">
         {/* Login Form Card */}
-        <Card className="w-full lg:w-1/2">
-          <CardHeader>
+        <Card className="w-full lg:w-1/2 border-2 border-blue-100 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-bayan-blue to-blue-600 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold" data-testid="login-title">{t('login')}</CardTitle>
-            <CardDescription>{t('signInToAccount')}</CardDescription>
+            <CardDescription className="text-blue-100">{t('signInToAccount')}</CardDescription>
           </CardHeader>
           <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

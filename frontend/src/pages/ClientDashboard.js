@@ -354,11 +354,11 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" data-testid="client-dashboard">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg border-b-4 border-blue-700">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg">
         <div className="dashboard-header max-w-full mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="dashboard-header-left flex items-center gap-4">
-            <div className="bg-white rounded-xl p-3 shadow-sm">
-              <img src="/bayan-logo.png" alt="Bayan" className="h-14 w-auto object-contain" />
+            <div className="p-2">
+              <img src="/bayan-logo.png" alt="Bayan" className="h-14 w-auto object-contain drop-shadow-lg" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white" data-testid="client-dashboard-title">{t('clientDashboard')}</h1>

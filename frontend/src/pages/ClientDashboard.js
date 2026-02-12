@@ -379,7 +379,7 @@ const ClientDashboard = () => {
       </header>
 
       {/* Layout with Sidebar */}
-      <div className="flex pt-[88px]">
+      <div className="flex pt-[102px]">
         <Sidebar 
           activeTab={activeTab} 
           onTabChange={setActiveTab}

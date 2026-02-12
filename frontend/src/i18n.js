@@ -116,6 +116,9 @@ const resources = {
       "english": "English",
       "arabic": "العربية",
       
+      // Company
+      "serviceContractManagement": "Service Contract Management System",
+      
       // Demo Credentials
       "demoCredentials": "Demo Credentials",
       "useTheseCredentials": "Use these credentials to test the system",

@@ -149,18 +149,18 @@ const ClientDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="forms" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-          {/* RTL-aware tabs container */}
-          <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
+          {/* RTL-aware tabs container - using w-full and conditional justify */}
+          <div className="w-full flex" style={{ justifyContent: isRTL ? 'flex-end' : 'flex-start' }}>
             <TabsList className="bg-white shadow-sm border">
-              <TabsTrigger value="forms" data-testid="forms-tab" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <TabsTrigger value="forms" data-testid="forms-tab" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 <span>{t('myForms')}</span>
               </TabsTrigger>
-              <TabsTrigger value="quotations" data-testid="quotations-tab" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <TabsTrigger value="quotations" data-testid="quotations-tab" className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4" />
                 <span>{t('quotations')}</span>
               </TabsTrigger>
-              <TabsTrigger value="contracts" data-testid="contracts-tab" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <TabsTrigger value="contracts" data-testid="contracts-tab" className="flex items-center gap-2">
                 <FileCheck className="w-4 h-4" />
                 <span>{t('contracts')}</span>
               </TabsTrigger>

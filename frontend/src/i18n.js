@@ -107,6 +107,7 @@ const resources = {
       "quotationCreatedSuccess": "Quotation created and email sent!",
       "quotationApproved": "Quotation approved!",
       "quotationRejected": "Quotation rejected!",
+      "modificationsRequested": "Modifications requested!",
       "errorCreatingForm": "Error creating form:",
       "errorSubmittingForm": "Error submitting form:",
       "errorCreatingQuotation": "Error creating quotation:",

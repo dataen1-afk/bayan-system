@@ -127,38 +127,72 @@ code {
     direction: ltr;
 }
 
-/* RTL Tabs Alignment - Position tabs on right for Arabic */
-[dir="rtl"] .tabs-container {
-    display: flex;
-    flex-direction: row-reverse;
+/* RTL Header layout - Force elements to right */
+[dir="rtl"] .dashboard-header {
+    flex-direction: row-reverse !important;
 }
 
-/* RTL Header layout */
-[dir="rtl"] .header-content {
-    flex-direction: row-reverse;
+[dir="rtl"] .dashboard-header-left {
+    flex-direction: row-reverse !important;
+    text-align: right !important;
 }
 
-/* RTL text alignment for content areas */
-[dir="rtl"] .rtl-text {
-    text-align: right;
+[dir="rtl"] .dashboard-header-right {
+    flex-direction: row-reverse !important;
 }
 
-[dir="ltr"] .ltr-text {
-    text-align: left;
+/* RTL Tabs Container - Position tabs on right side */
+[dir="rtl"] .tabs-wrapper {
+    justify-content: flex-end !important;
 }
 
-/* RTL flex reverse for action buttons */
-[dir="rtl"] .rtl-flex-reverse {
-    flex-direction: row-reverse;
+[dir="ltr"] .tabs-wrapper {
+    justify-content: flex-start !important;
 }
 
-/* RTL margin/padding swap utilities */
-[dir="rtl"] .icon-gap {
-    margin-left: 0.5rem;
-    margin-right: 0;
+/* RTL Card content alignment */
+[dir="rtl"] .card-header-rtl {
+    text-align: right !important;
 }
 
-[dir="ltr"] .icon-gap {
-    margin-right: 0.5rem;
-    margin-left: 0;
+[dir="ltr"] .card-header-rtl {
+    text-align: left !important;
+}
+
+/* RTL Form layouts */
+[dir="rtl"] .form-row {
+    flex-direction: row-reverse !important;
+}
+
+/* RTL list items */
+[dir="rtl"] .list-item-rtl {
+    flex-direction: row-reverse !important;
+    text-align: right !important;
+}
+
+[dir="ltr"] .list-item-rtl {
+    flex-direction: row !important;
+    text-align: left !important;
+}
+
+/* RTL Button icon margins */
+[dir="rtl"] .btn-icon {
+    margin-left: 0.5rem !important;
+    margin-right: 0 !important;
+}
+
+[dir="ltr"] .btn-icon {
+    margin-right: 0.5rem !important;
+    margin-left: 0 !important;
+}
+
+/* RTL Actions column */
+[dir="rtl"] .actions-column {
+    margin-right: 1rem !important;
+    margin-left: 0 !important;
+}
+
+[dir="ltr"] .actions-column {
+    margin-left: 1rem !important;
+    margin-right: 0 !important;
 }

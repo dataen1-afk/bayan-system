@@ -126,20 +126,20 @@ const ClientDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" data-testid="client-dashboard">
       {/* Header */}
       <header className="bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg border-b-4 border-blue-700">
-        <div className={`max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+          <div className="flex items-center gap-4" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
             <div className="bg-white rounded-lg p-2 shadow-sm">
               <img src="/bayan-logo.png" alt="Bayan" className="h-10 w-auto object-contain" />
             </div>
-            <div className={isRTL ? 'text-right' : 'text-left'}>
+            <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
               <h1 className="text-2xl font-bold text-white" data-testid="client-dashboard-title">{t('clientDashboard')}</h1>
               <p className="text-sm text-blue-100">{t('welcome')}, {user?.name}</p>
             </div>
           </div>
-          <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="flex gap-2" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
             <LanguageSwitcher />
             <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-white text-bayan-blue hover:bg-blue-50 border-2 border-white font-semibold">
-              <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <LogOut className="w-4 h-4" style={{ marginRight: isRTL ? 0 : '0.5rem', marginLeft: isRTL ? '0.5rem' : 0 }} />
               {t('logout')}
             </Button>
           </div>

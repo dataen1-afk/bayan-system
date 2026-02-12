@@ -502,6 +502,8 @@ const AdminDashboard = () => {
           activeTab={activeTab} 
           onTabChange={setActiveTab}
           userRole="admin"
+          userName={user?.name}
+          dashboardTitle={t('adminDashboard')}
         />
         
         {/* Main Content */}

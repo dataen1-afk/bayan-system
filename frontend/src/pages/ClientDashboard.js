@@ -380,6 +380,8 @@ const ClientDashboard = () => {
           activeTab={activeTab} 
           onTabChange={setActiveTab}
           userRole="client"
+          userName={user?.name}
+          dashboardTitle={t('clientDashboard')}
         />
         
         {/* Main Content */}

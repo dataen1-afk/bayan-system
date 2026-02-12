@@ -5,7 +5,6 @@ import axios from 'axios';
 import '@/i18n'; // Initialize i18n
 import { useTranslation } from 'react-i18next';
 import LoginPage from '@/pages/LoginPage';
-import RegisterPage from '@/pages/RegisterPage';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ClientDashboard from '@/pages/ClientDashboard';
 

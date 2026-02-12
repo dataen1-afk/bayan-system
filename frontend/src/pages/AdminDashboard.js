@@ -154,22 +154,64 @@ const AdminDashboard = () => {
     }
   };
 
-  // Handle assigning a new application form to a client
-  const handleAssignApplicationForm = async () => {
-    if (!selectedClientForForm) {
-      alert(t('selectClientFirst'));
+  // Handle creating a new application form for a client
+  const handleCreateApplicationForm = async () => {
+    if (!newClientInfo.name || !newClientInfo.company_name || !newClientInfo.email || !newClientInfo.phone) {
+      alert(t('fillAllClientFields'));
       return;
     }
     try {
       const response = await axios.post(`${API}/application-forms`, {
-        client_id: selectedClientForForm
+        client_info: newClientInfo
       });
-      alert(t('applicationFormAssigned'));
-      setAssignFormModal(false);
-      setSelectedClientForForm('');
+      const formLink = `${window.location.origin}/form/${response.data.access_token}`;
+      setCreatedFormLink(formLink);
+      setShowFormLinkModal(true);
+      setCreateFormModal(false);
+      setNewClientInfo({ name: '', company_name: '', email: '', phone: '' });
       loadData();
     } catch (error) {
-      alert(t('errorAssigningForm') + ' ' + (error.response?.data?.detail || error.message));
+      alert(t('errorCreatingForm') + ' ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // Copy form link to clipboard
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(createdFormLink);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      alert(t('errorCopyingLink'));
+    }
+  };
+
+  // Send form link via email
+  const handleSendEmail = async (formId) => {
+    setSendingEmail(true);
+    try {
+      const response = await axios.post(`${API}/application-forms/${formId}/send-email`);
+      alert(t('emailSentSuccess'));
+    } catch (error) {
+      alert(t('errorSendingEmail') + ' ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  // Get form link for a specific form
+  const getFormLink = (form) => {
+    return `${window.location.origin}/form/${form.access_token}`;
+  };
+
+  // Copy specific form link
+  const copyFormLink = async (form) => {
+    const link = getFormLink(form);
+    try {
+      await navigator.clipboard.writeText(link);
+      alert(t('linkCopied'));
+    } catch (error) {
+      alert(t('errorCopyingLink'));
     }
   };
 

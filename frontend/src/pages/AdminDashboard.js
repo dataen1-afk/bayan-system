@@ -483,10 +483,6 @@ const AdminDashboard = () => {
             <div className="p-1">
               <img src="/bayan-logo.png" alt="Bayan" className="h-16 w-auto object-contain" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-bayan-navy" data-testid="admin-dashboard-title">{t('adminDashboard')}</h1>
-              <p className="text-sm text-bayan-gray-medium">{t('welcome')}, {user?.name}</p>
-            </div>
           </div>
           <div className="dashboard-header-right flex gap-2 items-center">
             <LanguageSwitcher />

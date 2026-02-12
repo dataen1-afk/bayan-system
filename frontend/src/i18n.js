@@ -225,7 +225,7 @@ const resources = {
       "myQuotations": "عروض الأسعار الخاصة بي",
       "noQuotationsCreated": "لم يتم إنشاء عروض أسعار بعد",
       "noQuotationsYet": "لا توجد عروض أسعار بعد",
-      "createFirstQuotation": "ستظهر عروض الأسعار هنا بمجرد إرسال النماذج",
+      "createFirstQuotation": "ستظهر عروض الأسعار هنا بعد إرسال النماذج",
       "quotationsEmptyStateHelp": "بعد أن يرسل العملاء النماذج، يمكنك إنشاء عروض أسعار مع التسعير. استخدم النموذج أعلاه لإنشاء عرض السعر الأول.",
       "noQuotationsReceived": "لم تستلم عروض أسعار بعد",
       "quotationId": "معرف عرض السعر",

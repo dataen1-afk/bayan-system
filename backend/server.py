@@ -647,14 +647,9 @@ async def get_clients(current_user: dict = Depends(require_admin)):
 
 @api_router.post("/application-forms", response_model=ApplicationForm)
 async def create_application_form(form_data: ApplicationFormCreate, current_user: dict = Depends(require_admin)):
-    """Admin creates and assigns an application form to a client"""
-    # Check if client exists
-    client = await db.users.find_one({"id": form_data.client_id, "role": UserRole.CLIENT})
-    if not client:
-        raise HTTPException(status_code=404, detail="Client not found")
-    
+    """Admin creates an application form for a client (no login required for client)"""
     form = ApplicationForm(
-        client_id=form_data.client_id
+        client_info=form_data.client_info
     )
     
     form_doc = form.model_dump()
@@ -666,13 +661,9 @@ async def create_application_form(form_data: ApplicationFormCreate, current_user
     return form
 
 @api_router.get("/application-forms", response_model=List[ApplicationForm])
-async def get_application_forms(current_user: dict = Depends(get_current_user)):
-    """Get all application forms (admin sees all, client sees their own)"""
-    query = {}
-    if current_user['role'] == UserRole.CLIENT:
-        query = {"client_id": current_user['user_id']}
-    
-    forms = await db.application_forms.find(query, {"_id": 0}).to_list(1000)
+async def get_application_forms(current_user: dict = Depends(require_admin)):
+    """Get all application forms (admin only)"""
+    forms = await db.application_forms.find({}, {"_id": 0}).to_list(1000)
     
     for form in forms:
         if isinstance(form.get('created_at'), str):
@@ -683,15 +674,11 @@ async def get_application_forms(current_user: dict = Depends(get_current_user)):
     return forms
 
 @api_router.get("/application-forms/{form_id}", response_model=ApplicationForm)
-async def get_application_form(form_id: str, current_user: dict = Depends(get_current_user)):
-    """Get a specific application form"""
+async def get_application_form(form_id: str, current_user: dict = Depends(require_admin)):
+    """Get a specific application form (admin only)"""
     form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
     if not form:
         raise HTTPException(status_code=404, detail="Application form not found")
-    
-    # Check access
-    if current_user['role'] == UserRole.CLIENT and form['client_id'] != current_user['user_id']:
-        raise HTTPException(status_code=403, detail="Access denied")
     
     if isinstance(form.get('created_at'), str):
         form['created_at'] = datetime.fromisoformat(form['created_at'])
@@ -700,16 +687,72 @@ async def get_application_form(form_id: str, current_user: dict = Depends(get_cu
     
     return ApplicationForm(**form)
 
-@api_router.put("/application-forms/{form_id}", response_model=ApplicationForm)
-async def update_application_form(form_id: str, update_data: ApplicationFormUpdate, current_user: dict = Depends(get_current_user)):
-    """Client updates their application form (saves draft)"""
+@api_router.post("/application-forms/{form_id}/send-email")
+async def send_form_email(form_id: str, current_user: dict = Depends(require_admin)):
+    """Send the form link to the client via email"""
     form = await db.application_forms.find_one({"id": form_id})
     if not form:
         raise HTTPException(status_code=404, detail="Application form not found")
     
-    # Check access
-    if current_user['role'] == UserRole.CLIENT and form['client_id'] != current_user['user_id']:
-        raise HTTPException(status_code=403, detail="Access denied")
+    # Get frontend URL from environment or use default
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://contractcert.preview.emergentagent.com')
+    form_link = f"{frontend_url}/form/{form['access_token']}"
+    
+    client_info = form['client_info']
+    email_body = f"""
+مرحباً {client_info['name']}،
+
+تم إنشاء نموذج طلب اعتماد لشركتكم {client_info['company_name']}.
+
+يرجى النقر على الرابط التالي لملء النموذج:
+{form_link}
+
+مع أطيب التحيات،
+بيان للتحقق والمطابقة
+
+---
+
+Hello {client_info['name']},
+
+A certification application form has been created for your company {client_info['company_name']}.
+
+Please click the following link to fill out the form:
+{form_link}
+
+Best regards,
+Bayan Auditing & Conformity
+"""
+    
+    await send_email(
+        to=client_info['email'],
+        subject="طلب اعتماد - Certification Application Form",
+        body=email_body
+    )
+    
+    return {"message": "Email sent successfully", "form_link": form_link}
+
+# ================= PUBLIC FORM ACCESS (NO LOGIN REQUIRED) =================
+
+@api_router.get("/public/form/{access_token}", response_model=PublicApplicationFormResponse)
+async def get_public_form(access_token: str):
+    """Public access to form using access token (no login required)"""
+    form = await db.application_forms.find_one({"access_token": access_token}, {"_id": 0})
+    if not form:
+        raise HTTPException(status_code=404, detail="Form not found or invalid link")
+    
+    return PublicApplicationFormResponse(
+        id=form['id'],
+        client_info=form['client_info'],
+        company_data=form.get('company_data'),
+        status=form['status']
+    )
+
+@api_router.put("/public/form/{access_token}", response_model=PublicApplicationFormResponse)
+async def update_public_form(access_token: str, update_data: ApplicationFormUpdate):
+    """Public save draft (no login required)"""
+    form = await db.application_forms.find_one({"access_token": access_token})
+    if not form:
+        raise HTTPException(status_code=404, detail="Form not found or invalid link")
     
     # Only allow updates if form is pending
     if form['status'] != 'pending':
@@ -717,26 +760,25 @@ async def update_application_form(form_id: str, update_data: ApplicationFormUpda
     
     # Update form data
     await db.application_forms.update_one(
-        {"id": form_id},
+        {"access_token": access_token},
         {"$set": {"company_data": update_data.company_data.model_dump()}}
     )
     
-    updated_form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
-    if isinstance(updated_form.get('created_at'), str):
-        updated_form['created_at'] = datetime.fromisoformat(updated_form['created_at'])
+    updated_form = await db.application_forms.find_one({"access_token": access_token}, {"_id": 0})
     
-    return ApplicationForm(**updated_form)
+    return PublicApplicationFormResponse(
+        id=updated_form['id'],
+        client_info=updated_form['client_info'],
+        company_data=updated_form.get('company_data'),
+        status=updated_form['status']
+    )
 
-@api_router.post("/application-forms/{form_id}/submit", response_model=ApplicationForm)
-async def submit_application_form(form_id: str, update_data: ApplicationFormUpdate, current_user: dict = Depends(get_current_user)):
-    """Client submits their completed application form"""
-    form = await db.application_forms.find_one({"id": form_id})
+@api_router.post("/public/form/{access_token}/submit", response_model=PublicApplicationFormResponse)
+async def submit_public_form(access_token: str, update_data: ApplicationFormUpdate):
+    """Public form submission (no login required)"""
+    form = await db.application_forms.find_one({"access_token": access_token})
     if not form:
-        raise HTTPException(status_code=404, detail="Application form not found")
-    
-    # Check access
-    if current_user['role'] == UserRole.CLIENT and form['client_id'] != current_user['user_id']:
-        raise HTTPException(status_code=403, detail="Access denied")
+        raise HTTPException(status_code=404, detail="Form not found or invalid link")
     
     # Only allow submission if form is pending
     if form['status'] != 'pending':
@@ -750,7 +792,7 @@ async def submit_application_form(form_id: str, update_data: ApplicationFormUpda
     # Update and submit
     submitted_at = datetime.now(timezone.utc)
     await db.application_forms.update_one(
-        {"id": form_id},
+        {"access_token": access_token},
         {
             "$set": {
                 "company_data": company_data.model_dump(),
@@ -760,13 +802,14 @@ async def submit_application_form(form_id: str, update_data: ApplicationFormUpda
         }
     )
     
-    updated_form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
-    if isinstance(updated_form.get('created_at'), str):
-        updated_form['created_at'] = datetime.fromisoformat(updated_form['created_at'])
-    if isinstance(updated_form.get('submitted_at'), str):
-        updated_form['submitted_at'] = datetime.fromisoformat(updated_form['submitted_at'])
+    updated_form = await db.application_forms.find_one({"access_token": access_token}, {"_id": 0})
     
-    return ApplicationForm(**updated_form)
+    return PublicApplicationFormResponse(
+        id=updated_form['id'],
+        client_info=updated_form['client_info'],
+        company_data=updated_form.get('company_data'),
+        status=updated_form['status']
+    )
 
 # Include the router in the main app
 app.include_router(api_router)

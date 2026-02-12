@@ -45,11 +45,8 @@ const LoginPage = () => {
         <img 
           src="/bayan-logo.jpeg" 
           alt="Bayan Auditing & Conformity" 
-          className="h-32 w-auto mx-auto mb-4 object-contain"
+          className="h-32 w-auto mx-auto mb-4 object-contain shadow-lg rounded-lg"
         />
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          {t('arabic') === 'العربية' ? 'بيان للتحقق والمطابقة' : 'BAYAN AUDITING & CONFORMITY'}
-        </h1>
         <p className="text-gray-600 text-sm">
           {t('serviceContractManagement')}
         </p>

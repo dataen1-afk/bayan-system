@@ -219,9 +219,79 @@ const AdminDashboard = () => {
       case 'forms':
         return (
           <div className="space-y-6">
+            {/* Certification Application Forms Section */}
             <Card>
               <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-                <CardTitle>{t('createNewForm')}</CardTitle>
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div>
+                    <CardTitle>{t('certificationApplicationForms')}</CardTitle>
+                    <CardDescription>{t('manageClientApplications')}</CardDescription>
+                  </div>
+                  <Button 
+                    onClick={() => setAssignFormModal(true)} 
+                    data-testid="assign-form-button"
+                    className="bg-bayan-navy hover:bg-bayan-navy-light"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {t('assignNewForm')}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3" data-testid="application-forms-list">
+                  {applicationForms.length === 0 ? (
+                    <EmptyState
+                      icon={FileText}
+                      title={t('noApplicationFormsYet')}
+                      description={t('assignFirstApplicationForm')}
+                      helpText={t('applicationFormsEmptyStateHelp')}
+                    />
+                  ) : (
+                    applicationForms.map((form) => (
+                      <div 
+                        key={form.id} 
+                        className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        data-testid={`application-form-${form.id}`}
+                      >
+                        <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={isRTL ? 'text-right' : 'text-left'}>
+                            <p className="font-semibold text-bayan-navy">
+                              {form.company_data?.companyName || t('pendingCompanyInfo')}
+                            </p>
+                            <p className="text-sm text-gray-600">{t('formId')}: {form.id.slice(0, 8)}...</p>
+                            <p className="text-sm text-gray-600">{t('clientId')}: {form.client_id.slice(0, 8)}...</p>
+                            <p className="text-sm text-gray-600">
+                              {t('certifications')}: {form.company_data?.certificationSchemes?.length || 0} {t('selected')}
+                            </p>
+                            <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${getStatusBadgeColor(form.status)}`}>
+                              {t(form.status)}
+                            </span>
+                          </div>
+                          <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            {form.status === 'submitted' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewApplicationForm(form)}
+                                data-testid={`view-form-${form.id}`}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                {t('view')}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Legacy Simple Forms Section (optional, for backwards compatibility) */}
+            <Card>
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                <CardTitle>{t('simpleCustomForms')}</CardTitle>
                 <CardDescription>{t('createCustomForm')}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -293,21 +363,14 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-                <CardTitle>{t('allForms')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2" data-testid="forms-list">
-                  {forms.length === 0 ? (
-                    <EmptyState
-                      icon={FileText}
-                      title={t('noFormsYet')}
-                      description={t('createFirstForm')}
-                      helpText={t('formsEmptyStateHelp')}
-                    />
-                  ) : (
-                    forms.map((form) => (
+            {forms.length > 0 && (
+              <Card>
+                <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                  <CardTitle>{t('simpleFormsSubmitted')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2" data-testid="forms-list">
+                    {forms.map((form) => (
                       <div key={form.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors" data-testid={`form-${form.id}`}>
                         <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -318,11 +381,11 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
 

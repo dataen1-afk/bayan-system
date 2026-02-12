@@ -639,6 +639,75 @@ const AdminDashboard = () => {
           </div>
         </main>
       </div>
+
+      {/* Assign Application Form Modal */}
+      {assignFormModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+              <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <CardTitle>{t('assignNewForm')}</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setAssignFormModal(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <CardDescription>{t('selectClientToAssignForm')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className={isRTL ? 'text-right block' : ''}>{t('selectClient')}</Label>
+                <Select value={selectedClientForForm} onValueChange={setSelectedClientForForm}>
+                  <SelectTrigger data-testid="select-client-dropdown">
+                    <SelectValue placeholder={t('selectClientPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name} ({client.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button variant="outline" onClick={() => setAssignFormModal(false)}>
+                  {t('cancel')}
+                </Button>
+                <Button 
+                  onClick={handleAssignApplicationForm}
+                  className="bg-bayan-navy hover:bg-bayan-navy-light"
+                  data-testid="confirm-assign-form"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  {t('assign')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* View Application Form Modal */}
+      {showApplicationForm && selectedApplicationForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold text-bayan-navy">
+                {t('applicationFormDetails')} - {selectedApplicationForm.company_data?.companyName || t('unknownCompany')}
+              </h2>
+              <Button variant="ghost" size="sm" onClick={() => setShowApplicationForm(false)}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <div className="p-6">
+              <ApplicationForm 
+                initialData={selectedApplicationForm.company_data}
+                readOnly={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

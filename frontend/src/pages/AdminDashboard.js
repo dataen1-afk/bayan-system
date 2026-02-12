@@ -480,8 +480,8 @@ const AdminDashboard = () => {
         {/* Main Header Content */}
         <div className="dashboard-header max-w-full mx-auto px-4 py-3 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="dashboard-header-left flex items-center gap-4">
-            <div className="p-1">
-              <img src="/bayan-logo.png" alt="Bayan" className="h-16 w-auto object-contain" />
+            <div className="-my-2">
+              <img src="/bayan-logo.png" alt="Bayan" className="h-20 w-auto object-contain" />
             </div>
           </div>
           <div className="dashboard-header-right flex gap-2 items-center">

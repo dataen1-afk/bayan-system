@@ -125,6 +125,7 @@ const resources = {
       
       // Demo Credentials
       "demoCredentials": "Demo Credentials",
+      "adminCredentials": "System Administrator Credentials",
       "useTheseCredentials": "Use these credentials to test the system",
       "clickToFill": "Click to fill",
       "adminAccess": "Full access to create forms, quotations, and contracts",

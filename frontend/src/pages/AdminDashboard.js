@@ -126,9 +126,7 @@ const AdminDashboard = () => {
       <header className="bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg border-b-4 border-blue-700">
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <div className="bg-white p-2 rounded-lg shadow-md">
-              <img src="/bayan-logo.png" alt="Bayan" className="h-10 w-auto object-contain" />
-            </div>
+            <img src="/bayan-logo.png" alt="Bayan" className="h-12 w-auto object-contain" />
             <div>
               <h1 className="text-2xl font-bold text-white" data-testid="admin-dashboard-title">{t('adminDashboard')}</h1>
               <p className="text-sm text-blue-100">{t('welcome')}, {user?.name}</p>

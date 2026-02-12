@@ -123,6 +123,116 @@ class Contract(BaseModel):
     pdf_path: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# ================= APPLICATION FORM MODELS =================
+
+class CurrentCertification(BaseModel):
+    system: str = ""
+    body: str = ""
+    validUntil: str = ""
+
+class ApplicationFormData(BaseModel):
+    # Step 1: Company Information
+    dateOfApplication: str = ""
+    companyName: str = ""
+    address: str = ""
+    phoneNumber: str = ""
+    website: str = ""
+    email: str = ""
+    contactPerson: str = ""
+    designation: str = ""
+    mobileNumber: str = ""
+    contactEmail: str = ""
+    legalStatus: str = ""
+    
+    # Step 2: Certification Selection
+    certificationSchemes: List[str] = []
+    certificationProgram: str = ""
+    combinedAudit: str = ""
+    combinedAuditSpecification: str = ""
+    isInternalAuditCombined: str = ""
+    isMRMCombined: str = ""
+    isManualProceduresCombined: str = ""
+    isSystemIntegrated: str = ""
+    
+    # Step 3: Sites & Employees
+    numberOfSites: int = 1
+    site1Address: str = ""
+    site2Address: str = ""
+    totalEmployees: str = ""
+    locationShifts: str = ""
+    fullTimeEmployees: str = ""
+    partTimeEmployees: str = ""
+    temporaryEmployees: str = ""
+    unskilledWorkers: str = ""
+    remoteEmployees: str = ""
+    
+    # Step 4: Existing Certifications
+    isAlreadyCertified: str = ""
+    currentCertifications: List[CurrentCertification] = []
+    isConsultantInvolved: str = ""
+    consultantName: str = ""
+    transferReason: str = ""
+    currentCertificateExpiry: str = ""
+    keyBusinessProcesses: str = ""
+    
+    # Step 5: Management System Requirements
+    # EMS
+    hasEnvironmentAspectRegister: str = ""
+    hasEnvironmentalManual: str = ""
+    hasEnvironmentalAuditProgram: str = ""
+    
+    # FSMS
+    numberOfHACCPStudies: str = ""
+    numberOfProcessLines: str = ""
+    processingType: str = ""
+    
+    # OHSMS
+    hazardsIdentified: str = ""
+    criticalRisks: str = ""
+    
+    # EnMS
+    annualEnergyConsumption: str = ""
+    numberOfEnergySources: str = ""
+    numberOfSEUs: str = ""
+    
+    # Medical Devices
+    productsInRange: str = ""
+    medicalDeviceTypes: List[str] = []
+    sterilizationType: str = ""
+    numberOfDeviceFiles: str = ""
+    applicableLegislations: str = ""
+    exportCountries: str = ""
+    productStandards: str = ""
+    intendedUse: str = ""
+    outsourceProcesses: str = ""
+    
+    # ISMS
+    businessComplexity: str = ""
+    processStandard: str = ""
+    managementSystemLevel: str = ""
+    itEnvironmentComplexity: str = ""
+    outsourcingDependency: str = ""
+    systemDevelopment: str = ""
+    
+    # Step 6: Declaration
+    declarationName: str = ""
+    declarationDesignation: str = ""
+    declarationAgreed: bool = False
+
+class ApplicationFormCreate(BaseModel):
+    client_id: str
+
+class ApplicationForm(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    company_data: Optional[ApplicationFormData] = None
+    status: str = "pending"  # pending, submitted, under_review, approved, rejected
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    submitted_at: Optional[datetime] = None
+
+class ApplicationFormUpdate(BaseModel):
+    company_data: ApplicationFormData
+
 # ================= HELPER FUNCTIONS =================
 
 def hash_password(password: str) -> str:

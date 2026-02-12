@@ -110,67 +110,72 @@ const LoginPage = () => {
       </Card>
 
       {/* Demo Credentials Card */}
-      <Card className="w-full lg:w-1/2 bg-gradient-to-br from-blue-50 to-white border-blue-200">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-blue-900">
+      <Card className="w-full lg:w-1/2 border-2 border-blue-100 shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-blue-200">
+          <CardTitle className="text-xl font-bold text-bayan-blue flex items-center gap-2">
             🔐 {t('demoCredentials')}
           </CardTitle>
-          <CardDescription>{t('useTheseCredentials')}</CardDescription>
+          <CardDescription className="text-bayan-gray">{t('useTheseCredentials')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-6">
           {/* Admin Credentials */}
-          <div className="p-4 bg-white rounded-lg border-2 border-purple-200 hover:border-purple-400 transition-colors cursor-pointer"
+          <div className="p-5 bg-gradient-to-br from-purple-50 to-white rounded-xl border-2 border-purple-300 hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer transform hover:scale-[1.02]"
                onClick={() => { setEmail('admin@test.com'); setPassword('admin123'); }}
                data-testid="admin-credentials-card">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-bold text-purple-900">👨‍💼 {t('admin')}</h3>
-              <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-purple-900 text-lg flex items-center gap-2">
+                <span className="text-2xl">👨‍💼</span> {t('admin')}
+              </h3>
+              <span className="text-xs px-3 py-1.5 bg-purple-500 text-white rounded-full font-semibold shadow-md">
                 {t('clickToFill')}
               </span>
             </div>
-            <div className="space-y-1 text-sm">
+            <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-600">{t('email')}:</span>
-                <code className="text-purple-700 bg-purple-50 px-2 py-1 rounded">admin@test.com</code>
+                <span className="font-semibold text-gray-700 min-w-[80px]">{t('email')}:</span>
+                <code className="text-purple-700 bg-purple-100 px-3 py-1.5 rounded-lg font-mono text-xs">admin@test.com</code>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-600">{t('password')}:</span>
-                <code className="text-purple-700 bg-purple-50 px-2 py-1 rounded">admin123</code>
+                <span className="font-semibold text-gray-700 min-w-[80px]">{t('password')}:</span>
+                <code className="text-purple-700 bg-purple-100 px-3 py-1.5 rounded-lg font-mono text-xs">admin123</code>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-600 mt-3 leading-relaxed">
               {t('adminAccess')}
             </p>
           </div>
 
           {/* Client Credentials */}
-          <div className="p-4 bg-white rounded-lg border-2 border-green-200 hover:border-green-400 transition-colors cursor-pointer"
+          <div className="p-5 bg-gradient-to-br from-green-50 to-white rounded-xl border-2 border-green-300 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer transform hover:scale-[1.02]"
                onClick={() => { setEmail('client@test.com'); setPassword('client123'); }}
                data-testid="client-credentials-card">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-bold text-green-900">👤 {t('client')}</h3>
-              <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-green-900 text-lg flex items-center gap-2">
+                <span className="text-2xl">👤</span> {t('client')}
+              </h3>
+              <span className="text-xs px-3 py-1.5 bg-green-500 text-white rounded-full font-semibold shadow-md">
                 {t('clickToFill')}
               </span>
             </div>
-            <div className="space-y-1 text-sm">
+            <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-600">{t('email')}:</span>
-                <code className="text-green-700 bg-green-50 px-2 py-1 rounded">client@test.com</code>
+                <span className="font-semibold text-gray-700 min-w-[80px]">{t('email')}:</span>
+                <code className="text-green-700 bg-green-100 px-3 py-1.5 rounded-lg font-mono text-xs">client@test.com</code>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-600">{t('password')}:</span>
-                <code className="text-green-700 bg-green-50 px-2 py-1 rounded">client123</code>
+                <span className="font-semibold text-gray-700 min-w-[80px]">{t('password')}:</span>
+                <code className="text-green-700 bg-green-100 px-3 py-1.5 rounded-lg font-mono text-xs">client123</code>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-600 mt-3 leading-relaxed">
               {t('clientAccess')}
             </p>
           </div>
 
-          <div className="pt-2 border-t border-blue-200">
-            <p className="text-xs text-center text-gray-600">
-              💡 {t('clickCredentialsTip')}
+          <div className="pt-3 border-t border-blue-200 bg-blue-50 -mx-6 px-6 -mb-6 pb-6 rounded-b-lg">
+            <p className="text-xs text-center text-bayan-gray flex items-center justify-center gap-2">
+              <span className="text-lg">💡</span>
+              <span>{t('clickCredentialsTip')}</span>
             </p>
           </div>
         </CardContent>

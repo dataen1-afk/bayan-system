@@ -194,6 +194,13 @@ const resources = {
       "myForms": "نماذجي",
       "quotations": "عروض الأسعار",
       "contracts": "العقود",
+      "templates": "القوالب",
+      "reports": "التقارير",
+      "settings": "الإعدادات",
+      "navigation": "التنقل",
+      "comingSoon": "قريباً",
+      "stayTuned": "ترقبوا!",
+      "collapseHint": "انقر على السهم للطي",
       
       // Forms
       "createNewForm": "إنشاء نموذج جديد",

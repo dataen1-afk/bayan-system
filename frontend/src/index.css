@@ -114,48 +114,51 @@ code {
     }
 }
 
-/* RTL Support */
+/* ===========================================
+   RTL/LTR Support - Clean Implementation
+   =========================================== */
+
+/* Base direction settings */
 [dir="rtl"] {
     direction: rtl;
-    text-align: right;
 }
 
 [dir="ltr"] {
     direction: ltr;
-    text-align: left;
 }
 
-/* RTL Header - Keep logo on right, logout on left */
-[dir="rtl"] header .flex.justify-between {
+/* RTL Tabs Alignment - Position tabs on right for Arabic */
+[dir="rtl"] .tabs-container {
+    display: flex;
     flex-direction: row-reverse;
 }
 
-/* RTL Tabs Container - Position tabs on right side */
-[dir="rtl"] .rtl-tabs-wrapper {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
+/* RTL Header layout */
+[dir="rtl"] .header-content {
+    flex-direction: row-reverse;
 }
 
-/* RTL Card content alignment */
-[dir="rtl"] .space-y-2 p,
-[dir="rtl"] .space-y-4 p,
-[dir="rtl"] label {
+/* RTL text alignment for content areas */
+[dir="rtl"] .rtl-text {
     text-align: right;
 }
 
-/* RTL Form layouts */
-[dir="rtl"] .flex.gap-2 {
+[dir="ltr"] .ltr-text {
+    text-align: left;
+}
+
+/* RTL flex reverse for action buttons */
+[dir="rtl"] .rtl-flex-reverse {
     flex-direction: row-reverse;
 }
 
-/* RTL Button icons - swap margin */
-[dir="rtl"] .mr-2 {
-    margin-right: 0;
+/* RTL margin/padding swap utilities */
+[dir="rtl"] .icon-gap {
     margin-left: 0.5rem;
+    margin-right: 0;
 }
 
-[dir="rtl"] .ml-2 {
-    margin-left: 0;
+[dir="ltr"] .icon-gap {
     margin-right: 0.5rem;
+    margin-left: 0;
 }

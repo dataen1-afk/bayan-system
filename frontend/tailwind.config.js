@@ -5,6 +5,10 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
     "./public/index.html"
   ],
+  // Enable RTL support via dir attribute
+  future: {
+    respectDefaultRingColorOpacity: true,
+  },
   theme: {
   	extend: {
   		borderRadius: {

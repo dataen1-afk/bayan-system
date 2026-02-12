@@ -123,8 +123,8 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
           isMobileOpen ? "translate-x-0" : (isRTL ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"),
         )}
         style={{
-          top: '88px', // Below header
-          height: 'calc(100vh - 88px)',
+          top: '96px', // Below header
+          height: 'calc(100vh - 96px)',
           [isRTL ? 'right' : 'left']: 0,
         }}
       >

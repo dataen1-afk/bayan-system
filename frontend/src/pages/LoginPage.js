@@ -65,20 +65,21 @@ const LoginPage = () => {
       <div className="w-full max-w-md">
         {/* Login Form Card */}
         <Card className="w-full border-2 border-blue-100 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-bayan-blue to-blue-600 text-white rounded-t-lg text-center pb-6">
-            {/* Logo inside card header */}
-            <div className="mb-4">
+          <CardHeader className="bg-gradient-to-r from-bayan-blue to-blue-600 text-white rounded-t-lg text-center">
+            <CardTitle className="text-2xl font-bold" data-testid="login-title">{t('login')}</CardTitle>
+            <CardDescription className="text-blue-100">{t('signInToAccount')}</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {/* Logo at top of white area */}
+            <div className="mb-6 text-center">
               <img 
                 src="/bayan-logo.png" 
                 alt="Bayan Auditing & Conformity" 
                 className="h-24 w-auto object-contain mx-auto"
               />
             </div>
-            <CardTitle className="text-2xl font-bold" data-testid="login-title">{t('login')}</CardTitle>
-            <CardDescription className="text-blue-100">{t('signInToAccount')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded" data-testid="login-error">
                 {error}

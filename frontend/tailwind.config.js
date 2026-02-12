@@ -70,7 +70,11 @@ module.exports = {
   			bayan: {
   				navy: '#1E304E',
   				'navy-light': '#2D476D',
-  				'blue-dark': '#1e3a8a',
+  				'gray-dark': '#5E6E7E',
+				'gray-medium': '#7C8E9E',
+				blue: '#1E304E',
+				'blue-light': '#2D476D',
+				'blue-dark': '#1E304E',
   				gold: '#f59e0b',
   				gray: '#64748b'
   			}

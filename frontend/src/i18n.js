@@ -235,6 +235,7 @@ const resources = {
       "quotationCreatedSuccess": "تم إنشاء عرض السعر وإرسال البريد الإلكتروني!",
       "quotationApproved": "تمت الموافقة على عرض السعر!",
       "quotationRejected": "تم رفض عرض السعر!",
+      "modificationsRequested": "تم طلب التعديلات!",
       "errorCreatingForm": "خطأ في إنشاء النموذج:",
       "errorSubmittingForm": "خطأ في إرسال النموذج:",
       "errorCreatingQuotation": "خطأ في إنشاء عرض السعر:",

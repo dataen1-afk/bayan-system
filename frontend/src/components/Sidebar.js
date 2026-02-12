@@ -60,21 +60,21 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
         data-testid={`sidebar-${item.id}`}
         className={cn(
           "sidebar-menu-item w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200",
-          "hover:bg-blue-50 hover:text-bayan-blue",
-          isActive && "bg-blue-100 text-bayan-blue font-semibold shadow-sm",
+          "hover:bg-slate-100 hover:text-bayan-navy",
+          isActive && "bg-slate-100 text-bayan-navy font-semibold shadow-sm",
           !isActive && "text-gray-600",
           isCollapsed && "justify-center px-2",
           isRTL && "flex-row-reverse"
         )}
         title={isCollapsed ? item.label : ''}
       >
-        <Icon className={cn("w-5 h-5 flex-shrink-0", isActive ? 'text-bayan-blue' : item.color)} />
+        <Icon className={cn("w-5 h-5 flex-shrink-0", isActive ? 'text-bayan-navy' : item.color)} />
         {!isCollapsed && (
           <span className="truncate text-sm">{item.label}</span>
         )}
         {isActive && !isCollapsed && (
           <div className={cn(
-            "w-1 h-6 bg-bayan-blue rounded-full",
+            "w-1 h-6 bg-bayan-navy rounded-full",
             isRTL ? "mr-auto" : "ml-auto"
           )} />
         )}

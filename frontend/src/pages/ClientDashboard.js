@@ -13,7 +13,8 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const ClientDashboard = () => {
   const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
+  // Check for RTL - handle both 'ar' and 'ar-XX' variants
+  const isRTL = i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
   const { user, logout } = useContext(AuthContext);
   const [forms, setForms] = useState([]);
   const [quotations, setQuotations] = useState([]);

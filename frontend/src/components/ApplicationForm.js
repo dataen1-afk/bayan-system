@@ -1336,15 +1336,17 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
         </div>
 
         <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSaveDraft}
-            className="flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {t('saveDraft')}
-          </Button>
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSaveDraft}
+              className="flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              {t('saveDraft')}
+            </Button>
+          )}
 
           {currentStep < totalSteps ? (
             <Button
@@ -1358,7 +1360,7 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
               {t('next')}
               {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             </Button>
-          ) : (
+          ) : !readOnly ? (
             <Button
               type="button"
               onClick={handleSubmit}
@@ -1368,7 +1370,7 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
               <Check className="w-4 h-4" />
               {t('submitApplication')}
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

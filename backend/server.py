@@ -622,6 +622,139 @@ async def download_contract(contract_id: str, current_user: dict = Depends(get_c
         media_type='application/pdf'
     )
 
+# ================= USER ROUTES =================
+
+@api_router.get("/users/clients")
+async def get_clients(current_user: dict = Depends(require_admin)):
+    """Get all client users (admin only)"""
+    clients = await db.users.find({"role": UserRole.CLIENT}, {"_id": 0, "password": 0}).to_list(1000)
+    return clients
+
+# ================= APPLICATION FORM ROUTES =================
+
+@api_router.post("/application-forms", response_model=ApplicationForm)
+async def create_application_form(form_data: ApplicationFormCreate, current_user: dict = Depends(require_admin)):
+    """Admin creates and assigns an application form to a client"""
+    # Check if client exists
+    client = await db.users.find_one({"id": form_data.client_id, "role": UserRole.CLIENT})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    form = ApplicationForm(
+        client_id=form_data.client_id
+    )
+    
+    form_doc = form.model_dump()
+    form_doc['created_at'] = form_doc['created_at'].isoformat()
+    if form_doc.get('submitted_at'):
+        form_doc['submitted_at'] = form_doc['submitted_at'].isoformat()
+    
+    await db.application_forms.insert_one(form_doc)
+    return form
+
+@api_router.get("/application-forms", response_model=List[ApplicationForm])
+async def get_application_forms(current_user: dict = Depends(get_current_user)):
+    """Get all application forms (admin sees all, client sees their own)"""
+    query = {}
+    if current_user['role'] == UserRole.CLIENT:
+        query = {"client_id": current_user['user_id']}
+    
+    forms = await db.application_forms.find(query, {"_id": 0}).to_list(1000)
+    
+    for form in forms:
+        if isinstance(form.get('created_at'), str):
+            form['created_at'] = datetime.fromisoformat(form['created_at'])
+        if form.get('submitted_at') and isinstance(form['submitted_at'], str):
+            form['submitted_at'] = datetime.fromisoformat(form['submitted_at'])
+    
+    return forms
+
+@api_router.get("/application-forms/{form_id}", response_model=ApplicationForm)
+async def get_application_form(form_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a specific application form"""
+    form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
+    if not form:
+        raise HTTPException(status_code=404, detail="Application form not found")
+    
+    # Check access
+    if current_user['role'] == UserRole.CLIENT and form['client_id'] != current_user['user_id']:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if isinstance(form.get('created_at'), str):
+        form['created_at'] = datetime.fromisoformat(form['created_at'])
+    if form.get('submitted_at') and isinstance(form['submitted_at'], str):
+        form['submitted_at'] = datetime.fromisoformat(form['submitted_at'])
+    
+    return ApplicationForm(**form)
+
+@api_router.put("/application-forms/{form_id}", response_model=ApplicationForm)
+async def update_application_form(form_id: str, update_data: ApplicationFormUpdate, current_user: dict = Depends(get_current_user)):
+    """Client updates their application form (saves draft)"""
+    form = await db.application_forms.find_one({"id": form_id})
+    if not form:
+        raise HTTPException(status_code=404, detail="Application form not found")
+    
+    # Check access
+    if current_user['role'] == UserRole.CLIENT and form['client_id'] != current_user['user_id']:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Only allow updates if form is pending
+    if form['status'] != 'pending':
+        raise HTTPException(status_code=400, detail="Cannot update a submitted form")
+    
+    # Update form data
+    await db.application_forms.update_one(
+        {"id": form_id},
+        {"$set": {"company_data": update_data.company_data.model_dump()}}
+    )
+    
+    updated_form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
+    if isinstance(updated_form.get('created_at'), str):
+        updated_form['created_at'] = datetime.fromisoformat(updated_form['created_at'])
+    
+    return ApplicationForm(**updated_form)
+
+@api_router.post("/application-forms/{form_id}/submit", response_model=ApplicationForm)
+async def submit_application_form(form_id: str, update_data: ApplicationFormUpdate, current_user: dict = Depends(get_current_user)):
+    """Client submits their completed application form"""
+    form = await db.application_forms.find_one({"id": form_id})
+    if not form:
+        raise HTTPException(status_code=404, detail="Application form not found")
+    
+    # Check access
+    if current_user['role'] == UserRole.CLIENT and form['client_id'] != current_user['user_id']:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Only allow submission if form is pending
+    if form['status'] != 'pending':
+        raise HTTPException(status_code=400, detail="Form has already been submitted")
+    
+    # Validate required fields
+    company_data = update_data.company_data
+    if not company_data.companyName or not company_data.declarationAgreed:
+        raise HTTPException(status_code=400, detail="Company name and declaration agreement are required")
+    
+    # Update and submit
+    submitted_at = datetime.now(timezone.utc)
+    await db.application_forms.update_one(
+        {"id": form_id},
+        {
+            "$set": {
+                "company_data": company_data.model_dump(),
+                "status": "submitted",
+                "submitted_at": submitted_at.isoformat()
+            }
+        }
+    )
+    
+    updated_form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
+    if isinstance(updated_form.get('created_at'), str):
+        updated_form['created_at'] = datetime.fromisoformat(updated_form['created_at'])
+    if isinstance(updated_form.get('submitted_at'), str):
+        updated_form['submitted_at'] = datetime.fromisoformat(updated_form['submitted_at'])
+    
+    return ApplicationForm(**updated_form)
+
 # Include the router in the main app
 app.include_router(api_router)
 

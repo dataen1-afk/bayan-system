@@ -148,14 +148,14 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
         )}>
           {!isCollapsed ? (
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <div className="w-9 h-9 bg-bayan-blue rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs">LB</span>
+              <div className="w-9 h-9 bg-bayan-navy rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xs">BA</span>
               </div>
-              <span className="font-semibold text-gray-800 text-sm">{t('navigation')}</span>
+              <span className="font-semibold text-bayan-navy text-sm">{t('navigation')}</span>
             </div>
           ) : (
-            <div className="w-9 h-9 bg-bayan-blue rounded-lg flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-xs">LB</span>
+            <div className="w-9 h-9 bg-bayan-navy rounded-lg flex items-center justify-center mx-auto">
+              <span className="text-white font-bold text-xs">BA</span>
             </div>
           )}
         </div>

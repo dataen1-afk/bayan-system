@@ -140,20 +140,20 @@ const ClientDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" data-testid="client-dashboard">
       {/* Header */}
       <header className="bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg border-b-4 border-blue-700">
-        <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-          <div className="flex items-center gap-4" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+        <div className="dashboard-header max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className="dashboard-header-left flex items-center gap-4">
             <div className="bg-white rounded-lg p-2 shadow-sm">
               <img src="/bayan-logo.png" alt="Bayan" className="h-10 w-auto object-contain" />
             </div>
-            <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
+            <div>
               <h1 className="text-2xl font-bold text-white" data-testid="client-dashboard-title">{t('clientDashboard')}</h1>
               <p className="text-sm text-blue-100">{t('welcome')}, {user?.name}</p>
             </div>
           </div>
-          <div className="flex gap-2" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+          <div className="dashboard-header-right flex gap-2">
             <LanguageSwitcher />
             <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-white text-bayan-blue hover:bg-blue-50 border-2 border-white font-semibold">
-              <LogOut className="w-4 h-4" style={{ marginRight: isRTL ? 0 : '0.5rem', marginLeft: isRTL ? '0.5rem' : 0 }} />
+              <LogOut className="btn-icon w-4 h-4" />
               {t('logout')}
             </Button>
           </div>
@@ -162,9 +162,9 @@ const ClientDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="forms" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-          {/* RTL-aware tabs container - using w-full and conditional justify */}
-          <div className="w-full flex" style={{ justifyContent: isRTL ? 'flex-end' : 'flex-start' }}>
+        <Tabs defaultValue="forms" className="space-y-6">
+          {/* RTL-aware tabs container */}
+          <div className="tabs-wrapper w-full flex">
             <TabsList className="bg-white shadow-sm border">
               <TabsTrigger value="forms" data-testid="forms-tab" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LogOut, FileText, DollarSign, FileCheck, FolderOpen, BarChart3, Settings, Plus, Eye, X, Send } from 'lucide-react';
+import { LogOut, FileText, DollarSign, FileCheck, FolderOpen, BarChart3, Settings, Plus, Eye, X, Send, Copy, Mail, Link, CheckCircle } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Sidebar from '@/components/Sidebar';
 import ApplicationForm from '@/components/ApplicationForm';
@@ -25,13 +25,23 @@ const AdminDashboard = () => {
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState([]);
 
   // Application Form Modal state
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [selectedApplicationForm, setSelectedApplicationForm] = useState(null);
-  const [assignFormModal, setAssignFormModal] = useState(false);
-  const [selectedClientForForm, setSelectedClientForForm] = useState('');
+  const [createFormModal, setCreateFormModal] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [showFormLinkModal, setShowFormLinkModal] = useState(false);
+  const [createdFormLink, setCreatedFormLink] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  // New client info for form creation
+  const [newClientInfo, setNewClientInfo] = useState({
+    name: '',
+    company_name: '',
+    email: '',
+    phone: ''
+  });
 
   // Form creation state (legacy simple forms)
   const [newForm, setNewForm] = useState({

@@ -115,16 +115,17 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
       <aside
         data-testid="sidebar"
         className={cn(
-          "sidebar-container fixed h-[calc(100vh-64px)] bg-white border-gray-200 shadow-lg z-30 transition-all duration-300 flex flex-col border-t-4 border-t-blue-700",
-          isRTL ? "right-0 border-l" : "left-0 border-r",
+          "sidebar-container bg-white border-gray-200 shadow-lg z-30 transition-all duration-300 flex flex-col border-t-4 border-t-blue-700",
+          isRTL ? "border-l" : "border-r",
           isCollapsed ? "w-16" : "w-64",
-          // Mobile styles
-          "lg:relative lg:translate-x-0",
-          isMobileOpen ? "translate-x-0" : (isRTL ? "translate-x-full" : "-translate-x-full"),
-          "lg:flex"
+          // Desktop: fixed position, Mobile: slide in/out
+          "fixed lg:sticky lg:top-0",
+          isMobileOpen ? "translate-x-0" : (isRTL ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"),
         )}
         style={{
-          top: '64px', // Connect with header's blue border
+          top: '88px', // Header height (92px) minus border overlap (4px)
+          height: 'calc(100vh - 88px)',
+          [isRTL ? 'right' : 'left']: 0,
         }}
       >
         {/* Collapse Toggle Button */}

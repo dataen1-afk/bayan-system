@@ -117,6 +117,20 @@ const LoginPage = () => {
               />
             </div>
 
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-bayan-blue bg-gray-100 border-gray-300 rounded focus:ring-bayan-blue focus:ring-2"
+                data-testid="remember-me-checkbox"
+              />
+              <Label htmlFor="rememberMe" className="text-sm font-medium text-gray-700 cursor-pointer">
+                {t('rememberMe')}
+              </Label>
+            </div>
+
             <Button type="submit" className="w-full bg-bayan-blue hover:bg-bayan-blue-dark text-white font-semibold py-6 text-lg shadow-lg" disabled={loading} data-testid="login-submit-button">
               {loading ? t('signingIn') : t('signIn')}
             </Button>

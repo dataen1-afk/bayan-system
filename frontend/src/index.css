@@ -132,6 +132,7 @@ code {
     width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    float: right !important;
 }
 
 [dir="rtl"] .inline-flex[role="tablist"] {
@@ -139,12 +140,33 @@ code {
     width: auto !important;
     margin-left: auto !important;
     margin-right: 0 !important;
+    float: right !important;
 }
 
 [dir="ltr"] [role="tablist"] {
     justify-content: flex-start !important;
     margin-left: 0 !important;
     margin-right: auto !important;
+    float: left !important;
+}
+
+/* RTL Dashboard Title - FORCE TO RIGHT */
+[dir="rtl"] [data-testid*="dashboard-title"],
+[dir="rtl"] header h1 {
+    text-align: right !important;
+    margin-right: 0 !important;
+    margin-left: auto !important;
+}
+
+/* RTL Main Content Container - ALIGN RIGHT */
+[dir="rtl"] main {
+    direction: rtl !important;
+}
+
+/* RTL Tabs Container Parent - ALIGN RIGHT */
+[dir="rtl"] .space-y-4 {
+    direction: rtl !important;
+    text-align: right !important;
 }
 
 /* RTL Card Headers and Titles - align right */
@@ -154,6 +176,7 @@ code {
 [dir="rtl"] h2,
 [dir="rtl"] h3 {
     text-align: right !important;
+    display: block !important;
 }
 
 /* RTL - Reverse ALL flex containers */
@@ -167,7 +190,6 @@ code {
 
 /* RTL - Align all content right */
 [dir="rtl"] .space-y-2,
-[dir="rtl"] .space-y-4,
 [dir="rtl"] .p-4,
 [dir="rtl"] p,
 [dir="rtl"] div {

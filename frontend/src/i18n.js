@@ -335,7 +335,46 @@ const resources = {
       "enterYourDesignation": "Enter your designation",
       "declarationAgreement": "I confirm that all the information provided is accurate and complete. I understand that providing false information may result in the rejection of this application.",
       "applicationSummary": "Application Summary",
-      "selectedStandards": "Selected Standards"
+      "selectedStandards": "Selected Standards",
+
+      // Application Form Management
+      "certificationApplicationForms": "Certification Application Forms",
+      "manageClientApplications": "Manage and review client certification applications",
+      "assignNewForm": "Assign New Form",
+      "noApplicationFormsYet": "No Application Forms Yet",
+      "assignFirstApplicationForm": "Assign an application form to a client to get started",
+      "applicationFormsEmptyStateHelp": "Application forms allow clients to apply for certifications. Click 'Assign New Form' to send an application to a client.",
+      "selectClientToAssignForm": "Select a client to assign the certification application form",
+      "selectClient": "Select Client",
+      "selectClientPlaceholder": "Choose a client...",
+      "assign": "Assign",
+      "selectClientFirst": "Please select a client first",
+      "applicationFormAssigned": "Application form assigned successfully!",
+      "errorAssigningForm": "Error assigning form:",
+      "view": "View",
+      "applicationFormDetails": "Application Form Details",
+      "unknownCompany": "Unknown Company",
+      "pendingCompanyInfo": "Pending Company Information",
+      "certifications": "Certifications",
+      "selected": "selected",
+      "simpleCustomForms": "Simple Custom Forms",
+      "simpleFormsSubmitted": "Submitted Simple Forms",
+      "under_review": "Under Review",
+      
+      // Client Dashboard Application Forms
+      "certificationApplication": "Certification Application",
+      "fillAssignedForms": "Complete your assigned certification applications",
+      "applicationFormsWillAppearHere": "Certification applications assigned to you will appear here",
+      "clientApplicationFormsEmptyStateHelp": "When an administrator assigns you a certification application, you can fill it out step by step here.",
+      "notStarted": "Not started yet",
+      "continueForm": "Continue Form",
+      "startForm": "Start Form",
+      "otherForms": "Other Forms",
+      "draftSaved": "Draft saved successfully!",
+      "errorSavingDraft": "Error saving draft:",
+      "applicationSubmittedSuccess": "Application submitted successfully!",
+      "errorSubmittingApplication": "Error submitting application:",
+      "contactPerson": "Contact Person"
     }
   },
   ar: {

@@ -141,21 +141,21 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
           <CollapseIcon className="w-4 h-4 text-gray-600" />
         </button>
 
-        {/* Logo/Brand Section */}
+        {/* Dashboard Title Section */}
         <div className={cn(
           "px-4 pt-8 pb-4 border-b border-gray-100",
           isCollapsed && "px-2"
         )}>
           {!isCollapsed ? (
-            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <div className="w-9 h-9 bg-bayan-navy rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs">BA</span>
-              </div>
-              <span className="font-semibold text-bayan-navy text-sm">{t('navigation')}</span>
+            <div className={isRTL ? "text-right" : "text-left"}>
+              <h2 className="text-lg font-bold text-bayan-navy" data-testid="sidebar-dashboard-title">{dashboardTitle}</h2>
+              <p className="text-sm text-bayan-gray-medium mt-1">{t('welcome')}, {userName}</p>
             </div>
           ) : (
-            <div className="w-9 h-9 bg-bayan-navy rounded-lg flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-xs">BA</span>
+            <div className="w-9 h-9 bg-bayan-navy rounded-full flex items-center justify-center mx-auto" title={`${dashboardTitle} - ${userName}`}>
+              <span className="text-white font-bold text-xs">
+                {userName?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
             </div>
           )}
         </div>

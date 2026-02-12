@@ -255,6 +255,7 @@ const resources = {
       
       // Demo Credentials
       "demoCredentials": "بيانات تجريبية",
+      "adminCredentials": "بيانات مدير النظام",
       "useTheseCredentials": "استخدم هذه البيانات لتجربة النظام",
       "clickToFill": "انقر للملء",
       "adminAccess": "صلاحية كاملة لإنشاء النماذج وعروض الأسعار والعقود",

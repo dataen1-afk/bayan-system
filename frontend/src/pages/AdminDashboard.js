@@ -498,7 +498,7 @@ const AdminDashboard = () => {
       </header>
 
       {/* Layout with Sidebar */}
-      <div className="flex pt-[116px]">
+      <div className="flex pt-[88px]">
         <Sidebar 
           activeTab={activeTab} 
           onTabChange={setActiveTab}

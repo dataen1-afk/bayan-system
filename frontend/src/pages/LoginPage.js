@@ -128,6 +128,25 @@ const LoginPage = () => {
             <Button type="submit" className="w-full bg-bayan-blue hover:bg-bayan-blue-dark text-white font-semibold py-6 text-lg shadow-lg" disabled={loading} data-testid="login-submit-button">
               {loading ? t('signingIn') : t('signIn')}
             </Button>
+
+            {/* Admin Credentials Display */}
+            <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+              <div className="text-center mb-3">
+                <h3 className="font-bold text-bayan-blue text-sm flex items-center justify-center gap-2">
+                  <span className="text-lg">👨‍💼</span> {t('adminCredentials')}
+                </h3>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between bg-white p-2 rounded">
+                  <span className="font-semibold text-gray-600">{t('email')}:</span>
+                  <code className="text-bayan-blue font-mono">admin@test.com</code>
+                </div>
+                <div className="flex items-center justify-between bg-white p-2 rounded">
+                  <span className="font-semibold text-gray-600">{t('password')}:</span>
+                  <code className="text-bayan-blue font-mono">admin123</code>
+                </div>
+              </div>
+            </div>
           </form>
         </CardContent>
       </Card>

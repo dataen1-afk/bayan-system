@@ -709,7 +709,46 @@ const resources = {
       "enterYourDesignation": "أدخل مسماك الوظيفي",
       "declarationAgreement": "أؤكد أن جميع المعلومات المقدمة دقيقة وكاملة. أفهم أن تقديم معلومات خاطئة قد يؤدي إلى رفض هذا الطلب.",
       "applicationSummary": "ملخص الطلب",
-      "selectedStandards": "المعايير المختارة"
+      "selectedStandards": "المعايير المختارة",
+
+      // Application Form Management
+      "certificationApplicationForms": "طلبات الاعتماد",
+      "manageClientApplications": "إدارة ومراجعة طلبات اعتماد العملاء",
+      "assignNewForm": "تعيين طلب جديد",
+      "noApplicationFormsYet": "لا توجد طلبات اعتماد بعد",
+      "assignFirstApplicationForm": "قم بتعيين نموذج طلب لعميل للبدء",
+      "applicationFormsEmptyStateHelp": "تتيح نماذج الطلبات للعملاء التقدم للحصول على الشهادات. انقر على 'تعيين طلب جديد' لإرسال طلب إلى عميل.",
+      "selectClientToAssignForm": "اختر عميلاً لتعيين نموذج طلب الاعتماد له",
+      "selectClient": "اختر العميل",
+      "selectClientPlaceholder": "اختر عميلاً...",
+      "assign": "تعيين",
+      "selectClientFirst": "يرجى اختيار عميل أولاً",
+      "applicationFormAssigned": "تم تعيين نموذج الطلب بنجاح!",
+      "errorAssigningForm": "خطأ في تعيين النموذج:",
+      "view": "عرض",
+      "applicationFormDetails": "تفاصيل نموذج الطلب",
+      "unknownCompany": "شركة غير معروفة",
+      "pendingCompanyInfo": "بانتظار معلومات الشركة",
+      "certifications": "الشهادات",
+      "selected": "مختارة",
+      "simpleCustomForms": "نماذج مخصصة بسيطة",
+      "simpleFormsSubmitted": "النماذج البسيطة المرسلة",
+      "under_review": "قيد المراجعة",
+      
+      // Client Dashboard Application Forms
+      "certificationApplication": "طلب الاعتماد",
+      "fillAssignedForms": "أكمل طلبات الاعتماد المعينة لك",
+      "applicationFormsWillAppearHere": "ستظهر طلبات الاعتماد المعينة لك هنا",
+      "clientApplicationFormsEmptyStateHelp": "عندما يعين لك المسؤول طلب اعتماد، يمكنك ملؤه خطوة بخطوة هنا.",
+      "notStarted": "لم يبدأ بعد",
+      "continueForm": "متابعة النموذج",
+      "startForm": "بدء النموذج",
+      "otherForms": "نماذج أخرى",
+      "draftSaved": "تم حفظ المسودة بنجاح!",
+      "errorSavingDraft": "خطأ في حفظ المسودة:",
+      "applicationSubmittedSuccess": "تم إرسال الطلب بنجاح!",
+      "errorSubmittingApplication": "خطأ في إرسال الطلب:",
+      "contactPerson": "جهة الاتصال"
     }
   }
 };

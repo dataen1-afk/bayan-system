@@ -184,7 +184,18 @@ const ClientDashboard = () => {
                 <CardContent>
                   <div className="space-y-2" data-testid="forms-list">
                     {forms.length === 0 ? (
-                      <p className="text-gray-500">{t('noFormsAssigned')}</p>
+                      <div className="text-center py-12">
+                        <div className="mb-4">
+                          <FileText className="w-16 h-16 mx-auto text-gray-300" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-700 mb-2">{t('noFormsYetClient')}</h3>
+                        <p className="text-sm text-gray-500 mb-6">{t('formsWillAppearHere')}</p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                          <p className="text-xs text-blue-800 leading-relaxed">
+                            💡 {t('clientFormsEmptyStateHelp')}
+                          </p>
+                        </div>
+                      </div>
                     ) : (
                       forms.map((form) => (
                         <div key={form.id} className="p-4 border rounded-lg flex justify-between items-center" data-testid={`form-${form.id}`}>
@@ -220,7 +231,18 @@ const ClientDashboard = () => {
               <CardContent>
                 <div className="space-y-2" data-testid="quotations-list">
                   {quotations.length === 0 ? (
-                    <p className="text-gray-500">{t('noQuotationsReceived')}</p>
+                    <div className="text-center py-12">
+                      <div className="mb-4">
+                        <DollarSign className="w-16 h-16 mx-auto text-gray-300" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-700 mb-2">{t('noQuotationsYetClient')}</h3>
+                      <p className="text-sm text-gray-500 mb-6">{t('quotationsWillAppearHere')}</p>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                        <p className="text-xs text-blue-800 leading-relaxed">
+                          💡 {t('clientQuotationsEmptyStateHelp')}
+                        </p>
+                      </div>
+                    </div>
                   ) : (
                     quotations.map((quotation) => (
                       <div key={quotation.id} className="p-4 border rounded-lg" data-testid={`quotation-${quotation.id}`}>
@@ -284,7 +306,18 @@ const ClientDashboard = () => {
               <CardContent>
                 <div className="space-y-2" data-testid="contracts-list">
                   {contracts.length === 0 ? (
-                    <p className="text-gray-500">{t('noContractsAvailable')}</p>
+                    <div className="text-center py-12">
+                      <div className="mb-4">
+                        <FileCheck className="w-16 h-16 mx-auto text-gray-300" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-700 mb-2">{t('noContractsYetClient')}</h3>
+                      <p className="text-sm text-gray-500 mb-6">{t('contractsWillAppearHere')}</p>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                        <p className="text-xs text-blue-800 leading-relaxed">
+                          💡 {t('clientContractsEmptyStateHelp')}
+                        </p>
+                      </div>
+                    </div>
                   ) : (
                     contracts.map((contract) => (
                       <div key={contract.id} className="p-4 border rounded-lg flex justify-between items-center" data-testid={`contract-${contract.id}`}>

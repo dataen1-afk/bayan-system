@@ -143,7 +143,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
 
         {/* Logo/Brand Section */}
         <div className={cn(
-          "px-4 pt-6 pb-4 border-b border-gray-100",
+          "px-4 pt-8 pb-4 border-b border-gray-100",
           isCollapsed && "px-2"
         )}>
           {!isCollapsed ? (

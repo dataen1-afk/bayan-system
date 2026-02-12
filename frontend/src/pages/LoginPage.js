@@ -35,9 +35,24 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4" data-testid="login-page">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4" data-testid="login-page">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
+      </div>
+      
+      {/* Logo Section */}
+      <div className="mb-8 text-center">
+        <img 
+          src="/bayan-logo.jpeg" 
+          alt="Bayan Auditing & Conformity" 
+          className="h-32 w-auto mx-auto mb-4 object-contain"
+        />
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          {t('arabic') === 'العربية' ? 'بيان للتحقق والمطابقة' : 'BAYAN AUDITING & CONFORMITY'}
+        </h1>
+        <p className="text-gray-600 text-sm">
+          {t('serviceContractManagement')}
+        </p>
       </div>
       
       <div className="w-full max-w-4xl flex flex-col lg:flex-row gap-4">

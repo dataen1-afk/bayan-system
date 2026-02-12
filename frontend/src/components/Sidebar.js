@@ -133,7 +133,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
           onClick={() => setIsCollapsed(!isCollapsed)}
           data-testid="sidebar-toggle"
           className={cn(
-            "hidden lg:flex absolute top-20 w-6 h-6 bg-white border border-gray-300 rounded-full items-center justify-center shadow-md hover:bg-gray-50 transition-colors",
+            "hidden lg:flex absolute top-10 w-6 h-6 bg-white border border-gray-300 rounded-full items-center justify-center shadow-md hover:bg-gray-50 transition-colors",
             isRTL ? "-left-3" : "-right-3"
           )}
         >

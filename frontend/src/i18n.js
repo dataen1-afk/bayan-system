@@ -23,6 +23,7 @@ const resources = {
       "alreadyHaveAccount": "Already have an account?",
       "registerHere": "Register here",
       "loginHere": "Login here",
+      "rememberMe": "Remember login details",
       
       // Roles
       "admin": "Admin",

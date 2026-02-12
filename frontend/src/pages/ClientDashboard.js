@@ -242,24 +242,25 @@ const ClientDashboard = () => {
                               <Button 
                                 onClick={() => handleRespondToQuotation(quotation.id, 'approved')}
                                 data-testid={`approve-quotation-${quotation.id}`}
-                                className="bg-green-600 hover:bg-green-700"
+                                className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md"
                               >
-                                {t('approve')}
+                                ✓ {t('approve')}
                               </Button>
                               <Button 
                                 variant="outline"
                                 onClick={() => handleRespondToQuotation(quotation.id, 'modifications_requested')}
                                 data-testid={`modify-quotation-${quotation.id}`}
-                                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                                className="border-2 border-bayan-blue text-bayan-blue hover:bg-blue-50 font-semibold shadow-md"
                               >
-                                {t('requestModifications')}
+                                ✎ {t('requestModifications')}
                               </Button>
                               <Button 
                                 variant="destructive"
                                 onClick={() => handleRespondToQuotation(quotation.id, 'rejected')}
                                 data-testid={`reject-quotation-${quotation.id}`}
+                                className="bg-red-600 hover:bg-red-700 font-semibold shadow-md"
                               >
-                                {t('reject')}
+                                ✕ {t('reject')}
                               </Button>
                             </div>
                           )}

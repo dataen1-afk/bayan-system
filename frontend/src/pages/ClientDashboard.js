@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, FileText, DollarSign, FileCheck, CheckCircle, XCircle, Edit, Settings } from 'lucide-react';
+import { LogOut, FileText, DollarSign, FileCheck, CheckCircle, XCircle, Edit, Settings, ClipboardList, X } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Sidebar from '@/components/Sidebar';
+import ApplicationForm from '@/components/ApplicationForm';
 
 const ClientDashboard = () => {
   const { t, i18n } = useTranslation();
@@ -19,9 +20,11 @@ const ClientDashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('forms');
   const [forms, setForms] = useState([]);
+  const [applicationForms, setApplicationForms] = useState([]);
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [selectedForm, setSelectedForm] = useState(null);
+  const [selectedApplicationForm, setSelectedApplicationForm] = useState(null);
   const [formResponses, setFormResponses] = useState({});
   const [loading, setLoading] = useState(false);
 

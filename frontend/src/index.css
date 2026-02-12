@@ -197,3 +197,38 @@ html[dir="ltr"] .actions-column {
     margin-left: 1rem !important;
     margin-right: 0 !important;
 }
+
+/* ===========================================
+   Sidebar Styles
+   =========================================== */
+
+/* Sidebar container positioning for RTL */
+html[dir="rtl"] .sidebar-container {
+    right: 0 !important;
+    left: auto !important;
+    border-left: 1px solid #e5e7eb !important;
+    border-right: none !important;
+}
+
+html[dir="ltr"] .sidebar-container {
+    left: 0 !important;
+    right: auto !important;
+    border-right: 1px solid #e5e7eb !important;
+    border-left: none !important;
+}
+
+/* Sidebar menu item RTL */
+html[dir="rtl"] .sidebar-menu-item {
+    flex-direction: row-reverse !important;
+    text-align: right !important;
+}
+
+html[dir="ltr"] .sidebar-menu-item {
+    flex-direction: row !important;
+    text-align: left !important;
+}
+
+/* Main content adjustment when sidebar is present */
+html[dir="rtl"] .flex.pt-\\[72px\\] {
+    flex-direction: row-reverse !important;
+}

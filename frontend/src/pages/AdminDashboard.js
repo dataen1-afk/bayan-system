@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LogOut, FileText, DollarSign, FileCheck, FolderOpen, BarChart3, Settings } from 'lucide-react';
+import { LogOut, FileText, DollarSign, FileCheck, FolderOpen, BarChart3, Settings, Plus, Eye, X, Send } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Sidebar from '@/components/Sidebar';
+import ApplicationForm from '@/components/ApplicationForm';
 
 const AdminDashboard = () => {
   const { t, i18n } = useTranslation();

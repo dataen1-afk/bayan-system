@@ -152,6 +152,7 @@ const resources = {
       "alreadyHaveAccount": "لديك حساب بالفعل؟",
       "registerHere": "سجل هنا",
       "loginHere": "سجل الدخول هنا",
+      "rememberMe": "تذكر بيانات الدخول",
       
       // Roles
       "admin": "مدير",

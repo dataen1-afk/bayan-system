@@ -197,87 +197,154 @@ const ClientDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'forms':
-        return selectedForm ? (
-          <Card>
-            <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-              <CardTitle>{t('submitForm')}</CardTitle>
-              <CardDescription>{t('fillOutForm')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmitForm} className="space-y-4">
-                {selectedForm.fields.map((field, index) => (
-                  <div key={index} className="space-y-2">
-                    <Label htmlFor={`field-${index}`} className={isRTL ? 'block text-right' : ''}>
-                      {field.label} {field.required && <span className="text-red-500">*</span>}
-                    </Label>
-                    {field.type === 'textarea' ? (
-                      <Textarea
-                        id={`field-${index}`}
-                        value={formResponses[field.label] || ''}
-                        onChange={(e) => setFormResponses({ ...formResponses, [field.label]: e.target.value })}
-                        required={field.required}
-                        data-testid={`response-${index}`}
-                        className={isRTL ? 'text-right' : ''}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    ) : (
-                      <Input
-                        id={`field-${index}`}
-                        type={field.type}
-                        value={formResponses[field.label] || ''}
-                        onChange={(e) => setFormResponses({ ...formResponses, [field.label]: e.target.value })}
-                        required={field.required}
-                        data-testid={`response-${index}`}
-                        className={isRTL ? 'text-right' : ''}
-                        dir={field.type === 'email' || field.type === 'number' ? 'ltr' : (isRTL ? 'rtl' : 'ltr')}
-                      />
-                    )}
-                  </div>
-                ))}
-                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Button type="submit" data-testid="submit-form-button">{t('submitForm')}</Button>
-                  <Button type="button" variant="outline" onClick={() => setSelectedForm(null)} data-testid="cancel-form-button">
-                    {t('cancel')}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-              <CardTitle>{t('myForms')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2" data-testid="forms-list">
-                {forms.length === 0 ? (
-                  <EmptyState
-                    icon={FileText}
-                    title={t('noFormsYetClient')}
-                    description={t('formsWillAppearHere')}
-                    helpText={t('clientFormsEmptyStateHelp')}
-                  />
-                ) : (
-                  forms.map((form) => (
-                    <div key={form.id} className={`p-4 border rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`form-${form.id}`}>
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <p className="font-semibold">{t('formId')}: {form.id}</p>
-                        <p className="text-sm text-gray-600">{t('fields')}: {form.fields.length}</p>
-                        <div className="mt-1">
-                          <StatusBadge status={form.status} />
+        // Show Application Form wizard if one is selected
+        if (selectedApplicationForm) {
+          return (
+            <div className="relative">
+              <div className="mb-4 flex justify-between items-center">
+                <h3 className="text-xl font-bold text-bayan-navy">{t('certificationApplication')}</h3>
+                <Button variant="outline" onClick={() => setSelectedApplicationForm(null)}>
+                  <X className="w-4 h-4 mr-2" />
+                  {t('cancel')}
+                </Button>
+              </div>
+              <ApplicationForm 
+                initialData={selectedApplicationForm.company_data}
+                onSubmit={handleSubmitApplicationForm}
+                onSaveDraft={handleSaveApplicationDraft}
+              />
+            </div>
+          );
+        }
+
+        return (
+          <div className="space-y-6">
+            {/* Certification Application Forms */}
+            <Card>
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                <CardTitle>{t('certificationApplicationForms')}</CardTitle>
+                <CardDescription>{t('fillAssignedForms')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3" data-testid="application-forms-list">
+                  {applicationForms.length === 0 ? (
+                    <EmptyState
+                      icon={ClipboardList}
+                      title={t('noApplicationFormsYet')}
+                      description={t('applicationFormsWillAppearHere')}
+                      helpText={t('clientApplicationFormsEmptyStateHelp')}
+                    />
+                  ) : (
+                    applicationForms.map((form) => (
+                      <div 
+                        key={form.id} 
+                        className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        data-testid={`application-form-${form.id}`}
+                      >
+                        <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={isRTL ? 'text-right' : 'text-left'}>
+                            <p className="font-semibold text-bayan-navy">
+                              {t('certificationApplication')} #{form.id.slice(0, 8)}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {form.company_data?.companyName ? 
+                                `${t('companyName')}: ${form.company_data.companyName}` : 
+                                t('notStarted')
+                              }
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {t('created')}: {new Date(form.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                            </p>
+                            <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${getStatusBadgeColor(form.status)}`}>
+                              {t(form.status)}
+                            </span>
+                          </div>
+                          {form.status === 'pending' && (
+                            <Button 
+                              onClick={() => setSelectedApplicationForm(form)}
+                              className="bg-bayan-navy hover:bg-bayan-navy-light"
+                              data-testid={`fill-application-form-${form.id}`}
+                            >
+                              {form.company_data ? t('continueForm') : t('startForm')}
+                            </Button>
+                          )}
                         </div>
                       </div>
-                      {form.status === 'pending' && (
-                        <Button onClick={() => setSelectedForm(form)} data-testid={`fill-form-${form.id}`}>
-                          {t('fillForm')}
-                        </Button>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Legacy Simple Forms */}
+            {forms.length > 0 && (
+              <Card>
+                <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                  <CardTitle>{t('otherForms')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2" data-testid="forms-list">
+                    {selectedForm ? (
+                      <form onSubmit={handleSubmitForm} className="space-y-4">
+                        {selectedForm.fields.map((field, index) => (
+                          <div key={index} className="space-y-2">
+                            <Label htmlFor={`field-${index}`} className={isRTL ? 'block text-right' : ''}>
+                              {field.label} {field.required && <span className="text-red-500">*</span>}
+                            </Label>
+                            {field.type === 'textarea' ? (
+                              <Textarea
+                                id={`field-${index}`}
+                                value={formResponses[field.label] || ''}
+                                onChange={(e) => setFormResponses({ ...formResponses, [field.label]: e.target.value })}
+                                required={field.required}
+                                data-testid={`response-${index}`}
+                                className={isRTL ? 'text-right' : ''}
+                                dir={isRTL ? 'rtl' : 'ltr'}
+                              />
+                            ) : (
+                              <Input
+                                id={`field-${index}`}
+                                type={field.type}
+                                value={formResponses[field.label] || ''}
+                                onChange={(e) => setFormResponses({ ...formResponses, [field.label]: e.target.value })}
+                                required={field.required}
+                                data-testid={`response-${index}`}
+                                className={isRTL ? 'text-right' : ''}
+                                dir={field.type === 'email' || field.type === 'number' ? 'ltr' : (isRTL ? 'rtl' : 'ltr')}
+                              />
+                            )}
+                          </div>
+                        ))}
+                        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Button type="submit" data-testid="submit-form-button">{t('submitForm')}</Button>
+                          <Button type="button" variant="outline" onClick={() => setSelectedForm(null)} data-testid="cancel-form-button">
+                            {t('cancel')}
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      forms.map((form) => (
+                        <div key={form.id} className={`p-4 border rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`form-${form.id}`}>
+                          <div className={isRTL ? 'text-right' : 'text-left'}>
+                            <p className="font-semibold">{t('formId')}: {form.id}</p>
+                            <p className="text-sm text-gray-600">{t('fields')}: {form.fields.length}</p>
+                            <div className="mt-1">
+                              <StatusBadge status={form.status} />
+                            </div>
+                          </div>
+                          {form.status === 'pending' && (
+                            <Button onClick={() => setSelectedForm(form)} data-testid={`fill-form-${form.id}`}>
+                              {t('fillForm')}
+                            </Button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         );
 
       case 'quotations':

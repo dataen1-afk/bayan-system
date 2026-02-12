@@ -354,25 +354,28 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" data-testid="client-dashboard">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg">
-        <div className="dashboard-header max-w-full mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
+        {/* Main Header Content */}
+        <div className="dashboard-header max-w-full mx-auto px-4 py-3 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="dashboard-header-left flex items-center gap-4">
-            <div className="p-2">
-              <img src="/bayan-logo.png" alt="Bayan" className="h-14 w-auto object-contain drop-shadow-lg" />
+            <div className="p-1">
+              <img src="/bayan-logo.png" alt="Bayan" className="h-16 w-auto object-contain" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white" data-testid="client-dashboard-title">{t('clientDashboard')}</h1>
-              <p className="text-sm text-blue-100">{t('welcome')}, {user?.name}</p>
+              <h1 className="text-xl font-bold text-bayan-navy" data-testid="client-dashboard-title">{t('clientDashboard')}</h1>
+              <p className="text-sm text-bayan-gray-medium">{t('welcome')}, {user?.name}</p>
             </div>
           </div>
           <div className="dashboard-header-right flex gap-2 items-center">
             <LanguageSwitcher />
-            <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-white text-bayan-blue hover:bg-blue-50 border-2 border-white font-semibold">
+            <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-bayan-navy text-white hover:bg-bayan-navy-light border-bayan-navy font-semibold">
               <LogOut className="btn-icon w-4 h-4" />
               {t('logout')}
             </Button>
           </div>
         </div>
+        {/* Navy Accent Bar */}
+        <div className="h-1.5 bg-gradient-to-r from-bayan-navy via-bayan-navy-light to-bayan-navy"></div>
       </header>
 
       {/* Layout with Sidebar */}

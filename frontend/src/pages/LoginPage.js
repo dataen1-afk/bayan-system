@@ -62,22 +62,18 @@ const LoginPage = () => {
         <LanguageSwitcher />
       </div>
       
-      {/* Logo Section */}
-      <div className="mb-8 text-center">
-        <img 
-          src="/bayan-logo.png" 
-          alt="Bayan Auditing & Conformity" 
-          className="h-32 w-auto object-contain mx-auto mb-4"
-        />
-        <p className="text-bayan-gray text-base font-medium">
-          {t('serviceContractManagement')}
-        </p>
-      </div>
-      
       <div className="w-full max-w-md">
         {/* Login Form Card */}
         <Card className="w-full border-2 border-blue-100 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-bayan-blue to-blue-600 text-white rounded-t-lg">
+          <CardHeader className="bg-gradient-to-r from-bayan-blue to-blue-600 text-white rounded-t-lg text-center pb-6">
+            {/* Logo inside card header */}
+            <div className="mb-4">
+              <img 
+                src="/bayan-logo.png" 
+                alt="Bayan Auditing & Conformity" 
+                className="h-24 w-auto object-contain mx-auto"
+              />
+            </div>
             <CardTitle className="text-2xl font-bold" data-testid="login-title">{t('login')}</CardTitle>
             <CardDescription className="text-blue-100">{t('signInToAccount')}</CardDescription>
           </CardHeader>

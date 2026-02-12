@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null }) => {
+const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly = false }) => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language?.startsWith('ar');
   

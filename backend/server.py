@@ -271,6 +271,40 @@ def decode_jwt_token(token: str) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+async def send_email(to: str, subject: str, body: str):
+    """Send email using SMTP (mock implementation - logs to console)"""
+    # For production, configure SMTP settings
+    smtp_host = os.environ.get('SMTP_HOST', '')
+    smtp_port = int(os.environ.get('SMTP_PORT', 587))
+    smtp_user = os.environ.get('SMTP_USER', '')
+    smtp_pass = os.environ.get('SMTP_PASS', '')
+    
+    if smtp_host and smtp_user and smtp_pass:
+        # Real email sending
+        message = MIMEMultipart()
+        message["From"] = smtp_user
+        message["To"] = to
+        message["Subject"] = subject
+        message.attach(MIMEText(body, "plain", "utf-8"))
+        
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=smtp_host,
+                port=smtp_port,
+                username=smtp_user,
+                password=smtp_pass,
+                start_tls=True
+            )
+            logging.info(f"Email sent successfully to {to}")
+        except Exception as e:
+            logging.error(f"Failed to send email: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+    else:
+        # Mock email - just log it
+        logging.info(f"[MOCK EMAIL] To: {to}, Subject: {subject}")
+        logging.info(f"[MOCK EMAIL] Body: {body[:200]}...")
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     token = credentials.credentials
     payload = decode_jwt_token(token)

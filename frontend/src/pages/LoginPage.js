@@ -66,7 +66,7 @@ const LoginPage = () => {
       <div className="mb-8 text-center">
         <div className="bg-white p-6 rounded-2xl shadow-lg mb-4 inline-block">
           <img 
-            src="/bayan-logo.jpeg" 
+            src="/bayan-logo.png" 
             alt="Bayan Auditing & Conformity" 
             className="h-24 w-auto object-contain"
           />

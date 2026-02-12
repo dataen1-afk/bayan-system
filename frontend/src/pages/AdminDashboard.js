@@ -127,7 +127,7 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className="bg-white p-2 rounded-lg shadow-md">
-              <img src="/bayan-logo.jpeg" alt="Bayan" className="h-10 w-auto object-contain" />
+              <img src="/bayan-logo.png" alt="Bayan" className="h-10 w-auto object-contain" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white" data-testid="admin-dashboard-title">{t('adminDashboard')}</h1>

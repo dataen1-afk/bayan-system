@@ -45,14 +45,16 @@ const ClientDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [formsRes, quotationsRes, contractsRes] = await Promise.all([
+      const [formsRes, quotationsRes, contractsRes, applicationFormsRes] = await Promise.all([
         axios.get(`${API}/forms`),
         axios.get(`${API}/quotations`),
-        axios.get(`${API}/contracts`)
+        axios.get(`${API}/contracts`),
+        axios.get(`${API}/application-forms`)
       ]);
       setForms(formsRes.data);
       setQuotations(quotationsRes.data);
       setContracts(contractsRes.data);
+      setApplicationForms(applicationFormsRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

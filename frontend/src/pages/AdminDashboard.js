@@ -278,12 +278,12 @@ const AdminDashboard = () => {
                     <CardDescription>{t('manageClientApplications')}</CardDescription>
                   </div>
                   <Button 
-                    onClick={() => setAssignFormModal(true)} 
-                    data-testid="assign-form-button"
+                    onClick={() => setCreateFormModal(true)} 
+                    data-testid="create-form-button"
                     className="bg-bayan-navy hover:bg-bayan-navy-light"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    {t('assignNewForm')}
+                    {t('createNewApplicationForm')}
                   </Button>
                 </div>
               </CardHeader>
@@ -293,7 +293,7 @@ const AdminDashboard = () => {
                     <EmptyState
                       icon={FileText}
                       title={t('noApplicationFormsYet')}
-                      description={t('assignFirstApplicationForm')}
+                      description={t('createFirstApplicationForm')}
                       helpText={t('applicationFormsEmptyStateHelp')}
                     />
                   ) : (
@@ -306,18 +306,52 @@ const AdminDashboard = () => {
                         <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className={isRTL ? 'text-right' : 'text-left'}>
                             <p className="font-semibold text-bayan-navy">
-                              {form.company_data?.companyName || t('pendingCompanyInfo')}
+                              {form.client_info?.company_name || t('unknownCompany')}
                             </p>
-                            <p className="text-sm text-gray-600">{t('formId')}: {form.id.slice(0, 8)}...</p>
-                            <p className="text-sm text-gray-600">{t('clientId')}: {form.client_id.slice(0, 8)}...</p>
                             <p className="text-sm text-gray-600">
-                              {t('certifications')}: {form.company_data?.certificationSchemes?.length || 0} {t('selected')}
+                              <span className="font-medium">{t('clientName')}:</span> {form.client_info?.name}
                             </p>
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">{t('email')}:</span> {form.client_info?.email}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">{t('phone')}:</span> {form.client_info?.phone}
+                            </p>
+                            {form.company_data?.certificationSchemes?.length > 0 && (
+                              <p className="text-sm text-gray-600">
+                                {t('certifications')}: {form.company_data.certificationSchemes.length} {t('selected')}
+                              </p>
+                            )}
                             <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${getStatusBadgeColor(form.status)}`}>
                               {t(form.status)}
                             </span>
                           </div>
-                          <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex flex-col gap-2 ${isRTL ? 'items-start' : 'items-end'}`}>
+                            {form.status === 'pending' && (
+                              <>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => copyFormLink(form)}
+                                  data-testid={`copy-link-${form.id}`}
+                                  className="w-full"
+                                >
+                                  <Copy className="w-4 h-4 mr-1" />
+                                  {t('copyLink')}
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleSendEmail(form.id)}
+                                  disabled={sendingEmail}
+                                  data-testid={`send-email-${form.id}`}
+                                  className="w-full"
+                                >
+                                  <Mail className="w-4 h-4 mr-1" />
+                                  {t('sendEmail')}
+                                </Button>
+                              </>
+                            )}
                             {form.status === 'submitted' && (
                               <Button 
                                 variant="outline" 

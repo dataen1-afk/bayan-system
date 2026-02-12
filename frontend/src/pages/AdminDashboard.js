@@ -147,20 +147,22 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="forms" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="forms" data-testid="forms-tab">
-              <FileText className="w-4 h-4 mr-2" />
-              {t('forms')}
-            </TabsTrigger>
-            <TabsTrigger value="quotations" data-testid="quotations-tab">
-              <DollarSign className="w-4 h-4 mr-2" />
-              {t('quotations')}
-            </TabsTrigger>
-            <TabsTrigger value="contracts" data-testid="contracts-tab">
-              <FileCheck className="w-4 h-4 mr-2" />
-              {t('contracts')}
-            </TabsTrigger>
-          </TabsList>
+          <div className="rtl-tabs-wrapper">
+            <TabsList>
+              <TabsTrigger value="forms" data-testid="forms-tab">
+                <FileText className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                {t('forms')}
+              </TabsTrigger>
+              <TabsTrigger value="quotations" data-testid="quotations-tab">
+                <DollarSign className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                {t('quotations')}
+              </TabsTrigger>
+              <TabsTrigger value="contracts" data-testid="contracts-tab">
+                <FileCheck className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                {t('contracts')}
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Forms Tab */}
           <TabsContent value="forms" className="space-y-4">

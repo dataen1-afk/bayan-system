@@ -39,6 +39,13 @@ const resources = {
       "myForms": "My Forms",
       "quotations": "Quotations",
       "contracts": "Contracts",
+      "templates": "Templates",
+      "reports": "Reports",
+      "settings": "Settings",
+      "navigation": "Navigation",
+      "comingSoon": "Coming Soon",
+      "stayTuned": "Stay Tuned!",
+      "collapseHint": "Click the arrow to collapse",
       
       // Forms
       "createNewForm": "Create New Form",

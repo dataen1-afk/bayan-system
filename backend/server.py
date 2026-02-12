@@ -219,12 +219,19 @@ class ApplicationFormData(BaseModel):
     declarationDesignation: str = ""
     declarationAgreed: bool = False
 
+class ClientInfo(BaseModel):
+    name: str
+    company_name: str
+    email: EmailStr
+    phone: str
+
 class ApplicationFormCreate(BaseModel):
-    client_id: str
+    client_info: ClientInfo
 
 class ApplicationForm(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_id: str
+    access_token: str = Field(default_factory=lambda: str(uuid.uuid4()))  # Public access token
+    client_info: ClientInfo
     company_data: Optional[ApplicationFormData] = None
     status: str = "pending"  # pending, submitted, under_review, approved, rejected
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -232,6 +239,12 @@ class ApplicationForm(BaseModel):
 
 class ApplicationFormUpdate(BaseModel):
     company_data: ApplicationFormData
+
+class PublicApplicationFormResponse(BaseModel):
+    id: str
+    client_info: ClientInfo
+    company_data: Optional[ApplicationFormData] = None
+    status: str
 
 # ================= HELPER FUNCTIONS =================
 

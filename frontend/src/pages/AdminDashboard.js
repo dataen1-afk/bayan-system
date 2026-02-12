@@ -13,12 +13,12 @@ import { LogOut, FileText, DollarSign, FileCheck } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const AdminDashboard = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const { user, logout } = useContext(AuthContext);
   const [forms, setForms] = useState([]);
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Form creation state
@@ -120,24 +120,40 @@ const AdminDashboard = () => {
     }
   };
 
+  // Empty state component
+  const EmptyState = ({ icon: Icon, title, description, helpText }) => (
+    <div className="text-center py-12">
+      <div className="mb-4">
+        <Icon className="w-16 h-16 mx-auto text-gray-300" />
+      </div>
+      <h3 className="text-lg font-semibold text-gray-700 mb-2">{title}</h3>
+      <p className="text-sm text-gray-500 mb-6">{description}</p>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+        <p className="text-xs text-blue-800 leading-relaxed">
+          💡 {helpText}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" data-testid="admin-dashboard">
       {/* Header */}
       <header className="bg-gradient-to-r from-bayan-blue to-blue-600 shadow-lg border-b-4 border-blue-700">
-        <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
+        <div className={`max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <div className="bg-white rounded-lg p-2 shadow-sm">
               <img src="/bayan-logo.png" alt="Bayan" className="h-10 w-auto object-contain" />
             </div>
-            <div>
+            <div className={isRTL ? 'text-right' : 'text-left'}>
               <h1 className="text-2xl font-bold text-white" data-testid="admin-dashboard-title">{t('adminDashboard')}</h1>
               <p className="text-sm text-blue-100">{t('welcome')}, {user?.name}</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <LanguageSwitcher />
             <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-white text-bayan-blue hover:bg-blue-50 border-2 border-white font-semibold">
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {t('logout')}
             </Button>
           </div>
@@ -146,20 +162,21 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="forms" className="space-y-4">
-          <div className="rtl-tabs-wrapper">
-            <TabsList>
-              <TabsTrigger value="forms" data-testid="forms-tab">
-                <FileText className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                {t('forms')}
+        <Tabs defaultValue="forms" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+          {/* RTL-aware tabs container */}
+          <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
+            <TabsList className="bg-white shadow-sm border">
+              <TabsTrigger value="forms" data-testid="forms-tab" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <FileText className="w-4 h-4" />
+                <span>{t('forms')}</span>
               </TabsTrigger>
-              <TabsTrigger value="quotations" data-testid="quotations-tab">
-                <DollarSign className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                {t('quotations')}
+              <TabsTrigger value="quotations" data-testid="quotations-tab" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <DollarSign className="w-4 h-4" />
+                <span>{t('quotations')}</span>
               </TabsTrigger>
-              <TabsTrigger value="contracts" data-testid="contracts-tab">
-                <FileCheck className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                {t('contracts')}
+              <TabsTrigger value="contracts" data-testid="contracts-tab" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <FileCheck className="w-4 h-4" />
+                <span>{t('contracts')}</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -167,14 +184,14 @@ const AdminDashboard = () => {
           {/* Forms Tab */}
           <TabsContent value="forms" className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle>{t('createNewForm')}</CardTitle>
                 <CardDescription>{t('createCustomForm')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateForm} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="client_id">{t('clientId')}</Label>
+                    <Label htmlFor="client_id" className={isRTL ? 'block text-right' : ''}>{t('clientId')}</Label>
                     <Input
                       id="client_id"
                       value={newForm.client_id}
@@ -182,13 +199,15 @@ const AdminDashboard = () => {
                       placeholder={t('enterClientId')}
                       required
                       data-testid="form-client-id-input"
+                      className={isRTL ? 'text-right' : ''}
+                      dir={isRTL ? 'rtl' : 'ltr'}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>{t('formFields')}</Label>
+                    <Label className={isRTL ? 'block text-right' : ''}>{t('formFields')}</Label>
                     {newForm.fields.map((field, index) => (
-                      <div key={index} className="flex gap-2 items-end">
+                      <div key={index} className={`flex gap-2 items-end ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className="flex-1">
                           <Input
                             placeholder={t('fieldLabel')}
@@ -196,6 +215,8 @@ const AdminDashboard = () => {
                             onChange={(e) => updateFormField(index, 'label', e.target.value)}
                             required
                             data-testid={`field-label-${index}`}
+                            className={isRTL ? 'text-right' : ''}
+                            dir={isRTL ? 'rtl' : 'ltr'}
                           />
                         </div>
                         <div className="w-40">
@@ -237,29 +258,23 @@ const AdminDashboard = () => {
             </Card>
 
             <Card>
-              <CardHeader>
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle>{t('allForms')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2" data-testid="forms-list">
                   {forms.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="mb-4">
-                        <FileText className="w-16 h-16 mx-auto text-gray-300" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-700 mb-2">{t('noFormsYet')}</h3>
-                      <p className="text-sm text-gray-500 mb-6">{t('createFirstForm')}</p>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
-                        <p className="text-xs text-blue-800 leading-relaxed">
-                          💡 {t('formsEmptyStateHelp')}
-                        </p>
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon={FileText}
+                      title={t('noFormsYet')}
+                      description={t('createFirstForm')}
+                      helpText={t('formsEmptyStateHelp')}
+                    />
                   ) : (
                     forms.map((form) => (
-                      <div key={form.id} className="p-4 border rounded-lg" data-testid={`form-${form.id}`}>
-                        <div className="flex justify-between">
-                          <div>
+                      <div key={form.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors" data-testid={`form-${form.id}`}>
+                        <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={isRTL ? 'text-right' : 'text-left'}>
                             <p className="font-semibold">{t('formId')}: {form.id}</p>
                             <p className="text-sm text-gray-600">{t('client')}: {form.client_id}</p>
                             <p className="text-sm text-gray-600">{t('status')}: {t(form.status)}</p>
@@ -277,14 +292,14 @@ const AdminDashboard = () => {
           {/* Quotations Tab */}
           <TabsContent value="quotations" className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle>{t('createQuotation')}</CardTitle>
                 <CardDescription>{t('createQuotationFor')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateQuotation} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="form_id">{t('formId')}</Label>
+                    <Label htmlFor="form_id" className={isRTL ? 'block text-right' : ''}>{t('formId')}</Label>
                     <Input
                       id="form_id"
                       value={newQuotation.form_id}
@@ -292,11 +307,13 @@ const AdminDashboard = () => {
                       placeholder={t('enterFormId')}
                       required
                       data-testid="quotation-form-id-input"
+                      className={isRTL ? 'text-right' : ''}
+                      dir={isRTL ? 'rtl' : 'ltr'}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="q_client_id">{t('clientId')}</Label>
+                    <Label htmlFor="q_client_id" className={isRTL ? 'block text-right' : ''}>{t('clientId')}</Label>
                     <Input
                       id="q_client_id"
                       value={newQuotation.client_id}
@@ -304,11 +321,13 @@ const AdminDashboard = () => {
                       placeholder={t('enterClientId')}
                       required
                       data-testid="quotation-client-id-input"
+                      className={isRTL ? 'text-right' : ''}
+                      dir={isRTL ? 'rtl' : 'ltr'}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="client_email">{t('clientEmail')}</Label>
+                    <Label htmlFor="client_email" className={isRTL ? 'block text-right' : ''}>{t('clientEmail')}</Label>
                     <Input
                       id="client_email"
                       type="email"
@@ -317,11 +336,12 @@ const AdminDashboard = () => {
                       placeholder="client@example.com"
                       required
                       data-testid="quotation-client-email-input"
+                      dir="ltr"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price">{t('price')}</Label>
+                    <Label htmlFor="price" className={isRTL ? 'block text-right' : ''}>{t('price')}</Label>
                     <Input
                       id="price"
                       type="number"
@@ -331,11 +351,12 @@ const AdminDashboard = () => {
                       placeholder="1000.00"
                       required
                       data-testid="quotation-price-input"
+                      dir="ltr"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="details">{t('details')}</Label>
+                    <Label htmlFor="details" className={isRTL ? 'block text-right' : ''}>{t('details')}</Label>
                     <Textarea
                       id="details"
                       value={newQuotation.details}
@@ -344,6 +365,8 @@ const AdminDashboard = () => {
                       rows={4}
                       required
                       data-testid="quotation-details-input"
+                      className={isRTL ? 'text-right' : ''}
+                      dir={isRTL ? 'rtl' : 'ltr'}
                     />
                   </div>
 
@@ -353,29 +376,23 @@ const AdminDashboard = () => {
             </Card>
 
             <Card>
-              <CardHeader>
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle>{t('allQuotations')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2" data-testid="quotations-list">
                   {quotations.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="mb-4">
-                        <DollarSign className="w-16 h-16 mx-auto text-gray-300" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-700 mb-2">{t('noQuotationsYet')}</h3>
-                      <p className="text-sm text-gray-500 mb-6">{t('createFirstQuotation')}</p>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
-                        <p className="text-xs text-blue-800 leading-relaxed">
-                          💡 {t('quotationsEmptyStateHelp')}
-                        </p>
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon={DollarSign}
+                      title={t('noQuotationsYet')}
+                      description={t('createFirstQuotation')}
+                      helpText={t('quotationsEmptyStateHelp')}
+                    />
                   ) : (
                     quotations.map((quotation) => (
-                      <div key={quotation.id} className="p-4 border rounded-lg" data-testid={`quotation-${quotation.id}`}>
-                        <div className="flex justify-between">
-                          <div>
+                      <div key={quotation.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors" data-testid={`quotation-${quotation.id}`}>
+                        <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={isRTL ? 'text-right' : 'text-left'}>
                             <p className="font-semibold">{t('quotationId')}: {quotation.id}</p>
                             <p className="text-sm text-gray-600">{t('form')}: {quotation.form_id}</p>
                             <p className="text-sm text-gray-600">{t('client')}: {quotation.client_id}</p>
@@ -402,28 +419,22 @@ const AdminDashboard = () => {
           {/* Contracts Tab */}
           <TabsContent value="contracts">
             <Card>
-              <CardHeader>
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle>{t('allContracts')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2" data-testid="contracts-list">
                   {contracts.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="mb-4">
-                        <FileCheck className="w-16 h-16 mx-auto text-gray-300" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-700 mb-2">{t('noContractsYet')}</h3>
-                      <p className="text-sm text-gray-500 mb-6">{t('contractsAutoGenerated')}</p>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
-                        <p className="text-xs text-blue-800 leading-relaxed">
-                          💡 {t('contractsEmptyStateHelp')}
-                        </p>
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon={FileCheck}
+                      title={t('noContractsYet')}
+                      description={t('contractsAutoGenerated')}
+                      helpText={t('contractsEmptyStateHelp')}
+                    />
                   ) : (
                     contracts.map((contract) => (
-                      <div key={contract.id} className="p-4 border rounded-lg flex justify-between items-center" data-testid={`contract-${contract.id}`}>
-                        <div>
+                      <div key={contract.id} className={`p-4 border rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`} data-testid={`contract-${contract.id}`}>
+                        <div className={isRTL ? 'text-right' : 'text-left'}>
                           <p className="font-semibold">{t('contractId')}: {contract.id}</p>
                           <p className="text-sm text-gray-600">{t('quotation')}: {contract.quotation_id}</p>
                           <p className="text-sm text-gray-600">{t('client')}: {contract.client_id}</p>

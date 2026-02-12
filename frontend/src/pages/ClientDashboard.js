@@ -61,7 +61,10 @@ const ClientDashboard = () => {
   const handleRespondToQuotation = async (quotationId, status) => {
     try {
       await axios.post(`${API}/quotations/${quotationId}/respond`, { status });
-      alert(t(status === 'approved' ? 'quotationApproved' : 'quotationRejected'));
+      const messageKey = status === 'approved' ? 'quotationApproved' : 
+                         status === 'rejected' ? 'quotationRejected' : 
+                         'modificationsRequested';
+      alert(t(messageKey));
       loadData();
     } catch (error) {
       alert(t('errorRespondingQuotation') + ' ' + (error.response?.data?.detail || error.message));

@@ -86,8 +86,10 @@ const resources = {
       "form": "Form",
       "approved": "approved",
       "rejected": "rejected",
+      "modificationsRequested": "modifications requested",
       "approve": "Approve",
       "reject": "Reject",
+      "requestModifications": "Request Modifications",
       
       // Contracts
       "allContracts": "All Contracts",

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const Sidebar = ({ activeTab, onTabChange, userRole = 'admin' }) => {
+const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboardTitle }) => {
   const { t, i18n } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);

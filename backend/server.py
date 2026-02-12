@@ -440,7 +440,7 @@ async def respond_to_quotation(quotation_id: str, response: QuotationResponse, c
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Validate status
-    if response.status not in ["approved", "rejected"]:
+    if response.status not in ["approved", "rejected", "modifications_requested"]:
         raise HTTPException(status_code=400, detail="Invalid status")
     
     # Update quotation

@@ -241,6 +241,9 @@ const resources = {
       "english": "English",
       "arabic": "العربية",
       
+      // Company
+      "serviceContractManagement": "نظام إدارة عقود الخدمات",
+      
       // Demo Credentials
       "demoCredentials": "بيانات تجريبية",
       "useTheseCredentials": "استخدم هذه البيانات لتجربة النظام",

@@ -118,81 +118,83 @@ code {
    RTL/LTR Support - Clean Implementation
    =========================================== */
 
-/* Base direction settings */
-[dir="rtl"] {
-    direction: rtl;
-}
+@layer utilities {
+    /* Base direction settings */
+    [dir="rtl"] {
+        direction: rtl;
+    }
 
-[dir="ltr"] {
-    direction: ltr;
-}
+    [dir="ltr"] {
+        direction: ltr;
+    }
 
-/* RTL Header layout - Force elements to right */
-[dir="rtl"] .dashboard-header {
-    flex-direction: row-reverse !important;
-}
+    /* RTL Header layout - Force elements to right */
+    [dir="rtl"] .dashboard-header {
+        flex-direction: row-reverse !important;
+    }
 
-[dir="rtl"] .dashboard-header-left {
-    flex-direction: row-reverse !important;
-    text-align: right !important;
-}
+    [dir="rtl"] .dashboard-header-left {
+        flex-direction: row-reverse !important;
+        text-align: right !important;
+    }
 
-[dir="rtl"] .dashboard-header-right {
-    flex-direction: row-reverse !important;
-}
+    [dir="rtl"] .dashboard-header-right {
+        flex-direction: row-reverse !important;
+    }
 
-/* RTL Tabs Container - Position tabs on right side */
-[dir="rtl"] .tabs-wrapper {
-    justify-content: flex-end !important;
-}
+    /* RTL Tabs Container - Position tabs on right side */
+    [dir="rtl"] .tabs-wrapper {
+        justify-content: flex-end !important;
+    }
 
-[dir="ltr"] .tabs-wrapper {
-    justify-content: flex-start !important;
-}
+    [dir="ltr"] .tabs-wrapper {
+        justify-content: flex-start !important;
+    }
 
-/* RTL Card content alignment */
-[dir="rtl"] .card-header-rtl {
-    text-align: right !important;
-}
+    /* RTL Card content alignment */
+    [dir="rtl"] .card-header-rtl {
+        text-align: right !important;
+    }
 
-[dir="ltr"] .card-header-rtl {
-    text-align: left !important;
-}
+    [dir="ltr"] .card-header-rtl {
+        text-align: left !important;
+    }
 
-/* RTL Form layouts */
-[dir="rtl"] .form-row {
-    flex-direction: row-reverse !important;
-}
+    /* RTL Form layouts */
+    [dir="rtl"] .form-row {
+        flex-direction: row-reverse !important;
+    }
 
-/* RTL list items */
-[dir="rtl"] .list-item-rtl {
-    flex-direction: row-reverse !important;
-    text-align: right !important;
-}
+    /* RTL list items */
+    [dir="rtl"] .list-item-rtl {
+        flex-direction: row-reverse !important;
+        text-align: right !important;
+    }
 
-[dir="ltr"] .list-item-rtl {
-    flex-direction: row !important;
-    text-align: left !important;
-}
+    [dir="ltr"] .list-item-rtl {
+        flex-direction: row !important;
+        text-align: left !important;
+    }
 
-/* RTL Button icon margins */
-[dir="rtl"] .btn-icon {
-    margin-left: 0.5rem !important;
-    margin-right: 0 !important;
-}
+    /* RTL Button icon margins */
+    [dir="rtl"] .btn-icon {
+        margin-left: 0.5rem !important;
+        margin-right: 0 !important;
+    }
 
-[dir="ltr"] .btn-icon {
-    margin-right: 0.5rem !important;
-    margin-left: 0 !important;
-}
+    [dir="ltr"] .btn-icon {
+        margin-right: 0.5rem !important;
+        margin-left: 0 !important;
+    }
 
-/* RTL Actions column */
-[dir="rtl"] .actions-column {
-    margin-right: 1rem !important;
-    margin-left: 0 !important;
-}
+    /* RTL Actions column */
+    [dir="rtl"] .actions-column {
+        margin-right: 1rem !important;
+        margin-left: 0 !important;
+    }
 
-[dir="ltr"] .actions-column {
-    margin-left: 1rem !important;
-    margin-right: 0 !important;
+    [dir="ltr"] .actions-column {
+        margin-left: 1rem !important;
+        margin-right: 0 !important;
+    }
 }

@@ -211,8 +211,10 @@ const resources = {
       "form": "النموذج",
       "approved": "موافق عليه",
       "rejected": "مرفوض",
+      "modificationsRequested": "طلب تعديلات",
       "approve": "موافقة",
       "reject": "رفض",
+      "requestModifications": "طلب تعديلات",
       
       // Contracts
       "allContracts": "جميع العقود",

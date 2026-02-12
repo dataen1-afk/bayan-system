@@ -34,17 +34,12 @@ const LanguageSwitcher = () => {
           data-testid="lang-arabic"
           className={i18n.language === 'ar' ? 'bg-accent' : ''}
         >
-          <svg className="w-5 h-5 mr-2" viewBox="0 0 640 480">
-            <defs>
-              <clipPath id="a">
-                <path fillOpacity=".7" d="M-85.3 0h682.6v512H-85.3z"/>
-              </clipPath>
-            </defs>
-            <g fillRule="evenodd" strokeWidth="1pt" clipPath="url(#a)" transform="translate(80) scale(.9375)">
-              <path fill="#199d00" d="M-128 0h768v512h-768z"/>
-              <path fill="#fff" d="M-128 0h768v341.3h-768z"/>
-              <path d="m-128 0 0 170.7h768V.0z"/>
-              <path fill="#ce1126" d="m-128 0 0 170.7h768V.0z"/>
+          <svg className="w-6 h-4 mr-2" viewBox="0 0 900 600">
+            <rect width="900" height="600" fill="#165B33"/>
+            <g fill="#FFF">
+              <path d="M129.6 295.5c3.1 0 5.5 2.3 5.5 5.4s-2.4 5.5-5.5 5.5h-14.4c-3.1 0-5.5-2.4-5.5-5.5s2.4-5.4 5.5-5.4h14.4m291.8 0c3.1 0 5.5 2.3 5.5 5.4s-2.4 5.5-5.5 5.5h-14.4c-3.1 0-5.5-2.4-5.5-5.5s2.4-5.4 5.5-5.4h14.4m-243.8 32.2c-3.7 0-6.7-3-6.7-6.8 0-3.7 3-6.7 6.7-6.7 3.7 0 6.8 3 6.8 6.7 0 3.8-3.1 6.8-6.8 6.8zm0-26.5c-3.7 0-6.7-3-6.7-6.7 0-3.8 3-6.8 6.7-6.8 3.7 0 6.8 3 6.8 6.8 0 3.7-3.1 6.7-6.8 6.7z"/>
+              <text x="450" y="320" font-family="Arial" font-size="120" font-weight="bold" text-anchor="middle" fill="white">لا إله إلا الله محمد رسول الله</text>
+              <path d="M530 380l150-15-5 35-145 10z"/>
             </g>
           </svg>
           {t('arabic')}

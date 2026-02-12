@@ -64,21 +64,19 @@ const LoginPage = () => {
       
       {/* Logo Section */}
       <div className="mb-8 text-center">
-        <div className="bg-white p-6 rounded-2xl shadow-lg mb-4 inline-block">
-          <img 
-            src="/bayan-logo.png" 
-            alt="Bayan Auditing & Conformity" 
-            className="h-24 w-auto object-contain"
-          />
-        </div>
+        <img 
+          src="/bayan-logo.png" 
+          alt="Bayan Auditing & Conformity" 
+          className="h-32 w-auto object-contain mx-auto mb-4"
+        />
         <p className="text-bayan-gray text-base font-medium">
           {t('serviceContractManagement')}
         </p>
       </div>
       
-      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6">
+      <div className="w-full max-w-md">
         {/* Login Form Card */}
-        <Card className="w-full lg:w-1/2 border-2 border-blue-100 shadow-xl">
+        <Card className="w-full border-2 border-blue-100 shadow-xl">
           <CardHeader className="bg-gradient-to-r from-bayan-blue to-blue-600 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold" data-testid="login-title">{t('login')}</CardTitle>
             <CardDescription className="text-blue-100">{t('signInToAccount')}</CardDescription>

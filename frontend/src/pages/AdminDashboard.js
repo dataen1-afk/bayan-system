@@ -620,6 +620,16 @@ const AdminDashboard = () => {
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDownloadFormBilingual(form.id)}
+                          data-testid={`download-form-bilingual-${form.id}`}
+                          className="h-8 px-2"
+                          title={t('downloadBilingualPDF') || 'Download Bilingual PDF'}
+                        >
+                          <FileText className="w-4 h-4" />
+                        </Button>
+                        <Button 
                           size="sm"
                           onClick={() => handleCreateQuotationFromForm(form)}
                           data-testid={`create-quote-${form.id}`}

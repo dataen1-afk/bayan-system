@@ -82,6 +82,7 @@ function App() {
             {/* Public routes - no authentication required */}
             <Route path="/form/:accessToken" element={<PublicFormPage />} />
             <Route path="/proposal/:accessToken" element={<PublicProposalPage />} />
+            <Route path="/agreement/:accessToken" element={<CertificationAgreementPage />} />
             
             {/* Authenticated routes */}
             <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />

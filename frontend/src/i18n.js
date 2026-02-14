@@ -828,7 +828,15 @@ const resources = {
       "thankYouForSubmitting": "شكراً لتقديم طلبك!",
       "applicationSubmittedMessage": "تم استلام طلبك وسيتم مراجعته من قبل فريقنا. سنتواصل معك قريباً بالخطوات التالية.",
       "bayanAuditingConformity": "بيان للتحقق والمطابقة",
-      "allRightsReserved": "جميع الحقوق محفوظة"
+      "allRightsReserved": "جميع الحقوق محفوظة",
+      
+      // Audit Calculation
+      "auditCalculation": "حساب التدقيق",
+      "totalManDays": "إجمالي أيام العمل",
+      "integrationDiscount": "خصم التكامل",
+      "days": "أيام",
+      "createQuotation": "إنشاء عرض سعر",
+      "totalEmployees": "إجمالي الموظفين"
     }
   }
 };

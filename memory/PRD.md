@@ -52,11 +52,23 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - 6 acknowledgement checkboxes
 - Signatory information capture
 
-### PDF Contract Generation ✅ (NEW - Dec 2025)
+### PDF Contract Generation ✅ (Updated - Feb 2026)
 - Professional PDF contracts with company branding
 - Includes: parties, standards, scope, sites, audit duration, fees, terms, signatures
+- **Digital Signatures**: Client signatures embedded in PDF
+- **Company Seals**: Optional company stamp/seal in PDF
+- Robust image validation with PIL preprocessing
+- Graceful fallback for corrupted images
 - Admin can download via `/api/contracts/{agreement_id}/pdf`
 - Client can download via `/api/public/contracts/{access_token}/pdf`
+
+### Digital Signatures ✅ (NEW - Feb 2026)
+- **Signature Pad Component**: Canvas-based drawing with mouse/touch support
+- **Dual Mode**: Draw signature online OR upload signature image
+- **Company Seal**: Optional stamp/seal upload
+- **Form Validation**: Signature required before agreement submission
+- **Database Storage**: signature_image and stamp_image stored as Base64
+- **PDF Integration**: Signatures rendered in contract PDF with proper sizing
 
 ### Admin Notifications ✅ (NEW - Dec 2025)
 - Bell icon in header with unread count badge

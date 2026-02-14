@@ -216,10 +216,8 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ```
 
 ## Future Enhancements
+- **P1**: Digital Signatures in PDFs (signature image or online signature pad with seal)
+- **P2**: Customer Portal for tracking order status via unique link
+- **P2**: Document uploads for supporting materials
+- **P3**: Multi-site auditing/scheduling
 - Enable real email sending (SendGrid integration)
-- Client portal for tracking application status
-- Document upload for supporting materials
-- Multi-site audit scheduling
-- Sticky footer for form buttons (so they are always visible on long forms)
-- Enhanced filtering and date range selection for Reports page
-- "Request Modification" workflow for proposals

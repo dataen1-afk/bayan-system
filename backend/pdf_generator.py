@@ -108,12 +108,12 @@ class ContractPDFGenerator:
             
             image_bytes = base64.b64decode(base64_data)
             
-            # Try PIL processing first for better compatibility
+            # Use PIL to validate and convert the image
             try:
                 from PIL import Image as PILImage
                 pil_img = PILImage.open(io.BytesIO(image_bytes))
                 
-                # Force load to check if data is valid
+                # Force load to fully validate image data
                 pil_img.load()
                 
                 # Convert to RGB if needed (handle RGBA, P, LA modes)
@@ -131,22 +131,23 @@ class ContractPDFGenerator:
                 pil_img.save(clean_buffer, format='PNG')
                 clean_buffer.seek(0)
                 
-                return Image(clean_buffer, width=width, height=height)
-            except Exception as pil_error:
-                print(f"PIL image processing failed: {pil_error}")
+                # Create the reportlab Image and validate it
+                img_element = Image(clean_buffer, width=width, height=height)
+                # Force validation by wrapping
+                img_element.wrap(width, height)
                 
-                # Fallback: try reportlab directly
-                try:
-                    direct_buffer = io.BytesIO(image_bytes)
-                    direct_buffer.seek(0)
-                    return Image(direct_buffer, width=width, height=height)
-                except Exception as direct_error:
-                    print(f"Direct reportlab image also failed: {direct_error}")
-                    return fallback
+                # Re-create for actual use (wrap consumes the buffer)
+                clean_buffer.seek(0)
+                return Image(clean_buffer, width=width, height=height)
+                
+            except Exception as pil_error:
+                print(f"PIL image processing failed, using fallback: {pil_error}")
+                return fallback
                     
         except Exception as e:
             print(f"Error processing image for PDF: {e}")
             return fallback
+
 
 
     def _create_header(self, canvas, doc):

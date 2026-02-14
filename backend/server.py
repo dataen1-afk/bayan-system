@@ -233,6 +233,8 @@ class CertificationAgreementSubmit(BaseModel):
     signatory_position: str
     signatory_date: str
     acknowledgements: AgreementAcknowledgements
+    signature_image: Optional[str] = None  # Base64 encoded signature image
+    stamp_image: Optional[str] = None  # Base64 encoded stamp image
 
 class CertificationAgreement(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -248,6 +250,8 @@ class CertificationAgreement(BaseModel):
     signatory_position: str
     signatory_date: str
     acknowledgements: Dict[str, bool] = {}
+    signature_image: Optional[str] = None  # Base64 encoded signature image
+    stamp_image: Optional[str] = None  # Base64 encoded stamp image
     status: str = "submitted"  # submitted, contract_generated
     contract_pdf_path: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

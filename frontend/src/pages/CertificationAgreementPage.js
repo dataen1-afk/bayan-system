@@ -77,12 +77,36 @@ const CertificationAgreementPage = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // First check if agreement already exists
+      try {
+        const agreementResponse = await axios.get(`${API}/public/agreement/${accessToken}`);
+        if (agreementResponse.data.status === 'submitted') {
+          // Agreement already submitted, show success
+          setSubmitted(true);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        // If 400 error, it means proposal not accepted yet - continue to check proposal
+        if (err.response?.status !== 400) {
+          console.error('Error checking agreement status:', err);
+        }
+      }
+      
       const response = await axios.get(`${API}/public/proposal/${accessToken}`);
       const proposalData = response.data;
       
-      // Check if proposal is accepted (only then show agreement form)
-      if (proposalData.status !== 'accepted') {
+      // Check if proposal is accepted or agreement_signed (both are valid states)
+      if (proposalData.status !== 'accepted' && proposalData.status !== 'agreement_signed') {
         setError('agreementNotAvailable');
+        setLoading(false);
+        return;
+      }
+      
+      // If status is agreement_signed, the agreement was already submitted
+      if (proposalData.status === 'agreement_signed') {
+        setSubmitted(true);
         setLoading(false);
         return;
       }

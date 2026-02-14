@@ -100,6 +100,109 @@ class Form(BaseModel):
 class FormSubmission(BaseModel):
     responses: Dict[str, Any]
 
+# ================= QUOTATION/PROPOSAL MODELS =================
+
+class AuditDuration(BaseModel):
+    stage_1: float = 0
+    stage_2: float = 0
+    surveillance_1: float = 0
+    surveillance_2: float = 0
+    recertification: float = 0
+
+class ServiceFees(BaseModel):
+    initial_certification: float = 0
+    surveillance_1: float = 0
+    surveillance_2: float = 0
+    recertification: float = 0
+    currency: str = "SAR"
+
+class ProposalCreate(BaseModel):
+    application_form_id: str
+    # Organization details (pre-filled from application)
+    organization_name: str
+    organization_address: str
+    organization_phone: str
+    contact_person: str
+    contact_position: str
+    contact_email: EmailStr
+    # Service details
+    standards: List[str]
+    scope: str
+    total_employees: int
+    number_of_sites: int
+    # Audit duration
+    audit_duration: AuditDuration
+    # Pricing
+    service_fees: ServiceFees
+    # Additional notes
+    notes: str = ""
+    # Validity
+    validity_days: int = 30
+
+class Proposal(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    access_token: str = Field(default_factory=lambda: str(uuid.uuid4()))  # For client access
+    application_form_id: str
+    # Organization details
+    organization_name: str
+    organization_address: str
+    organization_phone: str
+    contact_person: str
+    contact_position: str
+    contact_email: EmailStr
+    # Service details
+    standards: List[str]
+    scope: str
+    total_employees: int
+    number_of_sites: int
+    # Audit duration
+    audit_duration: AuditDuration
+    # Pricing
+    service_fees: ServiceFees
+    total_amount: float = 0
+    # Additional
+    notes: str = ""
+    validity_days: int = 30
+    # Status
+    status: str = "pending"  # pending, accepted, rejected, expired
+    # Signatures
+    issuer_name: str = ""
+    issuer_designation: str = ""
+    issued_date: Optional[datetime] = None
+    # Client response
+    client_response_date: Optional[datetime] = None
+    client_signatory_name: str = ""
+    client_signatory_designation: str = ""
+    rejection_reason: str = ""
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ProposalResponse(BaseModel):
+    status: str  # accepted or rejected
+    signatory_name: str = ""
+    signatory_designation: str = ""
+    rejection_reason: str = ""
+
+class PublicProposalResponse(BaseModel):
+    id: str
+    organization_name: str
+    contact_person: str
+    contact_email: str
+    standards: List[str]
+    scope: str
+    total_employees: int
+    number_of_sites: int
+    audit_duration: AuditDuration
+    service_fees: ServiceFees
+    total_amount: float
+    notes: str
+    validity_days: int
+    status: str
+    issuer_name: str
+    issuer_designation: str
+    issued_date: Optional[datetime]
+
+# Legacy models (kept for backward compatibility)
 class QuotationCreate(BaseModel):
     form_id: str
     client_id: str
@@ -122,6 +225,7 @@ class QuotationResponse(BaseModel):
 class Contract(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     quotation_id: str
+    proposal_id: str = ""  # Link to new proposal system
     client_id: str
     pdf_path: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

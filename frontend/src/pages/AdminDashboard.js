@@ -843,6 +843,17 @@ const AdminDashboard = () => {
                       </Button>
                     )}
                     
+                    {/* Bilingual PDF for all proposals */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownloadProposalBilingual(proposal.id)}
+                      className="h-8 px-2"
+                      title={t('downloadBilingualPDF') || 'Download Bilingual PDF (AR/EN)'}
+                    >
+                      <FileText className="w-4 h-4" />
+                    </Button>
+                    
                     {proposal.status === 'agreement_signed' && (
                       <Button
                         size="sm"

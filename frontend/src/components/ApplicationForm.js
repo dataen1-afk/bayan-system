@@ -238,7 +238,7 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label={t('dateOfApplication')} required>
+        <FormField label={t('dateOfApplication')} required isRTL={isRTL}>
           <Input
             type="date"
             value={formData.dateOfApplication}

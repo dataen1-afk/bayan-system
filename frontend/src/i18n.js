@@ -1689,7 +1689,31 @@ const resources = {
       "country": "الدولة",
       "mainSiteIndicator": "الموقع الرئيسي",
       "noSitesYet": "لا توجد مواقع مضافة بعد",
-      "addFirstSite": "أضف موقعك الأول"
+      "addFirstSite": "أضف موقعك الأول",
+      
+      // Recurring Events
+      "recurringEvent": "حدث متكرر",
+      "recurrenceType": "التكرار",
+      "selectFrequency": "اختر التكرار",
+      "weekly": "أسبوعي",
+      "monthly": "شهري",
+      "quarterly": "ربع سنوي (كل 3 أشهر)",
+      "yearly": "سنوي",
+      "recurrenceEndDate": "تاريخ الانتهاء",
+      "recurrenceEndDateHint": "سيتم إنشاء التدقيقات تلقائياً حتى هذا التاريخ",
+      "auditsCreated": "تم جدولة {{count}} تدقيقات (بما فيها الأحداث المتكررة)",
+      
+      // SMS Notifications
+      "smsNotifications": "إشعارات SMS",
+      "sendSmsReminder": "إرسال تذكير SMS",
+      "smsReminderSent": "تم إرسال تذكير SMS بنجاح",
+      "smsReminderSimulated": "تم محاكاة تذكير SMS (Twilio غير مكوّن)",
+      "smsReminderError": "فشل في إرسال تذكير SMS",
+      "smsSimulationMode": "SMS يعمل في وضع المحاكاة",
+      
+      // Bilingual PDF
+      "downloadBilingualPDF": "تحميل PDF ثنائي اللغة (عربي/إنجليزي)",
+      "errorDownloadingPDF": "خطأ في تحميل PDF"
     }
   }
 };

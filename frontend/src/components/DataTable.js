@@ -270,7 +270,7 @@ const DataTable = ({
       </div>
 
       {/* Table Body */}
-      <div className="divide-y divide-slate-100" data-testid="table-body">
+      <div className="divide-y divide-slate-100" data-testid="table-body" dir={isRTL ? 'rtl' : 'ltr'}>
         {paginatedData.length === 0 ? (
           emptyState || (
             <div className="text-center py-16 px-4">
@@ -278,7 +278,7 @@ const DataTable = ({
             </div>
           )
         ) : (
-          paginatedData.map((item, index) => renderRow(item, index))
+          paginatedData.map((item, index) => renderRow(item, index, isRTL))
         )}
       </div>
 

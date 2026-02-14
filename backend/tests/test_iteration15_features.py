@@ -168,7 +168,7 @@ class TestDocumentsAPI:
                 "name": "TEST_iteration15_doc.txt",
                 "file_type": "text/plain",
                 "category": "test",
-                "content": file_base64,
+                "file_data": file_base64,  # API expects file_data not content
                 "related_type": "test",
                 "related_id": "test-123"
             }

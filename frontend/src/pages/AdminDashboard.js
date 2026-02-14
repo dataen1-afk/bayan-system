@@ -741,140 +741,136 @@ const AdminDashboard = () => {
         
         return (
           <div className="space-y-6">
-            {/* Contract Statistics Summary Card */}
+            {/* Contract Statistics Summary Cards */}
             <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
               {/* Total Contracts */}
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <CardContent className="p-6">
-                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div>
-                      <p className="text-sm font-medium text-green-600">{t('totalContracts')}</p>
-                      <p className="text-3xl font-bold text-green-700">{signedContracts.length}</p>
-                    </div>
-                    <div className="p-3 bg-green-200 rounded-full">
-                      <FileCheck className="w-6 h-6 text-green-700" />
-                    </div>
+              <div className="bg-white rounded-xl border border-emerald-200 shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div>
+                    <p className="text-xs font-medium text-emerald-600 uppercase tracking-wider mb-1">{t('totalContracts')}</p>
+                    <p className="text-4xl font-bold text-slate-900">{signedContracts.length}</p>
+                    <p className="text-sm text-slate-500 mt-1">{t('signedAgreements')}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="p-4 bg-emerald-50 rounded-xl">
+                    <FileCheck className="w-8 h-8 text-emerald-600" />
+                  </div>
+                </div>
+              </div>
               
               {/* Total Revenue */}
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-6">
-                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div>
-                      <p className="text-sm font-medium text-blue-600">{t('totalRevenue')}</p>
-                      <p className="text-2xl font-bold text-blue-700">
-                        {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(totalContractsValue)}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-blue-200 rounded-full">
-                      <DollarSign className="w-6 h-6 text-blue-700" />
-                    </div>
+              <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div>
+                    <p className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">{t('totalRevenue')}</p>
+                    <p className="text-3xl font-bold text-slate-900">
+                      {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(totalContractsValue)}
+                    </p>
+                    <p className="text-sm text-slate-500 mt-1">{t('contractValue')}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="p-4 bg-blue-50 rounded-xl">
+                    <DollarSign className="w-8 h-8 text-blue-600" />
+                  </div>
+                </div>
+              </div>
               
               {/* Most Recent Contract */}
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-                <CardContent className="p-6">
-                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div>
-                      <p className="text-sm font-medium text-purple-600">{t('mostRecentContract')}</p>
-                      {mostRecentContract ? (
-                        <>
-                          <p className="text-lg font-bold text-purple-700 truncate max-w-[180px]">
-                            {mostRecentContract.organization_name}
-                          </p>
-                          <p className="text-xs text-purple-500">
-                            {new Date(mostRecentContract.client_response_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="text-lg font-bold text-purple-700">-</p>
-                      )}
-                    </div>
-                    <div className="p-3 bg-purple-200 rounded-full">
-                      <Clock className="w-6 h-6 text-purple-700" />
-                    </div>
+              <div className="bg-white rounded-xl border border-purple-200 shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-purple-600 uppercase tracking-wider mb-1">{t('mostRecentContract')}</p>
+                    {mostRecentContract ? (
+                      <>
+                        <p className="text-lg font-bold text-slate-900 truncate">
+                          {mostRecentContract.organization_name}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {new Date(mostRecentContract.client_response_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-lg font-bold text-slate-400">-</p>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="p-4 bg-purple-50 rounded-xl ms-4">
+                    <Clock className="w-8 h-8 text-purple-600" />
+                  </div>
+                </div>
+              </div>
             </div>
             
-            <Card>
-              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-                <CardTitle className="flex items-center gap-2">
-                  <FileCheck className="w-5 h-5" />
+            {/* Contracts List */}
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className={`border-b border-slate-100 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <CardTitle className={`flex items-center gap-2 text-lg font-semibold text-slate-900 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <FileCheck className="w-5 h-5 text-bayan-navy" />
                   {t('allContracts')}
                 </CardTitle>
-                <CardDescription>{t('contractsAutoGenerated')}</CardDescription>
+                <CardDescription className="text-sm text-slate-500">{t('contractsAutoGenerated')}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4" data-testid="contracts-list">
+              <CardContent className="p-0">
+                <div className="divide-y divide-slate-100" data-testid="contracts-list">
                   {signedContracts.length === 0 ? (
-                    <EmptyState
-                      icon={FileCheck}
-                      title={t('noContractsYet')}
-                      description={t('contractsAutoGenerated')}
-                      helpText={t('contractsEmptyStateHelp')}
-                    />
+                    <div className="text-center py-16 px-4">
+                      <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                        <FileCheck className="w-10 h-10 text-slate-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('noContractsYet')}</h3>
+                      <p className="text-sm text-slate-500 max-w-sm mx-auto">{t('contractsAutoGenerated')}</p>
+                    </div>
                   ) : (
-                    signedContracts.map((contract) => (
+                    signedContracts.map((contract, index) => (
                       <div 
                         key={contract.id} 
-                        className="p-4 border rounded-lg hover:shadow-md transition-all bg-white"
+                        className={`group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${isRTL ? 'lg:flex-row-reverse' : ''}`}
                         data-testid={`contract-${contract.id}`}
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <div className={`flex justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                            {/* Organization Name */}
-                            <h3 className="font-semibold text-lg text-gray-800">
+                        {/* Main Info */}
+                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <h3 className="font-semibold text-slate-900 truncate">
                               {contract.organization_name}
                             </h3>
-                            
-                            {/* Contact Info */}
-                            <p className="text-sm text-gray-600">
-                              {t('contactPerson')}: {contract.contact_person}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {t('email')}: {contract.contact_email}
-                            </p>
-                            
-                            {/* Standards badges */}
-                            <div className={`flex flex-wrap gap-1 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              {contract.standards?.map((std) => (
-                                <span key={std} className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
-                                  {std}
-                                </span>
-                              ))}
-                            </div>
-                            
-                            {/* Contract Value */}
-                            <p className="text-xl font-bold text-green-600 mt-2">
-                              {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR' }).format(contract.total_amount || 0)}
-                            </p>
-                            
-                            {/* Signing Date */}
-                            {contract.client_response_date && (
-                              <p className="text-sm text-gray-500 mt-1">
-                                {t('agreementSigned')}: {new Date(contract.client_response_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
-                              </p>
-                            )}
-                            
-                            {/* Status Timeline */}
-                            <div className="mt-3">
-                              <StatusTimeline status={contract.status} compact={true} />
-                            </div>
-                          </div>
-                          
-                          <div className={`flex flex-col gap-2 ${isRTL ? 'items-start' : 'items-end'}`}>
-                            {/* Status badge */}
-                            <span className="px-3 py-1 text-sm rounded-full font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
                               {t('agreement_signed')}
                             </span>
-                            
-                            {/* View Proposal Link */}
+                          </div>
+                          
+                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <span>{contract.contact_person}</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-slate-500">{contract.contact_email}</span>
+                          </div>
+                          
+                          {/* Standards badges */}
+                          <div className={`flex flex-wrap gap-1.5 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            {contract.standards?.map((std) => (
+                              <span key={std} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded border border-emerald-100">
+                                {std}
+                              </span>
+                            ))}
+                          </div>
+                          
+                          {/* Signing Date */}
+                          {contract.client_response_date && (
+                            <p className="text-xs text-slate-400 mt-2">
+                              {t('signedOn')}: {new Date(contract.client_response_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Price & Actions */}
+                        <div className={`flex flex-col items-end gap-3 mt-4 lg:mt-0 ${isRTL ? 'items-start' : 'items-end'}`}>
+                          {/* Contract Value */}
+                          <div className={`text-end ${isRTL ? 'text-start' : ''}`}>
+                            <p className="text-2xl font-bold text-emerald-600">
+                              {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(contract.total_amount || 0)}
+                            </p>
+                            <p className="text-xs text-slate-500">{t('contractValue')}</p>
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {contract.access_token && (
                               <Button
                                 size="sm"
@@ -883,14 +879,13 @@ const AdminDashboard = () => {
                                   const url = `${window.location.origin}/proposal/${contract.access_token}`;
                                   window.open(url, '_blank');
                                 }}
-                                className="mt-2"
+                                className="h-9 border-slate-200"
                               >
-                                <Eye className="w-4 h-4 mr-1" />
+                                <Eye className="w-4 h-4 me-1.5" />
                                 {t('viewProposal')}
                               </Button>
                             )}
                             
-                            {/* Download Contract PDF */}
                             <Button
                               size="sm"
                               onClick={async () => {
@@ -911,11 +906,11 @@ const AdminDashboard = () => {
                                   alert(t('errorDownloadingContract'));
                                 }
                               }}
-                              className="bg-green-600 hover:bg-green-700"
+                              className="h-9 bg-bayan-navy hover:bg-bayan-navy-light shadow-sm"
                               data-testid={`download-contract-${contract.id}`}
                             >
-                              <Download className="w-4 h-4 mr-1" />
-                              {t('downloadContract')}
+                              <Download className="w-4 h-4 me-1.5" />
+                              {t('downloadPDF')}
                             </Button>
                           </div>
                         </div>

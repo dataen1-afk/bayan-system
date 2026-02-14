@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   Calendar, ArrowLeft, Plus, X, MapPin, Clock, Users, Building2,
   ChevronLeft, ChevronRight, Loader2, AlertCircle, CheckCircle,
-  Edit2, Trash2, Eye
+  Edit2, Trash2, Eye, Link2, Unlink
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';

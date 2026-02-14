@@ -243,6 +243,49 @@ class CertificationAgreement(BaseModel):
     signatory_date: str
     acknowledgements: Dict[str, bool] = {}
     status: str = "submitted"  # submitted, contract_generated
+    contract_pdf_path: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# ================= NOTIFICATION MODELS =================
+
+class Notification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # form_submitted, proposal_sent, proposal_accepted, proposal_rejected, agreement_signed
+    title: str
+    message: str
+    related_id: Optional[str] = None  # ID of related form/proposal/agreement
+    related_type: Optional[str] = None  # form, proposal, agreement
+    is_read: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class NotificationCreate(BaseModel):
+    type: str
+    title: str
+    message: str
+    related_id: Optional[str] = None
+    related_type: Optional[str] = None
+
+# ================= TEMPLATE MODELS =================
+
+class CertificationPackage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    name_ar: str
+    description: str
+    description_ar: str
+    standards: List[str]
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ProposalTemplate(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    name_ar: str
+    description: str = ""
+    default_fees: Dict[str, float] = {}  # initial_certification, surveillance_1, surveillance_2, recertification
+    default_notes: str = ""
+    default_validity_days: int = 30
+    is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Legacy models (kept for backward compatibility)

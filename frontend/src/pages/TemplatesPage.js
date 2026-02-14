@@ -301,12 +301,15 @@ const TemplatesPage = () => {
           </Button>
         </div>
 
-        {/* Add Form */}
+        {/* Add/Edit Form */}
         {showAddForm && (
           <Card className="mb-6 border-2 border-blue-200">
             <CardHeader className={isRTL ? 'text-right' : ''}>
               <CardTitle>
-                {activeTab === 'packages' ? t('addNewPackage') : t('addNewTemplate')}
+                {editingItem 
+                  ? (activeTab === 'packages' ? t('editPackage') : t('editTemplate'))
+                  : (activeTab === 'packages' ? t('addNewPackage') : t('addNewTemplate'))
+                }
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -370,11 +373,11 @@ const TemplatesPage = () => {
                     </div>
                   </div>
                   <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Button onClick={handleAddPackage} disabled={saving}>
+                    <Button onClick={editingItem ? handleUpdatePackage : handleAddPackage} disabled={saving}>
                       {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                      {t('save')}
+                      {editingItem ? t('update') : t('save')}
                     </Button>
-                    <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                    <Button variant="outline" onClick={cancelEdit}>
                       <X className="w-4 h-4 mr-2" />
                       {t('cancel')}
                     </Button>

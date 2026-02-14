@@ -104,7 +104,7 @@ const NotificationBell = () => {
     if (diffMins < 60) return `${diffMins} ${t('minutesAgo')}`;
     if (diffHours < 24) return `${diffHours} ${t('hoursAgo')}`;
     if (diffDays < 7) return `${diffDays} ${t('daysAgo')}`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-GB');
   };
 
   return (

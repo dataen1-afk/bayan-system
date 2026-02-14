@@ -666,7 +666,22 @@ const resources = {
       "enterRequestedChanges": "e.g., Adjust pricing, Change audit dates, Modify scope...",
       "sendRequest": "Send Request",
       "pleaseEnterModificationComment": "Please enter a comment explaining the requested modifications",
-      "errorRequestingModification": "Error requesting modification"
+      "errorRequestingModification": "Error requesting modification",
+      
+      // Digital Signature
+      "digitalSignature": "Digital Signature",
+      "digitalSignatureSection": "Digital Signature & Seal",
+      "draw": "Draw",
+      "upload": "Upload",
+      "clear": "Clear",
+      "signatureCaptured": "Signature captured",
+      "signatureInstructions": "Please provide your digital signature. You can draw it or upload an image.",
+      "clickToUploadSignature": "Click to upload signature image",
+      "companySealStamp": "Company Seal / Stamp",
+      "optional": "Optional",
+      "clickToUploadStamp": "Click to upload company seal/stamp",
+      "remove": "Remove",
+      "pleaseProvideSignature": "Please provide your digital signature"
     }
   },
   ar: {

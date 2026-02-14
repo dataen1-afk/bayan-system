@@ -374,7 +374,42 @@ const resources = {
       "errorSavingDraft": "Error saving draft:",
       "applicationSubmittedSuccess": "Application submitted successfully!",
       "errorSubmittingApplication": "Error submitting application:",
-      "contactPerson": "Contact Person"
+      "contactPerson": "Contact Person",
+
+      // New form creation workflow
+      "createNewApplicationForm": "Create New Application Form",
+      "enterClientInfoToCreateForm": "Enter client information to create a new certification application form",
+      "clientName": "Client Name",
+      "enterClientName": "Enter client name",
+      "enterCompanyName": "Enter company name",
+      "enterEmail": "Enter email address",
+      "enterPhone": "Enter phone number",
+      "fillAllClientFields": "Please fill all client information fields",
+      "errorCreatingForm": "Error creating form:",
+      "createFirstApplicationForm": "Create an application form and share it with your client",
+      "formCreatedSuccess": "Form Created Successfully!",
+      "shareFormLinkWithClient": "Share this link with your client to fill out the form",
+      "formLink": "Form Link",
+      "copyLink": "Copy Link",
+      "sendEmail": "Send Email",
+      "linkCopied": "Link copied to clipboard!",
+      "errorCopyingLink": "Error copying link",
+      "emailSentSuccess": "Email sent successfully!",
+      "errorSendingEmail": "Error sending email:",
+      "formLinkInstructions": "Copy this link and send it to your client via email, WhatsApp, or any other method. The client can fill out the form without needing to log in.",
+      "close": "Close",
+      
+      // Public form page
+      "loadingForm": "Loading form...",
+      "formNotFound": "Form Not Found",
+      "errorLoadingForm": "Error Loading Form",
+      "formLinkInvalidOrExpired": "This form link is invalid or has expired. Please contact the administrator.",
+      "welcomeToApplicationForm": "Certification Application Form",
+      "formForCompany": "Form for company",
+      "thankYouForSubmitting": "Thank you for submitting your application!",
+      "applicationSubmittedMessage": "Your application has been received and will be reviewed by our team. We will contact you soon with the next steps.",
+      "bayanAuditingConformity": "Bayan Auditing & Conformity",
+      "allRightsReserved": "All Rights Reserved"
     }
   },
   ar: {

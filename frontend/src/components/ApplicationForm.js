@@ -1377,6 +1377,7 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
         </div>
       </div>
     </div>
+    </RTLContext.Provider>
   );
 };
 

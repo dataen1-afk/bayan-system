@@ -1201,6 +1201,7 @@ async def get_public_proposal(access_token: str):
     return PublicProposalResponse(
         id=proposal['id'],
         organization_name=proposal['organization_name'],
+        organization_address=proposal.get('organization_address', ''),
         contact_person=proposal['contact_person'],
         contact_email=proposal['contact_email'],
         standards=proposal['standards'],

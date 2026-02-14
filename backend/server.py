@@ -1759,7 +1759,7 @@ async def get_filtered_report(
     
     # Filter by standard if specified
     if standard and standard != "all":
-        forms = [f for f in forms if f.get('company_data', {}).get('certificationSchemes') and standard in f.get('company_data', {}).get('certificationSchemes', [])]
+        forms = [f for f in forms if f.get('company_data') and f.get('company_data', {}).get('certificationSchemes') and standard in f.get('company_data', {}).get('certificationSchemes', [])]
     
     # Build query for proposals
     proposals_query = {}

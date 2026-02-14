@@ -141,6 +141,24 @@ const resources = {
       "errorRespondingQuotation": "Error responding to quotation:",
       "errorDownloadingContract": "Error downloading contract:",
       
+      // DataTable
+      "searchPlaceholder": "Search...",
+      "showing": "Showing",
+      "results": "results",
+      "perPage": "Per page",
+      "clearFilters": "Clear",
+      "noDataFound": "No data found",
+      "filters": "Filters",
+      "companyName": "Company Name",
+      "contact": "Contact",
+      "actions": "Actions",
+      "organization": "Organization",
+      "amount": "Amount",
+      "signedDate": "Signed Date",
+      "quote": "Quote",
+      "download": "Download",
+      "pdf": "PDF",
+      
       // Language
       "language": "Language",
       "english": "English",

@@ -899,6 +899,9 @@ async def submit_public_form(access_token: str, update_data: ApplicationFormUpda
     if not company_data.companyName or not company_data.declarationAgreed:
         raise HTTPException(status_code=400, detail="Company name and declaration agreement are required")
     
+    # Calculate audit time automatically
+    audit_calculation = calculate_audit_from_form_data(company_data)
+    
     # Update and submit
     submitted_at = datetime.now(timezone.utc)
     await db.application_forms.update_one(
@@ -906,6 +909,7 @@ async def submit_public_form(access_token: str, update_data: ApplicationFormUpda
         {
             "$set": {
                 "company_data": company_data.model_dump(),
+                "audit_calculation": audit_calculation,
                 "status": "submitted",
                 "submitted_at": submitted_at.isoformat()
             }

@@ -418,6 +418,17 @@ const AdminDashboard = () => {
                                 </Button>
                               </>
                             )}
+                            {form.status === 'agreement_signed' && (
+                              <Button 
+                                size="sm"
+                                onClick={() => handleDownloadContract(form.id)}
+                                data-testid={`download-contract-${form.id}`}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                {t('downloadContract')}
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>

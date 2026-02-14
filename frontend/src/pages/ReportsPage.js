@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { 
   BarChart3, TrendingUp, FileText, DollarSign, CheckCircle, 
   XCircle, Clock, ArrowLeft, RefreshCw, Loader2, Filter,
-  Calendar, AlertCircle, Download
+  Calendar, AlertCircle, Download, FileSpreadsheet
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';

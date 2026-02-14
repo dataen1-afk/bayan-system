@@ -360,82 +360,10 @@ class ContractPDFGenerator:
         client_stamp_element = ''
         
         if signature_image:
-            try:
-                # Decode base64 signature image
-                if signature_image.startswith('data:image'):
-                    # Extract base64 data from data URL
-                    base64_data = signature_image.split(',')[1]
-                else:
-                    base64_data = signature_image
-                
-                signature_bytes = base64.b64decode(base64_data)
-                
-                # Use PIL to validate and process the image
-                try:
-                    from PIL import Image as PILImage
-                    pil_img = PILImage.open(io.BytesIO(signature_bytes))
-                    # Convert to RGB if needed (PNG might be RGBA)
-                    if pil_img.mode in ('RGBA', 'LA', 'P'):
-                        # Create white background and paste
-                        background = PILImage.new('RGB', pil_img.size, (255, 255, 255))
-                        if pil_img.mode == 'P':
-                            pil_img = pil_img.convert('RGBA')
-                        background.paste(pil_img, mask=pil_img.split()[-1] if pil_img.mode == 'RGBA' else None)
-                        pil_img = background
-                    elif pil_img.mode != 'RGB':
-                        pil_img = pil_img.convert('RGB')
-                    
-                    # Save to new buffer
-                    clean_buffer = io.BytesIO()
-                    pil_img.save(clean_buffer, format='PNG')
-                    clean_buffer.seek(0)
-                    client_signature_element = Image(clean_buffer, width=1.5*inch, height=0.5*inch)
-                except Exception as pil_error:
-                    print(f"PIL processing failed, trying direct: {pil_error}")
-                    # Fallback: try direct with reportlab
-                    signature_buffer = io.BytesIO(signature_bytes)
-                    signature_buffer.seek(0)
-                    client_signature_element = Image(signature_buffer, width=1.5*inch, height=0.5*inch)
-            except Exception as e:
-                print(f"Error processing signature image: {e}")
-                client_signature_element = '_________________________'
+            client_signature_element = self._process_image_for_pdf(signature_image, 1.5*inch, 0.5*inch, '_________________________')
         
         if stamp_image:
-            try:
-                # Decode base64 stamp image
-                if stamp_image.startswith('data:image'):
-                    base64_data = stamp_image.split(',')[1]
-                else:
-                    base64_data = stamp_image
-                
-                stamp_bytes = base64.b64decode(base64_data)
-                
-                # Use PIL to validate and process the image
-                try:
-                    from PIL import Image as PILImage
-                    pil_img = PILImage.open(io.BytesIO(stamp_bytes))
-                    # Convert to RGB if needed
-                    if pil_img.mode in ('RGBA', 'LA', 'P'):
-                        background = PILImage.new('RGB', pil_img.size, (255, 255, 255))
-                        if pil_img.mode == 'P':
-                            pil_img = pil_img.convert('RGBA')
-                        background.paste(pil_img, mask=pil_img.split()[-1] if pil_img.mode == 'RGBA' else None)
-                        pil_img = background
-                    elif pil_img.mode != 'RGB':
-                        pil_img = pil_img.convert('RGB')
-                    
-                    clean_buffer = io.BytesIO()
-                    pil_img.save(clean_buffer, format='PNG')
-                    clean_buffer.seek(0)
-                    client_stamp_element = Image(clean_buffer, width=1*inch, height=1*inch)
-                except Exception as pil_error:
-                    print(f"PIL stamp processing failed, trying direct: {pil_error}")
-                    stamp_buffer = io.BytesIO(stamp_bytes)
-                    stamp_buffer.seek(0)
-                    client_stamp_element = Image(stamp_buffer, width=1*inch, height=1*inch)
-            except Exception as e:
-                print(f"Error processing stamp image: {e}")
-                client_stamp_element = ''
+            client_stamp_element = self._process_image_for_pdf(stamp_image, 1*inch, 1*inch, '')
         
         # Build signature table with images
         sig_data = [

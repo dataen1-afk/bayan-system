@@ -8,6 +8,8 @@ import LoginPage from '@/pages/LoginPage';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ClientDashboard from '@/pages/ClientDashboard';
 import PublicFormPage from '@/pages/PublicFormPage';
+import PublicProposalPage from '@/pages/PublicProposalPage';
+import CreateProposalPage from '@/pages/CreateProposalPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -76,8 +78,9 @@ function App() {
       <div className="App">
         <BrowserRouter>
           <Routes>
-            {/* Public form route - no authentication required */}
+            {/* Public routes - no authentication required */}
             <Route path="/form/:accessToken" element={<PublicFormPage />} />
+            <Route path="/proposal/:accessToken" element={<PublicProposalPage />} />
             
             {/* Authenticated routes */}
             <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
@@ -90,6 +93,10 @@ function App() {
                   <Navigate to="/login" />
                 )
               } 
+            />
+            <Route 
+              path="/create-proposal/:formId" 
+              element={user?.role === 'admin' ? <CreateProposalPage /> : <Navigate to="/login" />} 
             />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
           </Routes>

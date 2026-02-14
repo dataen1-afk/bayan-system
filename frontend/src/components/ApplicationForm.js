@@ -1254,6 +1254,7 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
   };
 
   return (
+    <RTLContext.Provider value={isRTL}>
     <div className="max-w-4xl mx-auto">
       {/* Progress Bar */}
       <div className="mb-8">

@@ -710,6 +710,56 @@ const AuditSchedulingPage = () => {
                 />
               </div>
 
+              {/* Recurring Events Section */}
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="is_recurring"
+                    checked={formData.is_recurring}
+                    onChange={(e) => setFormData({ ...formData, is_recurring: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="is_recurring" className="cursor-pointer font-medium">
+                    {t('recurringEvent') || 'Recurring Event'}
+                  </Label>
+                </div>
+                
+                {formData.is_recurring && (
+                  <div className="space-y-4 bg-slate-50 p-3 rounded-lg">
+                    <div className="space-y-2">
+                      <Label className={isRTL ? 'text-right block' : ''}>{t('recurrenceType') || 'Frequency'}</Label>
+                      <select
+                        value={formData.recurrence_type}
+                        onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value })}
+                        className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                        data-testid="recurrence-type-select"
+                      >
+                        <option value="">{t('selectFrequency') || 'Select frequency'}</option>
+                        <option value="weekly">{t('weekly') || 'Weekly'}</option>
+                        <option value="monthly">{t('monthly') || 'Monthly'}</option>
+                        <option value="quarterly">{t('quarterly') || 'Quarterly (Every 3 months)'}</option>
+                        <option value="yearly">{t('yearly') || 'Yearly'}</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className={isRTL ? 'text-right block' : ''}>{t('recurrenceEndDate') || 'End Date'}</Label>
+                      <Input
+                        type="date"
+                        value={formData.recurrence_end_date}
+                        onChange={(e) => setFormData({ ...formData, recurrence_end_date: e.target.value })}
+                        min={formData.scheduled_date}
+                        data-testid="recurrence-end-date-input"
+                      />
+                      <p className="text-xs text-slate-500">
+                        {t('recurrenceEndDateHint') || 'Audits will be auto-generated until this date'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className={`flex gap-2 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Button variant="outline" onClick={() => setShowCreateModal(false)}>
                   {t('cancel')}
@@ -717,7 +767,7 @@ const AuditSchedulingPage = () => {
                 <Button 
                   onClick={handleCreateAudit}
                   className="bg-bayan-navy hover:bg-bayan-navy-light"
-                  disabled={!formData.contract_id || !formData.scheduled_date}
+                  disabled={!formData.contract_id || !formData.scheduled_date || (formData.is_recurring && (!formData.recurrence_type || !formData.recurrence_end_date))}
                   data-testid="confirm-create-audit-btn"
                 >
                   <Plus className="w-4 h-4 me-2" />

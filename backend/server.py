@@ -1506,6 +1506,70 @@ async def get_public_contract_pdf(access_token: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+# ================= BILINGUAL PDF CONTRACT GENERATION =================
+
+@api_router.get("/contracts/{agreement_id}/pdf/bilingual")
+async def generate_bilingual_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate bilingual PDF contract (Arabic + English) for a signed agreement (Admin only)"""
+    await get_current_user(credentials)
+    
+    # Get agreement
+    agreement = await db.certification_agreements.find_one({"id": agreement_id}, {"_id": 0})
+    if not agreement:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    
+    # Get proposal
+    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    # Generate bilingual PDF
+    try:
+        pdf_bytes = generate_bilingual_contract_pdf(agreement, proposal)
+        
+        # Update agreement status
+        await db.certification_agreements.update_one(
+            {"id": agreement_id},
+            {"$set": {"status": "contract_generated"}}
+        )
+        
+        # Return PDF
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=contract_bilingual_{agreement_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating bilingual PDF: {str(e)}")
+
+@api_router.get("/public/contracts/{access_token}/pdf/bilingual")
+async def get_public_bilingual_contract_pdf(access_token: str):
+    """Get bilingual PDF contract (Arabic + English) for a signed agreement (Public - client access)"""
+    # Get agreement by access token
+    agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token}, {"_id": 0})
+    if not agreement:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    
+    # Get proposal
+    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    # Generate bilingual PDF
+    try:
+        pdf_bytes = generate_bilingual_contract_pdf(agreement, proposal)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=contract_bilingual_{agreement['id'][:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating bilingual PDF: {str(e)}")
+
 # ================= NOTIFICATION ROUTES =================
 
 async def create_notification(notification_type: str, title: str, message: str, related_id: str = None, related_type: str = None):

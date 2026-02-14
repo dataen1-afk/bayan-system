@@ -442,7 +442,7 @@ const AdminDashboard = () => {
                     </Button>
                   </div>
 
-                  <Button type="submit" data-testid="create-form-button">{t('createForm')}</Button>
+                  <Button type="submit" data-testid="create-simple-form-button">{t('createForm')}</Button>
                 </form>
               </CardContent>
             </Card>

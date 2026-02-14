@@ -414,12 +414,12 @@ const AdminDashboard = () => {
         
         // DataTable columns for forms
         const formColumns = [
-          { key: 'company', label: t('companyName'), width: 'w-[25%]', sortAccessor: (item) => item.client_info?.company_name || '' },
-          { key: 'contact', label: t('contact'), width: 'w-[20%]', sortAccessor: (item) => item.client_info?.name || '' },
-          { key: 'email', label: t('email'), width: 'w-[20%]' },
-          { key: 'status', label: t('status'), width: 'w-[12%]', sortAccessor: (item) => item.status },
-          { key: 'date', label: t('date'), width: 'w-[10%]', sortAccessor: (item) => new Date(item.created_at || 0).getTime() },
-          { key: 'actions', label: t('actions'), width: 'w-[13%]' }
+          { key: 'company', label: t('companyName'), width: 'w-[24%]', sortAccessor: (item) => item.client_info?.company_name || '' },
+          { key: 'contact', label: t('contact'), width: 'w-[18%]', sortAccessor: (item) => item.client_info?.name || '' },
+          { key: 'email', label: t('email'), width: 'w-[18%]' },
+          { key: 'status', label: t('status'), width: 'w-[14%]', sortAccessor: (item) => item.status },
+          { key: 'date', label: t('date'), width: 'w-[12%]', sortAccessor: (item) => new Date(item.created_at || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'w-[14%]' }
         ];
 
         // Searchable columns for forms

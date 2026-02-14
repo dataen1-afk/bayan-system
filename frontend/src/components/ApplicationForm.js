@@ -1316,16 +1316,16 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
         </CardContent>
       </Card>
 
-      {/* Navigation Buttons - Fixed positioning for RTL */}
-      <div className="flex justify-between mt-6">
-        {/* Previous Button - Right side in RTL */}
-        <div className={cn("flex gap-2", isRTL ? "order-2" : "order-1")}>
+      {/* Navigation Buttons - Correct positioning for RTL */}
+      <div className="flex justify-between mt-6" dir={isRTL ? "rtl" : "ltr"}>
+        {/* Previous Button - Left in LTR, Right side visually in RTL due to dir */}
+        <div>
           {currentStep > 1 && (
             <Button
               type="button"
               variant="outline"
               onClick={prevStep}
-              className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}
+              className="flex items-center gap-2"
             >
               {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               {t('previous')}
@@ -1333,8 +1333,8 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
           )}
         </div>
 
-        {/* Next/Submit Button - Left side in RTL */}
-        <div className={cn("flex gap-2", isRTL ? "order-1 flex-row-reverse" : "order-2")}>
+        {/* Next/Submit Button - Right in LTR, Left side visually in RTL due to dir */}
+        <div className="flex gap-2">
           {!readOnly && (
             <Button
               type="button"
@@ -1351,10 +1351,7 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
             <Button
               type="button"
               onClick={nextStep}
-              className={cn(
-                "flex items-center gap-2 bg-bayan-navy hover:bg-bayan-navy-light",
-                isRTL && "flex-row-reverse"
-              )}
+              className="flex items-center gap-2 bg-bayan-navy hover:bg-bayan-navy-light"
             >
               {t('next')}
               {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}

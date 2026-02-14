@@ -272,6 +272,11 @@ const CertificationAgreementPage = () => {
   }
 
   if (submitted) {
+    // Auto-redirect to Customer Portal after 5 seconds
+    const redirectToPortal = () => {
+      window.location.href = `/track/${accessToken}`;
+    };
+
     return (
       <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
         <Header isRTL={isRTL} />
@@ -283,10 +288,24 @@ const CertificationAgreementPage = () => {
                   <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
                   <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('agreementSubmitted')}</h2>
                   <p className="text-gray-600 mb-6">{t('thankYouForAgreement')}</p>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md mx-auto">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md mx-auto mb-6">
                     <p className="text-sm text-green-800">
                       {t('contractWillBePrepared')}
                     </p>
+                  </div>
+                  
+                  {/* Redirect to Customer Portal */}
+                  <div className="mt-6 space-y-4">
+                    <p className="text-sm text-gray-500">
+                      {t('redirectingToPortal') || 'You will be redirected to track your order...'}
+                    </p>
+                    <Button 
+                      onClick={redirectToPortal}
+                      className="bg-bayan-navy hover:bg-bayan-navy-light"
+                      data-testid="go-to-portal-btn"
+                    >
+                      {t('trackYourOrder') || 'Track Your Order'}
+                    </Button>
                   </div>
                 </div>
               </CardContent>

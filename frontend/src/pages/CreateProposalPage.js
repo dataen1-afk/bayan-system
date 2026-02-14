@@ -426,7 +426,7 @@ const CreateProposalPage = () => {
               <div className="mt-6 p-4 bg-green-50 rounded-lg flex justify-between items-center">
                 <span className="text-lg font-bold">{t('totalAmount')}</span>
                 <span className="text-2xl font-bold text-green-700">
-                  {calculateTotal().toLocaleString()} SAR
+                  {new Intl.NumberFormat('en-US').format(calculateTotal())} SAR
                 </span>
               </div>
             </CardContent>

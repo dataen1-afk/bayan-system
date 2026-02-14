@@ -55,7 +55,11 @@ const CertificationAgreementPage = () => {
       surveillanceSchedule: false,
       nonconformityResolution: false,
       feesAndPayment: false
-    }
+    },
+    
+    // Digital Signature
+    signatureImage: null,
+    stampImage: null
   });
 
   // Available ISO Standards

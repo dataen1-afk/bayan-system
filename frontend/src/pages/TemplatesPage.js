@@ -559,11 +559,11 @@ const TemplatesPage = () => {
                   <div className="space-y-2 text-sm">
                     <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <span className="text-gray-500">{t('initialCertification')}:</span>
-                      <span className="font-medium">SAR {tmpl.default_fees?.initial_certification?.toLocaleString()}</span>
+                      <span className="font-medium">{new Intl.NumberFormat('en-US').format(tmpl.default_fees?.initial_certification || 0)} SAR</span>
                     </div>
                     <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <span className="text-gray-500">{t('recertification')}:</span>
-                      <span className="font-medium">SAR {tmpl.default_fees?.recertification?.toLocaleString()}</span>
+                      <span className="font-medium">{new Intl.NumberFormat('en-US').format(tmpl.default_fees?.recertification || 0)} SAR</span>
                     </div>
                     <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <span className="text-gray-500">{t('validity')}:</span>

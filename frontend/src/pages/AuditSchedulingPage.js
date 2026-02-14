@@ -58,6 +58,10 @@ const AuditSchedulingPage = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedAudit, setSelectedAudit] = useState(null);
   
+  // SMS status
+  const [smsStatus, setSmsStatus] = useState({ enabled: false, simulation_mode: true });
+  const [sendingSms, setSendingSms] = useState(null);
+  
   // Form state
   const [formData, setFormData] = useState({
     contract_id: '',
@@ -67,7 +71,11 @@ const AuditSchedulingPage = () => {
     scheduled_time: '09:00',
     duration_days: 1,
     auditors: '',
-    notes: ''
+    notes: '',
+    // Recurring event fields
+    is_recurring: false,
+    recurrence_type: '',
+    recurrence_end_date: ''
   });
 
   useEffect(() => {

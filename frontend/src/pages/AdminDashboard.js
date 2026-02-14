@@ -480,8 +480,8 @@ const AdminDashboard = () => {
                   data-testid={`application-form-${form.id}`}
                 >
                   {/* Company */}
-                  <div className={`lg:w-[25%] min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                  <div className="lg:w-[25%] min-w-0 text-start">
+                    <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="font-semibold text-slate-900 truncate">
                         {form.client_info?.company_name || t('unknownCompany')}
@@ -489,7 +489,7 @@ const AdminDashboard = () => {
                     </div>
                     {/* Standards badges on mobile */}
                     {form.company_data?.certificationSchemes?.length > 0 && (
-                      <div className={`flex flex-wrap gap-1 mt-1 lg:hidden ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <div className="flex flex-wrap gap-1 mt-1 lg:hidden">
                         {form.company_data.certificationSchemes.slice(0, 2).map((cert) => (
                           <span key={cert} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
                             {cert}
@@ -500,20 +500,20 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Contact */}
-                  <div className={`lg:w-[20%] min-w-0 mt-2 lg:mt-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                  <div className="lg:w-[20%] min-w-0 mt-2 lg:mt-0 text-start">
+                    <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
                       <span className="text-sm text-slate-700 truncate">{form.client_info?.name || '-'}</span>
                     </div>
                   </div>
                   
                   {/* Email */}
-                  <div className={`lg:w-[20%] min-w-0 hidden lg:block ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <div className="lg:w-[20%] min-w-0 hidden lg:block text-start">
                     <span className="text-sm text-slate-500 truncate block">{form.client_info?.email || '-'}</span>
                   </div>
                   
                   {/* Status */}
-                  <div className={`lg:w-[12%] mt-2 lg:mt-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <div className="lg:w-[12%] mt-2 lg:mt-0 text-start">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                       form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                       form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
@@ -526,15 +526,15 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Date */}
-                  <div className={`lg:w-[10%] hidden lg:block ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className={`flex items-center gap-1 text-sm text-slate-500 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                  <div className="lg:w-[10%] hidden lg:block text-start">
+                    <div className="flex items-center gap-1 text-sm text-slate-500">
                       <Calendar className="w-3.5 h-3.5" />
                       {formatDate(form.created_at)}
                     </div>
                   </div>
                   
                   {/* Actions */}
-                  <div className={`lg:w-[13%] flex items-center gap-2 mt-3 lg:mt-0 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-end'}`}>
+                  <div className="lg:w-[13%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {form.status === 'pending' && (
                       <>
                         <Button 

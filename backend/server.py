@@ -909,7 +909,7 @@ async def send_form_email(form_id: str, current_user: dict = Depends(require_adm
         raise HTTPException(status_code=404, detail="Application form not found")
     
     # Get frontend URL from environment or use default
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://contractcert.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://bayan-contracts.preview.emergentagent.com')
     form_link = f"{frontend_url}/form/{form['access_token']}"
     
     client_info = form['client_info']
@@ -1110,7 +1110,7 @@ async def send_proposal(proposal_id: str, current_user: dict = Depends(require_a
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://contractcert.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://bayan-contracts.preview.emergentagent.com')
     proposal_link = f"{frontend_url}/proposal/{proposal['access_token']}"
     
     email_body = f"""

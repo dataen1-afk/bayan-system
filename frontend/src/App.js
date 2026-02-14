@@ -14,8 +14,6 @@ import ReportsPage from '@/pages/ReportsPage';
 import TemplatesPage from '@/pages/TemplatesPage';
 import CustomerPortalPage from '@/pages/CustomerPortalPage';
 import AuditSchedulingPage from '@/pages/AuditSchedulingPage';
-import ContactHistoryPage from '@/pages/ContactHistoryPage';
-import DocumentsPage from '@/pages/DocumentsPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -114,14 +112,6 @@ function App() {
             <Route 
               path="/audit-scheduling" 
               element={user?.role === 'admin' ? <AuditSchedulingPage /> : <Navigate to="/login" />} 
-            />
-            <Route 
-              path="/contact-history" 
-              element={user?.role === 'admin' ? <ContactHistoryPage /> : <Navigate to="/login" />} 
-            />
-            <Route 
-              path="/documents" 
-              element={user?.role === 'admin' ? <DocumentsPage /> : <Navigate to="/login" />} 
             />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
           </Routes>

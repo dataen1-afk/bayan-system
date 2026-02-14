@@ -1029,6 +1029,200 @@ async def submit_public_form(access_token: str, update_data: ApplicationFormUpda
         status=updated_form['status']
     )
 
+# ================= PROPOSAL ROUTES =================
+
+@api_router.post("/proposals", response_model=Proposal)
+async def create_proposal(proposal_data: ProposalCreate, current_user: dict = Depends(require_admin)):
+    """Admin creates a proposal/quotation for a client"""
+    # Calculate total amount
+    fees = proposal_data.service_fees
+    total = fees.initial_certification + fees.surveillance_1 + fees.surveillance_2 + fees.recertification
+    
+    proposal = Proposal(
+        application_form_id=proposal_data.application_form_id,
+        organization_name=proposal_data.organization_name,
+        organization_address=proposal_data.organization_address,
+        organization_phone=proposal_data.organization_phone,
+        contact_person=proposal_data.contact_person,
+        contact_position=proposal_data.contact_position,
+        contact_email=proposal_data.contact_email,
+        standards=proposal_data.standards,
+        scope=proposal_data.scope,
+        total_employees=proposal_data.total_employees,
+        number_of_sites=proposal_data.number_of_sites,
+        audit_duration=proposal_data.audit_duration,
+        service_fees=proposal_data.service_fees,
+        total_amount=total,
+        notes=proposal_data.notes,
+        validity_days=proposal_data.validity_days,
+        issuer_name=current_user.get('name', 'Admin'),
+        issuer_designation="Certification Manager",
+        issued_date=datetime.now(timezone.utc)
+    )
+    
+    proposal_doc = proposal.model_dump()
+    proposal_doc['created_at'] = proposal_doc['created_at'].isoformat()
+    proposal_doc['issued_date'] = proposal_doc['issued_date'].isoformat() if proposal_doc['issued_date'] else None
+    
+    await db.proposals.insert_one(proposal_doc)
+    
+    # Update application form status to under_review
+    await db.application_forms.update_one(
+        {"id": proposal_data.application_form_id},
+        {"$set": {"status": "under_review"}}
+    )
+    
+    return proposal
+
+@api_router.get("/proposals", response_model=List[Proposal])
+async def get_proposals(current_user: dict = Depends(require_admin)):
+    """Get all proposals (admin only)"""
+    proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
+    
+    for p in proposals:
+        if isinstance(p.get('created_at'), str):
+            p['created_at'] = datetime.fromisoformat(p['created_at'])
+        if p.get('issued_date') and isinstance(p['issued_date'], str):
+            p['issued_date'] = datetime.fromisoformat(p['issued_date'])
+        if p.get('client_response_date') and isinstance(p['client_response_date'], str):
+            p['client_response_date'] = datetime.fromisoformat(p['client_response_date'])
+    
+    return proposals
+
+@api_router.get("/proposals/{proposal_id}", response_model=Proposal)
+async def get_proposal(proposal_id: str, current_user: dict = Depends(require_admin)):
+    """Get a specific proposal"""
+    proposal = await db.proposals.find_one({"id": proposal_id}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    if isinstance(proposal.get('created_at'), str):
+        proposal['created_at'] = datetime.fromisoformat(proposal['created_at'])
+    if proposal.get('issued_date') and isinstance(proposal['issued_date'], str):
+        proposal['issued_date'] = datetime.fromisoformat(proposal['issued_date'])
+    
+    return Proposal(**proposal)
+
+@api_router.post("/proposals/{proposal_id}/send")
+async def send_proposal(proposal_id: str, current_user: dict = Depends(require_admin)):
+    """Send proposal link to client via email"""
+    proposal = await db.proposals.find_one({"id": proposal_id})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://contractcert.preview.emergentagent.com')
+    proposal_link = f"{frontend_url}/proposal/{proposal['access_token']}"
+    
+    email_body = f"""
+مرحباً {proposal['contact_person']}،
+
+نرفق لكم عرض السعر للحصول على شهادة الاعتماد لشركتكم {proposal['organization_name']}.
+
+يرجى النقر على الرابط التالي لمراجعة العرض والموافقة عليه:
+{proposal_link}
+
+العرض صالح لمدة {proposal['validity_days']} يوماً.
+
+مع أطيب التحيات،
+بيان للتحقق والمطابقة
+
+---
+
+Hello {proposal['contact_person']},
+
+Please find attached the price quotation for certification of your organization {proposal['organization_name']}.
+
+Click the following link to review and accept the proposal:
+{proposal_link}
+
+This proposal is valid for {proposal['validity_days']} days.
+
+Best regards,
+Bayan Auditing & Conformity
+"""
+    
+    await send_email(
+        to=proposal['contact_email'],
+        subject=f"عرض سعر - Price Quotation - {proposal['organization_name']}",
+        body=email_body
+    )
+    
+    return {"message": "Proposal sent successfully", "proposal_link": proposal_link}
+
+# ================= PUBLIC PROPOSAL ACCESS =================
+
+@api_router.get("/public/proposal/{access_token}", response_model=PublicProposalResponse)
+async def get_public_proposal(access_token: str):
+    """Public access to proposal (no login required)"""
+    proposal = await db.proposals.find_one({"access_token": access_token}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
+    
+    return PublicProposalResponse(
+        id=proposal['id'],
+        organization_name=proposal['organization_name'],
+        contact_person=proposal['contact_person'],
+        contact_email=proposal['contact_email'],
+        standards=proposal['standards'],
+        scope=proposal['scope'],
+        total_employees=proposal['total_employees'],
+        number_of_sites=proposal['number_of_sites'],
+        audit_duration=proposal['audit_duration'],
+        service_fees=proposal['service_fees'],
+        total_amount=proposal['total_amount'],
+        notes=proposal.get('notes', ''),
+        validity_days=proposal['validity_days'],
+        status=proposal['status'],
+        issuer_name=proposal.get('issuer_name', ''),
+        issuer_designation=proposal.get('issuer_designation', ''),
+        issued_date=datetime.fromisoformat(proposal['issued_date']) if proposal.get('issued_date') else None
+    )
+
+@api_router.post("/public/proposal/{access_token}/respond")
+async def respond_to_proposal(access_token: str, response: ProposalResponse):
+    """Client accepts or rejects proposal (no login required)"""
+    proposal = await db.proposals.find_one({"access_token": access_token})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
+    
+    if proposal['status'] != 'pending':
+        raise HTTPException(status_code=400, detail="Proposal has already been responded to")
+    
+    update_data = {
+        "status": response.status,
+        "client_response_date": datetime.now(timezone.utc).isoformat(),
+        "client_signatory_name": response.signatory_name,
+        "client_signatory_designation": response.signatory_designation,
+    }
+    
+    if response.status == "rejected":
+        update_data["rejection_reason"] = response.rejection_reason
+    
+    await db.proposals.update_one(
+        {"access_token": access_token},
+        {"$set": update_data}
+    )
+    
+    # If accepted, update application form status and create contract
+    if response.status == "accepted":
+        await db.application_forms.update_one(
+            {"id": proposal['application_form_id']},
+            {"$set": {"status": "approved"}}
+        )
+        
+        # TODO: Generate contract PDF
+        contract = Contract(
+            quotation_id="",
+            proposal_id=proposal['id'],
+            client_id=proposal['organization_name'],
+            pdf_path=""  # Will be generated
+        )
+        contract_doc = contract.model_dump()
+        contract_doc['created_at'] = contract_doc['created_at'].isoformat()
+        await db.contracts.insert_one(contract_doc)
+    
+    return {"message": f"Proposal {response.status} successfully"}
+
 # Include the router in the main app
 app.include_router(api_router)
 

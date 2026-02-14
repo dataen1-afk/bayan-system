@@ -1605,6 +1605,21 @@ const resources = {
       "delete": "حذف",
       "time": "الوقت",
       
+      // Google Calendar Integration
+      "connectGoogleCalendar": "ربط تقويم Google",
+      "calendarConnected": "التقويم مرتبط",
+      "confirmDisconnectCalendar": "هل أنت متأكد من فصل تقويم Google؟",
+      "syncToCalendar": "مزامنة مع تقويم Google",
+      "auditSyncedToCalendar": "تم مزامنة التدقيق مع تقويم Google بنجاح",
+      "calendarSyncError": "خطأ في المزامنة مع التقويم",
+      "calendarConnectError": "خطأ في الاتصال بتقويم Google",
+      "synced": "تم المزامنة",
+      
+      // Bilingual PDF
+      "downloadBilingualPDF": "تحميل PDF ثنائي اللغة (عربي/إنجليزي)",
+      "downloadEnglishPDF": "تحميل PDF بالإنجليزية",
+      "downloadArabicPDF": "تحميل PDF بالعربية",
+      
       // Contact History
       "contactHistory": "سجل الاتصالات",
       "addContact": "إضافة اتصال",

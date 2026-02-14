@@ -31,6 +31,7 @@ const ReportsPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [standardFilter, setStandardFilter] = useState('all');
   const [filtersApplied, setFiltersApplied] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const certificationStandards = [
     'ISO9001', 'ISO14001', 'ISO45001', 'ISO22000', 
@@ -51,6 +52,44 @@ const ReportsPage = () => {
   useEffect(() => {
     loadAllStats();
   }, []);
+
+  const handleExport = async (format) => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const params = new URLSearchParams();
+      params.append('format', format);
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (standardFilter !== 'all') params.append('standard', standardFilter);
+      
+      const response = await axios.get(`${API}/reports/export?${params.toString()}`, {
+        headers,
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const filename = format === 'excel' 
+        ? `report_${new Date().toISOString().split('T')[0]}.xlsx`
+        : `report_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert(t('errorExportingReport'));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const loadAllStats = async () => {
     setLoading(true);

@@ -42,6 +42,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
     { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },
+    { id: 'contact-history', icon: Users, label: t('contactHistory'), color: 'text-teal-600', route: '/contact-history' },
   ] : [
     { id: 'forms', icon: FileText, label: t('myForms'), color: 'text-blue-600' },
     { id: 'quotations', icon: DollarSign, label: t('quotations'), color: 'text-green-600' },
@@ -49,7 +50,6 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
   ];
 
   const bottomMenuItems = [
-    { id: 'customer-portal', icon: Users, label: t('customerPortal'), color: 'text-teal-600', route: '/track', external: true },
     { id: 'settings', icon: Settings, label: t('settings'), color: 'text-gray-600' },
   ];
 

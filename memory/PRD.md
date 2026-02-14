@@ -278,13 +278,14 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── DataTable.js (NEW - Professional table with RTL support)
 │   │   │   ├── NotificationBell.js
 │   │   │   ├── StatusTimeline.js
 │   │   │   ├── Sidebar.js (UPDATED)
 │   │   │   ├── DocumentManagement.js (NEW)
 │   │   │   └── ...
 │   │   ├── pages/
-│   │   │   ├── AdminDashboard.js
+│   │   │   ├── AdminDashboard.js (UPDATED - Uses DataTable)
 │   │   │   ├── ReportsPage.js (UPDATED - Export)
 │   │   │   ├── TemplatesPage.js
 │   │   │   ├── CustomerPortalPage.js (NEW)

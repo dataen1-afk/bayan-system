@@ -667,13 +667,13 @@ const AdminDashboard = () => {
         
         // DataTable columns for proposals
         const proposalColumns = [
-          { key: 'organization', label: t('organization'), width: 'w-[25%]', sortAccessor: (item) => item.organization_name || '' },
-          { key: 'contact', label: t('contact'), width: 'w-[18%]', sortAccessor: (item) => item.contact_person || '' },
-          { key: 'standards', label: t('standards'), width: 'w-[15%]' },
-          { key: 'status', label: t('status'), width: 'w-[12%]', sortAccessor: (item) => item.status },
-          { key: 'amount', label: t('amount'), width: 'w-[12%]', sortAccessor: (item) => item.total_amount || 0 },
-          { key: 'date', label: t('date'), width: 'w-[8%]', sortAccessor: (item) => new Date(item.issued_date || 0).getTime() },
-          { key: 'actions', label: t('actions'), width: 'w-[10%]' }
+          { key: 'organization', label: t('organization'), width: 'w-[22%]', sortAccessor: (item) => item.organization_name || '' },
+          { key: 'contact', label: t('contact'), width: 'w-[15%]', sortAccessor: (item) => item.contact_person || '' },
+          { key: 'standards', label: t('standards'), width: 'w-[12%]' },
+          { key: 'status', label: t('status'), width: 'w-[14%]', sortAccessor: (item) => item.status },
+          { key: 'amount', label: t('amount'), width: 'w-[13%]', sortAccessor: (item) => item.total_amount || 0 },
+          { key: 'date', label: t('date'), width: 'w-[10%]', sortAccessor: (item) => new Date(item.issued_date || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'w-[14%]' }
         ];
 
         // Searchable columns for proposals

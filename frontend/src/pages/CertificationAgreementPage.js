@@ -203,6 +203,11 @@ const CertificationAgreementPage = () => {
       alert(t('acceptAllAcknowledgements'));
       return false;
     }
+    // Check digital signature
+    if (!formData.signatureImage) {
+      alert(t('pleaseProvideSignature') || 'Please provide your digital signature');
+      return false;
+    }
     return true;
   };
 

@@ -316,6 +316,70 @@ async def send_email(to: str, subject: str, body: str):
         logging.info(f"[MOCK EMAIL] To: {to}, Subject: {subject}")
         logging.info(f"[MOCK EMAIL] Body: {body[:200]}...")
 
+def calculate_audit_from_form_data(company_data: ApplicationFormData) -> Dict:
+    """
+    Calculate audit time based on form data.
+    Extracts employees, certifications, and risk info from the form.
+    """
+    # Get number of employees
+    try:
+        employees = int(company_data.totalEmployees) if company_data.totalEmployees else 10
+    except (ValueError, TypeError):
+        employees = 10  # Default
+    
+    # Get certifications selected
+    certifications = company_data.certificationSchemes or []
+    
+    # Map form certification values to calculator format
+    cert_mapping = {
+        "ISO9001": "ISO9001",
+        "ISO14001": "ISO14001",
+        "ISO45001": "ISO45001",
+        "ISO22000": "ISO22000",
+        "ISO13485": "ISO13485",
+        "ISO22301": "ISO22301",
+        "ISO27001": "ISO27001",
+        "ISO50001": "ISO50001",
+    }
+    
+    mapped_certs = [cert_mapping.get(c, c) for c in certifications if c in cert_mapping]
+    
+    if not mapped_certs:
+        return {
+            "certifications": {},
+            "total_md": 0,
+            "reduction": 0,
+            "final_total_md": 0,
+            "phases": {}
+        }
+    
+    # Get risk category (default to medium)
+    risk_category = "medium"
+    
+    # Get food safety category if ISO 22000 is selected
+    food_safety_category = company_data.processingType if company_data.processingType else "AI"
+    
+    # Check if integrated with ISO 9001
+    integrated_with_9001 = "ISO9001" in mapped_certs
+    
+    # Get HACCP studies count
+    try:
+        haccp_studies = int(company_data.numberOfHACCPStudies) if company_data.numberOfHACCPStudies else 1
+    except (ValueError, TypeError):
+        haccp_studies = 1
+    
+    # Calculate
+    result = calculate_total_audit_time(
+        certifications=mapped_certs,
+        employees=employees,
+        risk_category=risk_category,
+        food_safety_category=food_safety_category,
+        haccp_studies=haccp_studies,
+        integrated_with_9001=integrated_with_9001
+    )
+    
+    return result
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     token = credentials.credentials
     payload = decode_jwt_token(token)

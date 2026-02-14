@@ -1018,7 +1018,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Standards */}
-                  <div className="lg:w-[18%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex flex-wrap gap-1">
                       {contract.standards?.slice(0, 2).map((std) => (
                         <span key={std} className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded border border-emerald-100">
@@ -1032,22 +1032,22 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Amount */}
-                  <div className="lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
-                    <span className="font-bold text-emerald-600 text-lg">
+                  <div className="lg:w-[16%] min-w-0 mt-2 lg:mt-0 text-start">
+                    <span className="font-bold text-emerald-600 text-lg whitespace-nowrap">
                       {formatCurrency(contract.total_amount)}
                     </span>
                   </div>
                   
                   {/* Date */}
-                  <div className="lg:w-[12%] hidden lg:block text-start">
-                    <div className="flex items-center gap-1 text-sm text-slate-500">
-                      <Calendar className="w-3.5 h-3.5" />
+                  <div className="lg:w-[14%] hidden lg:block text-start">
+                    <div className="flex items-center gap-1 text-sm text-slate-500 whitespace-nowrap">
+                      <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       {formatDate(contract.client_response_date)}
                     </div>
                   </div>
                   
                   {/* Actions */}
-                  <div className="lg:w-[12%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
+                  <div className="lg:w-[18%] flex items-center gap-1 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {contract.access_token && (
                       <Button
                         size="sm"

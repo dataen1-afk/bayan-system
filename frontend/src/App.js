@@ -12,6 +12,8 @@ import CreateProposalPage from '@/pages/CreateProposalPage';
 import CertificationAgreementPage from '@/pages/CertificationAgreementPage';
 import ReportsPage from '@/pages/ReportsPage';
 import TemplatesPage from '@/pages/TemplatesPage';
+import CustomerPortalPage from '@/pages/CustomerPortalPage';
+import AuditSchedulingPage from '@/pages/AuditSchedulingPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

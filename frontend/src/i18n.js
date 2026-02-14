@@ -628,7 +628,10 @@ const resources = {
       // Contracts Page
       "signedDate": "Signed Date",
       "contractValue": "Contract Value",
-      "viewContract": "View Contract"
+      "viewContract": "View Contract",
+      "totalContracts": "Total Contracts",
+      "totalRevenue": "Total Revenue",
+      "mostRecentContract": "Most Recent Contract"
     }
   },
   ar: {
@@ -1256,7 +1259,10 @@ const resources = {
       // Contracts Page
       "signedDate": "تاريخ التوقيع",
       "contractValue": "قيمة العقد",
-      "viewContract": "عرض العقد"
+      "viewContract": "عرض العقد",
+      "totalContracts": "إجمالي العقود",
+      "totalRevenue": "إجمالي الإيرادات",
+      "mostRecentContract": "أحدث عقد"
     }
   }
 };

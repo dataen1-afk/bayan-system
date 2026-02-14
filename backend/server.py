@@ -1571,6 +1571,23 @@ async def delete_certification_package(package_id: str, credentials: HTTPAuthori
     )
     return {"message": "Package deleted"}
 
+@api_router.put("/templates/packages/{package_id}")
+async def update_certification_package(package_id: str, package: CertificationPackage, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update a certification package"""
+    await get_current_user(credentials)
+    update_data = {
+        "name": package.name,
+        "name_ar": package.name_ar,
+        "description": package.description,
+        "description_ar": package.description_ar,
+        "standards": package.standards
+    }
+    await db.certification_packages.update_one(
+        {"id": package_id},
+        {"$set": update_data}
+    )
+    return {"message": "Package updated", "id": package_id}
+
 @api_router.get("/templates/proposals")
 async def get_proposal_templates(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get all proposal templates"""

@@ -31,12 +31,22 @@ const formatDate = (dateString) => {
 const AuditSchedulingPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isRTL = i18n.language?.startsWith('ar');
   
   const [loading, setLoading] = useState(true);
   const [audits, setAudits] = useState([]);
   const [sites, setSites] = useState([]);
   const [contracts, setContracts] = useState([]);
+  
+  // Google Calendar state
+  const [calendarStatus, setCalendarStatus] = useState({
+    enabled: false,
+    configured: false,
+    connected: false,
+    message: ''
+  });
+  const [syncingAudit, setSyncingAudit] = useState(null);
   
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -62,7 +72,65 @@ const AuditSchedulingPage = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+    loadCalendarStatus();
+    
+    // Check if returning from calendar connection
+    if (searchParams.get('calendar_connected') === 'true') {
+      loadCalendarStatus();
+    }
+  }, [searchParams]);
+
+  const loadCalendarStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.get(`${API}/calendar/status`, { headers });
+      setCalendarStatus(res.data);
+    } catch (error) {
+      console.error('Error loading calendar status:', error);
+    }
+  };
+
+  const handleConnectCalendar = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.get(`${API}/calendar/auth/url`, { headers });
+      window.location.href = res.data.authorization_url;
+    } catch (error) {
+      console.error('Error getting calendar auth URL:', error);
+      alert(t('calendarConnectError'));
+    }
+  };
+
+  const handleDisconnectCalendar = async () => {
+    if (!window.confirm(t('confirmDisconnectCalendar'))) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.delete(`${API}/calendar/disconnect`, { headers });
+      setCalendarStatus({ ...calendarStatus, connected: false });
+    } catch (error) {
+      console.error('Error disconnecting calendar:', error);
+    }
+  };
+
+  const handleSyncToCalendar = async (auditId) => {
+    setSyncingAudit(auditId);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.post(`${API}/calendar/sync-audit?audit_id=${auditId}`, {}, { headers });
+      loadData();
+      alert(t('auditSyncedToCalendar'));
+    } catch (error) {
+      console.error('Error syncing to calendar:', error);
+      alert(error.response?.data?.detail || t('calendarSyncError'));
+    } finally {
+      setSyncingAudit(null);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);

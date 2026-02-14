@@ -546,6 +546,10 @@ const resources = {
       "contactPerson": "Contact Person",
       "sent": "Sent",
       "draft": "Draft",
+      "agreement_signed": "Agreement Signed",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "pending": "Pending",
       
       // Notifications
       "notifications": "Notifications",

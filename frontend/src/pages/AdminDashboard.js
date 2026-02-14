@@ -319,8 +319,41 @@ const AdminDashboard = () => {
                             </p>
                             {form.company_data?.certificationSchemes?.length > 0 && (
                               <p className="text-sm text-gray-600">
-                                {t('certifications')}: {form.company_data.certificationSchemes.length} {t('selected')}
+                                {t('certifications')}: {form.company_data.certificationSchemes.join(', ')}
                               </p>
+                            )}
+                            {form.company_data?.totalEmployees && (
+                              <p className="text-sm text-gray-600">
+                                {t('totalEmployees')}: {form.company_data.totalEmployees}
+                              </p>
+                            )}
+                            {/* Show Audit Calculation for submitted forms */}
+                            {form.status === 'submitted' && form.audit_calculation && (
+                              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p className="font-semibold text-green-800 mb-2">{t('auditCalculation')}</p>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div>
+                                    <span className="text-gray-600">{t('totalManDays')}:</span>
+                                    <span className="font-bold text-green-700 mx-1">{form.audit_calculation.final_total_md}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-600">{t('integrationDiscount')}:</span>
+                                    <span className="font-bold text-blue-600 mx-1">-{form.audit_calculation.reduction}</span>
+                                  </div>
+                                  {form.audit_calculation.phases && (
+                                    <>
+                                      <div>
+                                        <span className="text-gray-600">Stage 1:</span>
+                                        <span className="font-medium mx-1">{form.audit_calculation.phases.stage_1}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-600">Stage 2:</span>
+                                        <span className="font-medium mx-1">{form.audit_calculation.phases.stage_2}</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
                             )}
                             <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${getStatusBadgeColor(form.status)}`}>
                               {t(form.status)}
@@ -353,15 +386,26 @@ const AdminDashboard = () => {
                               </>
                             )}
                             {form.status === 'submitted' && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleViewApplicationForm(form)}
-                                data-testid={`view-form-${form.id}`}
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                {t('view')}
-                              </Button>
+                              <>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleViewApplicationForm(form)}
+                                  data-testid={`view-form-${form.id}`}
+                                >
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  {t('view')}
+                                </Button>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => handleCreateQuotation(form)}
+                                  data-testid={`create-quote-${form.id}`}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <DollarSign className="w-4 h-4 mr-1" />
+                                  {t('createQuotation')}
+                                </Button>
+                              </>
                             )}
                           </div>
                         </div>

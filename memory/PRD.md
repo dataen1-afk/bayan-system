@@ -195,7 +195,8 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ## Testing Status (Feb 2026)
 - Backend API: 100% (all tests passed)
 - Frontend UI: 100% (all tests passed)
-- Latest Test Report: `/app/test_reports/iteration_8.json`
+- Latest Test Report: `/app/test_reports/iteration_9.json`
+- Signature Tests: `/app/backend/tests/test_signature_feature.py`
 
 ## Cleanup Completed
 - Removed obsolete `ClientDashboard.js` (clients access via public links, no login)

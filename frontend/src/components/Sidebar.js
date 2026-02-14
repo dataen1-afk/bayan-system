@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   DollarSign, 
@@ -9,12 +10,15 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Menu,
+  Calendar,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboardTitle }) => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   
@@ -37,6 +41,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'contracts', icon: FileCheck, label: t('contracts'), color: 'text-purple-600' },
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
+    { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },
   ] : [
     { id: 'forms', icon: FileText, label: t('myForms'), color: 'text-blue-600' },
     { id: 'quotations', icon: DollarSign, label: t('quotations'), color: 'text-green-600' },
@@ -44,8 +49,22 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
   ];
 
   const bottomMenuItems = [
+    { id: 'customer-portal', icon: Users, label: t('customerPortal'), color: 'text-teal-600', route: '/track', external: true },
     { id: 'settings', icon: Settings, label: t('settings'), color: 'text-gray-600' },
   ];
+
+  const handleMenuClick = (item) => {
+    if (item.route) {
+      if (item.external) {
+        window.open(item.route, '_blank');
+      } else {
+        navigate(item.route);
+      }
+    } else {
+      onTabChange(item.id);
+    }
+    setIsMobileOpen(false);
+  };
 
   const MenuItem = ({ item, isBottom = false }) => {
     const isActive = activeTab === item.id;
@@ -53,10 +72,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     
     return (
       <button
-        onClick={() => {
-          onTabChange(item.id);
-          setIsMobileOpen(false);
-        }}
+        onClick={() => handleMenuClick(item)}
         data-testid={`sidebar-${item.id}`}
         className={cn(
           "sidebar-menu-item w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200",

@@ -896,14 +896,14 @@ const AdminDashboard = () => {
           ? signedContracts.sort((a, b) => new Date(b.client_response_date) - new Date(a.client_response_date))[0]
           : null;
         
-        // DataTable columns for contracts
+        // DataTable columns for contracts - use min-width for better content visibility
         const contractColumns = [
-          { key: 'organization', label: t('organization'), width: 'w-[22%]', sortAccessor: (item) => item.organization_name || '' },
-          { key: 'contact', label: t('contact'), width: 'w-[15%]', sortAccessor: (item) => item.contact_person || '' },
-          { key: 'standards', label: t('standards'), width: 'w-[15%]' },
-          { key: 'amount', label: t('contractValue'), width: 'w-[16%]', sortAccessor: (item) => item.total_amount || 0 },
-          { key: 'date', label: t('signedDate'), width: 'w-[14%]', sortAccessor: (item) => new Date(item.client_response_date || 0).getTime() },
-          { key: 'actions', label: t('actions'), width: 'w-[18%]' }
+          { key: 'organization', label: t('organization'), width: 'min-w-[200px] flex-1', sortAccessor: (item) => item.organization_name || '' },
+          { key: 'contact', label: t('contact'), width: 'min-w-[130px] w-[13%]', sortAccessor: (item) => item.contact_person || '' },
+          { key: 'standards', label: t('standards'), width: 'min-w-[120px] w-[12%]' },
+          { key: 'amount', label: t('contractValue'), width: 'min-w-[130px] w-[14%]', sortAccessor: (item) => item.total_amount || 0 },
+          { key: 'date', label: t('signedDate'), width: 'min-w-[110px] w-[12%]', sortAccessor: (item) => new Date(item.client_response_date || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'min-w-[170px] w-[16%]' }
         ];
 
         // Searchable columns for contracts
@@ -995,30 +995,30 @@ const AdminDashboard = () => {
               renderRow={(contract, index, rtl) => (
                 <div 
                   key={contract.id} 
-                  className="group flex flex-col lg:flex-row lg:items-center p-4 lg:p-5 hover:bg-slate-50/80 transition-colors"
+                  className="group flex flex-col lg:flex-row lg:items-center p-4 lg:px-5 lg:py-4 hover:bg-slate-50/80 transition-colors"
                   data-testid={`contract-${contract.id}`}
                 >
                   {/* Organization */}
-                  <div className="lg:w-[22%] min-w-0 text-start">
+                  <div className="lg:min-w-[200px] lg:flex-1 min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span className="font-semibold text-slate-900 truncate">
+                      <span className="font-semibold text-slate-900 truncate" title={contract.organization_name}>
                         {contract.organization_name}
                       </span>
                     </div>
                   </div>
                   
                   {/* Contact */}
-                  <div className="lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[130px] lg:w-[13%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
-                      <span className="text-sm text-slate-700 truncate">{contract.contact_person || '-'}</span>
+                      <span className="text-sm text-slate-700 truncate" title={contract.contact_person}>{contract.contact_person || '-'}</span>
                     </div>
                     <span className="text-xs text-slate-500 truncate block lg:hidden">{contract.contact_email}</span>
                   </div>
                   
                   {/* Standards */}
-                  <div className="lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[120px] lg:w-[12%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex flex-wrap gap-1">
                       {contract.standards?.slice(0, 2).map((std) => (
                         <span key={std} className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded border border-emerald-100">
@@ -1032,22 +1032,22 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Amount */}
-                  <div className="lg:w-[16%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[130px] lg:w-[14%] min-w-0 mt-2 lg:mt-0 text-start">
                     <span className="font-bold text-emerald-600 text-lg whitespace-nowrap">
                       {formatCurrency(contract.total_amount)}
                     </span>
                   </div>
                   
                   {/* Date */}
-                  <div className="lg:w-[14%] hidden lg:block text-start">
+                  <div className="lg:min-w-[110px] lg:w-[12%] hidden lg:block text-start">
                     <div className="flex items-center gap-1 text-sm text-slate-500 whitespace-nowrap">
                       <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       {formatDate(contract.client_response_date)}
                     </div>
                   </div>
                   
-                  {/* Actions */}
-                  <div className="lg:w-[18%] flex items-center gap-1 mt-3 lg:mt-0 justify-end" dir="ltr">
+                  {/* Actions - Professional layout with proper spacing */}
+                  <div className="lg:min-w-[170px] lg:w-[16%] flex items-center gap-1.5 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {contract.access_token && (
                       <Button
                         size="sm"
@@ -1056,7 +1056,7 @@ const AdminDashboard = () => {
                           const url = `${window.location.origin}/proposal/${contract.access_token}`;
                           window.open(url, '_blank');
                         }}
-                        className="h-8 px-2"
+                        className="h-8 w-8 p-0"
                         title={t('viewProposal')}
                       >
                         <Eye className="w-4 h-4" />
@@ -1084,7 +1084,7 @@ const AdminDashboard = () => {
                           console.error('Error downloading contract:', error);
                         }
                       }}
-                      className="h-8 px-2"
+                      className="h-8 w-8 p-0"
                       data-testid={`download-contract-${contract.id}`}
                       title={t('downloadEnglishPDF')}
                     >
@@ -1111,12 +1111,12 @@ const AdminDashboard = () => {
                           console.error('Error downloading bilingual contract:', error);
                         }
                       }}
-                      className="h-8 px-3 bg-bayan-navy hover:bg-bayan-navy-light"
+                      className="h-8 px-2.5 bg-bayan-navy hover:bg-bayan-navy-light"
                       data-testid={`download-bilingual-contract-${contract.id}`}
                       title={t('downloadBilingualPDF')}
                     >
-                      <Download className="w-4 h-4 me-1" />
-                      <span className="hidden sm:inline">AR/EN</span>
+                      <Download className="w-4 h-4" />
+                      <span className="hidden xl:inline ms-1">AR/EN</span>
                     </Button>
                   </div>
                 </div>

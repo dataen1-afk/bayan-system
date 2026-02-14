@@ -86,6 +86,8 @@ function App() {
             <Route path="/form/:accessToken" element={<PublicFormPage />} />
             <Route path="/proposal/:accessToken" element={<PublicProposalPage />} />
             <Route path="/agreement/:accessToken" element={<CertificationAgreementPage />} />
+            <Route path="/track" element={<CustomerPortalPage />} />
+            <Route path="/track/:trackingId" element={<CustomerPortalPage />} />
             
             {/* Authenticated routes */}
             <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
@@ -106,6 +108,10 @@ function App() {
             <Route 
               path="/templates" 
               element={user?.role === 'admin' ? <TemplatesPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/audit-scheduling" 
+              element={user?.role === 'admin' ? <AuditSchedulingPage /> : <Navigate to="/login" />} 
             />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
           </Routes>

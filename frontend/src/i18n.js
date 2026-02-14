@@ -424,6 +424,7 @@ const resources = {
       "createNewAccount": "إنشاء حساب جديد",
       "email": "البريد الإلكتروني",
       "password": "كلمة المرور",
+      "phone": "رقم الهاتف",
       "fullName": "الاسم الكامل",
       "role": "الدور",
       "signingIn": "جاري تسجيل الدخول...",

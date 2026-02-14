@@ -462,11 +462,11 @@ const TemplatesPage = () => {
                     />
                   </div>
                   <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Button onClick={handleAddTemplate} disabled={saving}>
+                    <Button onClick={editingItem ? handleUpdateTemplate : handleAddTemplate} disabled={saving}>
                       {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                      {t('save')}
+                      {editingItem ? t('update') : t('save')}
                     </Button>
-                    <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                    <Button variant="outline" onClick={cancelEdit}>
                       <X className="w-4 h-4 mr-2" />
                       {t('cancel')}
                     </Button>
@@ -485,14 +485,24 @@ const TemplatesPage = () => {
                 <CardHeader className={isRTL ? 'text-right' : ''}>
                   <CardTitle className="flex items-center justify-between">
                     <span>{isRTL ? pkg.name_ar : pkg.name}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleDeletePackage(pkg.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleEditPackage(pkg)}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeletePackage(pkg.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </CardTitle>
                   <CardDescription>{isRTL ? pkg.description_ar : pkg.description}</CardDescription>
                 </CardHeader>

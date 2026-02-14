@@ -1370,6 +1370,10 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
     if existing_agreement:
         raise HTTPException(status_code=400, detail="Agreement has already been submitted")
     
+    # Validate signature is provided
+    if not agreement_data.signature_image:
+        raise HTTPException(status_code=400, detail="Digital signature is required")
+    
     # Create certification agreement
     agreement = CertificationAgreement(
         proposal_id=proposal['id'],
@@ -1383,7 +1387,9 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
         signatory_name=agreement_data.signatory_name,
         signatory_position=agreement_data.signatory_position,
         signatory_date=agreement_data.signatory_date,
-        acknowledgements=agreement_data.acknowledgements.model_dump()
+        acknowledgements=agreement_data.acknowledgements.model_dump(),
+        signature_image=agreement_data.signature_image,
+        stamp_image=agreement_data.stamp_image
     )
     
     agreement_doc = agreement.model_dump()

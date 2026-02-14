@@ -226,7 +226,9 @@ const CertificationAgreementPage = () => {
         signatory_name: formData.signatoryName,
         signatory_position: formData.signatoryPosition,
         signatory_date: formData.signatoryDate,
-        acknowledgements: formData.acknowledgements
+        acknowledgements: formData.acknowledgements,
+        signature_image: formData.signatureImage,
+        stamp_image: formData.stampImage
       });
       setSubmitted(true);
     } catch (error) {

@@ -898,12 +898,12 @@ const AdminDashboard = () => {
         
         // DataTable columns for contracts
         const contractColumns = [
-          { key: 'organization', label: t('organization'), width: 'w-[25%]', sortAccessor: (item) => item.organization_name || '' },
-          { key: 'contact', label: t('contact'), width: 'w-[18%]', sortAccessor: (item) => item.contact_person || '' },
-          { key: 'standards', label: t('standards'), width: 'w-[18%]' },
-          { key: 'amount', label: t('contractValue'), width: 'w-[15%]', sortAccessor: (item) => item.total_amount || 0 },
-          { key: 'date', label: t('signedDate'), width: 'w-[12%]', sortAccessor: (item) => new Date(item.client_response_date || 0).getTime() },
-          { key: 'actions', label: t('actions'), width: 'w-[12%]' }
+          { key: 'organization', label: t('organization'), width: 'w-[22%]', sortAccessor: (item) => item.organization_name || '' },
+          { key: 'contact', label: t('contact'), width: 'w-[15%]', sortAccessor: (item) => item.contact_person || '' },
+          { key: 'standards', label: t('standards'), width: 'w-[15%]' },
+          { key: 'amount', label: t('contractValue'), width: 'w-[16%]', sortAccessor: (item) => item.total_amount || 0 },
+          { key: 'date', label: t('signedDate'), width: 'w-[14%]', sortAccessor: (item) => new Date(item.client_response_date || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'w-[18%]' }
         ];
 
         // Searchable columns for contracts

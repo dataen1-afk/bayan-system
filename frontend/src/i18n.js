@@ -752,7 +752,7 @@ const resources = {
       "assignNewForm": "تعيين طلب جديد",
       "noApplicationFormsYet": "لا توجد طلبات اعتماد بعد",
       "assignFirstApplicationForm": "قم بتعيين نموذج طلب لعميل للبدء",
-      "applicationFormsEmptyStateHelp": "تتيح نماذج الطلبات للعملاء التقدم للحصول على الشهادات. انقر على 'تعيين طلب جديد' لإرسال طلب إلى عميل.",
+      "applicationFormsEmptyStateHelp": "تتيح نماذج الطلبات للعملاء التقدم للحصول على الشهادات. انقر على 'إنشاء طلب جديد' لإنشاء طلب وإرساله إلى العميل.",
       "selectClientToAssignForm": "اختر عميلاً لتعيين نموذج طلب الاعتماد له",
       "selectClient": "اختر العميل",
       "selectClientPlaceholder": "اختر عميلاً...",
@@ -783,7 +783,42 @@ const resources = {
       "errorSavingDraft": "خطأ في حفظ المسودة:",
       "applicationSubmittedSuccess": "تم إرسال الطلب بنجاح!",
       "errorSubmittingApplication": "خطأ في إرسال الطلب:",
-      "contactPerson": "جهة الاتصال"
+      "contactPerson": "جهة الاتصال",
+
+      // New form creation workflow
+      "createNewApplicationForm": "إنشاء طلب اعتماد جديد",
+      "enterClientInfoToCreateForm": "أدخل معلومات العميل لإنشاء نموذج طلب اعتماد جديد",
+      "clientName": "اسم العميل",
+      "enterClientName": "أدخل اسم العميل",
+      "enterCompanyName": "أدخل اسم الشركة",
+      "enterEmail": "أدخل البريد الإلكتروني",
+      "enterPhone": "أدخل رقم الهاتف",
+      "fillAllClientFields": "يرجى ملء جميع حقول معلومات العميل",
+      "errorCreatingForm": "خطأ في إنشاء النموذج:",
+      "createFirstApplicationForm": "أنشئ نموذج طلب وشاركه مع عميلك",
+      "formCreatedSuccess": "تم إنشاء النموذج بنجاح!",
+      "shareFormLinkWithClient": "شارك هذا الرابط مع عميلك لملء النموذج",
+      "formLink": "رابط النموذج",
+      "copyLink": "نسخ الرابط",
+      "sendEmail": "إرسال بريد",
+      "linkCopied": "تم نسخ الرابط!",
+      "errorCopyingLink": "خطأ في نسخ الرابط",
+      "emailSentSuccess": "تم إرسال البريد الإلكتروني بنجاح!",
+      "errorSendingEmail": "خطأ في إرسال البريد:",
+      "formLinkInstructions": "انسخ هذا الرابط وأرسله إلى عميلك عبر البريد الإلكتروني أو الواتساب أو أي طريقة أخرى. يمكن للعميل ملء النموذج دون الحاجة لتسجيل الدخول.",
+      "close": "إغلاق",
+      
+      // Public form page
+      "loadingForm": "جاري تحميل النموذج...",
+      "formNotFound": "النموذج غير موجود",
+      "errorLoadingForm": "خطأ في تحميل النموذج",
+      "formLinkInvalidOrExpired": "رابط النموذج غير صالح أو منتهي الصلاحية. يرجى التواصل مع المسؤول.",
+      "welcomeToApplicationForm": "نموذج طلب الاعتماد",
+      "formForCompany": "نموذج لشركة",
+      "thankYouForSubmitting": "شكراً لتقديم طلبك!",
+      "applicationSubmittedMessage": "تم استلام طلبك وسيتم مراجعته من قبل فريقنا. سنتواصل معك قريباً بالخطوات التالية.",
+      "bayanAuditingConformity": "بيان للتحقق والمطابقة",
+      "allRightsReserved": "جميع الحقوق محفوظة"
     }
   }
 };

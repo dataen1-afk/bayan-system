@@ -28,6 +28,7 @@ const AdminDashboard = () => {
   const [applicationForms, setApplicationForms] = useState([]);
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
+  const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Application Form Modal state

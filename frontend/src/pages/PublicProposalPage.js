@@ -208,6 +208,32 @@ const PublicProposalPage = () => {
     );
   }
 
+  if (proposal?.status === 'modification_requested') {
+    return (
+      <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
+        <Header isRTL={isRTL} />
+        <main className="pt-28 pb-12 px-4">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardContent className="pt-8 pb-8">
+                <div className="text-center">
+                  <Edit3 className="w-20 h-20 text-orange-500 mx-auto mb-6" />
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('modificationRequested') || 'Modification Requested'}</h2>
+                  <p className="text-gray-600 mb-4">{t('modificationRequestSent') || 'Your modification request has been sent to the administrator.'}</p>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 max-w-md mx-auto text-left">
+                    <p className="text-sm text-orange-800 font-medium mb-2">{t('yourComment') || 'Your Comment'}:</p>
+                    <p className="text-sm text-orange-700">{proposal?.modification_comment || '-'}</p>
+                  </div>
+                  <p className="text-gray-500 mt-4 text-sm">{t('waitingForResponse') || 'The administrator will review your request and respond shortly.'}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header isRTL={isRTL} />

@@ -1066,7 +1066,9 @@ const resources = {
       "fillSignatoryDetails": "يرجى ملء اسم ومنصب الموقّع",
       "acceptAllAcknowledgements": "يرجى قبول جميع الإقرارات للمتابعة",
       "pleaseCompleteAgreementForm": "يرجى إكمال نموذج اتفاقية الاعتماد لإتمام عملية الاعتماد.",
-      "continueToAgreement": "المتابعة إلى نموذج الاتفاقية"
+      "continueToAgreement": "المتابعة إلى نموذج الاتفاقية",
+      "agreementAlreadySigned": "تم توقيع اتفاقية الاعتماد بالفعل.",
+      "viewAgreement": "عرض الاتفاقية"
     }
   }
 };

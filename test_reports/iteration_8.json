@@ -53,7 +53,7 @@
   "seed_data_creation": "No new seed data created - Used existing proposals for testing",
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "Two new features fully implemented and tested: 1) Enhanced Reports at /reports with filter panel including date range, status, and standard filters. Filter panel toggle via data-testid='toggle-filters-btn'. Apply/Clear buttons work correctly. 2) Modification Request mechanism on Public Proposal Page (/proposal/{access_token}). Button data-testid='request-modification-btn' opens modal with comment and requested_changes fields. Submitting creates notification for admin. Test tokens: pending proposal=d4a5fd8f-7c81-4453-a529-626b8c2bfe1a, modification_requested=4d2067ae-cc32-400b-8f69-3b14b28ba313",
+  "context_for_next_testing_agent": "Two new features fully implemented and tested: 1) Enhanced Reports at /reports with filter panel including date range, status, and standard filters. Filter panel toggle via data-testid='toggle-filters-btn'. Apply/Clear buttons work correctly. 2) Modification Request mechanism on Public Proposal Page (/proposal/{access_token}). Button data-testid='request-modification-btn' opens modal with comment and requested_changes fields. Submitting creates notification for admin. Test tokens: pending proposal=audit-dash-portal, modification_requested=audit-dash-portal",
   "features_tested": {
     "enhanced_reports": {
       "status": "WORKING",

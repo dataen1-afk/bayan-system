@@ -9,7 +9,7 @@ import requests
 import os
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://proposal-flow-3.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://audit-dash-portal.preview.emergentagent.com').rstrip('/')
 
 # Test access tokens provided by main agent
 PENDING_PROPOSAL_TOKEN = "d4a5fd8f-7c81-4453-a529-626b8c2bfe1a"  # Pending proposal for modification test

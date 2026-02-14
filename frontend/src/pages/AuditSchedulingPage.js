@@ -401,6 +401,32 @@ const AuditSchedulingPage = () => {
                   </div>
                   
                   <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    {/* SMS Reminder button */}
+                    {!audit.sms_reminder_sent && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendSmsReminder(audit.id);
+                        }}
+                        disabled={sendingSms === audit.id}
+                        className="text-green-500 hover:text-green-700 hover:bg-green-50"
+                        title={t('sendSmsReminder') || 'Send SMS Reminder'}
+                      >
+                        {sendingSms === audit.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <MessageSquare className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
+                    {audit.sms_reminder_sent && (
+                      <span className="text-xs text-green-600 flex items-center gap-1" title={t('smsReminderSent') || 'SMS Reminder Sent'}>
+                        <MessageSquare className="w-3 h-3" />
+                      </span>
+                    )}
+                    
                     {/* Sync to Google Calendar button */}
                     {calendarStatus.connected && !audit.calendar_event_id && (
                       <Button

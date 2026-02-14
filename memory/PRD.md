@@ -228,7 +228,6 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ```
 
 ## Future Enhancements
-- **P1**: Digital Signatures in PDFs (signature image or online signature pad with seal)
 - **P2**: Customer Portal for tracking order status via unique link
 - **P2**: Document uploads for supporting materials
 - **P3**: Multi-site auditing/scheduling

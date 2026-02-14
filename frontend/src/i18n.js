@@ -1251,7 +1251,12 @@ const resources = {
       // Contract Download
       "downloadContract": "تحميل العقد",
       "noAgreementFound": "لم يتم العثور على اتفاقية موقعة لهذا النموذج",
-      "errorDownloadingContract": "خطأ في تحميل العقد"
+      "errorDownloadingContract": "خطأ في تحميل العقد",
+      
+      // Contracts Page
+      "signedDate": "تاريخ التوقيع",
+      "contractValue": "قيمة العقد",
+      "viewContract": "عرض العقد"
     }
   }
 };

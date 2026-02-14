@@ -67,7 +67,9 @@ const NotificationBell = () => {
       await axios.put(`${API}/notifications/read-all`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      loadNotifications();
+      // Clear notifications from the dropdown immediately after marking all as read
+      setNotifications([]);
+      setUnreadCount(0);
     } catch (error) {
       console.error('Error marking all as read:', error);
     } finally {

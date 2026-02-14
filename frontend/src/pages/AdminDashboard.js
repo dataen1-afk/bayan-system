@@ -263,7 +263,7 @@ const AdminDashboard = () => {
   };
 
   // Download contract PDF
-  const handleDownloadContract = async (formId) => {
+  const handleDownloadContract = async (formId, bilingual = false) => {
     try {
       // First find the agreement for this form
       const proposalsRes = await axios.get(`${API}/proposals`);
@@ -274,8 +274,12 @@ const AdminDashboard = () => {
         return;
       }
       
-      // Download PDF using the agreement endpoint
-      const response = await axios.get(`${API}/public/contracts/${proposal.access_token}/pdf`, {
+      // Download PDF using the agreement endpoint (bilingual or standard)
+      const endpoint = bilingual 
+        ? `${API}/public/contracts/${proposal.access_token}/pdf/bilingual`
+        : `${API}/public/contracts/${proposal.access_token}/pdf`;
+        
+      const response = await axios.get(endpoint, {
         responseType: 'blob'
       });
       
@@ -283,7 +287,8 @@ const AdminDashboard = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `contract_${formId.substring(0, 8)}.pdf`);
+      const suffix = bilingual ? '_bilingual' : '';
+      link.setAttribute('download', `contract${suffix}_${formId.substring(0, 8)}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();

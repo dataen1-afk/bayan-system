@@ -542,6 +542,26 @@ const CertificationAgreementPage = () => {
             </CardContent>
           </Card>
 
+          {/* Section: Digital Signature */}
+          <Card>
+            <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+              <CardTitle className="flex items-center gap-2">
+                <Pen className="w-5 h-5 text-bayan-navy" />
+                {t('digitalSignatureSection') || 'Digital Signature & Seal'}
+              </CardTitle>
+              <CardDescription>{t('signatureInstructions') || 'Please provide your digital signature. You can draw it or upload an image.'}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SignaturePad
+                onSignatureChange={(signature) => handleInputChange('signatureImage', signature)}
+                onStampChange={(stamp) => handleInputChange('stampImage', stamp)}
+                initialSignature={formData.signatureImage}
+                initialStamp={formData.stampImage}
+                showStamp={true}
+              />
+            </CardContent>
+          </Card>
+
           {/* Submit Button */}
           <div className="flex justify-center py-4">
             <Button

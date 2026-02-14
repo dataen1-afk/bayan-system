@@ -755,13 +755,11 @@ const AdminDashboard = () => {
         );
 
       case 'reports':
-        // Navigate to the reports page
-        navigate('/reports');
+        // Navigation handled by useEffect
         return null;
 
       case 'templates':
-        // Navigate to the templates page  
-        navigate('/templates');
+        // Navigation handled by useEffect
         return null;
 
       case 'settings':

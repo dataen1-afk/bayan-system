@@ -208,6 +208,11 @@ const CertificationAgreementPage = () => {
       alert(t('pleaseProvideSignature') || 'Please provide your digital signature');
       return false;
     }
+    // Check company seal
+    if (!formData.stampImage) {
+      alert(t('pleaseProvideCompanySeal') || 'Please provide your company seal/stamp');
+      return false;
+    }
     return true;
   };
 

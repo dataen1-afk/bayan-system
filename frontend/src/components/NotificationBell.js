@@ -130,16 +130,17 @@ const NotificationBell = () => {
           data-testid="notification-dropdown"
         >
           {/* Header */}
-          <div className="px-4 py-3 border-b flex items-center justify-between">
-            <h3 className="font-semibold text-gray-800">{t('notifications')}</h3>
+          <div className="px-4 py-3 border-b flex items-center justify-between gap-2">
+            <h3 className="font-semibold text-gray-800 flex-shrink-0">{t('notifications')}</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
                 disabled={loading}
-                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 whitespace-nowrap flex-shrink-0"
+                data-testid="mark-all-read-btn"
               >
-                <CheckCheck className="w-4 h-4" />
-                {t('markAllRead')}
+                <CheckCheck className="w-4 h-4 flex-shrink-0" />
+                <span>{t('markAllRead')}</span>
               </button>
             )}
           </div>

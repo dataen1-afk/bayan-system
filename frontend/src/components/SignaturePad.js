@@ -282,7 +282,7 @@ const SignaturePad = ({
         <div className="space-y-3">
           <Label className="text-base font-semibold flex items-center gap-2">
             <Upload className="w-4 h-4" />
-            {t('companySealStamp') || 'Company Seal / Stamp'} ({t('optional') || 'Optional'})
+            {t('companySealStamp') || 'Company Seal / Stamp'} *
           </Label>
           
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 text-center">

@@ -233,8 +233,8 @@ class CertificationAgreementSubmit(BaseModel):
     signatory_position: str
     signatory_date: str
     acknowledgements: AgreementAcknowledgements
-    signature_image: Optional[str] = None  # Base64 encoded signature image
-    stamp_image: Optional[str] = None  # Base64 encoded stamp image
+    signature_image: str  # Base64 encoded signature image (required)
+    stamp_image: str  # Base64 encoded stamp image (required)
 
 class CertificationAgreement(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

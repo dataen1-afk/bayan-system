@@ -24,9 +24,12 @@ const PublicProposalPage = () => {
   const [responding, setResponding] = useState(false);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showModificationModal, setShowModificationModal] = useState(false);
   const [signatoryName, setSignatoryName] = useState('');
   const [signatoryDesignation, setSignatoryDesignation] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [modificationComment, setModificationComment] = useState('');
+  const [modificationChanges, setModificationChanges] = useState('');
 
   useEffect(() => {
     loadProposal();

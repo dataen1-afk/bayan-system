@@ -65,16 +65,17 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ### Digital Signatures ✅ (NEW - Feb 2026)
 - **Signature Pad Component**: Canvas-based drawing with mouse/touch support
 - **Dual Mode**: Draw signature online OR upload signature image
-- **Company Seal**: Optional stamp/seal upload
-- **Form Validation**: Signature required before agreement submission
+- **Company Seal**: **MANDATORY** stamp/seal upload (updated Feb 2026)
+- **Form Validation**: Signature AND seal required before agreement submission
 - **Database Storage**: signature_image and stamp_image stored as Base64
 - **PDF Integration**: Signatures rendered in contract PDF with proper sizing
 
-### Admin Notifications ✅ (NEW - Dec 2025)
+### Admin Notifications ✅ (Updated - Feb 2026)
 - Bell icon in header with unread count badge
 - Dropdown shows recent notifications
 - Notification types: form_submitted, proposal_accepted, proposal_rejected, agreement_signed
-- Mark as read / Mark all as read functionality
+- Mark as read / **Mark all as read** functionality (text truncation fixed)
+- Proper RTL alignment with `whitespace-nowrap` CSS
 
 ### Contract Status Timeline ✅ (NEW - Dec 2025)
 - Compact view on dashboard form cards (X/6 progress indicator)
@@ -195,8 +196,9 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ## Testing Status (Feb 2026)
 - Backend API: 100% (all tests passed)
 - Frontend UI: 100% (all tests passed)
-- Latest Test Report: `/app/test_reports/iteration_9.json`
+- Latest Test Report: `/app/test_reports/iteration_10.json`
 - Signature Tests: `/app/backend/tests/test_signature_feature.py`
+- Seal Mandatory Tests: `/app/backend/tests/test_seal_mandatory.py`
 
 ## Cleanup Completed
 - Removed obsolete `ClientDashboard.js` (clients access via public links, no login)

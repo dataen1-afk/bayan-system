@@ -121,6 +121,15 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - Edit form pre-populates with existing data
 - Backend PUT endpoints for both packages and templates
 
+### Modification Request Mechanism ✅ (NEW - Feb 2026)
+- Clients can request modifications to proposals before accepting/rejecting
+- "Request Modification" button (orange) on Public Proposal Page
+- Modal with required comment field and optional specific changes field
+- Proposal status updates to `modification_requested`
+- Admin receives notification with client's comment
+- Dedicated status page shows when modification is pending review
+- Backend endpoint: `POST /api/public/proposal/{access_token}/request_modification`
+
 ## API Endpoints
 
 ### Authentication

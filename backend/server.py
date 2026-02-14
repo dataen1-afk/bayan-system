@@ -1381,6 +1381,274 @@ async def get_certification_agreement(access_token: str):
     
     return {"status": "pending", "proposal": proposal}
 
+# ================= PDF CONTRACT GENERATION =================
+
+@api_router.get("/contracts/{agreement_id}/pdf")
+async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate PDF contract for a signed agreement (Admin only)"""
+    await get_current_user(credentials)
+    
+    # Get agreement
+    agreement = await db.certification_agreements.find_one({"id": agreement_id}, {"_id": 0})
+    if not agreement:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    
+    # Get proposal
+    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    # Generate PDF
+    try:
+        pdf_bytes = generate_contract_pdf(agreement, proposal)
+        
+        # Update agreement status
+        await db.certification_agreements.update_one(
+            {"id": agreement_id},
+            {"$set": {"status": "contract_generated"}}
+        )
+        
+        # Return PDF
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=contract_{agreement_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+@api_router.get("/public/contracts/{access_token}/pdf")
+async def get_public_contract_pdf(access_token: str):
+    """Get PDF contract for a signed agreement (Public - client access)"""
+    # Get agreement by access token
+    agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token}, {"_id": 0})
+    if not agreement:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    
+    # Get proposal
+    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    # Generate PDF
+    try:
+        pdf_bytes = generate_contract_pdf(agreement, proposal)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=contract_{agreement['id'][:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+# ================= NOTIFICATION ROUTES =================
+
+async def create_notification(notification_type: str, title: str, message: str, related_id: str = None, related_type: str = None):
+    """Helper function to create a notification"""
+    notification = Notification(
+        type=notification_type,
+        title=title,
+        message=message,
+        related_id=related_id,
+        related_type=related_type
+    )
+    notification_doc = notification.model_dump()
+    notification_doc['created_at'] = notification_doc['created_at'].isoformat()
+    await db.notifications.insert_one(notification_doc)
+    return notification
+
+@api_router.get("/notifications")
+async def get_notifications(credentials: HTTPAuthorizationCredentials = Depends(security), limit: int = 20, unread_only: bool = False):
+    """Get admin notifications"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if unread_only:
+        query['is_read'] = False
+    
+    notifications = await db.notifications.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    unread_count = await db.notifications.count_documents({"is_read": False})
+    
+    return {
+        "notifications": notifications,
+        "unread_count": unread_count
+    }
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Mark a notification as read"""
+    await get_current_user(credentials)
+    
+    result = await db.notifications.update_one(
+        {"id": notification_id},
+        {"$set": {"is_read": True}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"message": "Notification marked as read"}
+
+@api_router.put("/notifications/read-all")
+async def mark_all_notifications_read(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Mark all notifications as read"""
+    await get_current_user(credentials)
+    
+    await db.notifications.update_many(
+        {"is_read": False},
+        {"$set": {"is_read": True}}
+    )
+    
+    return {"message": "All notifications marked as read"}
+
+# ================= TEMPLATE ROUTES =================
+
+@api_router.get("/templates/packages")
+async def get_certification_packages(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all certification packages"""
+    await get_current_user(credentials)
+    packages = await db.certification_packages.find({"is_active": True}, {"_id": 0}).to_list(100)
+    return packages
+
+@api_router.post("/templates/packages")
+async def create_certification_package(package: CertificationPackage, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new certification package"""
+    await get_current_user(credentials)
+    package_doc = package.model_dump()
+    package_doc['created_at'] = package_doc['created_at'].isoformat()
+    await db.certification_packages.insert_one(package_doc)
+    return {"message": "Package created", "id": package.id}
+
+@api_router.delete("/templates/packages/{package_id}")
+async def delete_certification_package(package_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a certification package"""
+    await get_current_user(credentials)
+    await db.certification_packages.update_one(
+        {"id": package_id},
+        {"$set": {"is_active": False}}
+    )
+    return {"message": "Package deleted"}
+
+@api_router.get("/templates/proposals")
+async def get_proposal_templates(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all proposal templates"""
+    await get_current_user(credentials)
+    templates = await db.proposal_templates.find({"is_active": True}, {"_id": 0}).to_list(100)
+    return templates
+
+@api_router.post("/templates/proposals")
+async def create_proposal_template(template: ProposalTemplate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new proposal template"""
+    await get_current_user(credentials)
+    template_doc = template.model_dump()
+    template_doc['created_at'] = template_doc['created_at'].isoformat()
+    await db.proposal_templates.insert_one(template_doc)
+    return {"message": "Template created", "id": template.id}
+
+@api_router.delete("/templates/proposals/{template_id}")
+async def delete_proposal_template(template_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a proposal template"""
+    await get_current_user(credentials)
+    await db.proposal_templates.update_one(
+        {"id": template_id},
+        {"$set": {"is_active": False}}
+    )
+    return {"message": "Template deleted"}
+
+# ================= REPORTS ROUTES =================
+
+@api_router.get("/reports/submissions")
+async def get_submission_statistics(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get submission statistics"""
+    await get_current_user(credentials)
+    
+    # Get counts by status
+    total_forms = await db.application_forms.count_documents({})
+    submitted_forms = await db.application_forms.count_documents({"status": {"$in": ["submitted", "under_review", "approved", "agreement_signed"]}})
+    pending_forms = await db.application_forms.count_documents({"status": "pending"})
+    
+    # Get monthly statistics (last 6 months)
+    from datetime import datetime, timedelta
+    monthly_stats = []
+    for i in range(5, -1, -1):
+        start_date = datetime.now().replace(day=1) - timedelta(days=i*30)
+        end_date = start_date + timedelta(days=30)
+        
+        count = await db.application_forms.count_documents({
+            "created_at": {
+                "$gte": start_date.isoformat(),
+                "$lt": end_date.isoformat()
+            }
+        })
+        monthly_stats.append({
+            "month": start_date.strftime("%b %Y"),
+            "count": count
+        })
+    
+    # Conversion rate
+    total_proposals = await db.proposals.count_documents({})
+    accepted_proposals = await db.proposals.count_documents({"status": {"$in": ["accepted", "agreement_signed"]}})
+    conversion_rate = (accepted_proposals / total_proposals * 100) if total_proposals > 0 else 0
+    
+    return {
+        "total_forms": total_forms,
+        "submitted_forms": submitted_forms,
+        "pending_forms": pending_forms,
+        "monthly_stats": monthly_stats,
+        "total_proposals": total_proposals,
+        "accepted_proposals": accepted_proposals,
+        "conversion_rate": round(conversion_rate, 1)
+    }
+
+@api_router.get("/reports/revenue")
+async def get_revenue_statistics(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get revenue statistics"""
+    await get_current_user(credentials)
+    
+    # Get all proposals
+    proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
+    
+    total_quoted = sum(p.get('total_amount', 0) for p in proposals)
+    accepted_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') in ['accepted', 'agreement_signed'])
+    pending_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') == 'sent')
+    rejected_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') == 'rejected')
+    
+    # Get agreements (contracts)
+    agreements = await db.certification_agreements.count_documents({})
+    
+    # Revenue by month (last 6 months)
+    from datetime import datetime, timedelta
+    monthly_revenue = []
+    for i in range(5, -1, -1):
+        start_date = datetime.now().replace(day=1) - timedelta(days=i*30)
+        end_date = start_date + timedelta(days=30)
+        
+        month_proposals = [p for p in proposals if p.get('status') in ['accepted', 'agreement_signed']]
+        # Filter by date if issued_date exists
+        month_total = sum(
+            p.get('total_amount', 0) for p in month_proposals
+            if p.get('issued_date') and start_date.isoformat() <= p.get('issued_date', '') < end_date.isoformat()
+        )
+        
+        monthly_revenue.append({
+            "month": start_date.strftime("%b %Y"),
+            "amount": month_total
+        })
+    
+    return {
+        "total_quoted": total_quoted,
+        "accepted_revenue": accepted_revenue,
+        "pending_revenue": pending_revenue,
+        "rejected_revenue": rejected_revenue,
+        "total_contracts": agreements,
+        "monthly_revenue": monthly_revenue,
+        "currency": "SAR"
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 

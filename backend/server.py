@@ -1362,6 +1362,15 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
         {"$set": {"status": "agreement_signed"}}
     )
     
+    # Create notification for admin
+    await create_notification(
+        notification_type="agreement_signed",
+        title="اتفاقية جديدة موقعة",
+        message=f"قامت {agreement_data.organization_name} بتوقيع اتفاقية الاعتماد",
+        related_id=agreement.id,
+        related_type="agreement"
+    )
+    
     return {"message": "Certification agreement submitted successfully", "agreement_id": agreement.id}
 
 @api_router.get("/public/agreement/{access_token}")

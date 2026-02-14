@@ -844,6 +844,24 @@ const resources = {
       "loginHere": "سجل الدخول هنا",
       "rememberMe": "تذكر بيانات الدخول",
       
+      // DataTable
+      "searchPlaceholder": "بحث...",
+      "showing": "عرض",
+      "results": "نتائج",
+      "perPage": "في الصفحة",
+      "clearFilters": "مسح",
+      "noDataFound": "لا توجد بيانات",
+      "filters": "التصفية",
+      "companyName": "اسم الشركة",
+      "contact": "جهة الاتصال",
+      "actions": "الإجراءات",
+      "organization": "المنظمة",
+      "amount": "المبلغ",
+      "signedDate": "تاريخ التوقيع",
+      "quote": "عرض سعر",
+      "download": "تحميل",
+      "pdf": "PDF",
+      
       // Roles
       "admin": "مدير",
       "client": "عميل",

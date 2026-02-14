@@ -89,7 +89,7 @@ const AdminDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [formsRes, quotationsRes, contractsRes, applicationFormsRes] = await Promise.all([
+      const [formsRes, quotationsRes, contractsRes, applicationFormsRes, proposalsRes] = await Promise.all([
         axios.get(`${API}/forms`),
         axios.get(`${API}/quotations`),
         axios.get(`${API}/contracts`),

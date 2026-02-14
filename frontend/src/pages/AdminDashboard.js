@@ -419,7 +419,7 @@ Stage 2: ${form.audit_calculation?.phases?.stage_2 || ''} ${t('days')}
                                 </Button>
                                 <Button 
                                   size="sm"
-                                  onClick={() => handleCreateQuotation(form)}
+                                  onClick={() => handleCreateQuotationFromForm(form)}
                                   data-testid={`create-quote-${form.id}`}
                                   className="bg-green-600 hover:bg-green-700"
                                 >

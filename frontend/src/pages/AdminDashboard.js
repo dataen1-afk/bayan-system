@@ -583,123 +583,121 @@ const AdminDashboard = () => {
       case 'quotations':
         return (
           <div className="space-y-6">
+            {/* Proposals/Quotations List */}
             <Card>
               <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-                <CardTitle>{t('createQuotation')}</CardTitle>
-                <CardDescription>{t('createQuotationFor')}</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  {t('allProposals')}
+                </CardTitle>
+                <CardDescription>{t('trackProposalStatus')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleCreateQuotation} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="form_id" className={isRTL ? 'block text-right' : ''}>{t('formId')}</Label>
-                      <Input
-                        id="form_id"
-                        value={newQuotation.form_id}
-                        onChange={(e) => setNewQuotation({ ...newQuotation, form_id: e.target.value })}
-                        placeholder={t('enterFormId')}
-                        required
-                        data-testid="quotation-form-id-input"
-                        className={isRTL ? 'text-right' : ''}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="q_client_id" className={isRTL ? 'block text-right' : ''}>{t('clientId')}</Label>
-                      <Input
-                        id="q_client_id"
-                        value={newQuotation.client_id}
-                        onChange={(e) => setNewQuotation({ ...newQuotation, client_id: e.target.value })}
-                        placeholder={t('enterClientId')}
-                        required
-                        data-testid="quotation-client-id-input"
-                        className={isRTL ? 'text-right' : ''}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="client_email" className={isRTL ? 'block text-right' : ''}>{t('clientEmail')}</Label>
-                      <Input
-                        id="client_email"
-                        type="email"
-                        value={newQuotation.client_email}
-                        onChange={(e) => setNewQuotation({ ...newQuotation, client_email: e.target.value })}
-                        placeholder="client@example.com"
-                        required
-                        data-testid="quotation-client-email-input"
-                        dir="ltr"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="price" className={isRTL ? 'block text-right' : ''}>{t('price')}</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        value={newQuotation.price}
-                        onChange={(e) => setNewQuotation({ ...newQuotation, price: e.target.value })}
-                        placeholder="1000.00"
-                        required
-                        data-testid="quotation-price-input"
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="details" className={isRTL ? 'block text-right' : ''}>{t('details')}</Label>
-                    <Textarea
-                      id="details"
-                      value={newQuotation.details}
-                      onChange={(e) => setNewQuotation({ ...newQuotation, details: e.target.value })}
-                      placeholder={t('serviceDetails')}
-                      rows={4}
-                      required
-                      data-testid="quotation-details-input"
-                      className={isRTL ? 'text-right' : ''}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    />
-                  </div>
-
-                  <Button type="submit" data-testid="create-quotation-button">{t('createQuotation')}</Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-                <CardTitle>{t('allQuotations')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2" data-testid="quotations-list">
-                  {quotations.length === 0 ? (
+                <div className="space-y-4" data-testid="proposals-list">
+                  {proposals.length === 0 ? (
                     <EmptyState
                       icon={DollarSign}
-                      title={t('noQuotationsYet')}
-                      description={t('createFirstQuotation')}
-                      helpText={t('quotationsEmptyStateHelp')}
+                      title={t('noProposalsYet')}
+                      description={t('createProposalFromForms')}
+                      helpText={t('proposalsEmptyStateHelp')}
                     />
                   ) : (
-                    quotations.map((quotation) => (
-                      <div key={quotation.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors" data-testid={`quotation-${quotation.id}`}>
-                        <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className={isRTL ? 'text-right' : 'text-left'}>
-                            <p className="font-semibold">{t('quotationId')}: {quotation.id}</p>
-                            <p className="text-sm text-gray-600">{t('form')}: {quotation.form_id}</p>
-                            <p className="text-sm text-gray-600">{t('client')}: {quotation.client_id}</p>
-                            <p className="text-lg font-bold text-green-600">${quotation.price}</p>
-                            <p className="text-sm mt-2">{quotation.details}</p>
-                            <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${
-                              quotation.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              quotation.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              quotation.status === 'modifications_requested' ? 'bg-blue-100 text-blue-800' :
+                    proposals.map((proposal) => (
+                      <div 
+                        key={proposal.id} 
+                        className="p-4 border rounded-lg hover:shadow-md transition-all bg-white"
+                        data-testid={`proposal-${proposal.id}`}
+                      >
+                        <div className={`flex justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                            <h3 className="font-semibold text-lg text-gray-800">
+                              {proposal.organization_name}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {t('contactPerson')}: {proposal.contact_person}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {t('email')}: {proposal.contact_email}
+                            </p>
+                            
+                            {/* Standards badges */}
+                            <div className={`flex flex-wrap gap-1 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              {proposal.standards?.map((std) => (
+                                <span key={std} className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                  {std}
+                                </span>
+                              ))}
+                            </div>
+                            
+                            {/* Price */}
+                            <p className="text-xl font-bold text-green-600 mt-2">
+                              {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR' }).format(proposal.total_amount || 0)}
+                            </p>
+                            
+                            {/* Status Timeline */}
+                            <div className="mt-3">
+                              <StatusTimeline status={proposal.status} compact={true} />
+                            </div>
+                          </div>
+                          
+                          <div className={`flex flex-col gap-2 ${isRTL ? 'items-start' : 'items-end'}`}>
+                            {/* Status badge */}
+                            <span className={`px-3 py-1 text-sm rounded-full font-medium ${
+                              proposal.status === 'accepted' || proposal.status === 'agreement_signed' ? 'bg-green-100 text-green-800' :
+                              proposal.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              proposal.status === 'sent' ? 'bg-blue-100 text-blue-800' :
                               'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {t(quotation.status)}
+                              {t(proposal.status)}
                             </span>
+                            
+                            {/* Date */}
+                            <p className="text-xs text-gray-500">
+                              {proposal.issued_date ? new Date(proposal.issued_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US') : ''}
+                            </p>
+                            
+                            {/* View Link */}
+                            {proposal.access_token && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const url = `${window.location.origin}/proposal/${proposal.access_token}`;
+                                  window.open(url, '_blank');
+                                }}
+                                className="mt-2"
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                {t('viewProposal')}
+                              </Button>
+                            )}
+                            
+                            {/* Download Contract if agreement signed */}
+                            {proposal.status === 'agreement_signed' && (
+                              <Button
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    const response = await axios.get(`${API}/public/contracts/${proposal.access_token}/pdf`, {
+                                      responseType: 'blob'
+                                    });
+                                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.setAttribute('download', `contract_${proposal.id.substring(0, 8)}.pdf`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.remove();
+                                  } catch (error) {
+                                    console.error('Error downloading contract:', error);
+                                  }
+                                }}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                {t('downloadContract')}
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>

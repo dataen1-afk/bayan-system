@@ -234,16 +234,6 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
   // Progress percentage
   const progressPercentage = (currentStep / totalSteps) * 100;
 
-  // Form field component for consistent styling
-  const FormField = ({ label, required, children, className }) => (
-    <div className={cn("space-y-2", className)}>
-      <Label className={cn("font-medium", isRTL && "text-right block")}>
-        {label} {required && <span className="text-red-500">*</span>}
-      </Label>
-      {children}
-    </div>
-  );
-
   // Render Step 1: Company Information
   const renderStep1 = () => (
     <div className="space-y-6">

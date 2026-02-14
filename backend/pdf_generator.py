@@ -5,6 +5,7 @@ Generates professional certification contracts with company branding
 
 import io
 import os
+import base64
 from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4

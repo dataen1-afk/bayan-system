@@ -150,6 +150,95 @@ const TemplatesPage = () => {
     }
   };
 
+  // Edit handlers
+  const handleEditPackage = (pkg) => {
+    setEditingItem({ type: 'package', id: pkg.id });
+    setNewPackage({
+      name: pkg.name || '',
+      name_ar: pkg.name_ar || '',
+      description: pkg.description || '',
+      description_ar: pkg.description_ar || '',
+      standards: pkg.standards || []
+    });
+    setShowAddForm(true);
+  };
+
+  const handleEditTemplate = (tmpl) => {
+    setEditingItem({ type: 'template', id: tmpl.id });
+    setNewTemplate({
+      name: tmpl.name || '',
+      name_ar: tmpl.name_ar || '',
+      description: tmpl.description || '',
+      default_fees: tmpl.default_fees || { initial_certification: 0, surveillance_1: 0, surveillance_2: 0, recertification: 0 },
+      default_notes: tmpl.default_notes || '',
+      default_validity_days: tmpl.default_validity_days || 30
+    });
+    setShowAddForm(true);
+  };
+
+  const handleUpdatePackage = async () => {
+    if (!newPackage.name || !newPackage.name_ar || newPackage.standards.length === 0) {
+      alert(t('fillRequiredFields'));
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/templates/packages/${editingItem.id}`, newPackage, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNewPackage({ name: '', name_ar: '', description: '', description_ar: '', standards: [] });
+      setShowAddForm(false);
+      setEditingItem(null);
+      loadData();
+    } catch (error) {
+      console.error('Error updating package:', error);
+      alert(t('errorUpdatingPackage'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateTemplate = async () => {
+    if (!newTemplate.name || !newTemplate.name_ar) {
+      alert(t('fillRequiredFields'));
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/templates/proposals/${editingItem.id}`, newTemplate, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNewTemplate({
+        name: '', name_ar: '', description: '',
+        default_fees: { initial_certification: 0, surveillance_1: 0, surveillance_2: 0, recertification: 0 },
+        default_notes: '', default_validity_days: 30
+      });
+      setShowAddForm(false);
+      setEditingItem(null);
+      loadData();
+    } catch (error) {
+      console.error('Error updating template:', error);
+      alert(t('errorUpdatingTemplate'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setShowAddForm(false);
+    setEditingItem(null);
+    setNewPackage({ name: '', name_ar: '', description: '', description_ar: '', standards: [] });
+    setNewTemplate({
+      name: '', name_ar: '', description: '',
+      default_fees: { initial_certification: 0, surveillance_1: 0, surveillance_2: 0, recertification: 0 },
+      default_notes: '', default_validity_days: 30
+    });
+  };
+
   const toggleStandard = (standardId) => {
     setNewPackage(prev => ({
       ...prev,

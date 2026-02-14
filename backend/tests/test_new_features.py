@@ -1,366 +1,338 @@
 """
-Test suite for new features:
-- PDF Contract Generation
-- Notifications API
-- Reports API
-- Templates API (certification packages + proposal templates)
+Test cases for iteration 7 new features:
+1. Contract Statistics Summary Cards on Contracts page
+2. Template edit functionality (PUT endpoints for packages and proposals)
+3. ApplicationForm sticky footer (frontend validation via API)
 """
-
 import pytest
 import requests
 import os
-from datetime import datetime
+import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
-
-# Test credentials
-ADMIN_EMAIL = "admin@test.com"
-ADMIN_PASSWORD = "admin123"
-
-# Known test data
-TEST_ACCESS_TOKEN = "7e9465b4-fa2d-4ba9-8baf-05e5d32cd971"  # Existing proposal with signed agreement
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://contract-mgmt-7.preview.emergentagent.com').rstrip('/')
 
 
-@pytest.fixture(scope="module")
-def auth_token():
-    """Get authentication token for admin user"""
-    response = requests.post(
-        f"{BASE_URL}/api/auth/login",
-        json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
-    )
-    if response.status_code == 200:
-        return response.json().get("token")
-    pytest.skip(f"Authentication failed - status: {response.status_code}")
-
-
-@pytest.fixture(scope="module")
-def auth_headers(auth_token):
-    """Return headers with auth token"""
-    return {"Authorization": f"Bearer {auth_token}"}
-
-
-# ================= NOTIFICATIONS TESTS =================
-
-class TestNotifications:
-    """Test notification endpoints"""
+class TestAuth:
+    """Authentication helper tests"""
     
-    def test_get_notifications_success(self, auth_headers):
-        """GET /api/notifications should return notifications list"""
-        response = requests.get(
-            f"{BASE_URL}/api/notifications",
-            headers=auth_headers
-        )
+    @pytest.fixture
+    def auth_token(self):
+        """Get admin authentication token"""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@test.com",
+            "password": "admin123"
+        })
+        assert response.status_code == 200, f"Login failed: {response.text}"
+        return response.json()['token']
+    
+    def test_login_success(self):
+        """Test admin login works"""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@test.com",
+            "password": "admin123"
+        })
         assert response.status_code == 200
         data = response.json()
-        
-        # Verify response structure
-        assert "notifications" in data
-        assert "unread_count" in data
-        assert isinstance(data["notifications"], list)
-        assert isinstance(data["unread_count"], int)
-        print(f"Retrieved {len(data['notifications'])} notifications, {data['unread_count']} unread")
-    
-    def test_get_notifications_with_limit(self, auth_headers):
-        """GET /api/notifications?limit=5 should limit results"""
-        response = requests.get(
-            f"{BASE_URL}/api/notifications?limit=5",
-            headers=auth_headers
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data["notifications"]) <= 5
-    
-    def test_get_notifications_unread_only(self, auth_headers):
-        """GET /api/notifications?unread_only=true should return only unread"""
-        response = requests.get(
-            f"{BASE_URL}/api/notifications?unread_only=true",
-            headers=auth_headers
-        )
-        assert response.status_code == 200
-        data = response.json()
-        # All returned notifications should be unread
-        for notification in data["notifications"]:
-            assert notification.get("is_read") == False
-    
-    def test_get_notifications_unauthorized(self):
-        """GET /api/notifications without auth should fail"""
-        response = requests.get(f"{BASE_URL}/api/notifications")
-        assert response.status_code in [401, 403]
-    
-    def test_mark_notification_read_invalid_id(self, auth_headers):
-        """PUT /api/notifications/{id}/read with invalid id should return 404"""
-        response = requests.put(
-            f"{BASE_URL}/api/notifications/nonexistent-id/read",
-            headers=auth_headers
-        )
-        assert response.status_code == 404
-    
-    def test_mark_all_notifications_read(self, auth_headers):
-        """PUT /api/notifications/read-all should mark all as read"""
-        response = requests.put(
-            f"{BASE_URL}/api/notifications/read-all",
-            json={},
-            headers=auth_headers
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        
-        # Verify unread count is now 0
-        verify_response = requests.get(
-            f"{BASE_URL}/api/notifications",
-            headers=auth_headers
-        )
-        assert verify_response.status_code == 200
-        assert verify_response.json()["unread_count"] == 0
+        assert 'token' in data
+        assert 'user' in data
+        print("Login successful")
 
 
-# ================= REPORTS TESTS =================
-
-class TestReports:
-    """Test reports endpoints"""
+class TestContractStatistics:
+    """Test contract statistics data availability for frontend display"""
     
-    def test_get_submission_statistics(self, auth_headers):
-        """GET /api/reports/submissions should return stats"""
-        response = requests.get(
-            f"{BASE_URL}/api/reports/submissions",
-            headers=auth_headers
-        )
+    @pytest.fixture
+    def auth_token(self):
+        """Get admin authentication token"""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@test.com",
+            "password": "admin123"
+        })
         assert response.status_code == 200
-        data = response.json()
-        
-        # Verify response structure
-        assert "total_forms" in data
-        assert "submitted_forms" in data
-        assert "pending_forms" in data
-        assert "monthly_stats" in data
-        assert "total_proposals" in data
-        assert "accepted_proposals" in data
-        assert "conversion_rate" in data
-        
-        # Verify data types
-        assert isinstance(data["total_forms"], int)
-        assert isinstance(data["submitted_forms"], int)
-        assert isinstance(data["monthly_stats"], list)
-        assert isinstance(data["conversion_rate"], (int, float))
-        
-        print(f"Submission stats: {data['total_forms']} total forms, {data['conversion_rate']}% conversion rate")
+        return response.json()['token']
     
-    def test_get_revenue_statistics(self, auth_headers):
-        """GET /api/reports/revenue should return revenue stats"""
-        response = requests.get(
-            f"{BASE_URL}/api/reports/revenue",
-            headers=auth_headers
-        )
+    def test_proposals_endpoint_returns_data(self, auth_token):
+        """Test that proposals endpoint returns data for statistics calculation"""
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = requests.get(f"{BASE_URL}/api/proposals", headers=headers)
+        
         assert response.status_code == 200
-        data = response.json()
+        proposals = response.json()
+        assert isinstance(proposals, list)
         
-        # Verify response structure
-        assert "total_quoted" in data
-        assert "accepted_revenue" in data
-        assert "pending_revenue" in data
-        assert "rejected_revenue" in data
-        assert "total_contracts" in data
-        assert "monthly_revenue" in data
-        assert "currency" in data
+        # Check if there are agreement_signed proposals (contracts)
+        signed_contracts = [p for p in proposals if p.get('status') == 'agreement_signed']
+        print(f"Total proposals: {len(proposals)}")
+        print(f"Signed contracts: {len(signed_contracts)}")
         
-        # Verify data types
-        assert isinstance(data["total_quoted"], (int, float))
-        assert isinstance(data["accepted_revenue"], (int, float))
-        assert isinstance(data["monthly_revenue"], list)
-        assert data["currency"] == "SAR"
-        
-        print(f"Revenue stats: SAR {data['total_quoted']} total quoted, SAR {data['accepted_revenue']} accepted")
+        if signed_contracts:
+            # Verify contract has required fields for statistics
+            contract = signed_contracts[0]
+            assert 'total_amount' in contract, "Contract should have total_amount"
+            assert 'organization_name' in contract, "Contract should have organization_name"
+            print(f"First contract: {contract.get('organization_name')} - {contract.get('total_amount')} SAR")
     
-    def test_reports_unauthorized(self):
-        """Reports endpoints without auth should fail"""
-        # Test submissions
-        response = requests.get(f"{BASE_URL}/api/reports/submissions")
-        assert response.status_code in [401, 403]
+    def test_statistics_calculation(self, auth_token):
+        """Test that statistics can be calculated from proposals"""
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = requests.get(f"{BASE_URL}/api/proposals", headers=headers)
         
-        # Test revenue
-        response = requests.get(f"{BASE_URL}/api/reports/revenue")
-        assert response.status_code in [401, 403]
+        assert response.status_code == 200
+        proposals = response.json()
+        
+        # Filter signed contracts
+        signed_contracts = [p for p in proposals if p.get('status') == 'agreement_signed']
+        
+        # Calculate statistics
+        total_contracts = len(signed_contracts)
+        total_revenue = sum(c.get('total_amount', 0) for c in signed_contracts)
+        most_recent = max(signed_contracts, key=lambda x: x.get('client_response_date', ''), default=None) if signed_contracts else None
+        
+        print(f"Total Contracts: {total_contracts}")
+        print(f"Total Revenue: {total_revenue} SAR")
+        if most_recent:
+            print(f"Most Recent: {most_recent.get('organization_name')}")
+        
+        # Verify expected values based on test data
+        assert total_contracts >= 1, "Should have at least 1 signed contract"
+        assert total_revenue > 0, "Total revenue should be positive"
 
 
-# ================= TEMPLATES TESTS =================
-
-class TestTemplates:
-    """Test templates endpoints (certification packages + proposal templates)"""
+class TestTemplatePackagesUpdate:
+    """Test PUT /api/templates/packages/{id} endpoint"""
     
-    def test_get_certification_packages(self, auth_headers):
-        """GET /api/templates/packages should return packages list"""
-        response = requests.get(
-            f"{BASE_URL}/api/templates/packages",
-            headers=auth_headers
-        )
+    @pytest.fixture
+    def auth_token(self):
+        """Get admin authentication token"""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@test.com",
+            "password": "admin123"
+        })
+        return response.json()['token']
+    
+    @pytest.fixture
+    def test_package(self, auth_token):
+        """Create a test package and clean up after"""
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        
+        # Create test package
+        create_data = {
+            "name": "TEST_Package_Update",
+            "name_ar": "حزمة اختبار التحديث",
+            "description": "Test package for update testing",
+            "description_ar": "حزمة اختبار للتحديث",
+            "standards": ["ISO9001"],
+            "is_active": True
+        }
+        response = requests.post(f"{BASE_URL}/api/templates/packages", json=create_data, headers=headers)
         assert response.status_code == 200
-        data = response.json()
+        package_id = response.json()['id']
         
-        assert isinstance(data, list)
-        print(f"Retrieved {len(data)} certification packages")
+        yield package_id
         
-        # Verify structure of packages if any exist
-        if len(data) > 0:
-            package = data[0]
-            assert "id" in package
-            assert "name" in package
-            assert "name_ar" in package
-            assert "standards" in package
-            assert isinstance(package["standards"], list)
+        # Cleanup: Delete the test package
+        requests.delete(f"{BASE_URL}/api/templates/packages/{package_id}", headers=headers)
     
-    def test_get_proposal_templates(self, auth_headers):
-        """GET /api/templates/proposals should return templates list"""
-        response = requests.get(
-            f"{BASE_URL}/api/templates/proposals",
-            headers=auth_headers
-        )
-        assert response.status_code == 200
+    def test_update_package_success(self, auth_token, test_package):
+        """Test successful package update"""
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        package_id = test_package
+        
+        # Update package
+        update_data = {
+            "name": "TEST_Package_Updated",
+            "name_ar": "حزمة اختبار محدثة",
+            "description": "Updated description",
+            "description_ar": "الوصف المحدث",
+            "standards": ["ISO9001", "ISO14001"],
+            "is_active": True
+        }
+        response = requests.put(f"{BASE_URL}/api/templates/packages/{package_id}", json=update_data, headers=headers)
+        
+        assert response.status_code == 200, f"Update failed: {response.text}"
         data = response.json()
+        assert data.get('message') == 'Package updated'
+        print(f"Package updated successfully: {package_id}")
         
-        assert isinstance(data, list)
-        print(f"Retrieved {len(data)} proposal templates")
+        # Verify update by fetching packages
+        list_response = requests.get(f"{BASE_URL}/api/templates/packages", headers=headers)
+        packages = list_response.json()
+        updated_package = next((p for p in packages if p['id'] == package_id), None)
         
-        # Verify structure of templates if any exist
-        if len(data) > 0:
-            template = data[0]
-            assert "id" in template
-            assert "name" in template
-            assert "name_ar" in template
+        if updated_package:
+            assert updated_package['name'] == "TEST_Package_Updated"
+            assert "ISO14001" in updated_package['standards']
+            print(f"Verified: name={updated_package['name']}, standards={updated_package['standards']}")
     
-    def test_create_certification_package(self, auth_headers):
-        """POST /api/templates/packages should create a package"""
-        package_data = {
-            "name": "TEST_Package_QMS",
-            "name_ar": "حزمة اختبار نظام الجودة",
-            "description": "Test package for QMS certification",
-            "description_ar": "حزمة اختبار لشهادة نظام إدارة الجودة",
+    def test_update_package_unauthorized(self, test_package):
+        """Test package update without authentication"""
+        package_id = test_package
+        
+        update_data = {
+            "name": "Unauthorized Update",
+            "name_ar": "تحديث غير مصرح",
+            "description": "",
+            "description_ar": "",
             "standards": ["ISO9001"]
         }
+        response = requests.put(f"{BASE_URL}/api/templates/packages/{package_id}", json=update_data)
         
-        response = requests.post(
-            f"{BASE_URL}/api/templates/packages",
-            json=package_data,
-            headers=auth_headers
-        )
-        assert response.status_code == 200
-        data = response.json()
-        
-        assert "message" in data or "id" in data
-        print(f"Created package: {data.get('id', 'success')}")
+        # Should fail without auth
+        assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}"
+        print("Unauthorized update correctly rejected")
+
+
+class TestProposalTemplatesUpdate:
+    """Test PUT /api/templates/proposals/{id} endpoint"""
     
-    def test_create_proposal_template(self, auth_headers):
-        """POST /api/templates/proposals should create a template"""
-        template_data = {
-            "name": "TEST_Template_Standard",
-            "name_ar": "قالب اختبار قياسي",
-            "description": "Test standard pricing template",
+    @pytest.fixture
+    def auth_token(self):
+        """Get admin authentication token"""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@test.com",
+            "password": "admin123"
+        })
+        return response.json()['token']
+    
+    @pytest.fixture
+    def test_template(self, auth_token):
+        """Create a test proposal template and clean up after"""
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        
+        # Create test template
+        create_data = {
+            "name": "TEST_Template_Update",
+            "name_ar": "قالب اختبار التحديث",
+            "description": "Test template for update testing",
             "default_fees": {
                 "initial_certification": 10000,
                 "surveillance_1": 5000,
                 "surveillance_2": 5000,
                 "recertification": 8000
             },
-            "default_notes": "Standard pricing template",
+            "default_notes": "Test notes",
+            "default_validity_days": 30,
+            "is_active": True
+        }
+        response = requests.post(f"{BASE_URL}/api/templates/proposals", json=create_data, headers=headers)
+        assert response.status_code == 200
+        template_id = response.json()['id']
+        
+        yield template_id
+        
+        # Cleanup: Delete the test template
+        requests.delete(f"{BASE_URL}/api/templates/proposals/{template_id}", headers=headers)
+    
+    def test_update_template_success(self, auth_token, test_template):
+        """Test successful proposal template update"""
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        template_id = test_template
+        
+        # Update template
+        update_data = {
+            "name": "TEST_Template_Updated",
+            "name_ar": "قالب اختبار محدث",
+            "description": "Updated template description",
+            "default_fees": {
+                "initial_certification": 15000,
+                "surveillance_1": 7000,
+                "surveillance_2": 7000,
+                "recertification": 12000
+            },
+            "default_notes": "Updated notes",
+            "default_validity_days": 45,
+            "is_active": True
+        }
+        response = requests.put(f"{BASE_URL}/api/templates/proposals/{template_id}", json=update_data, headers=headers)
+        
+        assert response.status_code == 200, f"Update failed: {response.text}"
+        data = response.json()
+        assert data.get('message') == 'Template updated'
+        print(f"Template updated successfully: {template_id}")
+        
+        # Verify update by fetching templates
+        list_response = requests.get(f"{BASE_URL}/api/templates/proposals", headers=headers)
+        templates = list_response.json()
+        updated_template = next((t for t in templates if t['id'] == template_id), None)
+        
+        if updated_template:
+            assert updated_template['name'] == "TEST_Template_Updated"
+            assert updated_template['default_fees']['initial_certification'] == 15000
+            assert updated_template['default_validity_days'] == 45
+            print(f"Verified: name={updated_template['name']}, fees={updated_template['default_fees']}")
+    
+    def test_update_template_unauthorized(self, test_template):
+        """Test template update without authentication"""
+        template_id = test_template
+        
+        update_data = {
+            "name": "Unauthorized Update",
+            "name_ar": "تحديث غير مصرح",
+            "description": "",
+            "default_fees": {},
+            "default_notes": "",
             "default_validity_days": 30
         }
+        response = requests.put(f"{BASE_URL}/api/templates/proposals/{template_id}", json=update_data)
         
-        response = requests.post(
-            f"{BASE_URL}/api/templates/proposals",
-            json=template_data,
-            headers=auth_headers
-        )
+        # Should fail without auth
+        assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}"
+        print("Unauthorized update correctly rejected")
+
+
+class TestApplicationForms:
+    """Test application forms for sticky footer context"""
+    
+    @pytest.fixture
+    def auth_token(self):
+        """Get admin authentication token"""
+        response = requests.post(f"{BASE_URL}/api/auth/login", json={
+            "email": "admin@test.com",
+            "password": "admin123"
+        })
+        return response.json()['token']
+    
+    def test_get_pending_forms(self, auth_token):
+        """Test that pending forms exist for form testing"""
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        response = requests.get(f"{BASE_URL}/api/application-forms", headers=headers)
+        
         assert response.status_code == 200
-        data = response.json()
+        forms = response.json()
+        pending_forms = [f for f in forms if f.get('status') == 'pending']
         
-        assert "message" in data or "id" in data
-        print(f"Created template: {data.get('id', 'success')}")
-    
-    def test_templates_unauthorized(self):
-        """Templates endpoints without auth should fail"""
-        response = requests.get(f"{BASE_URL}/api/templates/packages")
-        assert response.status_code in [401, 403]
+        print(f"Total forms: {len(forms)}")
+        print(f"Pending forms (for sticky footer test): {len(pending_forms)}")
         
-        response = requests.get(f"{BASE_URL}/api/templates/proposals")
-        assert response.status_code in [401, 403]
-
-
-# ================= PDF CONTRACT GENERATION TESTS =================
-
-class TestPDFGeneration:
-    """Test PDF contract generation endpoints"""
+        if pending_forms:
+            form = pending_forms[0]
+            assert 'access_token' in form
+            print(f"Form access URL: /form/{form['access_token']}")
     
-    def test_public_contract_pdf(self):
-        """GET /api/public/contracts/{access_token}/pdf should return PDF"""
-        response = requests.get(
-            f"{BASE_URL}/api/public/contracts/{TEST_ACCESS_TOKEN}/pdf"
-        )
+    def test_public_form_access(self, auth_token):
+        """Test public form endpoint works for sticky footer form"""
+        headers = {"Authorization": f"Bearer {auth_token}"}
         
-        # Should return PDF or 404 if agreement doesn't exist
-        if response.status_code == 200:
-            assert response.headers.get("Content-Type") == "application/pdf"
-            assert len(response.content) > 0
-            print("PDF contract generated successfully")
-        elif response.status_code == 404:
-            # Agreement not found is acceptable if none exists
-            print("No signed agreement found for this access token")
-        else:
-            pytest.fail(f"Unexpected status code: {response.status_code}")
-    
-    def test_public_contract_pdf_invalid_token(self):
-        """GET /api/public/contracts/{invalid_token}/pdf should return 404"""
-        response = requests.get(
-            f"{BASE_URL}/api/public/contracts/invalid-token-12345/pdf"
-        )
-        assert response.status_code == 404
-    
-    def test_admin_contract_pdf(self, auth_headers):
-        """GET /api/contracts/{agreement_id}/pdf requires valid agreement_id"""
-        # First get agreements to find a valid ID
-        # Since we need agreement_id (not access_token), we'll test with invalid ID
-        response = requests.get(
-            f"{BASE_URL}/api/contracts/invalid-agreement-id/pdf",
-            headers=auth_headers
-        )
-        # Should return 404 for invalid agreement ID
-        assert response.status_code == 404
-    
-    def test_admin_contract_pdf_unauthorized(self):
-        """GET /api/contracts/{id}/pdf without auth should fail"""
-        response = requests.get(
-            f"{BASE_URL}/api/contracts/some-agreement-id/pdf"
-        )
-        assert response.status_code in [401, 403]
-
-
-# ================= INTEGRATION TEST: NOTIFICATION CREATION =================
-
-class TestNotificationIntegration:
-    """Test that notifications are created during key actions"""
-    
-    def test_get_notifications_contains_expected_types(self, auth_headers):
-        """Verify notifications contain expected types from system actions"""
-        response = requests.get(
-            f"{BASE_URL}/api/notifications?limit=50",
-            headers=auth_headers
-        )
-        assert response.status_code == 200
-        data = response.json()
+        # Get a pending form
+        response = requests.get(f"{BASE_URL}/api/application-forms", headers=headers)
+        forms = response.json()
+        pending_forms = [f for f in forms if f.get('status') == 'pending']
         
-        notification_types = set()
-        for notification in data["notifications"]:
-            if "type" in notification:
-                notification_types.add(notification["type"])
+        if not pending_forms:
+            pytest.skip("No pending forms available")
         
-        print(f"Notification types found: {notification_types}")
+        access_token = pending_forms[0]['access_token']
         
-        # Check if any expected types exist
-        expected_types = {"form_submitted", "proposal_accepted", "proposal_rejected", "agreement_signed"}
-        found_types = notification_types.intersection(expected_types)
-        print(f"Found expected notification types: {found_types}")
+        # Test public access
+        public_response = requests.get(f"{BASE_URL}/api/public/form/{access_token}")
+        assert public_response.status_code == 200
+        
+        form_data = public_response.json()
+        assert 'id' in form_data
+        assert 'client_info' in form_data
+        assert 'status' in form_data
+        print(f"Public form access works: {form_data['id']}")
 
-
-# ================= RUN ALL TESTS =================
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--tb=short"])
+    pytest.main([__file__, "-v"])

@@ -1108,6 +1108,16 @@ async def submit_public_form(access_token: str, update_data: ApplicationFormUpda
     
     updated_form = await db.application_forms.find_one({"access_token": access_token}, {"_id": 0})
     
+    # Create notification for admin
+    client_name = form.get('client_info', {}).get('company_name', 'Unknown')
+    await create_notification(
+        notification_type="form_submitted",
+        title="طلب اعتماد جديد",
+        message=f"قامت {client_name} بتقديم طلب اعتماد جديد",
+        related_id=updated_form['id'],
+        related_type="form"
+    )
+    
     return PublicApplicationFormResponse(
         id=updated_form['id'],
         client_info=updated_form['client_info'],

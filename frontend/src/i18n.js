@@ -1142,7 +1142,81 @@ const resources = {
       "pleaseCompleteAgreementForm": "يرجى إكمال نموذج اتفاقية الاعتماد لإتمام عملية الاعتماد.",
       "continueToAgreement": "المتابعة إلى نموذج الاتفاقية",
       "agreementAlreadySigned": "تم توقيع اتفاقية الاعتماد بالفعل.",
-      "viewAgreement": "عرض الاتفاقية"
+      "viewAgreement": "عرض الاتفاقية",
+      
+      // Notifications
+      "notifications": "الإشعارات",
+      "markAllRead": "تحديد الكل كمقروء",
+      "noNotifications": "لا توجد إشعارات بعد",
+      "justNow": "الآن",
+      "minutesAgo": "دقائق مضت",
+      "hoursAgo": "ساعات مضت",
+      "daysAgo": "أيام مضت",
+      "close": "إغلاق",
+      
+      // Status Timeline
+      "formCreated": "تم الإنشاء",
+      "formSubmitted": "تم التقديم",
+      "proposalSent": "تم إرسال العرض",
+      "proposalAccepted": "تم القبول",
+      "agreementSigned": "تم التوقيع",
+      "contractGenerated": "تم إنشاء العقد",
+      
+      // Reports
+      "reportsAnalytics": "التقارير والتحليلات",
+      "backToDashboard": "العودة للوحة التحكم",
+      "refresh": "تحديث",
+      "totalForms": "إجمالي النماذج",
+      "submittedForms": "النماذج المقدمة",
+      "conversionRate": "معدل التحويل",
+      "totalContracts": "إجمالي العقود",
+      "revenueOverview": "نظرة عامة على الإيرادات",
+      "revenueBreakdown": "تفصيل الإيرادات المقترحة والمقبولة",
+      "totalQuoted": "إجمالي المعروض",
+      "acceptedRevenue": "الإيرادات المقبولة",
+      "pendingRevenue": "الإيرادات المعلقة",
+      "rejectedRevenue": "الإيرادات المرفوضة",
+      "proposalStatistics": "إحصائيات العروض",
+      "proposalOverview": "نظرة عامة على العروض المرسلة والمقبولة",
+      "totalProposals": "إجمالي العروض",
+      "accepted": "مقبول",
+      "pendingForms": "النماذج المعلقة",
+      "conversionProgress": "تقدم التحويل",
+      "monthlySubmissions": "التقديمات الشهرية",
+      "lastSixMonths": "التقديمات خلال الأشهر الستة الماضية",
+      
+      // Templates
+      "templatesManagement": "إدارة القوالب",
+      "certificationPackages": "حزم الاعتماد",
+      "proposalTemplates": "قوالب العروض",
+      "addPackage": "إضافة حزمة",
+      "addTemplate": "إضافة قالب",
+      "addNewPackage": "إضافة حزمة جديدة",
+      "addNewTemplate": "إضافة قالب جديد",
+      "nameEnglish": "الاسم (إنجليزي)",
+      "nameArabic": "الاسم (عربي)",
+      "descriptionEnglish": "الوصف (إنجليزي)",
+      "descriptionArabic": "الوصف (عربي)",
+      "standards": "المعايير",
+      "defaultFees": "الرسوم الافتراضية",
+      "initialCertification": "الاعتماد الأولي",
+      "recertification": "إعادة الاعتماد",
+      "defaultNotes": "الملاحظات الافتراضية",
+      "validity": "الصلاحية",
+      "days": "يوم",
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "confirmDelete": "هل أنت متأكد من حذف هذا العنصر؟",
+      "fillRequiredFields": "يرجى ملء جميع الحقول المطلوبة",
+      "errorAddingPackage": "خطأ في إضافة الحزمة",
+      "errorAddingTemplate": "خطأ في إضافة القالب",
+      "noPackagesYet": "لا توجد حزم اعتماد بعد",
+      "noTemplatesYet": "لا توجد قوالب عروض بعد",
+      
+      // Contract Download
+      "downloadContract": "تحميل العقد",
+      "noAgreementFound": "لم يتم العثور على اتفاقية موقعة لهذا النموذج",
+      "errorDownloadingContract": "خطأ في تحميل العقد"
     }
   }
 };

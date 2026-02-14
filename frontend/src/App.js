@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import LoginPage from '@/pages/LoginPage';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ClientDashboard from '@/pages/ClientDashboard';
+import PublicFormPage from '@/pages/PublicFormPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -75,6 +76,10 @@ function App() {
       <div className="App">
         <BrowserRouter>
           <Routes>
+            {/* Public form route - no authentication required */}
+            <Route path="/form/:accessToken" element={<PublicFormPage />} />
+            
+            {/* Authenticated routes */}
             <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
             <Route 
               path="/dashboard" 

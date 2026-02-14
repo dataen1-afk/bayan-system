@@ -1726,6 +1726,166 @@ async def get_revenue_statistics(credentials: HTTPAuthorizationCredentials = Dep
         "currency": "SAR"
     }
 
+@api_router.get("/reports/filtered")
+async def get_filtered_report(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    status: Optional[str] = None,
+    standard: Optional[str] = None
+):
+    """Get filtered report data with comprehensive filters"""
+    await get_current_user(credentials)
+    
+    # Build query for forms
+    forms_query = {}
+    if status and status != "all":
+        forms_query["status"] = status
+    
+    # Date filtering
+    if start_date or end_date:
+        forms_query["created_at"] = {}
+        if start_date:
+            forms_query["created_at"]["$gte"] = start_date
+        if end_date:
+            forms_query["created_at"]["$lte"] = end_date
+    
+    # Get filtered forms
+    forms = await db.application_forms.find(forms_query, {"_id": 0}).to_list(1000)
+    
+    # Filter by standard if specified
+    if standard and standard != "all":
+        forms = [f for f in forms if f.get('company_data', {}).get('certificationSchemes') and standard in f.get('company_data', {}).get('certificationSchemes', [])]
+    
+    # Build query for proposals
+    proposals_query = {}
+    if status and status != "all":
+        proposals_query["status"] = status
+    if start_date or end_date:
+        proposals_query["created_at"] = {}
+        if start_date:
+            proposals_query["created_at"]["$gte"] = start_date
+        if end_date:
+            proposals_query["created_at"]["$lte"] = end_date
+    
+    # Get filtered proposals
+    proposals = await db.proposals.find(proposals_query, {"_id": 0}).to_list(1000)
+    
+    # Filter proposals by standard if specified
+    if standard and standard != "all":
+        proposals = [p for p in proposals if standard in p.get('standards', [])]
+    
+    # Calculate statistics
+    total_forms = len(forms)
+    submitted_forms = len([f for f in forms if f.get('status') in ['submitted', 'under_review', 'approved', 'agreement_signed']])
+    pending_forms = len([f for f in forms if f.get('status') == 'pending'])
+    
+    total_proposals = len(proposals)
+    accepted_proposals = len([p for p in proposals if p.get('status') in ['accepted', 'agreement_signed']])
+    pending_proposals = len([p for p in proposals if p.get('status') == 'pending'])
+    rejected_proposals = len([p for p in proposals if p.get('status') == 'rejected'])
+    modification_requested = len([p for p in proposals if p.get('status') == 'modification_requested'])
+    
+    # Revenue calculations
+    total_quoted = sum(p.get('total_amount', 0) for p in proposals)
+    accepted_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') in ['accepted', 'agreement_signed'])
+    pending_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') == 'pending')
+    rejected_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') == 'rejected')
+    
+    conversion_rate = (accepted_proposals / total_proposals * 100) if total_proposals > 0 else 0
+    
+    # Standards breakdown
+    standards_count = {}
+    for p in proposals:
+        for std in p.get('standards', []):
+            standards_count[std] = standards_count.get(std, 0) + 1
+    
+    # Status breakdown for forms
+    form_status_breakdown = {}
+    for f in forms:
+        status_val = f.get('status', 'unknown')
+        form_status_breakdown[status_val] = form_status_breakdown.get(status_val, 0) + 1
+    
+    # Status breakdown for proposals
+    proposal_status_breakdown = {}
+    for p in proposals:
+        status_val = p.get('status', 'unknown')
+        proposal_status_breakdown[status_val] = proposal_status_breakdown.get(status_val, 0) + 1
+    
+    return {
+        "forms": {
+            "total": total_forms,
+            "submitted": submitted_forms,
+            "pending": pending_forms,
+            "status_breakdown": form_status_breakdown,
+            "data": forms[:50]  # Return first 50 for detail view
+        },
+        "proposals": {
+            "total": total_proposals,
+            "accepted": accepted_proposals,
+            "pending": pending_proposals,
+            "rejected": rejected_proposals,
+            "modification_requested": modification_requested,
+            "status_breakdown": proposal_status_breakdown,
+            "data": proposals[:50]
+        },
+        "revenue": {
+            "total_quoted": total_quoted,
+            "accepted": accepted_revenue,
+            "pending": pending_revenue,
+            "rejected": rejected_revenue,
+            "currency": "SAR"
+        },
+        "conversion_rate": round(conversion_rate, 1),
+        "standards_breakdown": standards_count,
+        "filters_applied": {
+            "start_date": start_date,
+            "end_date": end_date,
+            "status": status,
+            "standard": standard
+        }
+    }
+
+# ================= MODIFICATION REQUEST ROUTES =================
+
+@api_router.post("/public/proposal/{access_token}/request_modification")
+async def request_proposal_modification(access_token: str, request: ModificationRequest):
+    """Client requests modification to a proposal (no login required)"""
+    proposal = await db.proposals.find_one({"access_token": access_token})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
+    
+    if proposal['status'] != 'pending':
+        raise HTTPException(status_code=400, detail="Proposal has already been responded to")
+    
+    if not request.comment:
+        raise HTTPException(status_code=400, detail="Please provide a comment explaining the requested modifications")
+    
+    # Update proposal with modification request
+    update_data = {
+        "status": "modification_requested",
+        "modification_comment": request.comment,
+        "modification_requested_changes": request.requested_changes,
+        "modification_requested_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.proposals.update_one(
+        {"access_token": access_token},
+        {"$set": update_data}
+    )
+    
+    # Create notification for admin
+    org_name = proposal.get('organization_name', 'Unknown')
+    await create_notification(
+        notification_type="modification_requested",
+        title="طلب تعديل على العرض",
+        message=f"طلبت {org_name} تعديلات على عرض السعر: {request.comment[:100]}",
+        related_id=proposal['id'],
+        related_type="proposal"
+    )
+    
+    return {"message": "Modification request submitted successfully"}
+
 # ================= SEED DATA =================
 
 async def seed_default_templates():

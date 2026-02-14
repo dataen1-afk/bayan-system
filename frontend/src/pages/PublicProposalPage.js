@@ -411,19 +411,31 @@ const PublicProposalPage = () => {
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               onClick={() => setShowRejectModal(true)}
               variant="outline"
               size="lg"
               className="px-8 border-red-300 text-red-600 hover:bg-red-50"
+              data-testid="reject-proposal-btn"
             >
               {t('rejectProposal')}
+            </Button>
+            <Button
+              onClick={() => setShowModificationModal(true)}
+              variant="outline"
+              size="lg"
+              className="px-8 border-orange-300 text-orange-600 hover:bg-orange-50"
+              data-testid="request-modification-btn"
+            >
+              <Edit3 className="w-4 h-4 mr-2" />
+              {t('requestModification') || 'Request Modification'}
             </Button>
             <Button
               onClick={() => setShowAcceptModal(true)}
               size="lg"
               className="px-8 bg-green-600 hover:bg-green-700"
+              data-testid="accept-proposal-btn"
             >
               {t('acceptProposal')}
             </Button>

@@ -1620,15 +1620,13 @@ async def mark_notification_read(notification_id: str, credentials: HTTPAuthoriz
 
 @api_router.put("/notifications/read-all")
 async def mark_all_notifications_read(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Mark all notifications as read"""
+    """Mark all notifications as read and clear them"""
     await get_current_user(credentials)
     
-    await db.notifications.update_many(
-        {"is_read": False},
-        {"$set": {"is_read": True}}
-    )
+    # Delete all notifications to prevent accumulation
+    await db.notifications.delete_many({})
     
-    return {"message": "All notifications marked as read"}
+    return {"message": "All notifications cleared"}
 
 # ================= TEMPLATE ROUTES =================
 

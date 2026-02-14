@@ -1155,6 +1155,17 @@ const resources = {
       "agreementAlreadySigned": "تم توقيع اتفاقية الاعتماد بالفعل.",
       "viewAgreement": "عرض الاتفاقية",
       
+      // Proposals/Quotations page
+      "allProposals": "جميع العروض",
+      "trackProposalStatus": "تتبع حالة جميع العروض المرسلة",
+      "noProposalsYet": "لا توجد عروض بعد",
+      "createProposalFromForms": "إنشاء عروض من طلبات الاعتماد المقدمة",
+      "proposalsEmptyStateHelp": "انتقل إلى علامة تبويب النماذج وانقر على 'إنشاء عرض سعر' على النموذج المقدم",
+      "viewProposal": "عرض العرض",
+      "contactPerson": "جهة الاتصال",
+      "sent": "مرسل",
+      "draft": "مسودة",
+      
       // Notifications
       "notifications": "الإشعارات",
       "markAllRead": "تحديد الكل كمقروء",

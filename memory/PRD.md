@@ -82,11 +82,19 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Small Business (discounted)
   - Enterprise
 
-### Reports & Analytics ✅ (NEW - Dec 2025)
+### Reports & Analytics ✅ (Updated - Feb 2026)
 - **Summary Cards**: Total forms, submitted, conversion rate, contracts
 - **Revenue Overview**: Total quoted, accepted, pending, rejected
 - **Proposal Statistics**: With conversion progress bar
 - **Monthly Submissions Chart**: Last 6 months bar chart
+- **Enhanced Filtering** (NEW):
+  - Toggle filter panel with button
+  - Date range selection (start/end date)
+  - Status filter dropdown (all, pending, submitted, under_review, accepted, rejected, agreement_signed, modification_requested)
+  - Certification Standard filter (ISO9001, ISO14001, etc.)
+  - Apply/Clear filters buttons
+  - Standards breakdown card when filters applied
+  - Backend `/api/reports/filtered` endpoint with comprehensive filtering
 
 ### Contracts Page ✅ (Updated - Feb 2026)
 - Displays approved price quotes converted to contracts (proposals with `status: agreement_signed`)

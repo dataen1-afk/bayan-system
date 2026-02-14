@@ -16,6 +16,24 @@ import ApplicationForm from '@/components/ApplicationForm';
 import NotificationBell from '@/components/NotificationBell';
 import StatusTimeline from '@/components/StatusTimeline';
 
+// Format currency with Western Arabic numerals and SAR
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  }).format(amount || 0) + ' SAR';
+};
+
+// Format date with Western Arabic numerals
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
 const AdminDashboard = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();

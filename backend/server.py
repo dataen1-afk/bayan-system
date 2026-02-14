@@ -1372,7 +1372,11 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
     
     # Validate signature is provided
     if not agreement_data.signature_image:
-        raise HTTPException(status_code=400, detail="Digital signature is required")
+        raise HTTPException(status_code=422, detail="Digital signature is required")
+    
+    # Validate company seal is provided
+    if not agreement_data.stamp_image:
+        raise HTTPException(status_code=422, detail="Company seal/stamp is required")
     
     # Create certification agreement
     agreement = CertificationAgreement(

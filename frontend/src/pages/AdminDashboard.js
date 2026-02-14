@@ -412,14 +412,14 @@ const AdminDashboard = () => {
         const submittedForms = applicationForms.filter(f => f.status === 'submitted').length;
         const completedForms = applicationForms.filter(f => ['approved', 'agreement_signed'].includes(f.status)).length;
         
-        // DataTable columns for forms
+        // DataTable columns for forms - use min-width for better content visibility
         const formColumns = [
-          { key: 'company', label: t('companyName'), width: 'w-[24%]', sortAccessor: (item) => item.client_info?.company_name || '' },
-          { key: 'contact', label: t('contact'), width: 'w-[18%]', sortAccessor: (item) => item.client_info?.name || '' },
-          { key: 'email', label: t('email'), width: 'w-[18%]' },
-          { key: 'status', label: t('status'), width: 'w-[14%]', sortAccessor: (item) => item.status },
-          { key: 'date', label: t('date'), width: 'w-[12%]', sortAccessor: (item) => new Date(item.created_at || 0).getTime() },
-          { key: 'actions', label: t('actions'), width: 'w-[14%]' }
+          { key: 'company', label: t('companyName'), width: 'min-w-[200px] flex-1', sortAccessor: (item) => item.client_info?.company_name || '' },
+          { key: 'contact', label: t('contact'), width: 'min-w-[140px] w-[15%]', sortAccessor: (item) => item.client_info?.name || '' },
+          { key: 'email', label: t('email'), width: 'min-w-[180px] w-[18%]' },
+          { key: 'status', label: t('status'), width: 'min-w-[120px] w-[12%]', sortAccessor: (item) => item.status },
+          { key: 'date', label: t('date'), width: 'min-w-[100px] w-[10%]', sortAccessor: (item) => new Date(item.created_at || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'min-w-[180px] w-[15%]' }
         ];
 
         // Searchable columns for forms
@@ -523,14 +523,14 @@ const AdminDashboard = () => {
               renderRow={(form, index, rtl) => (
                 <div 
                   key={form.id} 
-                  className="group flex flex-col lg:flex-row lg:items-center p-4 lg:p-5 hover:bg-slate-50/80 transition-colors"
+                  className="group flex flex-col lg:flex-row lg:items-center p-4 lg:px-5 lg:py-4 hover:bg-slate-50/80 transition-colors"
                   data-testid={`application-form-${form.id}`}
                 >
                   {/* Company */}
-                  <div className="lg:w-[24%] min-w-0 text-start">
+                  <div className="lg:min-w-[200px] lg:flex-1 min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                      <span className="font-semibold text-slate-900 truncate">
+                      <span className="font-semibold text-slate-900 truncate" title={form.client_info?.company_name}>
                         {form.client_info?.company_name || t('unknownCompany')}
                       </span>
                     </div>
@@ -547,20 +547,20 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Contact */}
-                  <div className="lg:w-[18%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[140px] lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
-                      <span className="text-sm text-slate-700 truncate">{form.client_info?.name || '-'}</span>
+                      <span className="text-sm text-slate-700 truncate" title={form.client_info?.name}>{form.client_info?.name || '-'}</span>
                     </div>
                   </div>
                   
                   {/* Email */}
-                  <div className="lg:w-[18%] min-w-0 hidden lg:block text-start">
-                    <span className="text-sm text-slate-500 truncate block">{form.client_info?.email || '-'}</span>
+                  <div className="lg:min-w-[180px] lg:w-[18%] min-w-0 hidden lg:block text-start">
+                    <span className="text-sm text-slate-500 truncate block" title={form.client_info?.email}>{form.client_info?.email || '-'}</span>
                   </div>
                   
                   {/* Status */}
-                  <div className="lg:w-[14%] mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[120px] lg:w-[12%] mt-2 lg:mt-0 text-start">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${
                       form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                       form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
@@ -573,48 +573,48 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Date */}
-                  <div className="lg:w-[12%] hidden lg:block text-start">
+                  <div className="lg:min-w-[100px] lg:w-[10%] hidden lg:block text-start">
                     <div className="flex items-center gap-1 text-sm text-slate-500 whitespace-nowrap">
                       <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       {formatDate(form.created_at)}
                     </div>
                   </div>
                   
-                  {/* Actions */}
-                  <div className="lg:w-[14%] flex items-center gap-1 mt-3 lg:mt-0 justify-end" dir="ltr">
+                  {/* Actions - Professional layout with proper spacing */}
+                  <div className="lg:min-w-[180px] lg:w-[15%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {form.status === 'pending' && (
-                      <>
+                      <div className="flex items-center gap-1.5">
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm"
                           onClick={() => copyFormLink(form)}
                           data-testid={`copy-link-${form.id}`}
-                          className="h-8 px-2 text-slate-600 hover:text-bayan-navy"
+                          className="h-8 w-8 p-0 text-slate-600 hover:text-bayan-navy hover:border-bayan-navy"
                           title={t('copyLink')}
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm"
                           onClick={() => handleSendEmail(form.id)}
                           disabled={sendingEmail}
                           data-testid={`send-email-${form.id}`}
-                          className="h-8 px-2 text-slate-600 hover:text-bayan-navy"
+                          className="h-8 w-8 p-0 text-slate-600 hover:text-bayan-navy hover:border-bayan-navy"
                           title={t('sendEmail')}
                         >
                           <Mail className="w-4 h-4" />
                         </Button>
-                      </>
+                      </div>
                     )}
                     {form.status === 'submitted' && (
-                      <>
+                      <div className="flex items-center gap-1.5">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleViewApplicationForm(form)}
                           data-testid={`view-form-${form.id}`}
-                          className="h-8 px-2"
+                          className="h-8 w-8 p-0"
                           title={t('view')}
                         >
                           <Eye className="w-4 h-4" />
@@ -624,7 +624,7 @@ const AdminDashboard = () => {
                           size="sm"
                           onClick={() => handleDownloadFormBilingual(form.id)}
                           data-testid={`download-form-bilingual-${form.id}`}
-                          className="h-8 px-2"
+                          className="h-8 w-8 p-0"
                           title={t('downloadBilingualPDF') || 'Download Bilingual PDF'}
                         >
                           <FileText className="w-4 h-4" />
@@ -633,12 +633,12 @@ const AdminDashboard = () => {
                           size="sm"
                           onClick={() => handleCreateQuotationFromForm(form)}
                           data-testid={`create-quote-${form.id}`}
-                          className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700"
+                          className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700"
                         >
-                          <DollarSign className="w-4 h-4 me-1" />
-                          <span className="hidden sm:inline">{t('quote')}</span>
+                          <DollarSign className="w-4 h-4" />
+                          <span className="hidden xl:inline ms-1">{t('quote')}</span>
                         </Button>
-                      </>
+                      </div>
                     )}
                     {form.status === 'agreement_signed' && (
                       <Button 
@@ -647,8 +647,8 @@ const AdminDashboard = () => {
                         data-testid={`download-contract-${form.id}`}
                         className="h-8 px-3 bg-bayan-navy hover:bg-bayan-navy-light"
                       >
-                        <Download className="w-4 h-4 me-1" />
-                        <span className="hidden sm:inline">{t('download')}</span>
+                        <Download className="w-4 h-4" />
+                        <span className="hidden xl:inline ms-1">{t('download')}</span>
                       </Button>
                     )}
                   </div>

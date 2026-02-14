@@ -1263,6 +1263,77 @@ async def respond_to_proposal(access_token: str, response: ProposalResponse):
     
     return {"message": f"Proposal {response.status} successfully"}
 
+# ================= CERTIFICATION AGREEMENT ROUTES =================
+
+@api_router.post("/public/agreement/{access_token}/submit")
+async def submit_certification_agreement(access_token: str, agreement_data: CertificationAgreementSubmit):
+    """Submit certification agreement form (no login required)"""
+    # Find the proposal by access token
+    proposal = await db.proposals.find_one({"access_token": access_token})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
+    
+    # Check if proposal is accepted
+    if proposal['status'] != 'accepted':
+        raise HTTPException(status_code=400, detail="Proposal must be accepted before signing agreement")
+    
+    # Check if agreement already exists
+    existing_agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token})
+    if existing_agreement:
+        raise HTTPException(status_code=400, detail="Agreement has already been submitted")
+    
+    # Create certification agreement
+    agreement = CertificationAgreement(
+        proposal_id=proposal['id'],
+        proposal_access_token=access_token,
+        organization_name=agreement_data.organization_name,
+        organization_address=agreement_data.organization_address,
+        selected_standards=agreement_data.selected_standards,
+        other_standard=agreement_data.other_standard,
+        scope_of_services=agreement_data.scope_of_services,
+        sites=agreement_data.sites,
+        signatory_name=agreement_data.signatory_name,
+        signatory_position=agreement_data.signatory_position,
+        signatory_date=agreement_data.signatory_date,
+        acknowledgements=agreement_data.acknowledgements.model_dump()
+    )
+    
+    agreement_doc = agreement.model_dump()
+    agreement_doc['created_at'] = agreement_doc['created_at'].isoformat()
+    
+    await db.certification_agreements.insert_one(agreement_doc)
+    
+    # Update proposal status to indicate agreement signed
+    await db.proposals.update_one(
+        {"access_token": access_token},
+        {"$set": {"status": "agreement_signed"}}
+    )
+    
+    # Update application form status
+    await db.application_forms.update_one(
+        {"id": proposal['application_form_id']},
+        {"$set": {"status": "agreement_signed"}}
+    )
+    
+    return {"message": "Certification agreement submitted successfully", "agreement_id": agreement.id}
+
+@api_router.get("/public/agreement/{access_token}")
+async def get_certification_agreement(access_token: str):
+    """Get certification agreement status"""
+    agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token}, {"_id": 0})
+    if agreement:
+        return {"status": "submitted", "agreement": agreement}
+    
+    # Check if proposal exists and is accepted
+    proposal = await db.proposals.find_one({"access_token": access_token}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    if proposal['status'] != 'accepted':
+        raise HTTPException(status_code=400, detail="Proposal is not accepted")
+    
+    return {"status": "pending", "proposal": proposal}
+
 # Include the router in the main app
 app.include_router(api_router)
 

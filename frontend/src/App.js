@@ -119,6 +119,10 @@ function App() {
               path="/contact-history" 
               element={user?.role === 'admin' ? <ContactHistoryPage /> : <Navigate to="/login" />} 
             />
+            <Route 
+              path="/documents" 
+              element={user?.role === 'admin' ? <DocumentsPage /> : <Navigate to="/login" />} 
+            />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
           </Routes>
         </BrowserRouter>

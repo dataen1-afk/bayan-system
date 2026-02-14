@@ -839,12 +839,46 @@ const AdminDashboard = () => {
                     signedContracts.map((contract, index) => (
                       <div 
                         key={contract.id} 
-                        className="group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors"
+                        className={`group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${!isRTL ? 'lg:flex-row-reverse' : ''}`}
                         data-testid={`contract-${contract.id}`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        {/* Price & Actions - On LEFT in RTL mode */}
-                        <div className={`flex flex-col gap-3 mt-4 lg:mt-0 ${isRTL ? 'items-start lg:order-first' : 'items-end lg:order-last'}`}>
+                        {/* Main Info - On RIGHT in RTL */}
+                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                            <h3 className="font-semibold text-slate-900 truncate">
+                              {contract.organization_name}
+                            </h3>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
+                              {t('agreement_signed')}
+                            </span>
+                          </div>
+                          
+                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                            <span>{contract.contact_person}</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-slate-500">{contract.contact_email}</span>
+                          </div>
+                          
+                          {/* Standards badges */}
+                          <div className={`flex flex-wrap gap-1.5 mt-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                            {contract.standards?.map((std) => (
+                              <span key={std} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded border border-emerald-100">
+                                {std}
+                              </span>
+                            ))}
+                          </div>
+                          
+                          {/* Signing Date */}
+                          {contract.client_response_date && (
+                            <p className="text-xs text-slate-400 mt-2">
+                              {t('signedOn')}: {formatDate(contract.client_response_date)}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Price & Actions - On LEFT in RTL */}
+                        <div className={`flex flex-col gap-3 mt-4 lg:mt-0 ${isRTL ? 'items-start' : 'items-end'}`}>
                           {/* Contract Value */}
                           <div className={isRTL ? 'text-start' : 'text-end'}>
                             <p className="text-2xl font-bold text-emerald-600">
@@ -897,40 +931,6 @@ const AdminDashboard = () => {
                               {t('downloadPDF')}
                             </Button>
                           </div>
-                        </div>
-                        
-                        {/* Main Info - RIGHT side in RTL */}
-                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            <h3 className="font-semibold text-slate-900 truncate">
-                              {contract.organization_name}
-                            </h3>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
-                              {t('agreement_signed')}
-                            </span>
-                          </div>
-                          
-                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            <span>{contract.contact_person}</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-slate-500">{contract.contact_email}</span>
-                          </div>
-                          
-                          {/* Standards badges */}
-                          <div className={`flex flex-wrap gap-1.5 mt-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            {contract.standards?.map((std) => (
-                              <span key={std} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded border border-emerald-100">
-                                {std}
-                              </span>
-                            ))}
-                          </div>
-                          
-                          {/* Signing Date */}
-                          {contract.client_response_date && (
-                            <p className="text-xs text-slate-400 mt-2">
-                              {t('signedOn')}: {formatDate(contract.client_response_date)}
-                            </p>
-                          )}
                         </div>
                       </div>
                     ))

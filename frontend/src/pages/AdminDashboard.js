@@ -849,18 +849,20 @@ const AdminDashboard = () => {
       <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
         {/* Main Header Content */}
         <div className="dashboard-header max-w-full mx-auto px-4 py-3 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="dashboard-header-left flex items-center gap-4">
-            <div className="-my-2">
-              <img src="/bayan-logo.png" alt="Bayan" className="h-20 w-auto object-contain" />
-            </div>
-          </div>
-          <div className="dashboard-header-right flex gap-3 items-center">
+          {/* User Controls - Left side in RTL, Right side in LTR */}
+          <div className={`dashboard-header-controls flex gap-3 items-center ${isRTL ? 'order-first' : 'order-last'}`}>
             <NotificationBell />
             <LanguageSwitcher />
             <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-bayan-navy text-white hover:bg-bayan-navy-light border-bayan-navy font-semibold">
               <LogOut className="btn-icon w-4 h-4" />
               {t('logout')}
             </Button>
+          </div>
+          {/* Logo - Right side in RTL, Left side in LTR */}
+          <div className={`dashboard-header-logo ${isRTL ? 'order-last' : 'order-first'}`}>
+            <div className="-my-2">
+              <img src="/bayan-logo.png" alt="Bayan" className="h-20 w-auto object-contain" />
+            </div>
           </div>
         </div>
         {/* Navy Accent Bar */}

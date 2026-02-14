@@ -100,6 +100,37 @@ const AuditSchedulingPage = () => {
     }
   };
 
+  const loadSmsStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.get(`${API}/sms/status`, { headers });
+      setSmsStatus(res.data);
+    } catch (error) {
+      console.error('Error loading SMS status:', error);
+    }
+  };
+
+  const handleSendSmsReminder = async (auditId) => {
+    setSendingSms(auditId);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.post(`${API}/sms/send-audit-reminder?audit_id=${auditId}`, {}, { headers });
+      loadData();
+      if (res.data.simulated) {
+        alert(t('smsReminderSimulated') || 'SMS reminder simulated (Twilio not configured)');
+      } else {
+        alert(t('smsReminderSent') || 'SMS reminder sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending SMS reminder:', error);
+      alert(error.response?.data?.detail || t('smsReminderError') || 'Failed to send SMS reminder');
+    } finally {
+      setSendingSms(null);
+    }
+  };
+
   const handleConnectCalendar = async () => {
     try {
       const token = localStorage.getItem('token');

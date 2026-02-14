@@ -125,7 +125,7 @@ const PublicProposalPage = () => {
     );
   }
 
-  if (proposal?.status === 'accepted') {
+  if (proposal?.status === 'accepted' || proposal?.status === 'agreement_signed') {
     return (
       <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
         <Header isRTL={isRTL} />
@@ -139,7 +139,9 @@ const PublicProposalPage = () => {
                   <p className="text-gray-600 mb-6">{t('thankYouForAccepting')}</p>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md mx-auto mb-6">
                     <p className="text-sm text-green-800">
-                      {t('pleaseCompleteAgreementForm')}
+                      {proposal?.status === 'agreement_signed' 
+                        ? t('agreementAlreadySigned')
+                        : t('pleaseCompleteAgreementForm')}
                     </p>
                   </div>
                   <Button 
@@ -148,7 +150,9 @@ const PublicProposalPage = () => {
                     className="bg-bayan-navy hover:bg-bayan-navy-light"
                     data-testid="continue-to-agreement-btn"
                   >
-                    {t('continueToAgreement')}
+                    {proposal?.status === 'agreement_signed' 
+                      ? t('viewAgreement') || t('continueToAgreement')
+                      : t('continueToAgreement')}
                   </Button>
                 </div>
               </CardContent>

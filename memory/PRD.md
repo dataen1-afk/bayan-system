@@ -145,9 +145,11 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ### Templates
 - `GET /api/templates/packages` - Get certification packages
 - `POST /api/templates/packages` - Create package
+- `PUT /api/templates/packages/{id}` - Update package
 - `DELETE /api/templates/packages/{id}` - Delete package
 - `GET /api/templates/proposals` - Get proposal templates
 - `POST /api/templates/proposals` - Create template
+- `PUT /api/templates/proposals/{id}` - Update template
 - `DELETE /api/templates/proposals/{id}` - Delete template
 
 ### Reports

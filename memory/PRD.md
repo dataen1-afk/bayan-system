@@ -172,6 +172,10 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ### Reports
 - `GET /api/reports/submissions` - Submission statistics
 - `GET /api/reports/revenue` - Revenue statistics
+- `GET /api/reports/filtered` - Filtered reports with date range, status, and standard parameters
+
+### Modification Request
+- `POST /api/public/proposal/{access_token}/request_modification` - Submit modification request (public)
 
 ## Test Credentials
 - **Admin**: admin@test.com / admin123

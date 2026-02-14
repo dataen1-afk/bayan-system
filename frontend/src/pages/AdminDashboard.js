@@ -746,13 +746,14 @@ const AdminDashboard = () => {
         );
 
       case 'reports':
-        return (
-          <Card>
-            <CardContent className="py-8">
-              <ComingSoon icon={BarChart3} title={t('reports')} />
-            </CardContent>
-          </Card>
-        );
+        // Navigate to the reports page
+        navigate('/reports');
+        return null;
+
+      case 'templates':
+        // Navigate to the templates page  
+        navigate('/templates');
+        return null;
 
       case 'settings':
         return (

@@ -636,7 +636,37 @@ const resources = {
       "viewContract": "View Contract",
       "totalContracts": "Total Contracts",
       "totalRevenue": "Total Revenue",
-      "mostRecentContract": "Most Recent Contract"
+      "mostRecentContract": "Most Recent Contract",
+      
+      // Enhanced Reports
+      "filters": "Filters",
+      "filterReports": "Filter Reports",
+      "filterDescription": "Apply filters to narrow down your report data",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "applyFilters": "Apply Filters",
+      "clearFilters": "Clear Filters",
+      "filtersActive": "Filters are active. Showing filtered results.",
+      "from": "From",
+      "to": "To",
+      "standard": "Standard",
+      "all": "All",
+      "standardsBreakdown": "Standards Breakdown",
+      "proposalsByStandard": "Proposals grouped by certification standard",
+      
+      // Modification Request
+      "requestModification": "Request Modification",
+      "modificationRequested": "Modification Requested",
+      "modificationRequestSent": "Your modification request has been sent to the administrator.",
+      "waitingForResponse": "The administrator will review your request and respond shortly.",
+      "yourComment": "Your Comment",
+      "modificationModalDescription": "Describe the changes you would like to see in the proposal",
+      "enterModificationComment": "Explain what modifications you need...",
+      "requestedChanges": "Specific Changes Requested",
+      "enterRequestedChanges": "e.g., Adjust pricing, Change audit dates, Modify scope...",
+      "sendRequest": "Send Request",
+      "pleaseEnterModificationComment": "Please enter a comment explaining the requested modifications",
+      "errorRequestingModification": "Error requesting modification"
     }
   },
   ar: {

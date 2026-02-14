@@ -434,13 +434,76 @@ const AdminDashboard = () => {
                     applicationForms.map((form, index) => (
                       <div 
                         key={form.id} 
-                        className={`group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${isRTL ? 'lg:flex-row-reverse' : ''}`}
+                        className="group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors"
                         data-testid={`application-form-${form.id}`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        {/* Main Info */}
+                        {/* Actions - LEFT side in RTL */}
+                        <div className={`flex items-center gap-2 mt-3 lg:mt-0 order-last lg:order-first ${isRTL ? '' : 'lg:order-last'}`}>
+                          {form.status === 'pending' && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => copyFormLink(form)}
+                                data-testid={`copy-link-${form.id}`}
+                                className="h-9 px-3 text-slate-600 hover:text-bayan-navy hover:bg-slate-100"
+                              >
+                                <Copy className="w-4 h-4 me-1.5" />
+                                {t('copyLink')}
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleSendEmail(form.id)}
+                                disabled={sendingEmail}
+                                data-testid={`send-email-${form.id}`}
+                                className="h-9 px-3 text-slate-600 hover:text-bayan-navy hover:bg-slate-100"
+                              >
+                                <Mail className="w-4 h-4 me-1.5" />
+                                {t('sendEmail')}
+                              </Button>
+                            </>
+                          )}
+                          {form.status === 'submitted' && (
+                            <>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewApplicationForm(form)}
+                                data-testid={`view-form-${form.id}`}
+                                className="h-9 border-slate-200"
+                              >
+                                <Eye className="w-4 h-4 me-1.5" />
+                                {t('view')}
+                              </Button>
+                              <Button 
+                                size="sm"
+                                onClick={() => handleCreateQuotationFromForm(form)}
+                                data-testid={`create-quote-${form.id}`}
+                                className="h-9 bg-emerald-600 hover:bg-emerald-700 shadow-sm"
+                              >
+                                <DollarSign className="w-4 h-4 me-1.5" />
+                                {t('createQuotation')}
+                              </Button>
+                            </>
+                          )}
+                          {form.status === 'agreement_signed' && (
+                            <Button 
+                              size="sm"
+                              onClick={() => handleDownloadContract(form.id)}
+                              data-testid={`download-contract-${form.id}`}
+                              className="h-9 bg-bayan-navy hover:bg-bayan-navy-light shadow-sm"
+                            >
+                              <Download className="w-4 h-4 me-1.5" />
+                              {t('downloadContract')}
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {/* Main Info - RIGHT side in RTL */}
                         <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                             <h3 className="font-semibold text-slate-900 truncate">
                               {form.client_info?.company_name || t('unknownCompany')}
                             </h3>
@@ -456,7 +519,7 @@ const AdminDashboard = () => {
                             </span>
                           </div>
                           
-                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                             <span>{form.client_info?.name}</span>
                             <span className="text-slate-300">|</span>
                             <span className="text-slate-500">{form.client_info?.email}</span>

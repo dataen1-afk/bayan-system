@@ -177,3 +177,6 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - Client portal for tracking application status
 - Document upload for supporting materials
 - Multi-site audit scheduling
+- Sticky footer for form buttons (so they are always visible on long forms)
+- Enhanced filtering and date range selection for Reports page
+- "Request Modification" workflow for proposals

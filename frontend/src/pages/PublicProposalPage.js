@@ -521,6 +521,56 @@ const PublicProposalPage = () => {
         </div>
       )}
 
+      {/* Modification Request Modal */}
+      {showModificationModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-orange-700 flex items-center gap-2">
+                <Edit3 className="w-5 h-5" />
+                {t('requestModification') || 'Request Modification'}
+              </CardTitle>
+              <CardDescription>{t('modificationModalDescription') || 'Describe the changes you would like to see in the proposal'}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t('yourComment') || 'Your Comment'} *</Label>
+                <Textarea
+                  value={modificationComment}
+                  onChange={(e) => setModificationComment(e.target.value)}
+                  placeholder={t('enterModificationComment') || 'Explain what modifications you need...'}
+                  rows={3}
+                  data-testid="modification-comment-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('requestedChanges') || 'Specific Changes Requested'}</Label>
+                <Textarea
+                  value={modificationChanges}
+                  onChange={(e) => setModificationChanges(e.target.value)}
+                  placeholder={t('enterRequestedChanges') || 'e.g., Adjust pricing, Change audit dates, Modify scope...'}
+                  rows={2}
+                  data-testid="modification-changes-input"
+                />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowModificationModal(false)} className="flex-1">
+                  {t('cancel')}
+                </Button>
+                <Button
+                  onClick={handleRequestModification}
+                  disabled={responding}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700"
+                  data-testid="confirm-modification-btn"
+                >
+                  {responding ? <Loader2 className="w-4 h-4 animate-spin" /> : (t('sendRequest') || 'Send Request')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Footer */}
       <footer className="bg-bayan-navy text-white py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">

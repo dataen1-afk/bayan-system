@@ -336,6 +336,25 @@ const AdminDashboard = () => {
     </div>
   );
 
+  // Status filter options for forms
+  const formStatusOptions = [
+    { value: 'pending', label: t('pending') },
+    { value: 'submitted', label: t('submitted') },
+    { value: 'under_review', label: t('under_review') || 'Under Review' },
+    { value: 'approved', label: t('approved') || 'Approved' },
+    { value: 'agreement_signed', label: t('agreement_signed') || 'Agreement Signed' }
+  ];
+
+  // Status filter options for proposals
+  const proposalStatusOptions = [
+    { value: 'pending', label: t('pending') },
+    { value: 'sent', label: t('sent') || 'Sent' },
+    { value: 'accepted', label: t('accepted') },
+    { value: 'rejected', label: t('rejected') },
+    { value: 'modification_requested', label: t('modificationRequested') || 'Modification Requested' },
+    { value: 'agreement_signed', label: t('agreement_signed') || 'Agreement Signed' }
+  ];
+
   // Render content based on active tab
   const renderContent = () => {
     switch (activeTab) {
@@ -345,6 +364,28 @@ const AdminDashboard = () => {
         const pendingForms = applicationForms.filter(f => f.status === 'pending').length;
         const submittedForms = applicationForms.filter(f => f.status === 'submitted').length;
         const completedForms = applicationForms.filter(f => ['approved', 'agreement_signed'].includes(f.status)).length;
+        
+        // DataTable columns for forms
+        const formColumns = [
+          { key: 'company', label: t('companyName'), width: 'w-[25%]', sortAccessor: (item) => item.client_info?.company_name || '' },
+          { key: 'contact', label: t('contact'), width: 'w-[20%]', sortAccessor: (item) => item.client_info?.name || '' },
+          { key: 'email', label: t('email'), width: 'w-[20%]' },
+          { key: 'status', label: t('status'), width: 'w-[12%]', sortAccessor: (item) => item.status },
+          { key: 'date', label: t('date'), width: 'w-[10%]', sortAccessor: (item) => new Date(item.created_at || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'w-[13%]' }
+        ];
+
+        // Searchable columns for forms
+        const formSearchableColumns = [
+          { accessor: (item) => item.client_info?.company_name },
+          { accessor: (item) => item.client_info?.name },
+          { accessor: (item) => item.client_info?.email }
+        ];
+
+        // Filter options for forms
+        const formFilterOptions = [
+          { key: 'status', label: t('status'), accessor: (item) => item.status, options: formStatusOptions }
+        ];
         
         return (
           <div className="space-y-6">
@@ -396,165 +437,167 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Certification Application Forms Section */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className={`border-b border-slate-100 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <CardTitle className="text-lg font-semibold text-slate-900">{t('certificationApplicationForms')}</CardTitle>
-                    <CardDescription className="text-sm text-slate-500">{t('manageClientApplications')}</CardDescription>
+            {/* Certification Application Forms Data Table */}
+            <DataTable
+              data={applicationForms}
+              columns={formColumns}
+              searchableColumns={formSearchableColumns}
+              filterOptions={formFilterOptions}
+              isRTL={isRTL}
+              defaultSort={{ key: 'date', direction: 'desc' }}
+              title={t('certificationApplicationForms')}
+              description={t('manageClientApplications')}
+              headerActions={
+                <Button 
+                  onClick={() => setCreateFormModal(true)} 
+                  data-testid="create-form-button"
+                  className="bg-bayan-navy hover:bg-bayan-navy-light shadow-sm h-9"
+                >
+                  <Plus className="w-4 h-4 me-2" />
+                  {t('createNewApplicationForm')}
+                </Button>
+              }
+              emptyState={
+                <div className="text-center py-16 px-4">
+                  <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                    <FileText className="w-10 h-10 text-slate-400" />
                   </div>
+                  <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('noApplicationFormsYet')}</h3>
+                  <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">{t('createFirstApplicationForm')}</p>
                   <Button 
                     onClick={() => setCreateFormModal(true)} 
-                    data-testid="create-form-button"
-                    className="bg-bayan-navy hover:bg-bayan-navy-light shadow-sm"
+                    className="bg-bayan-navy hover:bg-bayan-navy-light"
                   >
                     <Plus className="w-4 h-4 me-2" />
                     {t('createNewApplicationForm')}
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-slate-100" data-testid="application-forms-list">
-                  {applicationForms.length === 0 ? (
-                    <div className="text-center py-16 px-4">
-                      <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                        <FileText className="w-10 h-10 text-slate-400" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('noApplicationFormsYet')}</h3>
-                      <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">{t('createFirstApplicationForm')}</p>
-                      <Button 
-                        onClick={() => setCreateFormModal(true)} 
-                        className="bg-bayan-navy hover:bg-bayan-navy-light"
-                      >
-                        <Plus className="w-4 h-4 me-2" />
-                        {t('createNewApplicationForm')}
-                      </Button>
+              }
+              renderRow={(form, index) => (
+                <div 
+                  key={form.id} 
+                  className={`group flex flex-col lg:flex-row lg:items-center p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${isRTL ? 'lg:flex-row-reverse' : ''}`}
+                  data-testid={`application-form-${form.id}`}
+                >
+                  {/* Company */}
+                  <div className={`lg:w-[25%] min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="font-semibold text-slate-900 truncate">
+                        {form.client_info?.company_name || t('unknownCompany')}
+                      </span>
                     </div>
-                  ) : (
-                    applicationForms.map((form, index) => (
-                      <div 
-                        key={form.id} 
-                        className={`group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${!isRTL ? 'lg:flex-row-reverse' : ''}`}
-                        data-testid={`application-form-${form.id}`}
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        {/* Main Info - On RIGHT in RTL */}
-                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            <h3 className="font-semibold text-slate-900 truncate">
-                              {form.client_info?.company_name || t('unknownCompany')}
-                            </h3>
-                            {/* Status Badge */}
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                              form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                              form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              form.status === 'under_review' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                              form.status === 'approved' || form.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              'bg-slate-50 text-slate-700 border-slate-200'
-                            }`}>
-                              {t(form.status)}
-                            </span>
-                          </div>
-                          
-                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            <span>{form.client_info?.name}</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-slate-500">{form.client_info?.email}</span>
-                            {form.company_data?.certificationSchemes?.length > 0 && (
-                              <>
-                                <span className="text-slate-300">|</span>
-                                <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                  {form.company_data.certificationSchemes.slice(0, 3).map((cert) => (
-                                    <span key={cert} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
-                                      {cert}
-                                    </span>
-                                  ))}
-                                  {form.company_data.certificationSchemes.length > 3 && (
-                                    <span className="text-slate-400 text-xs">+{form.company_data.certificationSchemes.length - 3}</span>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          
-                          {/* Audit Calculation Preview for Submitted */}
-                          {form.status === 'submitted' && form.audit_calculation && (
-                            <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              <span className="text-xs text-emerald-600">{t('auditDays')}:</span>
-                              <span className="text-sm font-bold text-emerald-700">{form.audit_calculation.final_total_md}</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Actions - On LEFT in RTL */}
-                        <div className={`flex items-center gap-2 mt-3 lg:mt-0`}>
-                          {form.status === 'pending' && (
-                            <>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => copyFormLink(form)}
-                                data-testid={`copy-link-${form.id}`}
-                                className="h-9 px-3 text-slate-600 hover:text-bayan-navy hover:bg-slate-100"
-                              >
-                                <Copy className="w-4 h-4 me-1.5" />
-                                {t('copyLink')}
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleSendEmail(form.id)}
-                                disabled={sendingEmail}
-                                data-testid={`send-email-${form.id}`}
-                                className="h-9 px-3 text-slate-600 hover:text-bayan-navy hover:bg-slate-100"
-                              >
-                                <Mail className="w-4 h-4 me-1.5" />
-                                {t('sendEmail')}
-                              </Button>
-                            </>
-                          )}
-                          {form.status === 'submitted' && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleViewApplicationForm(form)}
-                                data-testid={`view-form-${form.id}`}
-                                className="h-9 border-slate-200"
-                              >
-                                <Eye className="w-4 h-4 me-1.5" />
-                                {t('view')}
-                              </Button>
-                              <Button 
-                                size="sm"
-                                onClick={() => handleCreateQuotationFromForm(form)}
-                                data-testid={`create-quote-${form.id}`}
-                                className="h-9 bg-emerald-600 hover:bg-emerald-700 shadow-sm"
-                              >
-                                <DollarSign className="w-4 h-4 me-1.5" />
-                                {t('createQuotation')}
-                              </Button>
-                            </>
-                          )}
-                          {form.status === 'agreement_signed' && (
-                            <Button 
-                              size="sm"
-                              onClick={() => handleDownloadContract(form.id)}
-                              data-testid={`download-contract-${form.id}`}
-                              className="h-9 bg-bayan-navy hover:bg-bayan-navy-light shadow-sm"
-                            >
-                              <Download className="w-4 h-4 me-1.5" />
-                              {t('downloadContract')}
-                            </Button>
-                          )}
-                        </div>
+                    {/* Standards badges on mobile */}
+                    {form.company_data?.certificationSchemes?.length > 0 && (
+                      <div className={`flex flex-wrap gap-1 mt-1 lg:hidden ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                        {form.company_data.certificationSchemes.slice(0, 2).map((cert) => (
+                          <span key={cert} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
+                            {cert}
+                          </span>
+                        ))}
                       </div>
-                    ))
-                  )}
+                    )}
+                  </div>
+                  
+                  {/* Contact */}
+                  <div className={`lg:w-[20%] min-w-0 mt-2 lg:mt-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
+                      <span className="text-sm text-slate-700 truncate">{form.client_info?.name || '-'}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Email */}
+                  <div className={`lg:w-[20%] min-w-0 hidden lg:block ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <span className="text-sm text-slate-500 truncate block">{form.client_info?.email || '-'}</span>
+                  </div>
+                  
+                  {/* Status */}
+                  <div className={`lg:w-[12%] mt-2 lg:mt-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                      form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      form.status === 'under_review' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                      form.status === 'approved' || form.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}>
+                      {t(form.status)}
+                    </span>
+                  </div>
+                  
+                  {/* Date */}
+                  <div className={`lg:w-[10%] hidden lg:block ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-1 text-sm text-slate-500 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <Calendar className="w-3.5 h-3.5" />
+                      {formatDate(form.created_at)}
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className={`lg:w-[13%] flex items-center gap-2 mt-3 lg:mt-0 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-end'}`}>
+                    {form.status === 'pending' && (
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => copyFormLink(form)}
+                          data-testid={`copy-link-${form.id}`}
+                          className="h-8 px-2 text-slate-600 hover:text-bayan-navy"
+                          title={t('copyLink')}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleSendEmail(form.id)}
+                          disabled={sendingEmail}
+                          data-testid={`send-email-${form.id}`}
+                          className="h-8 px-2 text-slate-600 hover:text-bayan-navy"
+                          title={t('sendEmail')}
+                        >
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                    {form.status === 'submitted' && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewApplicationForm(form)}
+                          data-testid={`view-form-${form.id}`}
+                          className="h-8 px-2"
+                          title={t('view')}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleCreateQuotationFromForm(form)}
+                          data-testid={`create-quote-${form.id}`}
+                          className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          <DollarSign className="w-4 h-4 me-1" />
+                          <span className="hidden sm:inline">{t('quote')}</span>
+                        </Button>
+                      </>
+                    )}
+                    {form.status === 'agreement_signed' && (
+                      <Button 
+                        size="sm"
+                        onClick={() => handleDownloadContract(form.id)}
+                        data-testid={`download-contract-${form.id}`}
+                        className="h-8 px-3 bg-bayan-navy hover:bg-bayan-navy-light"
+                      >
+                        <Download className="w-4 h-4 me-1" />
+                        <span className="hidden sm:inline">{t('download')}</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            />
           </div>
         );
 

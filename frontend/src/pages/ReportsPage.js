@@ -201,6 +201,35 @@ const ReportsPage = () => {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* Export Buttons */}
+            <Button 
+              variant="outline" 
+              onClick={() => handleExport('excel')}
+              disabled={exporting}
+              className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              data-testid="export-excel-btn"
+            >
+              {exporting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+              )}
+              {t('exportToExcel')}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleExport('pdf')}
+              disabled={exporting}
+              className="border-red-300 text-red-700 hover:bg-red-50"
+              data-testid="export-pdf-btn"
+            >
+              {exporting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              {t('exportToPDF')}
+            </Button>
             <Button 
               variant={showFilters ? "default" : "outline"} 
               onClick={() => setShowFilters(!showFilters)}

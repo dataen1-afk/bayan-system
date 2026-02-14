@@ -1614,6 +1614,24 @@ async def delete_proposal_template(template_id: str, credentials: HTTPAuthorizat
     )
     return {"message": "Template deleted"}
 
+@api_router.put("/templates/proposals/{template_id}")
+async def update_proposal_template(template_id: str, template: ProposalTemplate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update a proposal template"""
+    await get_current_user(credentials)
+    update_data = {
+        "name": template.name,
+        "name_ar": template.name_ar,
+        "description": template.description,
+        "default_fees": template.default_fees,
+        "default_notes": template.default_notes,
+        "default_validity_days": template.default_validity_days
+    }
+    await db.proposal_templates.update_one(
+        {"id": template_id},
+        {"$set": update_data}
+    )
+    return {"message": "Template updated", "id": template_id}
+
 # ================= REPORTS ROUTES =================
 
 @api_router.get("/reports/submissions")

@@ -536,6 +536,17 @@ const resources = {
       "agreementAlreadySigned": "The certification agreement has already been signed.",
       "viewAgreement": "View Agreement",
       
+      // Proposals/Quotations page
+      "allProposals": "All Proposals",
+      "trackProposalStatus": "Track the status of all sent proposals",
+      "noProposalsYet": "No proposals yet",
+      "createProposalFromForms": "Create proposals from submitted application forms",
+      "proposalsEmptyStateHelp": "Go to Forms tab and click 'Create Quotation' on a submitted form",
+      "viewProposal": "View Proposal",
+      "contactPerson": "Contact Person",
+      "sent": "Sent",
+      "draft": "Draft",
+      
       // Notifications
       "notifications": "Notifications",
       "markAllRead": "Mark all as read",

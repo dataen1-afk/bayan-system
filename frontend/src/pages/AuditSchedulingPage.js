@@ -200,7 +200,7 @@ const AuditSchedulingPage = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      await axios.post(`${API}/audit-schedules`, formData, { headers });
+      const res = await axios.post(`${API}/audit-schedules`, formData, { headers });
       setShowCreateModal(false);
       setFormData({
         contract_id: '',
@@ -210,9 +210,17 @@ const AuditSchedulingPage = () => {
         scheduled_time: '09:00',
         duration_days: 1,
         auditors: '',
-        notes: ''
+        notes: '',
+        is_recurring: false,
+        recurrence_type: '',
+        recurrence_end_date: ''
       });
       loadData();
+      
+      // Show success message with count of created audits
+      if (res.data.total_created > 1) {
+        alert(t('auditsCreated', { count: res.data.total_created }) || `${res.data.total_created} audits scheduled (including recurring events)`);
+      }
     } catch (error) {
       console.error('Error creating audit:', error);
       alert(t('errorCreatingAudit'));

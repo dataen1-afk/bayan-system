@@ -843,8 +843,8 @@ const AdminDashboard = () => {
                         data-testid={`contract-${contract.id}`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        {/* Price & Actions - LEFT side in RTL */}
-                        <div className={`flex flex-col gap-3 mt-4 lg:mt-0 order-last lg:order-first ${isRTL ? 'items-start' : 'items-end lg:order-last'}`}>
+                        {/* Price & Actions - On LEFT in RTL mode */}
+                        <div className={`flex flex-col gap-3 mt-4 lg:mt-0 ${isRTL ? 'items-start lg:order-first' : 'items-end lg:order-last'}`}>
                           {/* Contract Value */}
                           <div className={isRTL ? 'text-start' : 'text-end'}>
                             <p className="text-2xl font-bold text-emerald-600">

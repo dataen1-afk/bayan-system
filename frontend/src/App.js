@@ -10,6 +10,7 @@ import ClientDashboard from '@/pages/ClientDashboard';
 import PublicFormPage from '@/pages/PublicFormPage';
 import PublicProposalPage from '@/pages/PublicProposalPage';
 import CreateProposalPage from '@/pages/CreateProposalPage';
+import CertificationAgreementPage from '@/pages/CertificationAgreementPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

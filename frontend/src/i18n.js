@@ -1347,7 +1347,22 @@ const resources = {
       "enterRequestedChanges": "مثال: تعديل الأسعار، تغيير مواعيد التدقيق، تعديل النطاق...",
       "sendRequest": "إرسال الطلب",
       "pleaseEnterModificationComment": "يرجى إدخال تعليق يوضح التعديلات المطلوبة",
-      "errorRequestingModification": "خطأ في طلب التعديل"
+      "errorRequestingModification": "خطأ في طلب التعديل",
+      
+      // Digital Signature
+      "digitalSignature": "التوقيع الرقمي",
+      "digitalSignatureSection": "التوقيع الرقمي والختم",
+      "draw": "رسم",
+      "upload": "رفع",
+      "clear": "مسح",
+      "signatureCaptured": "تم التقاط التوقيع",
+      "signatureInstructions": "يرجى تقديم توقيعك الرقمي. يمكنك رسمه أو تحميل صورة.",
+      "clickToUploadSignature": "انقر لتحميل صورة التوقيع",
+      "companySealStamp": "ختم الشركة",
+      "optional": "اختياري",
+      "clickToUploadStamp": "انقر لتحميل ختم الشركة",
+      "remove": "إزالة",
+      "pleaseProvideSignature": "يرجى تقديم توقيعك الرقمي"
     }
   }
 };

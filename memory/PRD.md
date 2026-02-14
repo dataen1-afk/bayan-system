@@ -309,6 +309,23 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Data columns (company name) appear on **RIGHT**
   - Works correctly across Forms, Quotations, Contracts tabs
 
+### Data Table Professional Layout Fix (February 2026) ✅
+- **Issue**: Data overlapping in Forms, Quotations, and Contracts tabs. Action icons not visible properly.
+- **Solution**: 
+  1. Changed from fixed percentage widths to min-width + flex-1 approach
+  2. Added horizontal scrolling for smaller screens
+  3. Used square icon buttons (w-8 h-8 p-0) for consistent action column layout
+  4. Added proper gap spacing (gap-1.5) between action buttons
+  5. Added tooltips (title attribute) for truncated text
+- **Files Modified**:
+  - `/app/frontend/src/pages/AdminDashboard.js` - Updated column definitions and row rendering
+  - `/app/frontend/src/components/DataTable.js` - Added overflow-x-auto and min-width to table
+- **Result**:
+  - All data visible without overlap
+  - Action icons clearly displayed with consistent spacing
+  - Professional layout across all three tabs (Forms, Quotations, Contracts)
+  - Hover tooltips show full text for truncated fields
+
 ## Testing Status (December 2025)
 - Backend API: 100% (All tests passed)
 - Frontend UI: 100% (All features working)

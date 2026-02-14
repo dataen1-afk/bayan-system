@@ -833,7 +833,31 @@ const resources = {
       "country": "Country",
       "mainSiteIndicator": "Main Site",
       "noSitesYet": "No sites added yet",
-      "addFirstSite": "Add your first site"
+      "addFirstSite": "Add your first site",
+      
+      // Recurring Events
+      "recurringEvent": "Recurring Event",
+      "recurrenceType": "Frequency",
+      "selectFrequency": "Select frequency",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly (Every 3 months)",
+      "yearly": "Yearly",
+      "recurrenceEndDate": "End Date",
+      "recurrenceEndDateHint": "Audits will be auto-generated until this date",
+      "auditsCreated": "{{count}} audits scheduled (including recurring events)",
+      
+      // SMS Notifications
+      "smsNotifications": "SMS Notifications",
+      "sendSmsReminder": "Send SMS Reminder",
+      "smsReminderSent": "SMS reminder sent successfully",
+      "smsReminderSimulated": "SMS reminder simulated (Twilio not configured)",
+      "smsReminderError": "Failed to send SMS reminder",
+      "smsSimulationMode": "SMS running in simulation mode",
+      
+      // Bilingual PDF
+      "downloadBilingualPDF": "Download Bilingual PDF (AR/EN)",
+      "errorDownloadingPDF": "Error downloading PDF"
     }
   },
   ar: {

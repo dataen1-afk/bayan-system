@@ -617,8 +617,75 @@ const AdminDashboard = () => {
         // Filter proposals that have been signed (converted to contracts)
         const signedContracts = proposals.filter(p => p.status === 'agreement_signed');
         
+        // Calculate statistics
+        const totalContractsValue = signedContracts.reduce((sum, c) => sum + (c.total_amount || 0), 0);
+        const mostRecentContract = signedContracts.length > 0 
+          ? signedContracts.sort((a, b) => new Date(b.client_response_date) - new Date(a.client_response_date))[0]
+          : null;
+        
         return (
           <div className="space-y-6">
+            {/* Contract Statistics Summary Card */}
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {/* Total Contracts */}
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="p-6">
+                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div>
+                      <p className="text-sm font-medium text-green-600">{t('totalContracts')}</p>
+                      <p className="text-3xl font-bold text-green-700">{signedContracts.length}</p>
+                    </div>
+                    <div className="p-3 bg-green-200 rounded-full">
+                      <FileCheck className="w-6 h-6 text-green-700" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Total Revenue */}
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-6">
+                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div>
+                      <p className="text-sm font-medium text-blue-600">{t('totalRevenue')}</p>
+                      <p className="text-2xl font-bold text-blue-700">
+                        {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(totalContractsValue)}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-blue-200 rounded-full">
+                      <DollarSign className="w-6 h-6 text-blue-700" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Most Recent Contract */}
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <CardContent className="p-6">
+                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div>
+                      <p className="text-sm font-medium text-purple-600">{t('mostRecentContract')}</p>
+                      {mostRecentContract ? (
+                        <>
+                          <p className="text-lg font-bold text-purple-700 truncate max-w-[180px]">
+                            {mostRecentContract.organization_name}
+                          </p>
+                          <p className="text-xs text-purple-500">
+                            {new Date(mostRecentContract.client_response_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-lg font-bold text-purple-700">-</p>
+                      )}
+                    </div>
+                    <div className="p-3 bg-purple-200 rounded-full">
+                      <Clock className="w-6 h-6 text-purple-700" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
             <Card>
               <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle className="flex items-center gap-2">

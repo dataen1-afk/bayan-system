@@ -527,7 +527,7 @@ const AdminDashboard = () => {
                   data-testid={`application-form-${form.id}`}
                 >
                   {/* Company */}
-                  <div className="lg:w-[25%] min-w-0 text-start">
+                  <div className="lg:w-[24%] min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="font-semibold text-slate-900 truncate">
@@ -547,7 +547,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Contact */}
-                  <div className="lg:w-[20%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:w-[18%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
                       <span className="text-sm text-slate-700 truncate">{form.client_info?.name || '-'}</span>
@@ -555,13 +555,13 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Email */}
-                  <div className="lg:w-[20%] min-w-0 hidden lg:block text-start">
+                  <div className="lg:w-[18%] min-w-0 hidden lg:block text-start">
                     <span className="text-sm text-slate-500 truncate block">{form.client_info?.email || '-'}</span>
                   </div>
                   
                   {/* Status */}
-                  <div className="lg:w-[12%] mt-2 lg:mt-0 text-start">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                  <div className="lg:w-[14%] mt-2 lg:mt-0 text-start">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${
                       form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                       form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                       form.status === 'under_review' ? 'bg-purple-50 text-purple-700 border-purple-200' :
@@ -573,15 +573,15 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Date */}
-                  <div className="lg:w-[10%] hidden lg:block text-start">
-                    <div className="flex items-center gap-1 text-sm text-slate-500">
-                      <Calendar className="w-3.5 h-3.5" />
+                  <div className="lg:w-[12%] hidden lg:block text-start">
+                    <div className="flex items-center gap-1 text-sm text-slate-500 whitespace-nowrap">
+                      <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       {formatDate(form.created_at)}
                     </div>
                   </div>
                   
                   {/* Actions */}
-                  <div className="lg:w-[13%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
+                  <div className="lg:w-[14%] flex items-center gap-1 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {form.status === 'pending' && (
                       <>
                         <Button 

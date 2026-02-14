@@ -403,6 +403,33 @@ const AuditSchedulingPage = () => {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* Google Calendar Connect */}
+            {calendarStatus.configured && (
+              calendarStatus.connected ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDisconnectCalendar}
+                  className="text-green-600 border-green-200 hover:bg-green-50"
+                  data-testid="calendar-disconnect-btn"
+                >
+                  <CheckCircle className="w-4 h-4 me-1" />
+                  {t('calendarConnected')}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleConnectCalendar}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                  data-testid="calendar-connect-btn"
+                >
+                  <Link2 className="w-4 h-4 me-1" />
+                  {t('connectGoogleCalendar')}
+                </Button>
+              )
+            )}
+            
             {/* View Toggle */}
             <div className="flex bg-slate-100 rounded-lg p-1">
               <Button

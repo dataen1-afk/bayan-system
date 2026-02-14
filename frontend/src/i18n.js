@@ -568,6 +568,7 @@ const resources = {
       "accepted": "Accepted",
       "rejected": "Rejected",
       "pending": "Pending",
+      "completed": "Completed",
       
       // Notifications
       "notifications": "Notifications",

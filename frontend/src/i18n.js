@@ -1279,6 +1279,12 @@ const resources = {
       "conversionProgress": "تقدم التحويل",
       "monthlySubmissions": "التقديمات الشهرية",
       "lastSixMonths": "التقديمات خلال الأشهر الستة الماضية",
+      "auditDays": "أيام التدقيق",
+      "pendingReview": "قيد المراجعة",
+      "issuedOn": "تاريخ الإصدار",
+      "signedAgreements": "الاتفاقيات الموقعة",
+      "signedOn": "تاريخ التوقيع",
+      "downloadPDF": "تحميل PDF",
       
       // Templates
       "templatesManagement": "إدارة القوالب",

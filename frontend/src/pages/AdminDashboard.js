@@ -434,12 +434,60 @@ const AdminDashboard = () => {
                     applicationForms.map((form, index) => (
                       <div 
                         key={form.id} 
-                        className="group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors"
+                        className={`group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${!isRTL ? 'lg:flex-row-reverse' : ''}`}
                         data-testid={`application-form-${form.id}`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        {/* Actions - On LEFT in RTL mode */}
-                        <div className={`flex items-center gap-2 mt-3 lg:mt-0 ${isRTL ? 'lg:order-first' : 'lg:order-last'}`}>
+                        {/* Main Info - On RIGHT in RTL */}
+                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                            <h3 className="font-semibold text-slate-900 truncate">
+                              {form.client_info?.company_name || t('unknownCompany')}
+                            </h3>
+                            {/* Status Badge */}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                              form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              form.status === 'under_review' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                              form.status === 'approved' || form.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              'bg-slate-50 text-slate-700 border-slate-200'
+                            }`}>
+                              {t(form.status)}
+                            </span>
+                          </div>
+                          
+                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                            <span>{form.client_info?.name}</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-slate-500">{form.client_info?.email}</span>
+                            {form.company_data?.certificationSchemes?.length > 0 && (
+                              <>
+                                <span className="text-slate-300">|</span>
+                                <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                  {form.company_data.certificationSchemes.slice(0, 3).map((cert) => (
+                                    <span key={cert} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
+                                      {cert}
+                                    </span>
+                                  ))}
+                                  {form.company_data.certificationSchemes.length > 3 && (
+                                    <span className="text-slate-400 text-xs">+{form.company_data.certificationSchemes.length - 3}</span>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                          
+                          {/* Audit Calculation Preview for Submitted */}
+                          {form.status === 'submitted' && form.audit_calculation && (
+                            <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <span className="text-xs text-emerald-600">{t('auditDays')}:</span>
+                              <span className="text-sm font-bold text-emerald-700">{form.audit_calculation.final_total_md}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Actions - On LEFT in RTL */}
+                        <div className={`flex items-center gap-2 mt-3 lg:mt-0`}>
                           {form.status === 'pending' && (
                             <>
                               <Button 
@@ -498,54 +546,6 @@ const AdminDashboard = () => {
                               <Download className="w-4 h-4 me-1.5" />
                               {t('downloadContract')}
                             </Button>
-                          )}
-                        </div>
-                        
-                        {/* Main Info - RIGHT side in RTL */}
-                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            <h3 className="font-semibold text-slate-900 truncate">
-                              {form.client_info?.company_name || t('unknownCompany')}
-                            </h3>
-                            {/* Status Badge */}
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                              form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                              form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              form.status === 'under_review' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                              form.status === 'approved' || form.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              'bg-slate-50 text-slate-700 border-slate-200'
-                            }`}>
-                              {t(form.status)}
-                            </span>
-                          </div>
-                          
-                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            <span>{form.client_info?.name}</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-slate-500">{form.client_info?.email}</span>
-                            {form.company_data?.certificationSchemes?.length > 0 && (
-                              <>
-                                <span className="text-slate-300">|</span>
-                                <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                  {form.company_data.certificationSchemes.slice(0, 3).map((cert) => (
-                                    <span key={cert} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
-                                      {cert}
-                                    </span>
-                                  ))}
-                                  {form.company_data.certificationSchemes.length > 3 && (
-                                    <span className="text-slate-400 text-xs">+{form.company_data.certificationSchemes.length - 3}</span>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          
-                          {/* Audit Calculation Preview for Submitted */}
-                          {form.status === 'submitted' && form.audit_calculation && (
-                            <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              <span className="text-xs text-emerald-600">{t('auditDays')}:</span>
-                              <span className="text-sm font-bold text-emerald-700">{form.audit_calculation.final_total_md}</span>
-                            </div>
                           )}
                         </div>
                       </div>

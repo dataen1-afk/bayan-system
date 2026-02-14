@@ -1300,6 +1300,25 @@ async def respond_to_proposal(access_token: str, response: ProposalResponse):
         {"$set": update_data}
     )
     
+    # Create notification for admin
+    org_name = proposal.get('organization_name', 'Unknown')
+    if response.status == "accepted":
+        await create_notification(
+            notification_type="proposal_accepted",
+            title="تم قبول العرض",
+            message=f"قامت {org_name} بقبول عرض السعر",
+            related_id=proposal['id'],
+            related_type="proposal"
+        )
+    else:
+        await create_notification(
+            notification_type="proposal_rejected",
+            title="تم رفض العرض",
+            message=f"قامت {org_name} برفض عرض السعر",
+            related_id=proposal['id'],
+            related_type="proposal"
+        )
+    
     # If accepted, update application form status and create contract
     if response.status == "accepted":
         await db.application_forms.update_one(

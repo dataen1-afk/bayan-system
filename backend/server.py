@@ -186,6 +186,7 @@ class ProposalResponse(BaseModel):
 class PublicProposalResponse(BaseModel):
     id: str
     organization_name: str
+    organization_address: str = ""
     contact_person: str
     contact_email: str
     standards: List[str]
@@ -201,6 +202,45 @@ class PublicProposalResponse(BaseModel):
     issuer_name: str
     issuer_designation: str
     issued_date: Optional[datetime]
+
+# ================= CERTIFICATION AGREEMENT MODELS =================
+
+class AgreementAcknowledgements(BaseModel):
+    certificationRules: bool = False
+    publicDirectory: bool = False
+    certificationCommunication: bool = False
+    surveillanceSchedule: bool = False
+    nonconformityResolution: bool = False
+    feesAndPayment: bool = False
+
+class CertificationAgreementSubmit(BaseModel):
+    organization_name: str
+    organization_address: str
+    selected_standards: List[str]
+    other_standard: str = ""
+    scope_of_services: str
+    sites: List[str]
+    signatory_name: str
+    signatory_position: str
+    signatory_date: str
+    acknowledgements: AgreementAcknowledgements
+
+class CertificationAgreement(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proposal_id: str
+    proposal_access_token: str
+    organization_name: str
+    organization_address: str
+    selected_standards: List[str]
+    other_standard: str = ""
+    scope_of_services: str
+    sites: List[str]
+    signatory_name: str
+    signatory_position: str
+    signatory_date: str
+    acknowledgements: Dict[str, bool] = {}
+    status: str = "submitted"  # submitted, contract_generated
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Legacy models (kept for backward compatibility)
 class QuotationCreate(BaseModel):

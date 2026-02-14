@@ -473,10 +473,10 @@ const AdminDashboard = () => {
                   </Button>
                 </div>
               }
-              renderRow={(form, index) => (
+              renderRow={(form, index, rtl) => (
                 <div 
                   key={form.id} 
-                  className={`group flex flex-col lg:flex-row lg:items-center p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${isRTL ? 'lg:flex-row-reverse' : ''}`}
+                  className="group flex flex-col lg:flex-row lg:items-center p-4 lg:p-5 hover:bg-slate-50/80 transition-colors"
                   data-testid={`application-form-${form.id}`}
                 >
                   {/* Company */}

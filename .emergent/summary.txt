@@ -1,0 +1,140 @@
+<analysis>**original_problem_statement**: The user provided a Node.js/Express backend for a Service Contract Management System and requested a migration to a FastAPI backend with a new React frontend.
+
+**PRODUCT REQUIREMENTS**:
+-   **Core Functionality**: A full-stack application to manage service contracts.
+-   **Workflow**:
+    1.  Admin creates a form and sends a public link to a client.
+    2.  Client fills out a multi-step wizard form (no login required).
+    3.  On submission, the system automatically calculates audit duration based on an Excel logic file.
+    4.  Admin reviews the submission and calculation on their dashboard.
+    5.  Admin generates a price quote based on the submitted data.
+    6.  Client receives a link to the quote and can **approve**, **reject**, or **request modifications**.
+    7.  Upon approval, the client is redirected to fill out a Certification Agreement form.
+    8.  A submitted agreement becomes a contract, and a PDF can be generated, including a digital signature.
+-   **User Roles**: Admin (full access), Client (accesses forms/quotes/agreements via public links).
+-   **UI/UX**: Professional UI matching the Bayan Auditing brand, multi-language support (English/Arabic), full RTL layout for Arabic, and a collapsible sidebar.
+-   **Additional Features**: Admin notifications, status tracking timeline, editable reusable templates, a reporting dashboard with filtering, and a customer portal.
+
+**User's preferred language**: The user communicates in English, but the application's primary language is **Arabic**. The next agent MUST ensure all features work correctly in both Arabic (with RTL) and English and continue to respond in English.
+
+**what currently exists?**
+The application is a full-stack Service Contract Management System. In the last session, the agent successfully fixed a critical and recurring Right-to-Left (RTL) layout bug in the main dashboard's data tables. Following the fix, the agent verified the functionality of several previously-added features (Customer Portal, Audit Scheduling, Document Management, Contact Log).
+
+Two new features were then implemented:
+1.  **Dual-Language PDF Generation**: Contracts can now be downloaded as a bilingual PDF containing both Arabic and English.
+2.  **Google Calendar Integration (Foundation)**: The backend and frontend have been prepared for Google Calendar integration to sync audit schedules. It is currently inactive, pending user-provided API credentials.
+
+A new dedicated Documents page was also created and integrated into the application with a sidebar link.
+
+**Last working item**:
+The agent's last action was to successfully implement and verify the new features. The session concluded with the user asking a question about the core application workflow, seeking to understand where client-submitted data appears in the admin dashboard.
+-   **Last item agent was working**: Responding to the user's question about the core workflow for accessing client-submitted data.
+-   **Status**: NOT STARTED
+-   **Agent Testing Done**: N/A (This is a user clarification question, not a feature/bug).
+-   **Which testing method agent to use?**: N/A
+-   **User Testing Done**: N/A
+
+**All Pending/In progress Issue list**:
+-   None. The critical RTL bug has been resolved.
+
+**In progress Task List**:
+-   None.
+
+**Upcoming and Future Tasks**
+-   **Upcoming Tasks**:
+    -   **(P0) Answer User's Workflow Question**: Explain to the user how to find and access client-submitted data in the admin dashboard, referencing the Forms tab.
+    -   **(P1) Finalize Google Calendar Integration**: Guide the user on how to obtain  and . Once they provide the credentials, add them to the  file and activate the sync functionality in  and .
+-   **Future Tasks**:
+    -   Test the functionality of sending actual emails (currently simulated).
+    -   Implement advanced audit scheduling with recurring events.
+    -   Add multilingual support to all generated PDFs, not just contracts.
+
+**Completed work in this session**
+-   **RTL Bug Fix (RESOLVED)**: Fixed the critical, recurring RTL layout bug in , ensuring action buttons are on the left and text is right-aligned in Arabic across the Forms, Quotations, and Contracts tabs.
+-   **Feature Verification**: Successfully tested and confirmed the functionality of the Customer Portal, Audit Scheduling, Document Management, and Contact Log pages.
+-   **New Documents Page**: Created , added a route in , and a navigation link in .
+-   **Bilingual PDF Generation**: Created  and a new endpoint () to generate PDFs with both Arabic and English content. Added a corresponding download button in .
+-   **Google Calendar Integration Foundation**: Added placeholder backend endpoints in  and frontend UI elements/logic in  to support Google Calendar sync. This feature is inactive until the user provides credentials.
+-   **Internationalization**: Added new translations for the new features in .
+
+**Earlier issues found/mentioned but not fixed**
+-   None.
+
+**Known issue recurrence from previous fork**
+-   **Issue recurrence in previous fork**: Incorrect RTL layout.
+-   **Recurrence count**: 3+
+-   **Status**: RESOLVED
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Backend**: FastAPI, Motor, Pydantic, ReportLab
+-   **Frontend**: React, , , , Tailwind CSS
+-   **Database**: MongoDB
+-   **Styling**: Tailwind CSS with  and  variants.
+
+**key DB schema**
+-   No changes made in this session.
+
+**changes in tech stack**
+-   No new libraries were installed.  usage was extended for custom font loading and bilingual document generation.
+
+**All files of reference**
+-    (RTL fix)
+-    (RTL fix and bilingual PDF button)
+-    (New endpoints)
+-    (New file)
+-    (New file)
+-    (New route)
+-    (New link)
+-    (Google Calendar foundation)
+-    (New translations)
+
+**Areas that need refactoring**:
+-   None.
+
+**key api endpoints**
+-   : **(NEW)** Generates a bilingual (AR/EN) PDF for a contract.
+-   : **(NEW)** Initiates the Google OAuth flow.
+-   : **(NEW)** Handles the redirect from Google after authentication.
+-   : **(NEW)** Syncs audit schedules to the user's Google Calendar.
+
+**Critical Info for New Agent**
+-   Your first task is to answer the user's question about the application's workflow: Where does this screen appear, and how do I access the clients data?". You should explain that new client submissions appear in the "Forms" tab on the Admin Dashboard.
+-   The next priority is to finalize the Google Calendar integration. The foundation is built, but you must guide the user to obtain and provide the necessary OAuth credentials (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) to activate the feature.
+-   The major recurring RTL layout bug has been fixed and verified. All previously implemented features have also been verified by the testing agent. The application is in a stable state.
+
+**documents and test reports created in this job**
+-   `/app/test_reports/iteration_2.json` (Verification of RTL fix)
+-   `/app/test_reports/iteration_3.json` (Verification of new Documents page)
+-   `/app/test_reports/iteration_4.json` (Verification of Bilingual PDF and Google Calendar UI)
+-   `/app/memory/PRD.md` (Updated with completed tasks)
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User**: Confirms plan to fix RTL bug. - **Status: DONE**
+2.  **User**: Asks to verify features: Customer Portal, Audit Scheduling, Document Management, Contact Log. - **Status: DONE**
+3.  **User**: Asks to keep email sending simulated. - **Status: DONE**
+4.  **User**: Asks for Google Calendar integration ("choose the best and recommended system"). - **Status: IN PROGRESS (Foundation laid)**
+5.  **User**: Asks for multilingual (Arabic + English) PDF contracts. - **Status: DONE**
+6.  **User**: (Latest message) "In our first step, we send the application to the client. When the client fills in the required information, it should be automatically reflected in the AIM Adwaiting account, as the price quote will be calculated based on this. Where does this screen appear, and how do I access the clients data? - **Status: PENDING (This is the next action item)**
+
+**Project Health Check:**
+-   **Healthy**: The critical blocking bug has been resolved, and recent features have been verified.
+
+**3rd Party Integrations**
+-   : Used for PDF generation.
+-   : Used for Excel generation.
+-   **Google Calendar API**: Foundation laid, pending user credentials for activation.
+
+**Testing status**
+-   **Testing agent used after significant changes**: YES. The agent was used multiple times to successfully verify the RTL bug fix and the new features.
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: None.
+-   **Known regressions**: None. The previous regression was fixed.
+
+**Credentials to test flow:**
+-   **Admin**:  / 
+
+**What agent forgot to execute**
+-   The agent successfully completed all requested tasks in the previous session. The session ended on a pending user question, which is the natural starting point for the next session.</analysis>

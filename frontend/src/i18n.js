@@ -712,6 +712,7 @@ const resources = {
       "customerPortal": "Customer Portal",
       "trackYourApplicationStatus": "Track your application and certification status",
       "trackYourOrder": "Track Your Order",
+      "redirectingToPortal": "You will be redirected to track your order...",
       "enterTrackingIdToViewStatus": "Enter your tracking ID or form ID to view your application status",
       "enterTrackingIdPlaceholder": "Enter tracking ID (e.g., abc123-def456...)",
       "pleaseEnterTrackingId": "Please enter a tracking ID",

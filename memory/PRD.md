@@ -88,6 +88,14 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Proposal Statistics**: With conversion progress bar
 - **Monthly Submissions Chart**: Last 6 months bar chart
 
+### Contracts Page ✅ (Updated - Feb 2026)
+- Displays approved price quotes converted to contracts (proposals with `status: agreement_signed`)
+- Contract card shows: organization name, contact person, email, standards badges, total amount, signing date
+- Download Contract PDF button (generates professional PDF with branding)
+- View Proposal button opens original proposal
+- Status Timeline with 6-stage progress indicator
+- Full RTL support for Arabic
+
 ## API Endpoints
 
 ### Authentication

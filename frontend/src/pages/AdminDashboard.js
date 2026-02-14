@@ -158,23 +158,8 @@ const AdminDashboard = () => {
 
   // Handle creating quotation from submitted application form
   const handleCreateQuotationFromForm = (form) => {
-    // Pre-fill quotation data from form
-    setNewQuotation({
-      form_id: form.id,
-      client_id: form.client_info?.name || '',
-      client_email: form.client_info?.email || '',
-      price: '',
-      details: `
-${t('companyName')}: ${form.company_data?.companyName || form.client_info?.company_name}
-${t('certifications')}: ${form.company_data?.certificationSchemes?.join(', ') || ''}
-${t('totalEmployees')}: ${form.company_data?.totalEmployees || ''}
-${t('totalManDays')}: ${form.audit_calculation?.final_total_md || ''}
-Stage 1: ${form.audit_calculation?.phases?.stage_1 || ''} ${t('days')}
-Stage 2: ${form.audit_calculation?.phases?.stage_2 || ''} ${t('days')}
-      `.trim()
-    });
-    // Switch to quotations tab
-    setActiveTab('quotations');
+    // Navigate to create proposal page
+    navigate(`/create-proposal/${form.id}`);
   };
 
   // Handle creating a new application form for a client

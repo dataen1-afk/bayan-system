@@ -2721,6 +2721,197 @@ async def seed_default_templates():
     
     logger.info("Default templates seeded successfully")
 
+# ================= GOOGLE CALENDAR INTEGRATION =================
+
+# Google Calendar OAuth Configuration
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', '')
+
+# Check if Google Calendar is configured
+GOOGLE_CALENDAR_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+@api_router.get("/calendar/status")
+async def get_calendar_status(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Check if Google Calendar integration is enabled and connected"""
+    current_user = await get_current_user(credentials)
+    
+    # Check if configured
+    if not GOOGLE_CALENDAR_ENABLED:
+        return {
+            "enabled": False,
+            "configured": False,
+            "connected": False,
+            "message": "Google Calendar integration not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to environment."
+        }
+    
+    # Check if user has connected their calendar
+    user = await db.users.find_one({"email": current_user['email']}, {"_id": 0})
+    has_tokens = bool(user and user.get('google_tokens'))
+    
+    return {
+        "enabled": True,
+        "configured": True,
+        "connected": has_tokens,
+        "message": "Connected to Google Calendar" if has_tokens else "Click 'Connect Calendar' to enable sync"
+    }
+
+@api_router.get("/calendar/auth/url")
+async def get_calendar_auth_url(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get Google Calendar OAuth authorization URL"""
+    await get_current_user(credentials)
+    
+    if not GOOGLE_CALENDAR_ENABLED:
+        raise HTTPException(status_code=400, detail="Google Calendar integration not configured")
+    
+    # Build authorization URL
+    scopes = "https://www.googleapis.com/auth/calendar"
+    auth_url = (
+        f"https://accounts.google.com/o/oauth2/auth?"
+        f"client_id={GOOGLE_CLIENT_ID}&"
+        f"redirect_uri={GOOGLE_REDIRECT_URI}&"
+        f"response_type=code&"
+        f"scope={scopes}&"
+        f"access_type=offline&"
+        f"prompt=consent"
+    )
+    
+    return {"authorization_url": auth_url}
+
+@api_router.get("/oauth/calendar/callback")
+async def calendar_oauth_callback(code: str):
+    """Handle Google Calendar OAuth callback"""
+    import requests
+    
+    if not GOOGLE_CALENDAR_ENABLED:
+        raise HTTPException(status_code=400, detail="Google Calendar integration not configured")
+    
+    # Exchange code for tokens
+    token_response = requests.post('https://oauth2.googleapis.com/token', data={
+        'code': code,
+        'client_id': GOOGLE_CLIENT_ID,
+        'client_secret': GOOGLE_CLIENT_SECRET,
+        'redirect_uri': GOOGLE_REDIRECT_URI,
+        'grant_type': 'authorization_code'
+    })
+    
+    if token_response.status_code != 200:
+        raise HTTPException(status_code=400, detail="Failed to exchange code for tokens")
+    
+    tokens = token_response.json()
+    
+    # Get user email
+    user_response = requests.get(
+        'https://www.googleapis.com/oauth2/v2/userinfo',
+        headers={'Authorization': f'Bearer {tokens["access_token"]}'}
+    )
+    
+    if user_response.status_code != 200:
+        raise HTTPException(status_code=400, detail="Failed to get user info")
+    
+    user_info = user_response.json()
+    
+    # Save tokens to user record
+    await db.users.update_one(
+        {"email": user_info['email']},
+        {"$set": {"google_tokens": tokens}},
+        upsert=False
+    )
+    
+    # Redirect back to dashboard
+    frontend_url = os.environ.get('FRONTEND_URL', '')
+    return RedirectResponse(url=f"{frontend_url}/audit-scheduling?calendar_connected=true")
+
+@api_router.post("/calendar/sync-audit")
+async def sync_audit_to_calendar(
+    audit_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Sync an audit schedule to Google Calendar"""
+    import requests
+    
+    current_user = await get_current_user(credentials)
+    
+    if not GOOGLE_CALENDAR_ENABLED:
+        raise HTTPException(status_code=400, detail="Google Calendar integration not configured")
+    
+    # Get user tokens
+    user = await db.users.find_one({"email": current_user['email']}, {"_id": 0})
+    if not user or not user.get('google_tokens'):
+        raise HTTPException(status_code=400, detail="Google Calendar not connected")
+    
+    tokens = user['google_tokens']
+    
+    # Get audit schedule
+    audit = await db.audit_schedules.find_one({"id": audit_id}, {"_id": 0})
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit schedule not found")
+    
+    # Get contract details for more info
+    contract = await db.proposals.find_one({"id": audit.get('contract_id')}, {"_id": 0})
+    org_name = contract.get('organization_name', 'Client') if contract else 'Client'
+    
+    # Create calendar event
+    event = {
+        'summary': f"Audit: {org_name}",
+        'description': f"Audit Type: {audit.get('audit_type', 'N/A')}\nAuditor: {audit.get('auditor', 'N/A')}\nSite: {audit.get('site', 'N/A')}\nNotes: {audit.get('notes', '')}",
+        'start': {
+            'date': audit.get('start_date'),
+            'timeZone': 'Asia/Riyadh'
+        },
+        'end': {
+            'date': audit.get('end_date'),
+            'timeZone': 'Asia/Riyadh'
+        },
+        'location': audit.get('site', ''),
+        'reminders': {
+            'useDefault': False,
+            'overrides': [
+                {'method': 'email', 'minutes': 24 * 60},
+                {'method': 'popup', 'minutes': 60}
+            ]
+        }
+    }
+    
+    # Create event in Google Calendar
+    response = requests.post(
+        'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+        headers={
+            'Authorization': f'Bearer {tokens["access_token"]}',
+            'Content-Type': 'application/json'
+        },
+        json=event
+    )
+    
+    if response.status_code == 401:
+        # Token expired, need to re-authenticate
+        raise HTTPException(status_code=401, detail="Google Calendar token expired. Please reconnect.")
+    
+    if response.status_code not in [200, 201]:
+        raise HTTPException(status_code=500, detail=f"Failed to create calendar event: {response.text}")
+    
+    event_data = response.json()
+    
+    # Save calendar event ID to audit
+    await db.audit_schedules.update_one(
+        {"id": audit_id},
+        {"$set": {"calendar_event_id": event_data.get('id')}}
+    )
+    
+    return {"message": "Audit synced to Google Calendar", "event_id": event_data.get('id')}
+
+@api_router.delete("/calendar/disconnect")
+async def disconnect_calendar(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Disconnect Google Calendar"""
+    current_user = await get_current_user(credentials)
+    
+    await db.users.update_one(
+        {"email": current_user['email']},
+        {"$unset": {"google_tokens": ""}}
+    )
+    
+    return {"message": "Google Calendar disconnected"}
+
 @app.on_event("startup")
 async def startup_event():
     """Run startup tasks"""

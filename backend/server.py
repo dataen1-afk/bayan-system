@@ -2124,6 +2124,16 @@ class AuditSchedule(BaseModel):
     auditors: str = ""
     notes: str = ""
     status: str = "scheduled"  # scheduled, in_progress, completed, cancelled
+    # Recurring event fields
+    is_recurring: bool = False
+    recurrence_type: str = ""  # weekly, monthly, quarterly, yearly
+    recurrence_end_date: str = ""
+    parent_audit_id: str = ""  # For generated recurring events
+    # Google Calendar sync
+    calendar_event_id: str = ""
+    calendar_synced: bool = False
+    # SMS notification
+    sms_reminder_sent: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AuditScheduleCreate(BaseModel):
@@ -2135,6 +2145,10 @@ class AuditScheduleCreate(BaseModel):
     duration_days: int = 1
     auditors: str = ""
     notes: str = ""
+    # Recurring event fields
+    is_recurring: bool = False
+    recurrence_type: str = ""  # weekly, monthly, quarterly, yearly
+    recurrence_end_date: str = ""
 
 @api_router.get("/audit-schedules")
 async def get_audit_schedules(credentials: HTTPAuthorizationCredentials = Depends(security)):

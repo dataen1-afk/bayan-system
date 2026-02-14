@@ -231,10 +231,35 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 ## Test Credentials
 - **Admin**: admin@test.com / admin123
 
+## UI Components Update (December 2025)
+
+### DataTable Component ✅ (NEW/FIXED)
+- **Location**: `/app/frontend/src/components/DataTable.js`
+- **Purpose**: Professional reusable table component with:
+  - Pagination, search, sorting, filtering
+  - **Native RTL Support**: Uses `dir="rtl"` attribute instead of `flex-row-reverse` classes
+  - Works across Forms, Quotations, and Contracts tabs
+- **Key RTL Implementation**:
+  - Table body uses `dir={isRTL ? 'rtl' : 'ltr'}` for native browser RTL support
+  - Row cells use `text-start` class which auto-adjusts based on dir attribute
+  - Action columns have `dir="ltr"` to maintain consistent button order
+
+### RTL Layout Fix (December 2025) ✅
+- **Issue**: Previous implementation used CSS `flex-row-reverse` conditionally, which was unreliable
+- **Solution**: Changed to native HTML `dir` attribute approach:
+  1. Table body wrapper has `dir="rtl"` for Arabic
+  2. This makes flexbox naturally reverse
+  3. Action column uses `dir="ltr"` to keep button order consistent
+- **Result**: In Arabic mode:
+  - Action buttons appear on **LEFT**
+  - Data columns (company name) appear on **RIGHT**
+  - Works correctly across Forms, Quotations, Contracts tabs
+
 ## Testing Status (December 2025)
 - Backend API: 100% (22/22 tests passed)
 - Frontend UI: 100% (all tests passed)
-- Latest Test Report: `/app/test_reports/iteration_12.json`
+- RTL Layout Tests: 100% (all 6 scenarios passed)
+- Latest Test Report: `/app/test_reports/iteration_13.json`
 - New Features Test File: `/app/backend/tests/test_new_features.py`
 
 ## MOCKED Integrations

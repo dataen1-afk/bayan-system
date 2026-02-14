@@ -125,7 +125,7 @@ const NotificationBell = () => {
       {isOpen && (
         <div 
           className={`absolute top-full mt-2 w-80 bg-white rounded-lg shadow-xl border z-50 ${
-            isRTL ? 'left-0' : 'right-0'
+            isRTL ? 'right-0' : 'left-0'
           }`}
           data-testid="notification-dropdown"
         >

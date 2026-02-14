@@ -321,159 +321,214 @@ const AdminDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'forms':
+        // Calculate quick stats for forms
+        const totalForms = applicationForms.length;
+        const pendingForms = applicationForms.filter(f => f.status === 'pending').length;
+        const submittedForms = applicationForms.filter(f => f.status === 'submitted').length;
+        const completedForms = applicationForms.filter(f => ['approved', 'agreement_signed'].includes(f.status)).length;
+        
         return (
           <div className="space-y-6">
+            {/* Quick Stats Header */}
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-slate-100 rounded-lg">
+                    <FileText className="w-5 h-5 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{totalForms}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('totalForms')}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-amber-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-amber-50 rounded-lg">
+                    <Clock className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-amber-700">{pendingForms}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('pending')}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <Eye className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-blue-700">{submittedForms}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('submitted')}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-emerald-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-emerald-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-emerald-700">{completedForms}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('completed')}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Certification Application Forms Section */}
-            <Card>
-              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className={`border-b border-slate-100 ${isRTL ? 'text-right' : 'text-left'}`}>
                 <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div>
-                    <CardTitle>{t('certificationApplicationForms')}</CardTitle>
-                    <CardDescription>{t('manageClientApplications')}</CardDescription>
+                    <CardTitle className="text-lg font-semibold text-slate-900">{t('certificationApplicationForms')}</CardTitle>
+                    <CardDescription className="text-sm text-slate-500">{t('manageClientApplications')}</CardDescription>
                   </div>
                   <Button 
                     onClick={() => setCreateFormModal(true)} 
                     data-testid="create-form-button"
-                    className="bg-bayan-navy hover:bg-bayan-navy-light"
+                    className="bg-bayan-navy hover:bg-bayan-navy-light shadow-sm"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 me-2" />
                     {t('createNewApplicationForm')}
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3" data-testid="application-forms-list">
+              <CardContent className="p-0">
+                <div className="divide-y divide-slate-100" data-testid="application-forms-list">
                   {applicationForms.length === 0 ? (
-                    <EmptyState
-                      icon={FileText}
-                      title={t('noApplicationFormsYet')}
-                      description={t('createFirstApplicationForm')}
-                      helpText={t('applicationFormsEmptyStateHelp')}
-                    />
+                    <div className="text-center py-16 px-4">
+                      <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                        <FileText className="w-10 h-10 text-slate-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('noApplicationFormsYet')}</h3>
+                      <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">{t('createFirstApplicationForm')}</p>
+                      <Button 
+                        onClick={() => setCreateFormModal(true)} 
+                        className="bg-bayan-navy hover:bg-bayan-navy-light"
+                      >
+                        <Plus className="w-4 h-4 me-2" />
+                        {t('createNewApplicationForm')}
+                      </Button>
+                    </div>
                   ) : (
-                    applicationForms.map((form) => (
+                    applicationForms.map((form, index) => (
                       <div 
                         key={form.id} 
-                        className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        className={`group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${isRTL ? 'lg:flex-row-reverse' : ''}`}
                         data-testid={`application-form-${form.id}`}
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className={isRTL ? 'text-right' : 'text-left'}>
-                            <p className="font-semibold text-bayan-navy">
+                        {/* Main Info */}
+                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <h3 className="font-semibold text-slate-900 truncate">
                               {form.client_info?.company_name || t('unknownCompany')}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              <span className="font-medium">{t('clientName')}:</span> {form.client_info?.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              <span className="font-medium">{t('email')}:</span> {form.client_info?.email}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              <span className="font-medium">{t('phone')}:</span> {form.client_info?.phone}
-                            </p>
+                            </h3>
+                            {/* Status Badge */}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                              form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              form.status === 'under_review' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                              form.status === 'approved' || form.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              'bg-slate-50 text-slate-700 border-slate-200'
+                            }`}>
+                              {t(form.status)}
+                            </span>
+                          </div>
+                          
+                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <span>{form.client_info?.name}</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-slate-500">{form.client_info?.email}</span>
                             {form.company_data?.certificationSchemes?.length > 0 && (
-                              <p className="text-sm text-gray-600">
-                                {t('certifications')}: {form.company_data.certificationSchemes.join(', ')}
-                              </p>
-                            )}
-                            {form.company_data?.totalEmployees && (
-                              <p className="text-sm text-gray-600">
-                                {t('totalEmployees')}: {form.company_data.totalEmployees}
-                              </p>
-                            )}
-                            {/* Show Audit Calculation for submitted forms */}
-                            {form.status === 'submitted' && form.audit_calculation && (
-                              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <p className="font-semibold text-green-800 mb-2">{t('auditCalculation')}</p>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <div>
-                                    <span className="text-gray-600">{t('totalManDays')}:</span>
-                                    <span className="font-bold text-green-700 mx-1">{form.audit_calculation.final_total_md}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-600">{t('integrationDiscount')}:</span>
-                                    <span className="font-bold text-blue-600 mx-1">-{form.audit_calculation.reduction}</span>
-                                  </div>
-                                  {form.audit_calculation.phases && (
-                                    <>
-                                      <div>
-                                        <span className="text-gray-600">Stage 1:</span>
-                                        <span className="font-medium mx-1">{form.audit_calculation.phases.stage_1}</span>
-                                      </div>
-                                      <div>
-                                        <span className="text-gray-600">Stage 2:</span>
-                                        <span className="font-medium mx-1">{form.audit_calculation.phases.stage_2}</span>
-                                      </div>
-                                    </>
+                              <>
+                                <span className="text-slate-300">|</span>
+                                <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                  {form.company_data.certificationSchemes.slice(0, 3).map((cert) => (
+                                    <span key={cert} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
+                                      {cert}
+                                    </span>
+                                  ))}
+                                  {form.company_data.certificationSchemes.length > 3 && (
+                                    <span className="text-slate-400 text-xs">+{form.company_data.certificationSchemes.length - 3}</span>
                                   )}
                                 </div>
-                              </div>
+                              </>
                             )}
-                            {/* Status Timeline */}
-                            <div className="mt-3">
-                              <StatusTimeline status={form.status} compact={true} />
-                            </div>
                           </div>
-                          <div className={`flex flex-col gap-2 ${isRTL ? 'items-start' : 'items-end'}`}>
-                            {form.status === 'pending' && (
-                              <>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => copyFormLink(form)}
-                                  data-testid={`copy-link-${form.id}`}
-                                  className="w-full"
-                                >
-                                  <Copy className="w-4 h-4 mr-1" />
-                                  {t('copyLink')}
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleSendEmail(form.id)}
-                                  disabled={sendingEmail}
-                                  data-testid={`send-email-${form.id}`}
-                                  className="w-full"
-                                >
-                                  <Mail className="w-4 h-4 mr-1" />
-                                  {t('sendEmail')}
-                                </Button>
-                              </>
-                            )}
-                            {form.status === 'submitted' && (
-                              <>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleViewApplicationForm(form)}
-                                  data-testid={`view-form-${form.id}`}
-                                >
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  {t('view')}
-                                </Button>
-                                <Button 
-                                  size="sm"
-                                  onClick={() => handleCreateQuotationFromForm(form)}
-                                  data-testid={`create-quote-${form.id}`}
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  <DollarSign className="w-4 h-4 mr-1" />
-                                  {t('createQuotation')}
-                                </Button>
-                              </>
-                            )}
-                            {form.status === 'agreement_signed' && (
+                          
+                          {/* Audit Calculation Preview for Submitted */}
+                          {form.status === 'submitted' && form.audit_calculation && (
+                            <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <span className="text-xs text-emerald-600">{t('auditDays')}:</span>
+                              <span className="text-sm font-bold text-emerald-700">{form.audit_calculation.final_total_md}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Actions */}
+                        <div className={`flex items-center gap-2 mt-3 lg:mt-0 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
+                          {form.status === 'pending' && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => copyFormLink(form)}
+                                data-testid={`copy-link-${form.id}`}
+                                className="h-9 px-3 text-slate-600 hover:text-bayan-navy hover:bg-slate-100"
+                              >
+                                <Copy className="w-4 h-4 me-1.5" />
+                                {t('copyLink')}
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleSendEmail(form.id)}
+                                disabled={sendingEmail}
+                                data-testid={`send-email-${form.id}`}
+                                className="h-9 px-3 text-slate-600 hover:text-bayan-navy hover:bg-slate-100"
+                              >
+                                <Mail className="w-4 h-4 me-1.5" />
+                                {t('sendEmail')}
+                              </Button>
+                            </>
+                          )}
+                          {form.status === 'submitted' && (
+                            <>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewApplicationForm(form)}
+                                data-testid={`view-form-${form.id}`}
+                                className="h-9 border-slate-200"
+                              >
+                                <Eye className="w-4 h-4 me-1.5" />
+                                {t('view')}
+                              </Button>
                               <Button 
                                 size="sm"
-                                onClick={() => handleDownloadContract(form.id)}
-                                data-testid={`download-contract-${form.id}`}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={() => handleCreateQuotationFromForm(form)}
+                                data-testid={`create-quote-${form.id}`}
+                                className="h-9 bg-emerald-600 hover:bg-emerald-700 shadow-sm"
                               >
-                                <Download className="w-4 h-4 mr-1" />
-                                {t('downloadContract')}
+                                <DollarSign className="w-4 h-4 me-1.5" />
+                                {t('createQuotation')}
                               </Button>
-                            )}
-                          </div>
+                            </>
+                          )}
+                          {form.status === 'agreement_signed' && (
+                            <Button 
+                              size="sm"
+                              onClick={() => handleDownloadContract(form.id)}
+                              data-testid={`download-contract-${form.id}`}
+                              className="h-9 bg-bayan-navy hover:bg-bayan-navy-light shadow-sm"
+                            >
+                              <Download className="w-4 h-4 me-1.5" />
+                              {t('downloadContract')}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))

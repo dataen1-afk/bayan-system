@@ -146,7 +146,7 @@ const DataTable = ({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
       {/* Header */}
       <div className={`px-5 py-4 border-b border-slate-100 ${isRTL ? 'text-right' : 'text-left'}`}>
         <div className={`flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
@@ -246,11 +246,12 @@ const DataTable = ({
       <div 
         className={`hidden lg:flex items-center px-5 py-3 bg-slate-50/80 border-b border-slate-100 text-xs font-semibold text-slate-600 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}
         dir={isRTL ? 'rtl' : 'ltr'}
+        style={{ minWidth: '900px' }}
       >
         {columns.map((column) => (
           <div 
             key={column.key}
-            className={`${column.width || 'flex-1'} ${column.sortAccessor ? 'cursor-pointer hover:text-slate-900 select-none' : ''}`}
+            className={`${column.width || 'flex-1'} px-1 ${column.sortAccessor ? 'cursor-pointer hover:text-slate-900 select-none' : ''}`}
             onClick={() => column.sortAccessor && handleSort(column.key)}
           >
             <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
@@ -270,7 +271,7 @@ const DataTable = ({
       </div>
 
       {/* Table Body */}
-      <div className="divide-y divide-slate-100" data-testid="table-body" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="divide-y divide-slate-100" data-testid="table-body" dir={isRTL ? 'rtl' : 'ltr'} style={{ minWidth: '900px' }}>
         {paginatedData.length === 0 ? (
           emptyState || (
             <div className="text-center py-16 px-4">

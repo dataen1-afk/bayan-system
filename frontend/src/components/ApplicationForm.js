@@ -1255,7 +1255,7 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
 
   return (
     <RTLContext.Provider value={isRTL}>
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-24">
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
@@ -1323,57 +1323,73 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
         </CardContent>
       </Card>
 
-      {/* Navigation Buttons - Correct positioning for RTL */}
-      <div className="flex justify-between mt-6" dir={isRTL ? "rtl" : "ltr"}>
-        {/* Previous Button - Left in LTR, Right side visually in RTL due to dir */}
-        <div>
-          {currentStep > 1 && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={prevStep}
-              className="flex items-center gap-2"
-            >
-              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-              {t('previous')}
-            </Button>
-          )}
-        </div>
+      {/* Sticky Navigation Footer - Always visible at bottom */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+          {/* Previous Button */}
+          <div>
+            {currentStep > 1 ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={prevStep}
+                className="flex items-center gap-2"
+                data-testid="form-prev-button"
+              >
+                {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                {t('previous')}
+              </Button>
+            ) : (
+              <div></div>
+            )}
+          </div>
 
-        {/* Next/Submit Button - Right in LTR, Left side visually in RTL due to dir */}
-        <div className="flex gap-2">
-          {!readOnly && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleSaveDraft}
-              className="flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              {t('saveDraft')}
-            </Button>
-          )}
+          {/* Step Indicator (center) */}
+          <div className="text-sm text-gray-500 hidden md:block">
+            {t('step')} {currentStep} {t('of')} {totalSteps}
+          </div>
 
-          {currentStep < totalSteps ? (
-            <Button
-              type="button"
-              onClick={nextStep}
-              className="flex items-center gap-2 bg-bayan-navy hover:bg-bayan-navy-light"
-            >
-              {t('next')}
-              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </Button>
-          ) : !readOnly ? (
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!formData.declarationAgreed}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-            >
-              <Check className="w-4 h-4" />
-              {t('submitApplication')}
-            </Button>
-          ) : null}
+          {/* Next/Submit Button */}
+          <div className="flex gap-2">
+            {!readOnly && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveDraft}
+                className="flex items-center gap-2"
+                data-testid="form-save-draft-button"
+              >
+                <Save className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('saveDraft')}</span>
+              </Button>
+            )}
+
+            {currentStep < totalSteps ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                className="flex items-center gap-2 bg-bayan-navy hover:bg-bayan-navy-light"
+                data-testid="form-next-button"
+              >
+                {t('next')}
+                {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </Button>
+            ) : !readOnly ? (
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!formData.declarationAgreed}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                data-testid="form-submit-button"
+              >
+                <Check className="w-4 h-4" />
+                {t('submitApplication')}
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

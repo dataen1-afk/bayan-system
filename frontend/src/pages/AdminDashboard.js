@@ -365,9 +365,10 @@ const AdminDashboard = () => {
                                 </div>
                               </div>
                             )}
-                            <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${getStatusBadgeColor(form.status)}`}>
-                              {t(form.status)}
-                            </span>
+                            {/* Status Timeline */}
+                            <div className="mt-3">
+                              <StatusTimeline status={form.status} compact={true} />
+                            </div>
                           </div>
                           <div className={`flex flex-col gap-2 ${isRTL ? 'items-start' : 'items-end'}`}>
                             {form.status === 'pending' && (

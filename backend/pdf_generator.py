@@ -351,17 +351,63 @@ class ContractPDFGenerator:
         # Section 7: Signatures
         story.append(Paragraph("7. SIGNATURES", self.styles['SectionHeader']))
         
+        # Get signature and stamp images from agreement data
+        signature_image = agreement_data.get('signature_image')
+        stamp_image = agreement_data.get('stamp_image')
+        
+        # Create signature elements
+        client_signature_element = '_________________________'
+        client_stamp_element = ''
+        
+        if signature_image:
+            try:
+                # Decode base64 signature image
+                if signature_image.startswith('data:image'):
+                    # Extract base64 data from data URL
+                    base64_data = signature_image.split(',')[1]
+                else:
+                    base64_data = signature_image
+                
+                signature_bytes = base64.b64decode(base64_data)
+                signature_buffer = io.BytesIO(signature_bytes)
+                client_signature_element = Image(signature_buffer, width=1.5*inch, height=0.5*inch)
+            except Exception as e:
+                print(f"Error processing signature image: {e}")
+                client_signature_element = '_________________________'
+        
+        if stamp_image:
+            try:
+                # Decode base64 stamp image
+                if stamp_image.startswith('data:image'):
+                    base64_data = stamp_image.split(',')[1]
+                else:
+                    base64_data = stamp_image
+                
+                stamp_bytes = base64.b64decode(base64_data)
+                stamp_buffer = io.BytesIO(stamp_bytes)
+                client_stamp_element = Image(stamp_buffer, width=1*inch, height=1*inch)
+            except Exception as e:
+                print(f"Error processing stamp image: {e}")
+                client_stamp_element = ''
+        
+        # Build signature table with images
         sig_data = [
             ['FOR THE CERTIFICATION BODY', 'FOR THE CLIENT'],
             ['', ''],
             ['BAYAN AUDITING & CONFORMITY', agreement_data.get('organization_name', '')],
             ['', ''],
-            ['_________________________', '_________________________'],
+            ['_________________________', client_signature_element if isinstance(client_signature_element, Image) else client_signature_element],
             ['Authorized Signatory', agreement_data.get('signatory_name', '')],
             ['', agreement_data.get('signatory_position', '')],
             ['', ''],
             [f"Date: {datetime.now().strftime('%Y-%m-%d')}", f"Date: {agreement_data.get('signatory_date', '')}"],
         ]
+        
+        # Add stamp row if available
+        if client_stamp_element:
+            sig_data.append(['', ''])
+            sig_data.append(['', client_stamp_element])
+            sig_data.append(['', 'Company Seal'])
         
         sig_table = Table(sig_data, colWidths=[3*inch, 3*inch])
         sig_table.setStyle(TableStyle([
@@ -373,6 +419,13 @@ class ContractPDFGenerator:
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ]))
         story.append(sig_table)
+        
+        # Add digital signature notice
+        story.append(Spacer(1, 20))
+        story.append(Paragraph(
+            "<i>This document has been digitally signed through the Bayan Auditing & Conformity online portal.</i>",
+            self.styles['Footer']
+        ))
         
         # Build PDF
         doc.build(story, onFirstPage=self._create_header, onLaterPages=self._create_header)

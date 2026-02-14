@@ -64,7 +64,8 @@ const PublicProposalPage = () => {
         signatory_designation: signatoryDesignation
       });
       setShowAcceptModal(false);
-      loadProposal();
+      // Redirect to the certification agreement form
+      navigate(`/agreement/${accessToken}`);
     } catch (error) {
       alert(t('errorRespondingToProposal') + ' ' + (error.response?.data?.detail || error.message));
     } finally {

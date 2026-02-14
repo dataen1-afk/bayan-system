@@ -681,7 +681,8 @@ const resources = {
       "optional": "Optional",
       "clickToUploadStamp": "Click to upload company seal/stamp",
       "remove": "Remove",
-      "pleaseProvideSignature": "Please provide your digital signature"
+      "pleaseProvideSignature": "Please provide your digital signature",
+      "pleaseProvideCompanySeal": "Please provide your company seal/stamp"
     }
   },
   ar: {
@@ -1362,7 +1363,8 @@ const resources = {
       "optional": "اختياري",
       "clickToUploadStamp": "انقر لتحميل ختم الشركة",
       "remove": "إزالة",
-      "pleaseProvideSignature": "يرجى تقديم توقيعك الرقمي"
+      "pleaseProvideSignature": "يرجى تقديم توقيعك الرقمي",
+      "pleaseProvideCompanySeal": "يرجى تقديم ختم الشركة"
     }
   }
 };

@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   Calendar, ArrowLeft, Plus, X, MapPin, Clock, Users, Building2,
   ChevronLeft, ChevronRight, Loader2, AlertCircle, CheckCircle,
-  Edit2, Trash2, Eye, Link2, Unlink
+  Edit2, Trash2, Eye, Link2, Unlink, MessageSquare, RefreshCw
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';

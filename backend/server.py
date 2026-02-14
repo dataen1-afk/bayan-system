@@ -1687,6 +1687,122 @@ async def get_revenue_statistics(credentials: HTTPAuthorizationCredentials = Dep
         "currency": "SAR"
     }
 
+# ================= SEED DATA =================
+
+async def seed_default_templates():
+    """Seed default certification packages and proposal templates"""
+    
+    # Check if already seeded
+    existing_packages = await db.certification_packages.count_documents({})
+    if existing_packages > 0:
+        return
+    
+    # Default certification packages
+    packages = [
+        CertificationPackage(
+            name="QMS Basic",
+            name_ar="نظام إدارة الجودة الأساسي",
+            description="ISO 9001 Quality Management System certification",
+            description_ar="شهادة نظام إدارة الجودة ISO 9001",
+            standards=["ISO9001"]
+        ),
+        CertificationPackage(
+            name="EMS Basic",
+            name_ar="نظام الإدارة البيئية الأساسي",
+            description="ISO 14001 Environmental Management System certification",
+            description_ar="شهادة نظام الإدارة البيئية ISO 14001",
+            standards=["ISO14001"]
+        ),
+        CertificationPackage(
+            name="OHS Basic",
+            name_ar="نظام السلامة والصحة المهنية الأساسي",
+            description="ISO 45001 Occupational Health & Safety certification",
+            description_ar="شهادة نظام السلامة والصحة المهنية ISO 45001",
+            standards=["ISO45001"]
+        ),
+        CertificationPackage(
+            name="Integrated Management System",
+            name_ar="نظام الإدارة المتكامل",
+            description="Combined QMS, EMS, and OHS certification (ISO 9001, 14001, 45001)",
+            description_ar="شهادة نظام الإدارة المتكامل (ISO 9001, 14001, 45001)",
+            standards=["ISO9001", "ISO14001", "ISO45001"]
+        ),
+        CertificationPackage(
+            name="Food Safety",
+            name_ar="سلامة الغذاء",
+            description="ISO 22000 Food Safety Management System certification",
+            description_ar="شهادة نظام إدارة سلامة الغذاء ISO 22000",
+            standards=["ISO22000"]
+        ),
+        CertificationPackage(
+            name="Information Security",
+            name_ar="أمن المعلومات",
+            description="ISO 27001 Information Security Management certification",
+            description_ar="شهادة نظام إدارة أمن المعلومات ISO 27001",
+            standards=["ISO27001"]
+        )
+    ]
+    
+    for pkg in packages:
+        pkg_doc = pkg.model_dump()
+        pkg_doc['created_at'] = pkg_doc['created_at'].isoformat()
+        await db.certification_packages.insert_one(pkg_doc)
+    
+    # Default proposal templates
+    templates = [
+        ProposalTemplate(
+            name="Standard Pricing",
+            name_ar="الأسعار القياسية",
+            description="Standard pricing for most certifications",
+            default_fees={
+                "initial_certification": 15000,
+                "surveillance_1": 8000,
+                "surveillance_2": 8000,
+                "recertification": 12000
+            },
+            default_notes="العرض شامل كافة التكاليف عدا السفر والإقامة",
+            default_validity_days=30
+        ),
+        ProposalTemplate(
+            name="Small Business",
+            name_ar="المنشآت الصغيرة",
+            description="Discounted pricing for small businesses (< 50 employees)",
+            default_fees={
+                "initial_certification": 10000,
+                "surveillance_1": 5000,
+                "surveillance_2": 5000,
+                "recertification": 8000
+            },
+            default_notes="عرض خاص للمنشآت الصغيرة - شامل كافة التكاليف عدا السفر والإقامة",
+            default_validity_days=30
+        ),
+        ProposalTemplate(
+            name="Enterprise",
+            name_ar="المؤسسات الكبيرة",
+            description="Pricing for large enterprises (500+ employees)",
+            default_fees={
+                "initial_certification": 25000,
+                "surveillance_1": 12000,
+                "surveillance_2": 12000,
+                "recertification": 20000
+            },
+            default_notes="عرض للمؤسسات الكبيرة - يشمل تدقيق متعدد المواقع",
+            default_validity_days=45
+        )
+    ]
+    
+    for tmpl in templates:
+        tmpl_doc = tmpl.model_dump()
+        tmpl_doc['created_at'] = tmpl_doc['created_at'].isoformat()
+        await db.proposal_templates.insert_one(tmpl_doc)
+    
+    logger.info("Default templates seeded successfully")
+
+@app.on_event("startup")
+async def startup_event():
+    """Run startup tasks"""
+    await seed_default_templates()
+
 # Include the router in the main app
 app.include_router(api_router)
 

@@ -209,6 +209,8 @@ class PublicProposalResponse(BaseModel):
     issuer_name: str
     issuer_designation: str
     issued_date: Optional[datetime]
+    modification_comment: str = ""
+    modification_requested_changes: str = ""
 
 # ================= CERTIFICATION AGREEMENT MODELS =================
 

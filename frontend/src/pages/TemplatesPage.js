@@ -534,14 +534,24 @@ const TemplatesPage = () => {
                 <CardHeader className={isRTL ? 'text-right' : ''}>
                   <CardTitle className="flex items-center justify-between">
                     <span>{isRTL ? tmpl.name_ar : tmpl.name}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleDeleteTemplate(tmpl.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleEditTemplate(tmpl)}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteTemplate(tmpl.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </CardTitle>
                   <CardDescription>{tmpl.description}</CardDescription>
                 </CardHeader>

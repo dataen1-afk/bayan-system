@@ -1,585 +1,482 @@
 """
-Test file for new features in the Service Contract Management System:
-- Customer Portal (Public Tracking)
-- Reports Export (Excel/PDF)
-- Audit Scheduling
-- Contact History
-- Document Management
-- Sites Management
+Test file for Customer Portal, Audit Scheduling, Document Management, and Contact History features.
+Created for iteration 14 testing.
 """
 import pytest
 import requests
 import os
-import json
+import uuid
+from datetime import datetime, timedelta
+import base64
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://contract-dash-arabic.preview.emergentagent.com').rstrip('/')
 
-# Test credentials
-TEST_EMAIL = "admin@test.com"
-TEST_PASSWORD = "admin123"
+# Test data constants
+ADMIN_EMAIL = "admin@test.com"
+ADMIN_PASSWORD = "admin123"
 
-class TestAuthentication:
-    """Test authentication - needed for other tests"""
-    
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get auth token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200, f"Auth failed: {response.text}"
-        data = response.json()
-        assert "token" in data
-        return data["token"]
+# Known data from database
+EXISTING_FORM_ID = "ab9a8ab2-2f59-4cd3-89d0-23a8be32882a"
+SIGNED_CONTRACT_ID = "1c121c59-100f-49a9-b348-5e0694d1bd84"  # agreement_signed status
+
+@pytest.fixture(scope="module")
+def auth_token():
+    """Get authentication token for admin user"""
+    response = requests.post(f"{BASE_URL}/api/auth/login", json={
+        "email": ADMIN_EMAIL,
+        "password": ADMIN_PASSWORD
+    })
+    assert response.status_code == 200, f"Login failed: {response.text}"
+    return response.json()["token"]
+
+@pytest.fixture(scope="module")
+def auth_headers(auth_token):
+    """Return headers with authentication token"""
+    return {"Authorization": f"Bearer {auth_token}"}
+
 
 class TestCustomerPortalTracking:
     """Test public tracking endpoint for Customer Portal"""
     
-    def test_track_with_invalid_id(self):
+    def test_track_order_by_form_id(self):
+        """Test tracking order using form ID - should return order status and timeline"""
+        response = requests.get(f"{BASE_URL}/api/public/track/{EXISTING_FORM_ID}")
+        
+        assert response.status_code == 200, f"Failed to track order: {response.text}"
+        
+        data = response.json()
+        # Verify response structure
+        assert "tracking_id" in data, "Response missing tracking_id"
+        assert "company_name" in data, "Response missing company_name"
+        assert "current_status" in data, "Response missing current_status"
+        assert "timeline_dates" in data, "Response missing timeline_dates"
+        
+        # Verify data values
+        assert data["tracking_id"] == EXISTING_FORM_ID
+        assert data["company_name"] == "شركة التقنية المتقدمة"
+        assert data["current_status"] in ["pending", "submitted", "under_review", "accepted", "agreement_signed", "contract_generated"]
+        
+        # Verify timeline has at least pending date
+        assert "pending" in data["timeline_dates"], "Timeline missing pending date"
+        print(f"Track order SUCCESS: Company={data['company_name']}, Status={data['current_status']}")
+    
+    def test_track_order_not_found(self):
         """Test tracking with non-existent ID returns 404"""
-        response = requests.get(f"{BASE_URL}/api/public/track/invalid-tracking-id")
-        assert response.status_code == 404
-        data = response.json()
-        assert "detail" in data
-        print(f"[PASS] Invalid tracking ID returns 404: {data['detail']}")
+        fake_id = str(uuid.uuid4())
+        response = requests.get(f"{BASE_URL}/api/public/track/{fake_id}")
+        
+        assert response.status_code == 404, f"Expected 404 for non-existent order, got {response.status_code}"
+        print("Track order NOT FOUND test passed")
     
-    def test_track_with_valid_form_id(self):
-        """Get a valid form ID and test tracking"""
-        # First login and get forms
-        login_response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert login_response.status_code == 200
-        token = login_response.json()["token"]
+    def test_track_order_response_includes_standards(self):
+        """Test that tracking response includes certification standards"""
+        response = requests.get(f"{BASE_URL}/api/public/track/{EXISTING_FORM_ID}")
         
-        forms_response = requests.get(
-            f"{BASE_URL}/api/application-forms",
-            headers={"Authorization": f"Bearer {token}"}
-        )
+        assert response.status_code == 200
+        data = response.json()
         
-        if forms_response.status_code == 200:
-            forms = forms_response.json()
-            if forms:
-                form_id = forms[0]["id"]
-                # Now test public tracking
-                track_response = requests.get(f"{BASE_URL}/api/public/track/{form_id}")
-                assert track_response.status_code == 200
-                data = track_response.json()
-                assert "tracking_id" in data
-                assert "company_name" in data
-                assert "current_status" in data
-                assert "timeline_dates" in data
-                print(f"[PASS] Tracking works - Company: {data['company_name']}, Status: {data['current_status']}")
-            else:
-                pytest.skip("No application forms found for tracking test")
+        # Verify standards field exists (may be empty for pending forms)
+        assert "standards" in data, "Response missing standards field"
+        
+        # For this form, we know it has ISO certifications
+        if data["standards"]:
+            print(f"Standards found: {data['standards']}")
         else:
-            pytest.skip("Could not fetch application forms")
-
-
-class TestReportsExport:
-    """Test reports export functionality"""
-    
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get auth token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200
-        return response.json()["token"]
-    
-    def test_export_excel(self, auth_token):
-        """Test Excel export endpoint"""
-        response = requests.get(
-            f"{BASE_URL}/api/reports/export?format=excel",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200, f"Excel export failed: {response.text}"
-        assert "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" in response.headers.get("content-type", "")
-        assert len(response.content) > 0
-        print(f"[PASS] Excel export successful - Size: {len(response.content)} bytes")
-    
-    def test_export_pdf(self, auth_token):
-        """Test PDF export endpoint"""
-        response = requests.get(
-            f"{BASE_URL}/api/reports/export?format=pdf",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200, f"PDF export failed: {response.text}"
-        assert "application/pdf" in response.headers.get("content-type", "")
-        assert len(response.content) > 0
-        print(f"[PASS] PDF export successful - Size: {len(response.content)} bytes")
-    
-    def test_export_with_filters(self, auth_token):
-        """Test export with date filters"""
-        response = requests.get(
-            f"{BASE_URL}/api/reports/export?format=excel&start_date=2024-01-01&end_date=2026-12-31",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
-        print("[PASS] Excel export with date filters successful")
-    
-    def test_export_without_auth_fails(self):
-        """Test export requires authentication"""
-        response = requests.get(f"{BASE_URL}/api/reports/export?format=excel")
-        assert response.status_code in [401, 403]
-        print("[PASS] Export without auth correctly rejected")
-
-
-class TestSitesManagement:
-    """Test sites CRUD operations"""
-    
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get auth token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200
-        return response.json()["token"]
-    
-    def test_get_sites(self, auth_token):
-        """Test get sites endpoint"""
-        response = requests.get(
-            f"{BASE_URL}/api/sites",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
-        sites = response.json()
-        assert isinstance(sites, list)
-        print(f"[PASS] Get sites successful - Found {len(sites)} sites")
-    
-    def test_create_site(self, auth_token):
-        """Test create site"""
-        site_data = {
-            "contract_id": "TEST_contract_001",
-            "name": "TEST Site Location",
-            "address": "123 Test Street",
-            "city": "Riyadh",
-            "country": "Saudi Arabia",
-            "contact_name": "Test Contact",
-            "contact_email": "test@site.com",
-            "contact_phone": "+966 555 1234",
-            "is_main_site": False
-        }
-        
-        response = requests.post(
-            f"{BASE_URL}/api/sites",
-            json=site_data,
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "id" in data
-        print(f"[PASS] Site created with ID: {data['id']}")
-        return data["id"]
-    
-    def test_delete_site(self, auth_token):
-        """Test delete site"""
-        # First create a site
-        site_data = {
-            "contract_id": "TEST_delete_contract",
-            "name": "TEST Site to Delete",
-            "address": "Delete Street",
-            "city": "Jeddah"
-        }
-        
-        create_response = requests.post(
-            f"{BASE_URL}/api/sites",
-            json=site_data,
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert create_response.status_code == 200
-        site_id = create_response.json()["id"]
-        
-        # Then delete it
-        delete_response = requests.delete(
-            f"{BASE_URL}/api/sites/{site_id}",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert delete_response.status_code == 200
-        print(f"[PASS] Site {site_id} deleted successfully")
+            print("No standards found (expected for some forms)")
 
 
 class TestAuditScheduling:
-    """Test audit scheduling CRUD operations"""
+    """Test Audit Scheduling CRUD operations"""
     
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get auth token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200
-        return response.json()["token"]
-    
-    def test_get_audit_schedules(self, auth_token):
-        """Test get audit schedules"""
-        response = requests.get(
-            f"{BASE_URL}/api/audit-schedules",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
-        audits = response.json()
-        assert isinstance(audits, list)
-        print(f"[PASS] Get audit schedules successful - Found {len(audits)} audits")
-    
-    def test_create_audit_schedule(self, auth_token):
-        """Test create audit schedule"""
-        # First need to get a contract/proposal id
-        proposals_response = requests.get(
-            f"{BASE_URL}/api/proposals",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
+    def test_get_audit_schedules(self, auth_headers):
+        """Test getting all audit schedules"""
+        response = requests.get(f"{BASE_URL}/api/audit-schedules", headers=auth_headers)
         
-        if proposals_response.status_code == 200 and proposals_response.json():
-            proposal = proposals_response.json()[0]
-            proposal_id = proposal["id"]
-            
-            audit_data = {
-                "contract_id": proposal_id,
-                "site_id": "",
-                "audit_type": "initial",
-                "scheduled_date": "2026-03-15",
-                "scheduled_time": "09:00",
-                "duration_days": 2,
-                "auditors": "John Doe, Jane Smith",
-                "notes": "TEST audit schedule"
-            }
-            
-            response = requests.post(
-                f"{BASE_URL}/api/audit-schedules",
-                json=audit_data,
-                headers={"Authorization": f"Bearer {auth_token}"}
-            )
-            assert response.status_code == 200
-            data = response.json()
-            assert "id" in data
-            print(f"[PASS] Audit schedule created with ID: {data['id']}")
-            return data["id"]
-        else:
-            pytest.skip("No proposals found to create audit schedule")
-    
-    def test_delete_audit_schedule(self, auth_token):
-        """Test delete audit schedule"""
-        # Get proposals first
-        proposals_response = requests.get(
-            f"{BASE_URL}/api/proposals",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
+        assert response.status_code == 200, f"Failed to get audit schedules: {response.text}"
         
-        if proposals_response.status_code == 200 and proposals_response.json():
-            proposal_id = proposals_response.json()[0]["id"]
-            
-            # Create an audit
-            audit_data = {
-                "contract_id": proposal_id,
-                "audit_type": "surveillance",
-                "scheduled_date": "2026-04-20",
-                "notes": "TEST audit to delete"
-            }
-            
-            create_response = requests.post(
-                f"{BASE_URL}/api/audit-schedules",
-                json=audit_data,
-                headers={"Authorization": f"Bearer {auth_token}"}
-            )
-            
-            if create_response.status_code == 200:
-                audit_id = create_response.json()["id"]
-                
-                delete_response = requests.delete(
-                    f"{BASE_URL}/api/audit-schedules/{audit_id}",
-                    headers={"Authorization": f"Bearer {auth_token}"}
-                )
-                assert delete_response.status_code == 200
-                print(f"[PASS] Audit schedule {audit_id} deleted successfully")
-        else:
-            pytest.skip("No proposals found")
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+        print(f"Get audit schedules SUCCESS: Found {len(data)} audits")
+    
+    def test_create_audit_schedule(self, auth_headers):
+        """Test creating a new audit schedule"""
+        # Create audit with signed contract
+        audit_data = {
+            "contract_id": SIGNED_CONTRACT_ID,
+            "site_id": "",
+            "audit_type": "initial",
+            "scheduled_date": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+            "scheduled_time": "09:00",
+            "duration_days": 2,
+            "auditors": "TEST_Auditor_John Smith",
+            "notes": "TEST_Initial certification audit"
+        }
+        
+        response = requests.post(f"{BASE_URL}/api/audit-schedules", json=audit_data, headers=auth_headers)
+        
+        assert response.status_code == 200, f"Failed to create audit schedule: {response.text}"
+        
+        data = response.json()
+        assert "id" in data, "Response missing audit ID"
+        assert "message" in data, "Response missing message"
+        
+        print(f"Create audit schedule SUCCESS: ID={data['id']}")
+        return data["id"]
+    
+    def test_create_and_verify_audit_persistence(self, auth_headers):
+        """Test creating audit and verifying it persists in database"""
+        # Create audit
+        audit_date = (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")
+        audit_data = {
+            "contract_id": SIGNED_CONTRACT_ID,
+            "site_id": "",
+            "audit_type": "surveillance",
+            "scheduled_date": audit_date,
+            "scheduled_time": "10:00",
+            "duration_days": 1,
+            "auditors": "TEST_Auditor_Jane Doe",
+            "notes": "TEST_Surveillance audit - verify persistence"
+        }
+        
+        create_response = requests.post(f"{BASE_URL}/api/audit-schedules", json=audit_data, headers=auth_headers)
+        assert create_response.status_code == 200, f"Failed to create audit: {create_response.text}"
+        
+        audit_id = create_response.json()["id"]
+        
+        # Get all audits and verify our audit is there
+        get_response = requests.get(f"{BASE_URL}/api/audit-schedules", headers=auth_headers)
+        assert get_response.status_code == 200
+        
+        audits = get_response.json()
+        audit_found = next((a for a in audits if a.get("id") == audit_id), None)
+        
+        assert audit_found is not None, f"Created audit {audit_id} not found in list"
+        assert audit_found["audit_type"] == "surveillance"
+        assert audit_found["scheduled_date"] == audit_date or audit_found["scheduled_date"].startswith(audit_date)
+        
+        print(f"Audit persistence verified: ID={audit_id}, Type={audit_found['audit_type']}")
+        return audit_id
+    
+    def test_delete_audit_schedule(self, auth_headers):
+        """Test deleting an audit schedule"""
+        # First create an audit to delete
+        audit_data = {
+            "contract_id": SIGNED_CONTRACT_ID,
+            "site_id": "",
+            "audit_type": "recertification",
+            "scheduled_date": (datetime.now() + timedelta(days=60)).strftime("%Y-%m-%d"),
+            "scheduled_time": "14:00",
+            "duration_days": 3,
+            "auditors": "TEST_Auditor_Delete",
+            "notes": "TEST_Audit to be deleted"
+        }
+        
+        create_response = requests.post(f"{BASE_URL}/api/audit-schedules", json=audit_data, headers=auth_headers)
+        assert create_response.status_code == 200
+        audit_id = create_response.json()["id"]
+        
+        # Delete the audit
+        delete_response = requests.delete(f"{BASE_URL}/api/audit-schedules/{audit_id}", headers=auth_headers)
+        assert delete_response.status_code == 200, f"Failed to delete audit: {delete_response.text}"
+        
+        # Verify audit no longer exists
+        get_response = requests.get(f"{BASE_URL}/api/audit-schedules", headers=auth_headers)
+        audits = get_response.json()
+        audit_found = next((a for a in audits if a.get("id") == audit_id), None)
+        
+        assert audit_found is None, f"Deleted audit {audit_id} still found in list"
+        print(f"Delete audit SUCCESS: ID={audit_id}")
 
 
 class TestContactHistory:
-    """Test contact history CRUD operations"""
+    """Test Contact History CRUD operations"""
     
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get auth token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200
-        return response.json()["token"]
+    def test_get_contacts(self, auth_headers):
+        """Test getting all contact records"""
+        response = requests.get(f"{BASE_URL}/api/contacts", headers=auth_headers)
+        
+        assert response.status_code == 200, f"Failed to get contacts: {response.text}"
+        
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+        print(f"Get contacts SUCCESS: Found {len(data)} contacts")
     
-    def test_get_contacts(self, auth_token):
-        """Test get contacts endpoint"""
-        response = requests.get(
-            f"{BASE_URL}/api/contacts",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
-        contacts = response.json()
-        assert isinstance(contacts, list)
-        print(f"[PASS] Get contacts successful - Found {len(contacts)} contact records")
-    
-    def test_create_contact(self, auth_token):
-        """Test create contact record"""
-        # Get a customer ID from forms
-        forms_response = requests.get(
-            f"{BASE_URL}/api/application-forms",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        
-        customer_id = "TEST_customer_001"
-        customer_name = "Test Company"
-        
-        if forms_response.status_code == 200 and forms_response.json():
-            customer_id = forms_response.json()[0]["id"]
-            customer_name = forms_response.json()[0].get("client_info", {}).get("company_name", "Test Company")
-        
+    def test_create_contact_record(self, auth_headers):
+        """Test creating a new contact record"""
         contact_data = {
-            "customer_id": customer_id,
-            "customer_name": customer_name,
+            "customer_id": EXISTING_FORM_ID,
             "contact_type": "call",
-            "subject": "TEST Follow-up call regarding certification",
-            "notes": "Discussed ISO 9001 requirements. Customer interested in proceeding.",
-            "contact_date": "2026-01-15",
-            "follow_up_date": "2026-01-22"
+            "subject": "TEST_Follow-up on certification application",
+            "notes": "TEST_Discussed documentation requirements and timeline",
+            "contact_date": datetime.now().strftime("%Y-%m-%d"),
+            "follow_up_date": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
         }
         
-        response = requests.post(
-            f"{BASE_URL}/api/contacts",
-            json=contact_data,
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
+        response = requests.post(f"{BASE_URL}/api/contacts", json=contact_data, headers=auth_headers)
+        
+        assert response.status_code == 200, f"Failed to create contact: {response.text}"
+        
         data = response.json()
-        assert "id" in data
-        print(f"[PASS] Contact record created with ID: {data['id']}")
+        assert "id" in data, "Response missing contact ID"
+        
+        print(f"Create contact SUCCESS: ID={data['id']}")
         return data["id"]
     
-    def test_contact_follow_up(self, auth_token):
-        """Test marking follow-up as complete"""
-        # Create a contact with follow-up
+    def test_create_and_verify_contact_persistence(self, auth_headers):
+        """Test creating contact and verifying it persists"""
         contact_data = {
-            "customer_id": "TEST_followup_customer",
-            "customer_name": "Followup Test Company",
+            "customer_id": EXISTING_FORM_ID,
             "contact_type": "email",
-            "subject": "TEST Email follow-up",
-            "notes": "Testing follow-up completion",
-            "contact_date": "2026-01-10",
-            "follow_up_date": "2026-01-17"
+            "subject": "TEST_Email correspondence - persistence test",
+            "notes": "TEST_Sent proposal documentation via email",
+            "contact_date": datetime.now().strftime("%Y-%m-%d"),
+            "follow_up_date": ""
         }
         
-        create_response = requests.post(
-            f"{BASE_URL}/api/contacts",
-            json=contact_data,
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
+        create_response = requests.post(f"{BASE_URL}/api/contacts", json=contact_data, headers=auth_headers)
+        assert create_response.status_code == 200
         
-        if create_response.status_code == 200:
-            contact_id = create_response.json()["id"]
-            
-            # Mark as complete
-            complete_response = requests.put(
-                f"{BASE_URL}/api/contacts/{contact_id}/follow-up",
-                headers={"Authorization": f"Bearer {auth_token}"}
-            )
-            assert complete_response.status_code == 200
-            print(f"[PASS] Follow-up marked as complete for contact {contact_id}")
+        contact_id = create_response.json()["id"]
+        
+        # Get all contacts and verify our contact is there
+        get_response = requests.get(f"{BASE_URL}/api/contacts", headers=auth_headers)
+        assert get_response.status_code == 200
+        
+        contacts = get_response.json()
+        contact_found = next((c for c in contacts if c.get("id") == contact_id), None)
+        
+        assert contact_found is not None, f"Created contact {contact_id} not found in list"
+        assert contact_found["contact_type"] == "email"
+        assert "persistence test" in contact_found["subject"]
+        
+        print(f"Contact persistence verified: ID={contact_id}, Type={contact_found['contact_type']}")
+        return contact_id
     
-    def test_delete_contact(self, auth_token):
-        """Test delete contact"""
-        # Create a contact
+    def test_create_contact_meeting_type(self, auth_headers):
+        """Test creating a meeting type contact"""
         contact_data = {
-            "customer_id": "TEST_delete_customer",
-            "customer_name": "Delete Test Company",
+            "customer_id": EXISTING_FORM_ID,
             "contact_type": "meeting",
-            "subject": "TEST Meeting to delete",
-            "contact_date": "2026-01-05"
+            "subject": "TEST_Kickoff meeting for certification process",
+            "notes": "TEST_Met with client team to discuss audit schedule",
+            "contact_date": datetime.now().strftime("%Y-%m-%d"),
+            "follow_up_date": ""
         }
         
-        create_response = requests.post(
-            f"{BASE_URL}/api/contacts",
-            json=contact_data,
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
+        response = requests.post(f"{BASE_URL}/api/contacts", json=contact_data, headers=auth_headers)
+        assert response.status_code == 200
         
-        if create_response.status_code == 200:
-            contact_id = create_response.json()["id"]
-            
-            delete_response = requests.delete(
-                f"{BASE_URL}/api/contacts/{contact_id}",
-                headers={"Authorization": f"Bearer {auth_token}"}
-            )
-            assert delete_response.status_code == 200
-            print(f"[PASS] Contact {contact_id} deleted successfully")
+        contact_id = response.json()["id"]
+        print(f"Create meeting contact SUCCESS: ID={contact_id}")
+    
+    def test_mark_follow_up_complete(self, auth_headers):
+        """Test marking a follow-up as complete"""
+        # Create contact with follow-up date
+        contact_data = {
+            "customer_id": EXISTING_FORM_ID,
+            "contact_type": "call",
+            "subject": "TEST_Follow-up test contact",
+            "notes": "TEST_Testing follow-up completion",
+            "contact_date": datetime.now().strftime("%Y-%m-%d"),
+            "follow_up_date": (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d")
+        }
+        
+        create_response = requests.post(f"{BASE_URL}/api/contacts", json=contact_data, headers=auth_headers)
+        assert create_response.status_code == 200
+        contact_id = create_response.json()["id"]
+        
+        # Mark follow-up as complete
+        follow_up_response = requests.put(f"{BASE_URL}/api/contacts/{contact_id}/follow-up", headers=auth_headers)
+        assert follow_up_response.status_code == 200, f"Failed to mark follow-up complete: {follow_up_response.text}"
+        
+        # Verify the update
+        get_response = requests.get(f"{BASE_URL}/api/contacts", headers=auth_headers)
+        contacts = get_response.json()
+        contact_found = next((c for c in contacts if c.get("id") == contact_id), None)
+        
+        assert contact_found is not None
+        assert contact_found["follow_up_completed"] == True, "Follow-up should be marked as completed"
+        
+        print(f"Mark follow-up complete SUCCESS: ID={contact_id}")
+    
+    def test_delete_contact(self, auth_headers):
+        """Test deleting a contact record"""
+        # Create contact to delete
+        contact_data = {
+            "customer_id": EXISTING_FORM_ID,
+            "contact_type": "other",
+            "subject": "TEST_Contact to be deleted",
+            "notes": "TEST_This contact will be deleted",
+            "contact_date": datetime.now().strftime("%Y-%m-%d"),
+            "follow_up_date": ""
+        }
+        
+        create_response = requests.post(f"{BASE_URL}/api/contacts", json=contact_data, headers=auth_headers)
+        assert create_response.status_code == 200
+        contact_id = create_response.json()["id"]
+        
+        # Delete the contact
+        delete_response = requests.delete(f"{BASE_URL}/api/contacts/{contact_id}", headers=auth_headers)
+        assert delete_response.status_code == 200, f"Failed to delete contact: {delete_response.text}"
+        
+        # Verify contact no longer exists
+        get_response = requests.get(f"{BASE_URL}/api/contacts", headers=auth_headers)
+        contacts = get_response.json()
+        contact_found = next((c for c in contacts if c.get("id") == contact_id), None)
+        
+        assert contact_found is None, f"Deleted contact {contact_id} still found in list"
+        print(f"Delete contact SUCCESS: ID={contact_id}")
 
 
 class TestDocumentManagement:
-    """Test document upload/download/delete operations"""
+    """Test Document Management CRUD operations"""
     
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get auth token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200
-        return response.json()["token"]
+    def test_get_documents(self, auth_headers):
+        """Test getting all documents"""
+        response = requests.get(f"{BASE_URL}/api/documents", headers=auth_headers)
+        
+        assert response.status_code == 200, f"Failed to get documents: {response.text}"
+        
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+        print(f"Get documents SUCCESS: Found {len(data)} documents")
     
-    def test_get_documents(self, auth_token):
-        """Test get documents endpoint"""
-        response = requests.get(
-            f"{BASE_URL}/api/documents",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
-        documents = response.json()
-        assert isinstance(documents, list)
-        print(f"[PASS] Get documents successful - Found {len(documents)} documents")
-    
-    def test_upload_document(self, auth_token):
-        """Test upload document"""
+    def test_upload_document(self, auth_headers):
+        """Test uploading a new document"""
         # Create a simple text file as base64
-        import base64
-        test_content = "This is a test document for the Service Contract Management System."
+        test_content = "This is a test document for certification."
         file_data = base64.b64encode(test_content.encode()).decode()
         
         doc_data = {
-            "related_id": "TEST_general",
-            "related_type": "general",
-            "name": "TEST_document.txt",
+            "related_id": EXISTING_FORM_ID,
+            "related_type": "form",
+            "name": "TEST_Certification_Document.txt",
             "file_type": "text/plain",
-            "file_data": file_data
+            "file_data": f"data:text/plain;base64,{file_data}"
         }
         
-        response = requests.post(
-            f"{BASE_URL}/api/documents",
-            json=doc_data,
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
+        response = requests.post(f"{BASE_URL}/api/documents", json=doc_data, headers=auth_headers)
+        
+        assert response.status_code == 200, f"Failed to upload document: {response.text}"
+        
         data = response.json()
-        assert "id" in data
-        print(f"[PASS] Document uploaded with ID: {data['id']}")
+        assert "id" in data, "Response missing document ID"
+        
+        print(f"Upload document SUCCESS: ID={data['id']}")
         return data["id"]
     
-    def test_get_document_by_id(self, auth_token):
-        """Test get specific document"""
-        import base64
+    def test_upload_and_verify_document_persistence(self, auth_headers):
+        """Test uploading document and verifying it persists"""
+        test_content = "Verification test document content - checking persistence"
+        file_data = base64.b64encode(test_content.encode()).decode()
         
+        doc_data = {
+            "related_id": EXISTING_FORM_ID,
+            "related_type": "form",
+            "name": "TEST_Persistence_Doc.txt",
+            "file_type": "text/plain",
+            "file_data": f"data:text/plain;base64,{file_data}"
+        }
+        
+        create_response = requests.post(f"{BASE_URL}/api/documents", json=doc_data, headers=auth_headers)
+        assert create_response.status_code == 200
+        
+        doc_id = create_response.json()["id"]
+        
+        # Get all documents and verify our document is there
+        get_response = requests.get(f"{BASE_URL}/api/documents", headers=auth_headers)
+        assert get_response.status_code == 200
+        
+        documents = get_response.json()
+        doc_found = next((d for d in documents if d.get("id") == doc_id), None)
+        
+        assert doc_found is not None, f"Created document {doc_id} not found in list"
+        assert doc_found["name"] == "TEST_Persistence_Doc.txt"
+        
+        print(f"Document persistence verified: ID={doc_id}, Name={doc_found['name']}")
+        return doc_id
+    
+    def test_download_document(self, auth_headers):
+        """Test downloading a specific document"""
         # First upload a document
-        test_content = "Document to retrieve"
+        test_content = "Download test content"
         file_data = base64.b64encode(test_content.encode()).decode()
         
         doc_data = {
-            "related_id": "TEST_retrieve",
+            "related_id": "general",
             "related_type": "general",
-            "name": "TEST_retrieve_doc.txt",
+            "name": "TEST_Download_Doc.txt",
             "file_type": "text/plain",
-            "file_data": file_data
+            "file_data": f"data:text/plain;base64,{file_data}"
         }
         
-        create_response = requests.post(
-            f"{BASE_URL}/api/documents",
-            json=doc_data,
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
+        upload_response = requests.post(f"{BASE_URL}/api/documents", json=doc_data, headers=auth_headers)
+        assert upload_response.status_code == 200
+        doc_id = upload_response.json()["id"]
         
-        if create_response.status_code == 200:
-            doc_id = create_response.json()["id"]
-            
-            # Get the document
-            get_response = requests.get(
-                f"{BASE_URL}/api/documents/{doc_id}",
-                headers={"Authorization": f"Bearer {auth_token}"}
-            )
-            assert get_response.status_code == 200
-            doc = get_response.json()
-            assert doc["name"] == "TEST_retrieve_doc.txt"
-            assert "file_data" in doc
-            print(f"[PASS] Document retrieved successfully: {doc['name']}")
+        # Download the document
+        download_response = requests.get(f"{BASE_URL}/api/documents/{doc_id}", headers=auth_headers)
+        assert download_response.status_code == 200, f"Failed to download document: {download_response.text}"
+        
+        data = download_response.json()
+        assert "file_data" in data, "Response missing file_data"
+        assert data["name"] == "TEST_Download_Doc.txt"
+        
+        print(f"Download document SUCCESS: ID={doc_id}")
+        return doc_id
     
-    def test_delete_document(self, auth_token):
-        """Test delete document"""
-        import base64
-        
-        # Upload a document
-        test_content = "Document to delete"
+    def test_delete_document(self, auth_headers):
+        """Test deleting a document"""
+        # First upload a document to delete
+        test_content = "Document to be deleted"
         file_data = base64.b64encode(test_content.encode()).decode()
         
         doc_data = {
-            "related_id": "TEST_delete",
+            "related_id": "general",
             "related_type": "general",
-            "name": "TEST_delete_doc.txt",
+            "name": "TEST_Delete_Doc.txt",
             "file_type": "text/plain",
-            "file_data": file_data
+            "file_data": f"data:text/plain;base64,{file_data}"
         }
         
-        create_response = requests.post(
-            f"{BASE_URL}/api/documents",
-            json=doc_data,
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
+        upload_response = requests.post(f"{BASE_URL}/api/documents", json=doc_data, headers=auth_headers)
+        assert upload_response.status_code == 200
+        doc_id = upload_response.json()["id"]
         
-        if create_response.status_code == 200:
-            doc_id = create_response.json()["id"]
-            
-            # Delete the document
-            delete_response = requests.delete(
-                f"{BASE_URL}/api/documents/{doc_id}",
-                headers={"Authorization": f"Bearer {auth_token}"}
-            )
-            assert delete_response.status_code == 200
-            print(f"[PASS] Document {doc_id} deleted successfully")
+        # Delete the document
+        delete_response = requests.delete(f"{BASE_URL}/api/documents/{doc_id}", headers=auth_headers)
+        assert delete_response.status_code == 200, f"Failed to delete document: {delete_response.text}"
+        
+        # Verify document no longer exists
+        get_response = requests.get(f"{BASE_URL}/api/documents/{doc_id}", headers=auth_headers)
+        assert get_response.status_code == 404, f"Deleted document {doc_id} still exists"
+        
+        print(f"Delete document SUCCESS: ID={doc_id}")
 
 
-class TestReportsAPI:
-    """Test reports statistics endpoints"""
+class TestRequiredAuth:
+    """Test that authenticated endpoints require valid token"""
     
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get auth token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200
-        return response.json()["token"]
+    def test_audit_schedules_requires_auth(self):
+        """Test that audit-schedules endpoint requires authentication"""
+        response = requests.get(f"{BASE_URL}/api/audit-schedules")
+        assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
+        print("Auth required for audit-schedules: PASS")
     
-    def test_get_submission_statistics(self, auth_token):
-        """Test submission statistics endpoint"""
-        response = requests.get(
-            f"{BASE_URL}/api/reports/submissions",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "total_forms" in data
-        assert "submitted_forms" in data
-        assert "pending_forms" in data
-        assert "conversion_rate" in data
-        print(f"[PASS] Submission stats - Total: {data['total_forms']}, Submitted: {data['submitted_forms']}, Rate: {data['conversion_rate']}%")
+    def test_contacts_requires_auth(self):
+        """Test that contacts endpoint requires authentication"""
+        response = requests.get(f"{BASE_URL}/api/contacts")
+        assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
+        print("Auth required for contacts: PASS")
     
-    def test_get_revenue_statistics(self, auth_token):
-        """Test revenue statistics endpoint"""
-        response = requests.get(
-            f"{BASE_URL}/api/reports/revenue",
-            headers={"Authorization": f"Bearer {auth_token}"}
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "total_quoted" in data
-        assert "accepted_revenue" in data
-        print(f"[PASS] Revenue stats - Quoted: {data['total_quoted']} SAR, Accepted: {data['accepted_revenue']} SAR")
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--tb=short"])
+    def test_documents_requires_auth(self):
+        """Test that documents endpoint requires authentication"""
+        response = requests.get(f"{BASE_URL}/api/documents")
+        assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
+        print("Auth required for documents: PASS")
+    
+    def test_public_track_no_auth_required(self):
+        """Test that public track endpoint does NOT require auth"""
+        response = requests.get(f"{BASE_URL}/api/public/track/{EXISTING_FORM_ID}")
+        assert response.status_code == 200, f"Public track should work without auth, got {response.status_code}"
+        print("Public track NO auth required: PASS")

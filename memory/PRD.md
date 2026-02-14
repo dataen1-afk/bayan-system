@@ -10,224 +10,162 @@ Build a full-stack application for managing service contracts for Bayan Auditing
 6. Admin reviews the submission and creates a price quote/proposal
 7. Client can approve or reject the proposal
 8. **If approved**: Client fills the Certification Agreement form
-9. Agreement submission finalizes the contract
-
-## User Personas
-- **Admin**: Creates forms, manages quotations, and oversees contracts
-- **Client**: Fills forms via public links (no system account needed)
-
-## Core Requirements
-- **User Roles**: Admin only has system access; Clients access forms via public links
-- **Authentication**: Admin-only JWT authentication
-- **UI/UX**: Professional, branded interface matching "Bayan Auditing & Conformity" logo
-- **Multi-language Support**: English and Arabic with RTL layout for Arabic
-- **Public Form Access**: Clients can fill forms without logging in
+9. Agreement submission finalizes the contract & PDF is generated
 
 ## Tech Stack
-- **Backend**: FastAPI (Python), Motor (async MongoDB driver), Pydantic, JWT
+- **Backend**: FastAPI (Python), Motor (async MongoDB driver), Pydantic, JWT, ReportLab (PDF)
 - **Frontend**: React, Tailwind CSS, shadcn/ui, react-router-dom, axios
 - **Internationalization**: i18next, react-i18next
 - **Database**: MongoDB
 
-## Complete Workflow Diagram
+## Complete Workflow
 ```
 Admin creates form → Client fills form (public link) → Form submitted → 
 Audit calculation runs → Admin creates proposal → Proposal sent to client →
-Client accepts proposal → Client fills Agreement form → Contract finalized
+Client accepts proposal → Client fills Agreement form → Contract PDF generated
 ```
 
 ## Completed Features (December 2025)
 
-### Phase 1: Core Application ✅
+### Core Features ✅
 - Full Form → Quotation → Contract workflow
 - Admin dashboard with form management
-- JWT authentication
+- JWT authentication for admin
+- Public form access via unique tokens
+- Automated audit duration calculation
 
-### Phase 2: Branding & UI ✅
+### Branding & Localization ✅
 - Company logo integration (high-quality)
 - Professional color scheme matching Bayan brand
-- Collapsible sidebar navigation
-
-### Phase 3: Internationalization ✅
 - English/Arabic language switching
-- Complete Arabic translations
-- Full RTL Layout support
+- Full RTL layout support for Arabic
 
-### Phase 4: Multi-Step Application Form Wizard ✅
-- 6-Step Certification Application Wizard
-- Form validation and draft saving
-- Declaration section
+### Proposal System ✅
+- Create Proposal page with fee inputs
+- Public Proposal page for client review
+- Accept/Reject functionality
+- Proposal access via unique tokens
 
-### Phase 5: Public Form Access ✅
-- Admin creates forms with unique access tokens
-- Public form page at `/form/{access_token}`
-- No login required for clients
-- Copy link functionality
+### Certification Agreement ✅
+- Agreement form shows after proposal acceptance
+- Pre-fills data from proposal
+- 6 acknowledgement checkboxes
+- Signatory information capture
 
-### Phase 6: Automated Audit Calculation ✅
-- Business logic from Excel file implemented
-- Calculates audit duration based on:
-  - Number of employees
-  - Number of sites
-  - Certification standards selected
-- Results displayed on Admin Dashboard
+### PDF Contract Generation ✅ (NEW - Dec 2025)
+- Professional PDF contracts with company branding
+- Includes: parties, standards, scope, sites, audit duration, fees, terms, signatures
+- Admin can download via `/api/contracts/{agreement_id}/pdf`
+- Client can download via `/api/public/contracts/{access_token}/pdf`
 
-### Phase 7: Proposal/Quotation System ✅
-- **Create Proposal Page** (`/create-proposal/{formId}`):
-  - Pre-fills data from application form
-  - Service fees input (Initial, Surveillance 1 & 2, Recertification)
-  - Auto-calculates total amount
-  - Notes and validity period
-  - Save & Send functionality
+### Admin Notifications ✅ (NEW - Dec 2025)
+- Bell icon in header with unread count badge
+- Dropdown shows recent notifications
+- Notification types: form_submitted, proposal_accepted, proposal_rejected, agreement_signed
+- Mark as read / Mark all as read functionality
 
-- **Public Proposal Page** (`/proposal/{access_token}`):
-  - Client views full proposal details
-  - Audit duration breakdown
-  - Service fees in SAR
-  - Terms and conditions
-  - Accept/Reject buttons
+### Contract Status Timeline ✅ (NEW - Dec 2025)
+- Compact view on dashboard form cards (X/6 progress indicator)
+- 6 stages: Created → Submitted → Proposal Sent → Accepted → Agreement Signed → Contract Generated
+- Visual progress with icons and colors
 
-### Phase 8: Certification Agreement Form ✅ (NEW - Dec 2025)
-- **Agreement Page** (`/agreement/{access_token}`):
-  - Shows after client accepts proposal
-  - Pre-fills data from proposal
-  - Sections:
-    1. Parties to Agreement (BAC info + Client info)
-    2. Management System Standards (ISO checkboxes)
-    3. Scope of Services
-    4. Sites for Certification
-    5. Acknowledgements (6 required checkboxes)
-    6. Signatory Information (Name, Position, Date)
-  - Submit Agreement button
-  - Success page after submission
+### Templates Feature ✅ (NEW - Dec 2025)
+- **Certification Packages**: Pre-configured ISO packages
+  - QMS Basic (ISO 9001)
+  - EMS Basic (ISO 14001)
+  - OHS Basic (ISO 45001)
+  - Integrated Management System (9001+14001+45001)
+  - Food Safety (ISO 22000)
+  - Information Security (ISO 27001)
+- **Proposal Templates**: Default pricing tiers
+  - Standard Pricing
+  - Small Business (discounted)
+  - Enterprise
+
+### Reports & Analytics ✅ (NEW - Dec 2025)
+- **Summary Cards**: Total forms, submitted, conversion rate, contracts
+- **Revenue Overview**: Total quoted, accepted, pending, rejected
+- **Proposal Statistics**: With conversion progress bar
+- **Monthly Submissions Chart**: Last 6 months bar chart
 
 ## API Endpoints
 
-### Authentication (Admin Only)
+### Authentication
 - `POST /api/auth/login` - Admin login
 - `GET /api/auth/me` - Get current user
 
-### Application Forms (Admin)
-- `POST /api/application-forms` - Create form with client info
-- `GET /api/application-forms` - List all forms
-- `GET /api/application-forms/{id}` - Get specific form
-- `POST /api/application-forms/{id}/send-email` - Send form link (MOCKED)
+### Application Forms
+- `POST /api/application-forms` - Create form
+- `GET /api/application-forms` - List forms
+- `GET /api/public/form/{access_token}` - Get form (public)
+- `POST /api/public/form/{access_token}/submit` - Submit form
 
-### Public Form Access (No Auth)
-- `GET /api/public/form/{access_token}` - Get form for client
-- `PUT /api/public/form/{access_token}` - Save draft
-- `POST /api/public/form/{access_token}/submit` - Submit form (triggers audit calculation)
-
-### Proposals (Admin)
+### Proposals
 - `POST /api/proposals` - Create proposal
 - `GET /api/proposals` - List proposals
-- `POST /api/proposals/{id}/send` - Send proposal to client
+- `GET /api/public/proposal/{access_token}` - Get proposal (public)
+- `POST /api/public/proposal/{access_token}/respond` - Accept/Reject
 
-### Public Proposal (No Auth)
-- `GET /api/public/proposal/{access_token}` - Get proposal details
-- `POST /api/public/proposal/{access_token}/respond` - Accept/Reject proposal
-
-### Certification Agreement (No Auth)
+### Agreement & Contracts
 - `GET /api/public/agreement/{access_token}` - Get agreement status
-- `POST /api/public/agreement/{access_token}/submit` - Submit signed agreement
+- `POST /api/public/agreement/{access_token}/submit` - Submit agreement
+- `GET /api/contracts/{agreement_id}/pdf` - Download contract (admin)
+- `GET /api/public/contracts/{access_token}/pdf` - Download contract (public)
 
-## Database Schema
+### Notifications
+- `GET /api/notifications` - Get notifications (with limit, unread_only params)
+- `PUT /api/notifications/{id}/read` - Mark as read
+- `PUT /api/notifications/read-all` - Mark all as read
 
-### ApplicationForm
-```json
-{
-  "id": "UUID",
-  "access_token": "UUID",
-  "client_info": { "name", "company_name", "email", "phone" },
-  "company_data": { /* 6-step wizard data */ },
-  "audit_calculation": { "stage_1", "stage_2", "total_days", "integration_discount" },
-  "status": "pending | submitted | under_review | approved | agreement_signed",
-  "created_at": "datetime",
-  "submitted_at": "datetime"
-}
-```
+### Templates
+- `GET /api/templates/packages` - Get certification packages
+- `POST /api/templates/packages` - Create package
+- `DELETE /api/templates/packages/{id}` - Delete package
+- `GET /api/templates/proposals` - Get proposal templates
+- `POST /api/templates/proposals` - Create template
+- `DELETE /api/templates/proposals/{id}` - Delete template
 
-### Proposal
-```json
-{
-  "id": "UUID",
-  "access_token": "UUID",
-  "application_form_id": "UUID",
-  "organization_name": "string",
-  "service_fees": { "initial_certification", "surveillance_1", "surveillance_2", "recertification" },
-  "audit_duration": { "stage_1", "stage_2", "surveillance_1", "surveillance_2", "recertification" },
-  "total_amount": "float",
-  "status": "draft | sent | accepted | rejected | agreement_signed",
-  "issued_date": "datetime"
-}
-```
+### Reports
+- `GET /api/reports/submissions` - Submission statistics
+- `GET /api/reports/revenue` - Revenue statistics
 
-### CertificationAgreement
-```json
-{
-  "id": "UUID",
-  "proposal_id": "UUID",
-  "proposal_access_token": "UUID",
-  "organization_name": "string",
-  "selected_standards": ["ISO9001", "ISO14001"],
-  "scope_of_services": "string",
-  "sites": ["address1", "address2"],
-  "signatory_name": "string",
-  "signatory_position": "string",
-  "acknowledgements": { /* 6 boolean fields */ },
-  "status": "submitted | contract_generated",
-  "created_at": "datetime"
-}
-```
+## Test Credentials
+- **Admin**: admin@test.com / admin123
+
+## Testing Status (Dec 2025)
+- Backend API: 100% (19/19 tests passed)
+- Frontend UI: 100%
+- Test Reports: `/app/test_reports/iteration_5.json`
+
+## MOCKED Integrations
+- **Email Sending**: MOCKED - Logs to console instead of sending real emails
 
 ## File Structure
 ```
 /app/
 ├── backend/
-│   ├── server.py
+│   ├── server.py (main API)
 │   ├── audit_calculator.py (audit duration logic)
-│   ├── tests/
-│   │   ├── test_service_contract.py
-│   │   └── test_agreement.py
-│   └── .env
+│   ├── pdf_generator.py (contract PDF generation)
+│   └── tests/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── ApplicationForm.js
-│   │   │   ├── LanguageSwitcher.js
-│   │   │   └── Sidebar.js
+│   │   │   ├── NotificationBell.js (NEW)
+│   │   │   ├── StatusTimeline.js (NEW)
+│   │   │   └── ...
 │   │   ├── pages/
 │   │   │   ├── AdminDashboard.js
-│   │   │   ├── LoginPage.js
-│   │   │   ├── PublicFormPage.js
-│   │   │   ├── CreateProposalPage.js
-│   │   │   ├── PublicProposalPage.js
-│   │   │   └── CertificationAgreementPage.js (NEW)
-│   │   ├── App.js
+│   │   │   ├── ReportsPage.js (NEW)
+│   │   │   ├── TemplatesPage.js (NEW)
+│   │   │   ├── CertificationAgreementPage.js
+│   │   │   └── ...
 │   │   └── i18n.js
-│   └── tailwind.config.js
 └── test_reports/
-    └── iteration_4.json
 ```
 
-## Test Credentials
-- **Admin**: admin@test.com / admin123
-
-## Testing Status
-- Backend API: 100% PASSED
-- Frontend UI: 100% PASSED
-- Test Reports: `/app/test_reports/iteration_4.json`
-
-## MOCKED Integrations
-- **Email Sending**: MOCKED - Logs to console instead of sending real emails
-
-## Upcoming Tasks (P1)
-1. **PDF Contract Generation**: Generate PDF from signed agreement
-2. **Admin Notifications**: Alerts when forms submitted or proposals actioned
-3. **Fix form button visibility**: Sticky footer for navigation buttons
-
-## Future/Backlog Tasks (P2)
-1. **Enable Real Email Sending**: Integrate SendGrid or SMTP
-2. **Templates Feature**: Reusable form and proposal templates
-3. **Reports Section**: Business analytics
-4. **Clean up ClientDashboard.js**: Remove legacy component
+## Future Enhancements
+- Enable real email sending (SendGrid integration)
+- Client portal for tracking application status
+- Document upload for supporting materials
+- Multi-site audit scheduling

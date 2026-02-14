@@ -228,6 +228,13 @@ class ClientInfo(BaseModel):
     email: EmailStr
     phone: str
 
+class AuditCalculationResult(BaseModel):
+    certifications: Dict[str, Any] = {}
+    total_md: float = 0
+    reduction: float = 0
+    final_total_md: float = 0
+    phases: Dict[str, float] = {}
+
 class ApplicationFormCreate(BaseModel):
     client_info: ClientInfo
 
@@ -236,6 +243,7 @@ class ApplicationForm(BaseModel):
     access_token: str = Field(default_factory=lambda: str(uuid.uuid4()))  # Public access token
     client_info: ClientInfo
     company_data: Optional[ApplicationFormData] = None
+    audit_calculation: Optional[AuditCalculationResult] = None  # Auto-calculated on submit
     status: str = "pending"  # pending, submitted, under_review, approved, rejected
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     submitted_at: Optional[datetime] = None

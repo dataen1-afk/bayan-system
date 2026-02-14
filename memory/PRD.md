@@ -40,6 +40,12 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - English/Arabic language switching
 - Full RTL layout support for Arabic
 
+### UI/UX Improvements ✅ (NEW - Feb 2026)
+- **Forms Screen**: Quick Stats header (Total, Pending, Submitted, Completed), improved list design with status badges
+- **Quotations Screen**: Quick Stats header (Total Proposals, Pending Review, Accepted, Total Quoted), prominent pricing
+- **Contracts Screen**: Stats cards (Total Contracts, Revenue, Most Recent), Download PDF buttons
+- **Notification Dropdown**: "Mark All as Read" now clears notifications from dropdown immediately
+
 ### Proposal System ✅
 - Create Proposal page with fee inputs
 - Public Proposal page for client review

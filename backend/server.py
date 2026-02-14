@@ -697,7 +697,8 @@ async def create_application_form(form_data: ApplicationFormCreate, current_user
 @api_router.get("/application-forms", response_model=List[ApplicationForm])
 async def get_application_forms(current_user: dict = Depends(require_admin)):
     """Get all application forms (admin only)"""
-    forms = await db.application_forms.find({}, {"_id": 0}).to_list(1000)
+    # Only return forms that have client_info (new format)
+    forms = await db.application_forms.find({"client_info": {"$exists": True}}, {"_id": 0}).to_list(1000)
     
     for form in forms:
         if isinstance(form.get('created_at'), str):

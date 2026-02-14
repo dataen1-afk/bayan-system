@@ -540,82 +540,144 @@ const AdminDashboard = () => {
         );
 
       case 'quotations':
+        // Calculate stats for quotations
+        const totalProposals = proposals.length;
+        const pendingProposals = proposals.filter(p => p.status === 'pending' || p.status === 'sent').length;
+        const acceptedProposals = proposals.filter(p => ['accepted', 'agreement_signed'].includes(p.status)).length;
+        const totalQuotedValue = proposals.reduce((sum, p) => sum + (p.total_amount || 0), 0);
+        
         return (
           <div className="space-y-6">
+            {/* Quick Stats Header */}
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-slate-100 rounded-lg">
+                    <DollarSign className="w-5 h-5 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{totalProposals}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('totalProposals')}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-amber-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-amber-50 rounded-lg">
+                    <Clock className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-amber-700">{pendingProposals}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('pendingReview')}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-emerald-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-emerald-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-emerald-700">{acceptedProposals}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('accepted')}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <BarChart3 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold text-blue-700">
+                      {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(totalQuotedValue)}
+                    </p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('totalQuoted')}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             {/* Proposals/Quotations List */}
-            <Card>
-              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5" />
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className={`border-b border-slate-100 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <CardTitle className={`flex items-center gap-2 text-lg font-semibold text-slate-900 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <DollarSign className="w-5 h-5 text-bayan-navy" />
                   {t('allProposals')}
                 </CardTitle>
-                <CardDescription>{t('trackProposalStatus')}</CardDescription>
+                <CardDescription className="text-sm text-slate-500">{t('trackProposalStatus')}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4" data-testid="proposals-list">
+              <CardContent className="p-0">
+                <div className="divide-y divide-slate-100" data-testid="proposals-list">
                   {proposals.length === 0 ? (
-                    <EmptyState
-                      icon={DollarSign}
-                      title={t('noProposalsYet')}
-                      description={t('createProposalFromForms')}
-                      helpText={t('proposalsEmptyStateHelp')}
-                    />
+                    <div className="text-center py-16 px-4">
+                      <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                        <DollarSign className="w-10 h-10 text-slate-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('noProposalsYet')}</h3>
+                      <p className="text-sm text-slate-500 mb-2 max-w-sm mx-auto">{t('createProposalFromForms')}</p>
+                    </div>
                   ) : (
-                    proposals.map((proposal) => (
+                    proposals.map((proposal, index) => (
                       <div 
                         key={proposal.id} 
-                        className="p-4 border rounded-lg hover:shadow-md transition-all bg-white"
+                        className={`group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${isRTL ? 'lg:flex-row-reverse' : ''}`}
                         data-testid={`proposal-${proposal.id}`}
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <div className={`flex justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                            <h3 className="font-semibold text-lg text-gray-800">
+                        {/* Main Info */}
+                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <h3 className="font-semibold text-slate-900 truncate">
                               {proposal.organization_name}
                             </h3>
-                            <p className="text-sm text-gray-600">
-                              {t('contactPerson')}: {proposal.contact_person}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {t('email')}: {proposal.contact_email}
-                            </p>
-                            
-                            {/* Standards badges */}
-                            <div className={`flex flex-wrap gap-1 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              {proposal.standards?.map((std) => (
-                                <span key={std} className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
-                                  {std}
-                                </span>
-                              ))}
-                            </div>
-                            
-                            {/* Price */}
-                            <p className="text-xl font-bold text-green-600 mt-2">
-                              {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR' }).format(proposal.total_amount || 0)}
-                            </p>
-                            
-                            {/* Status Timeline */}
-                            <div className="mt-3">
-                              <StatusTimeline status={proposal.status} compact={true} />
-                            </div>
-                          </div>
-                          
-                          <div className={`flex flex-col gap-2 ${isRTL ? 'items-start' : 'items-end'}`}>
-                            {/* Status badge */}
-                            <span className={`px-3 py-1 text-sm rounded-full font-medium ${
-                              proposal.status === 'accepted' || proposal.status === 'agreement_signed' ? 'bg-green-100 text-green-800' :
-                              proposal.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              proposal.status === 'sent' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
+                            {/* Status Badge */}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                              proposal.status === 'accepted' || proposal.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              proposal.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                              proposal.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              proposal.status === 'modification_requested' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                              'bg-amber-50 text-amber-700 border-amber-200'
                             }`}>
                               {t(proposal.status)}
                             </span>
-                            
-                            {/* Date */}
-                            <p className="text-xs text-gray-500">
-                              {proposal.issued_date ? new Date(proposal.issued_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US') : ''}
+                          </div>
+                          
+                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <span>{proposal.contact_person}</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-slate-500">{proposal.contact_email}</span>
+                          </div>
+                          
+                          {/* Standards badges */}
+                          <div className={`flex flex-wrap gap-1.5 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            {proposal.standards?.map((std) => (
+                              <span key={std} className="px-2 py-0.5 bg-bayan-navy/10 text-bayan-navy text-xs font-medium rounded">
+                                {std}
+                              </span>
+                            ))}
+                          </div>
+                          
+                          {/* Date */}
+                          {proposal.issued_date && (
+                            <p className="text-xs text-slate-400 mt-2">
+                              {t('issuedOn')}: {new Date(proposal.issued_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
                             </p>
-                            
-                            {/* View Link */}
+                          )}
+                        </div>
+                        
+                        {/* Price & Actions */}
+                        <div className={`flex flex-col items-end gap-3 mt-4 lg:mt-0 ${isRTL ? 'items-start' : 'items-end'}`}>
+                          {/* Price prominently displayed */}
+                          <div className={`text-end ${isRTL ? 'text-start' : ''}`}>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(proposal.total_amount || 0)}
+                            </p>
+                            <p className="text-xs text-slate-500">{t('totalAmount')}</p>
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {proposal.access_token && (
                               <Button
                                 size="sm"
@@ -624,14 +686,13 @@ const AdminDashboard = () => {
                                   const url = `${window.location.origin}/proposal/${proposal.access_token}`;
                                   window.open(url, '_blank');
                                 }}
-                                className="mt-2"
+                                className="h-9 border-slate-200"
                               >
-                                <Eye className="w-4 h-4 mr-1" />
+                                <Eye className="w-4 h-4 me-1.5" />
                                 {t('viewProposal')}
                               </Button>
                             )}
                             
-                            {/* Download Contract if agreement signed */}
                             {proposal.status === 'agreement_signed' && (
                               <Button
                                 size="sm"
@@ -651,9 +712,9 @@ const AdminDashboard = () => {
                                     console.error('Error downloading contract:', error);
                                   }
                                 }}
-                                className="bg-green-600 hover:bg-green-700"
+                                className="h-9 bg-emerald-600 hover:bg-emerald-700 shadow-sm"
                               >
-                                <Download className="w-4 h-4 mr-1" />
+                                <Download className="w-4 h-4 me-1.5" />
                                 {t('downloadContract')}
                               </Button>
                             )}

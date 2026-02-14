@@ -591,6 +591,12 @@ const resources = {
       "conversionProgress": "Conversion Progress",
       "monthlySubmissions": "Monthly Submissions",
       "lastSixMonths": "Submissions over the last 6 months",
+      "auditDays": "Audit Days",
+      "pendingReview": "Pending Review",
+      "issuedOn": "Issued On",
+      "signedAgreements": "Signed Agreements",
+      "signedOn": "Signed On",
+      "downloadPDF": "Download PDF",
       
       // Templates
       "templatesManagement": "Templates Management",

@@ -1169,6 +1169,10 @@ const resources = {
       "contactPerson": "جهة الاتصال",
       "sent": "مرسل",
       "draft": "مسودة",
+      "agreement_signed": "تم توقيع الاتفاقية",
+      "accepted": "مقبول",
+      "rejected": "مرفوض",
+      "pending": "قيد الانتظار",
       
       // Notifications
       "notifications": "الإشعارات",

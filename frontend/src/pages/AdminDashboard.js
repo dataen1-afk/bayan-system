@@ -548,69 +548,6 @@ const AdminDashboard = () => {
                             </div>
                           )}
                         </div>
-                        
-                        {/* Actions */}
-                        <div className={`flex items-center gap-2 mt-3 lg:mt-0 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
-                          {form.status === 'pending' && (
-                            <>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => copyFormLink(form)}
-                                data-testid={`copy-link-${form.id}`}
-                                className="h-9 px-3 text-slate-600 hover:text-bayan-navy hover:bg-slate-100"
-                              >
-                                <Copy className="w-4 h-4 me-1.5" />
-                                {t('copyLink')}
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleSendEmail(form.id)}
-                                disabled={sendingEmail}
-                                data-testid={`send-email-${form.id}`}
-                                className="h-9 px-3 text-slate-600 hover:text-bayan-navy hover:bg-slate-100"
-                              >
-                                <Mail className="w-4 h-4 me-1.5" />
-                                {t('sendEmail')}
-                              </Button>
-                            </>
-                          )}
-                          {form.status === 'submitted' && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleViewApplicationForm(form)}
-                                data-testid={`view-form-${form.id}`}
-                                className="h-9 border-slate-200"
-                              >
-                                <Eye className="w-4 h-4 me-1.5" />
-                                {t('view')}
-                              </Button>
-                              <Button 
-                                size="sm"
-                                onClick={() => handleCreateQuotationFromForm(form)}
-                                data-testid={`create-quote-${form.id}`}
-                                className="h-9 bg-emerald-600 hover:bg-emerald-700 shadow-sm"
-                              >
-                                <DollarSign className="w-4 h-4 me-1.5" />
-                                {t('createQuotation')}
-                              </Button>
-                            </>
-                          )}
-                          {form.status === 'agreement_signed' && (
-                            <Button 
-                              size="sm"
-                              onClick={() => handleDownloadContract(form.id)}
-                              data-testid={`download-contract-${form.id}`}
-                              className="h-9 bg-bayan-navy hover:bg-bayan-navy-light shadow-sm"
-                            >
-                              <Download className="w-4 h-4 me-1.5" />
-                              {t('downloadContract')}
-                            </Button>
-                          )}
-                        </div>
                       </div>
                     ))
                   )}

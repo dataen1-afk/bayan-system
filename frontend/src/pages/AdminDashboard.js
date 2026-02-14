@@ -93,12 +93,14 @@ const AdminDashboard = () => {
         axios.get(`${API}/forms`),
         axios.get(`${API}/quotations`),
         axios.get(`${API}/contracts`),
-        axios.get(`${API}/application-forms`)
+        axios.get(`${API}/application-forms`),
+        axios.get(`${API}/proposals`)
       ]);
       setForms(formsRes.data);
       setQuotations(quotationsRes.data);
       setContracts(contractsRes.data);
       setApplicationForms(applicationFormsRes.data);
+      setProposals(proposalsRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

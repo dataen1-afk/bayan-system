@@ -532,7 +532,9 @@ const resources = {
       "fillSignatoryDetails": "Please fill in signatory name and position",
       "acceptAllAcknowledgements": "Please accept all acknowledgements to continue",
       "pleaseCompleteAgreementForm": "Please complete the certification agreement form to finalize your certification.",
-      "continueToAgreement": "Continue to Agreement Form"
+      "continueToAgreement": "Continue to Agreement Form",
+      "agreementAlreadySigned": "The certification agreement has already been signed.",
+      "viewAgreement": "View Agreement"
     }
   },
   ar: {

@@ -353,6 +353,32 @@ const AuditSchedulingPage = () => {
                   </div>
                   
                   <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    {/* Sync to Google Calendar button */}
+                    {calendarStatus.connected && !audit.calendar_event_id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSyncToCalendar(audit.id);
+                        }}
+                        disabled={syncingAudit === audit.id}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                        title={t('syncToCalendar')}
+                      >
+                        {syncingAudit === audit.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Link2 className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
+                    {audit.calendar_event_id && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        {t('synced')}
+                      </span>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"

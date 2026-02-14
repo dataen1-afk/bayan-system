@@ -2305,8 +2305,8 @@ async def export_report(
             
             # Data rows
             for row, form in enumerate(forms, 2):
-                client_info = form.get('client_info', {})
-                company_data = form.get('company_data', {})
+                client_info = form.get('client_info') or {}
+                company_data = form.get('company_data') or {}
                 
                 ws_forms.cell(row=row, column=1, value=client_info.get('company_name', ''))
                 ws_forms.cell(row=row, column=2, value=client_info.get('name', ''))
@@ -2431,10 +2431,10 @@ async def export_report(
         
         forms_data = [["Company", "Status", "Standards"]]
         for form in forms[:20]:  # Limit to 20 rows
-            client_info = form.get('client_info', {})
-            company_data = form.get('company_data', {})
+            client_info = form.get('client_info') or {}
+            company_data = form.get('company_data') or {}
             forms_data.append([
-                client_info.get('company_name', '')[:30],
+                (client_info.get('company_name', '') or '')[:30],
                 form.get('status', ''),
                 ', '.join(company_data.get('certificationSchemes', []))[:30]
             ])

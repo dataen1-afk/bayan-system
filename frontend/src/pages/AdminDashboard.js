@@ -735,7 +735,8 @@ const AdminDashboard = () => {
               <img src="/bayan-logo.png" alt="Bayan" className="h-20 w-auto object-contain" />
             </div>
           </div>
-          <div className="dashboard-header-right flex gap-2 items-center">
+          <div className="dashboard-header-right flex gap-3 items-center">
+            <NotificationBell />
             <LanguageSwitcher />
             <Button variant="outline" onClick={logout} data-testid="logout-button" className="bg-bayan-navy text-white hover:bg-bayan-navy-light border-bayan-navy font-semibold">
               <LogOut className="btn-icon w-4 h-4" />

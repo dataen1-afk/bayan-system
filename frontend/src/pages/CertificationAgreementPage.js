@@ -379,22 +379,22 @@ const CertificationAgreementPage = () => {
                   <Label className="text-base font-semibold">{t('managementSystemStandards')} *</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {availableStandards.map((standard) => (
-                      <div 
+                      <label 
                         key={standard.id}
-                        className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors select-none ${
                           formData.selectedStandards.includes(standard.id) 
                             ? 'bg-blue-50 border-blue-300' 
                             : 'hover:bg-gray-50'
                         }`}
-                        onClick={() => handleStandardToggle(standard.id)}
                         data-testid={`standard-${standard.id}`}
                       >
                         <Checkbox 
                           checked={formData.selectedStandards.includes(standard.id)}
                           onCheckedChange={() => handleStandardToggle(standard.id)}
+                          className="mt-0.5"
                         />
                         <span className="text-sm">{standard.label}</span>
-                      </div>
+                      </label>
                     ))}
                   </div>
                   
@@ -482,22 +482,22 @@ const CertificationAgreementPage = () => {
                   { key: 'nonconformityResolution', label: t('ack_nonconformityResolution') },
                   { key: 'feesAndPayment', label: t('ack_feesAndPayment') }
                 ].map((item) => (
-                  <div 
+                  <label 
                     key={item.key}
-                    className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                    className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors select-none ${
                       formData.acknowledgements[item.key] 
                         ? 'bg-green-50 border-green-300' 
                         : 'hover:bg-gray-50'
                     }`}
-                    onClick={() => handleAcknowledgementToggle(item.key)}
                     data-testid={`ack-${item.key}`}
                   >
                     <Checkbox 
                       checked={formData.acknowledgements[item.key]}
                       onCheckedChange={() => handleAcknowledgementToggle(item.key)}
+                      className="mt-0.5"
                     />
                     <span className="text-sm">{item.label}</span>
-                  </div>
+                  </label>
                 ))}
               </div>
             </CardContent>

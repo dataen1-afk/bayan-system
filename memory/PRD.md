@@ -236,8 +236,12 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 └── test_reports/
 ```
 
+## Upcoming Features (User Requested)
+1. **Customer Portal for Order Status Tracking** - Simple page for clients to track application status
+2. **Multi-Site Auditing/Scheduling** - Manage audits across multiple client locations
+3. **Export Reports Dashboard to Excel/PDF** - Download reports functionality
+4. **View Audit Scheduling Calendar** - Calendar view for audit schedules
+5. **Record Customer Contacts** - Customer contact history log
+
 ## Future Enhancements
-- **P2**: Customer Portal for tracking order status via unique link
-- **P2**: Document uploads for supporting materials
-- **P3**: Multi-site auditing/scheduling
 - Enable real email sending (SendGrid integration)

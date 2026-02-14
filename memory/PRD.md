@@ -90,11 +90,28 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 
 ### Contracts Page ✅ (Updated - Feb 2026)
 - Displays approved price quotes converted to contracts (proposals with `status: agreement_signed`)
+- **Statistics Summary Cards** at top showing:
+  - Total Contracts count
+  - Total Revenue in SAR
+  - Most Recent Contract with date
 - Contract card shows: organization name, contact person, email, standards badges, total amount, signing date
 - Download Contract PDF button (generates professional PDF with branding)
 - View Proposal button opens original proposal
 - Status Timeline with 6-stage progress indicator
 - Full RTL support for Arabic
+
+### Sticky Footer for Form Navigation ✅ (NEW - Feb 2026)
+- Form navigation buttons (Previous, Next, Save Draft, Submit) now always visible at bottom
+- Fixed position footer that stays visible while scrolling through long forms
+- Step indicator shows current progress (Step X of 6)
+- Responsive design hides Save Draft label on small screens
+
+### Editable Templates ✅ (NEW - Feb 2026)
+- Certification Packages can now be edited after creation
+- Proposal Templates can now be edited after creation
+- Edit button (blue) visible next to Delete button (red) on each template card
+- Edit form pre-populates with existing data
+- Backend PUT endpoints for both packages and templates
 
 ## API Endpoints
 

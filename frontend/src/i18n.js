@@ -569,6 +569,7 @@ const resources = {
       "rejected": "Rejected",
       "pending": "Pending",
       "completed": "Completed",
+      "modification_requested": "Modification Requested",
       
       // Notifications
       "notifications": "Notifications",

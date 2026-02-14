@@ -2,22 +2,25 @@
 
 ## Original Problem Statement
 Build a full-stack application for managing service contracts with the following workflow:
-1. Admin creates and sends a form to a client
-2. Client fills the form and submits it
-3. Admin reviews the submission and sends a price quote
-4. Client can **approve**, **reject**, or **request modifications** to the quote
-5. An approved quote automatically becomes a contract, generating a PDF
+1. Admin creates a form by entering client information (name, company, email, phone)
+2. System generates a unique public link for the form
+3. Admin shares the link with the client (via email, WhatsApp, etc.)
+4. Client fills out the form via the public link (NO LOGIN REQUIRED)
+5. Client submits the form
+6. Admin reviews the submission and sends a price quote
+7. Client can approve, reject, or request modifications to the quote
+8. An approved quote automatically becomes a contract, generating a PDF
 
 ## User Personas
 - **Admin**: Creates forms, manages quotations, and oversees contracts
-- **Client**: Fills forms, reviews quotations, downloads contracts
+- **Client**: Fills forms via public links (no system account needed)
 
 ## Core Requirements
-- **User Roles**: Admin and Client, with distinct dashboards and permissions
-- **Authentication**: Internal system (JWT) where Admins manage all user accounts
+- **User Roles**: Admin only has system access; Clients access forms via public links
+- **Authentication**: Admin-only JWT authentication
 - **UI/UX**: Professional, branded interface matching "Bayan Auditing & Conformity" logo
 - **Multi-language Support**: English and Arabic with RTL layout for Arabic
-- **Empty States**: Helpful, user-friendly messages when no data exists
+- **Public Form Access**: Clients can fill forms without logging in
 
 ## Tech Stack
 - **Backend**: FastAPI (Python), Motor (async MongoDB driver), Pydantic, JWT
@@ -29,86 +32,90 @@ Build a full-stack application for managing service contracts with the following
 
 ### Phase 1: Core Application ✅
 - Full Form → Quotation → Contract workflow
-- Admin & Client dashboards with distinct views
-- JWT authentication with "Remember me" feature
+- Admin dashboard with form management
+- JWT authentication
 - PDF contract generation
 
 ### Phase 2: Branding & UI ✅
-- Company logo integration with white background container
+- Company logo integration
 - Professional color scheme matching Bayan brand
-- Admin credentials displayed on login page for testing
 - Collapsible sidebar navigation
 
 ### Phase 3: Internationalization ✅
-- English/Arabic language switching with flag icons
-- Complete Arabic translations for all UI components
-- RTL Layout implemented using CSS `[dir="rtl"]` selectors
-- LTR Layout verified working correctly
+- English/Arabic language switching
+- Complete Arabic translations
+- RTL Layout using CSS `[dir="rtl"]` selectors
 
-### Phase 4: Empty States ✅
-- Empty state messages for Admin Dashboard (Forms, Quotations, Contracts)
-- Empty state messages for Client Dashboard (My Forms, Quotations, Contracts)
-- Complete translation keys in Arabic and English
+### Phase 4: Multi-Step Application Form Wizard ✅
+- **6-Step Certification Application Wizard**:
+  1. Company Information
+  2. Certification Selection
+  3. Sites and Employees
+  4. Existing Certifications
+  5. Management Systems
+  6. Declaration
 
-### Phase 5: Multi-Step Application Form Wizard ✅ (NEW)
-- **6-Step Certification Application Wizard** implemented:
-  1. **Company Information**: Company name, address, contact details, legal status
-  2. **Certification Selection**: ISO 9001, 14001, 45001, 27001, 22000, 50001, 13485, 22301, 41001
-  3. **Sites & Employees**: Number of sites, employee breakdown, shift information
-  4. **Existing Certifications**: Current certifications, consultant involvement
-  5. **Management Systems**: Conditional fields based on selected certifications (EMS, FSMS, OHSMS, EnMS, Medical Devices, ISMS)
-  6. **Declaration**: Signature and agreement confirmation
-- **Admin Features**:
-  - Assign new application forms to clients via modal
-  - View submitted applications
-  - Client selection dropdown from registered users
-- **Client Features**:
-  - View assigned application forms
-  - Fill forms step-by-step with navigation (Next/Previous)
+### Phase 5: Public Form Access (NEW - December 2025) ✅
+- **Admin Form Creation**:
+  - Modal to enter client info (name, company, email, phone)
+  - Generates unique access token for each form
+  - Shows form link modal after creation
+  - Copy link to clipboard functionality
+  - Send email button (MOCKED - logs to console)
+
+- **Public Form Page** (`/form/{access_token}`):
+  - No login required
+  - Displays client info header
+  - Full 6-step wizard form
   - Save draft functionality
-  - Submit completed applications
-- **Backend API**:
-  - `POST /api/application-forms` - Create and assign form
-  - `GET /api/application-forms` - List forms (filtered by role)
-  - `GET /api/application-forms/{id}` - Get specific form
-  - `PUT /api/application-forms/{id}` - Save draft
-  - `POST /api/application-forms/{id}/submit` - Submit form
-  - `GET /api/users/clients` - Get list of clients (admin only)
+  - Submit functionality with validation
+  - Success message after submission
+  - Language switching (Arabic/English)
 
-## Key Technical Implementation
-
-### RTL/LTR CSS Approach
-The RTL layout is implemented using CSS selectors in `/app/frontend/src/index.css`:
-- `html[dir="rtl"] .tabs-wrapper { justify-content: flex-end !important; }`
-- `html[dir="rtl"] .dashboard-header { flex-direction: row-reverse !important; }`
-- `html[dir="rtl"] .sidebar-container { right: 0; left: auto; }`
-
-### CSS Class Structure
-- `.tabs-wrapper` - Container for tab navigation
-- `.dashboard-header` - Header flex container
-- `.dashboard-header-left` - Logo and title section
-- `.dashboard-header-right` - Language switcher and logout
-- `.btn-icon` - Icon margin handling
-- `.sidebar-container` - Sidebar positioning
+- **Backend API - Public Endpoints**:
+  - `GET /api/public/form/{access_token}` - Get form data
+  - `PUT /api/public/form/{access_token}` - Save draft
+  - `POST /api/public/form/{access_token}/submit` - Submit form
 
 ## API Endpoints
-- `/api/auth/login`, `/api/auth/me` - Authentication
-- `/api/forms`, `/api/forms/{form_id}/submit` - Form management (legacy)
-- `/api/application-forms` - Certification application forms (new)
-- `/api/users/clients` - List client users (admin only)
-- `/api/quotations`, `/api/quotations/{quotation_id}/respond` - Quotation management
-- `/api/contracts/{contract_id}/download` - Contract PDF download
+
+### Authentication (Admin Only)
+- `POST /api/auth/login` - Admin login
+- `GET /api/auth/me` - Get current user
+
+### Application Forms (Admin)
+- `POST /api/application-forms` - Create form with client info
+- `GET /api/application-forms` - List all forms
+- `GET /api/application-forms/{id}` - Get specific form
+- `POST /api/application-forms/{id}/send-email` - Send form link via email (MOCKED)
+
+### Public Form Access (No Auth)
+- `GET /api/public/form/{access_token}` - Get form for client
+- `PUT /api/public/form/{access_token}` - Save draft
+- `POST /api/public/form/{access_token}/submit` - Submit form
+
+### Legacy Endpoints
+- `/api/forms`, `/api/quotations`, `/api/contracts`
 
 ## Database Schema
-- **User**: id, name, email, password, role
-- **Form**: id, client_id, fields, responses, status (legacy)
-- **ApplicationForm**: id, client_id, company_data (nested), status, created_at, submitted_at
-- **Quotation**: id, form_id, client_id, price, details, status
-- **Contract**: id, quotation_id, client_id, pdf_path, created_at
 
-## Test Credentials
-- **Admin**: admin@test.com / admin123
-- **Client**: client@test.com / client123
+### ApplicationForm
+```json
+{
+  "id": "UUID",
+  "access_token": "UUID (for public access)",
+  "client_info": {
+    "name": "string",
+    "company_name": "string",
+    "email": "string",
+    "phone": "string"
+  },
+  "company_data": { /* Form data from 6-step wizard */ },
+  "status": "pending | submitted | under_review | approved | rejected",
+  "created_at": "datetime",
+  "submitted_at": "datetime | null"
+}
+```
 
 ## File Structure
 ```
@@ -116,48 +123,50 @@ The RTL layout is implemented using CSS selectors in `/app/frontend/src/index.cs
 ├── backend/
 │   ├── server.py
 │   ├── tests/
-│   │   └── test_application_forms.py
+│   │   └── test_service_contract.py
 │   └── .env
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── ApplicationForm.js  (NEW - 6-step wizard)
+│   │   │   ├── ApplicationForm.js
 │   │   │   ├── LanguageSwitcher.js
 │   │   │   ├── Sidebar.js
 │   │   │   └── ui/
 │   │   ├── pages/
-│   │   │   ├── AdminDashboard.js  (Updated with form assignment)
-│   │   │   ├── ClientDashboard.js  (Updated with form filling)
-│   │   │   └── LoginPage.js
+│   │   │   ├── AdminDashboard.js
+│   │   │   ├── ClientDashboard.js (legacy, kept for reference)
+│   │   │   ├── LoginPage.js
+│   │   │   └── PublicFormPage.js (NEW)
 │   │   ├── App.js
 │   │   ├── index.css
-│   │   └── i18n.js  (Updated with new translations)
+│   │   └── i18n.js
 │   └── tailwind.config.js
-├── contracts/
 └── test_reports/
 ```
 
-## Known Issues
-None - All P0/P1 issues resolved
+## Test Credentials
+- **Admin**: admin@test.com / admin123
 
 ## Testing Status
-- Backend API Tests: 21/21 PASSED (100%)
-- Frontend UI Tests: All PASSED (100%)
-- Test Report: `/app/test_reports/iteration_2.json`
+- Backend API: 16/16 PASSED (100%)
+- Frontend UI: All PASSED (100%)
+- Test Report: `/app/test_reports/iteration_3.json`
+
+## MOCKED Integrations
+- **Email Sending**: MOCKED - Logs to console instead of sending real emails (SMTP not configured). To enable real email, configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in backend/.env
 
 ## Upcoming Tasks (P1)
-1. **Form Workflow Integration**:
+1. **Quotation Workflow**:
    - Admin review submitted applications
-   - "BAC Official Use" section visible only to admins after submission
-   - Create quotations from submitted application forms
+   - Create quotations from submitted forms
+   - Send quotation to client
 
-2. **Form Status Management**:
-   - Implement `under_review` status
-   - Implement `approved`/`rejected` status with notifications
+2. **Configure Real Email Sending**:
+   - Integrate with email service (SendGrid, SMTP, etc.)
+   - Send form links automatically to clients
 
 ## Future/Backlog Tasks (P2)
 - Templates feature for reusable form templates
 - Reports section for analytics
-- Email notifications for form status changes
-- Bulk form creation
-- Contract templates
+- Contract PDF generation from approved quotations
+- Form status email notifications

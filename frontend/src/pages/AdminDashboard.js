@@ -608,7 +608,7 @@ const AdminDashboard = () => {
                   </div>
                   <div>
                     <p className="text-xl font-bold text-blue-700">
-                      {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(totalQuotedValue)}
+                      {formatCurrency(totalQuotedValue)}
                     </p>
                     <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('totalQuoted')}</p>
                   </div>
@@ -679,7 +679,7 @@ const AdminDashboard = () => {
                           {/* Date */}
                           {proposal.issued_date && (
                             <p className="text-xs text-slate-400 mt-2">
-                              {t('issuedOn')}: {new Date(proposal.issued_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                              {t('issuedOn')}: {formatDate(proposal.issued_date)}
                             </p>
                           )}
                         </div>
@@ -689,7 +689,7 @@ const AdminDashboard = () => {
                           {/* Price prominently displayed */}
                           <div className={`text-end ${isRTL ? 'text-start' : ''}`}>
                             <p className="text-2xl font-bold text-slate-900">
-                              {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(proposal.total_amount || 0)}
+                              {formatCurrency(proposal.total_amount)}
                             </p>
                             <p className="text-xs text-slate-500">{t('totalAmount')}</p>
                           </div>
@@ -781,7 +781,7 @@ const AdminDashboard = () => {
                   <div>
                     <p className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">{t('totalRevenue')}</p>
                     <p className="text-3xl font-bold text-slate-900">
-                      {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(totalContractsValue)}
+                      {formatCurrency(totalContractsValue)}
                     </p>
                     <p className="text-sm text-slate-500 mt-1">{t('contractValue')}</p>
                   </div>
@@ -802,7 +802,7 @@ const AdminDashboard = () => {
                           {mostRecentContract.organization_name}
                         </p>
                         <p className="text-sm text-slate-500">
-                          {new Date(mostRecentContract.client_response_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                          {formatDate(mostRecentContract.client_response_date)}
                         </p>
                       </>
                     ) : (
@@ -872,7 +872,7 @@ const AdminDashboard = () => {
                           {/* Signing Date */}
                           {contract.client_response_date && (
                             <p className="text-xs text-slate-400 mt-2">
-                              {t('signedOn')}: {new Date(contract.client_response_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                              {t('signedOn')}: {formatDate(contract.client_response_date)}
                             </p>
                           )}
                         </div>
@@ -882,7 +882,7 @@ const AdminDashboard = () => {
                           {/* Contract Value */}
                           <div className={`text-end ${isRTL ? 'text-start' : ''}`}>
                             <p className="text-2xl font-bold text-emerald-600">
-                              {new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(contract.total_amount || 0)}
+                              {formatCurrency(contract.total_amount)}
                             </p>
                             <p className="text-xs text-slate-500">{t('contractValue')}</p>
                           </div>

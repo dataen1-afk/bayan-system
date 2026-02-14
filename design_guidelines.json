@@ -1,0 +1,152 @@
+{
+  "identity": {
+    "name": "E1",
+    "archetype": "The Performance Pro (Corporate Edition)",
+    "mission": "Transform a standard admin panel into a high-precision Audit Command Center."
+  },
+  "branding": {
+    "colors": {
+      "primary": {
+        "default": "#1a365d",
+        "light": "#2d4a6f",
+        "dark": "#102a4d",
+        "foreground": "#ffffff"
+      },
+      "secondary": {
+        "default": "#f1f5f9",
+        "foreground": "#0f172a"
+      },
+      "accent": {
+        "gold": "#d97706", 
+        "teal": "#0d9488",
+        "blue": "#2563eb",
+        "danger": "#ef4444"
+      },
+      "status": {
+        "pending": { "bg": "#fff7ed", "text": "#c2410c", "border": "#fed7aa" },
+        "approved": { "bg": "#f0fdf4", "text": "#15803d", "border": "#bbf7d0" },
+        "rejected": { "bg": "#fef2f2", "text": "#b91c1c", "border": "#fecaca" },
+        "sent": { "bg": "#eff6ff", "text": "#1d4ed8", "border": "#bfdbfe" }
+      },
+      "background": {
+        "app": "#f8fafc",
+        "card": "#ffffff",
+        "sidebar": "#ffffff"
+      }
+    },
+    "typography": {
+      "font_family_heading": "Manrope, sans-serif",
+      "font_family_body": "Inter, sans-serif (English) / IBM Plex Sans Arabic, sans-serif (Arabic)",
+      "scale": {
+        "h1": "text-3xl font-bold tracking-tight text-slate-900",
+        "h2": "text-2xl font-bold tracking-tight text-slate-900",
+        "h3": "text-lg font-semibold tracking-tight text-slate-900",
+        "body": "text-sm text-slate-600 leading-relaxed",
+        "label": "text-xs font-medium text-slate-500 uppercase tracking-wider"
+      }
+    },
+    "shadows": {
+      "card": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+      "card_hover": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      "dropdown": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)"
+    }
+  },
+  "layout_strategies": {
+    "rtl_support": {
+      "rules": [
+        "ALWAYS use logical properties for margins/padding: 'ms-' (margin-start) and 'me-' (margin-end) instead of 'ml-' and 'mr-'.",
+        "Use 'text-start' and 'text-end' instead of 'text-left' and 'text-right'.",
+        "For flex containers that need direction flipping, ensure 'flex-row' is used (browser handles flip automatically with dir='rtl').",
+        "Icons in RTL: Chevron arrows must be flipped. Use 'rtl:rotate-180' class."
+      ]
+    },
+    "grid_system": {
+      "dashboard_mode": "Mode B (High Density)",
+      "container": "max-w-7xl mx-auto p-4 sm:p-6 lg:p-8",
+      "card_gap": "gap-4 md:gap-6"
+    }
+  },
+  "components": {
+    "StatsCard": {
+      "description": "A dense card for high-level metrics (Contracts Screen)",
+      "structure": "Flex row. Left: Icon with soft bg. Right: Value (Big) + Label (Small). Bottom: Trend indicator.",
+      "styles": "bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition-shadow duration-200",
+      "path": "Create new if missing or enhance existing Card component"
+    },
+    "StatusBadge": {
+      "description": "Pill-shaped indicator for Form/Quote status",
+      "structure": "span element with flex-inline, gap-2, items-center.",
+      "styles": "px-2.5 py-0.5 rounded-full text-xs font-medium border",
+      "variants": {
+        "success": "bg-emerald-50 text-emerald-700 border-emerald-200",
+        "warning": "bg-amber-50 text-amber-700 border-amber-200",
+        "info": "bg-blue-50 text-blue-700 border-blue-200",
+        "neutral": "bg-slate-50 text-slate-700 border-slate-200"
+      }
+    },
+    "ActionRow": {
+      "description": "Horizontal list of icon-only buttons for quick actions",
+      "styles": "flex items-center gap-1",
+      "button_style": "h-8 w-8 p-0 hover:bg-slate-100 text-slate-500 hover:text-bayan-navy rounded-md transition-colors"
+    },
+    "DataListRow": {
+      "description": "A card that looks like a table row but has depth. Used for Forms/Quotations.",
+      "styles": "group flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white border border-slate-200 rounded-lg hover:border-bayan-navy/30 hover:shadow-sm transition-all duration-200 gap-4"
+    }
+  },
+  "screens": {
+    "forms_screen": {
+      "title": "Application Forms Management",
+      "guidelines": [
+        "Transform vertical list into 'DataListRow' components.",
+        "Visual Hierarchy: Client Name (Bold Navy) > Standards (Badge) > Date (Small Gray).",
+        "Actions: Group 'Copy Link', 'Email', 'View' into a distinct action area on the end side.",
+        "Add a 'Quick Stats' header above the list: 'Total Forms', 'Pending Review', 'Completed'.",
+        "Empty State: If no forms, show a professional illustration (use 'image_grid' abstract if suitable or clean SVG)."
+      ]
+    },
+    "quotations_screen": {
+      "title": "Proposals & Price Quotes",
+      "guidelines": [
+        "Use a 'Status-Grouped' layout or a clear table view.",
+        "Price Tag: Display price prominently (e.g., 'text-lg font-bold text-slate-900').",
+        "Timeline: Visual progress bar or step indicator for 'Draft -> Sent -> Accepted'.",
+        "Key Info: Organization Name, Contact Person, Standards (e.g., 'ISO 9001').",
+        "Primary Action: 'Create Proposal' button must be prominent (Bayan Navy)."
+      ]
+    },
+    "contracts_screen": {
+      "title": "Signed Contracts Repository",
+      "guidelines": [
+        "Top Section: 3 Stats Cards (Total Signed, Total Value, Recent Activity).",
+        "Main List: List of signed contracts. Each item shows Client, Date Signed, and a clear 'Download PDF' button.",
+        "Download Button: Use a red/gray icon for PDF to make it recognizable.",
+        "Filter: Add a simple text search or date filter at the top."
+      ]
+    }
+  },
+  "visual_enhancers": {
+    "textures": "Use subtle noise on the sidebar background to reduce flatness.",
+    "gradients": "NO gradients on cards. Only subtle top-down fade on the Dashboard background (#f8fafc to #f1f5f9).",
+    "icons": "Use Lucide React icons. Stroke width: 1.5px (Thin/Elegant).",
+    "animations": "Staggered entrance for list items (Framer Motion or CSS keyframes)."
+  },
+  "image_urls": {
+    "login_bg": {
+      "url": "https://images.unsplash.com/photo-1761229170427-487959bfb653?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Modern blue glass building facade - suitable for login page background or subtle overlay."
+    },
+    "empty_state": {
+      "url": "https://images.unsplash.com/photo-1765223353020-a279393f58ce?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Clean abstract pattern for empty states or loading screens."
+    }
+  },
+  "universal_guidelines": [
+    "Do not use gradients for text.",
+    "Do not use standard HTML tables for complex lists; use Flex/Grid based 'Row Cards' for better mobile responsiveness.",
+    "Ensure all text has sufficient contrast (APCA standards).",
+    "RTL is paramount. Test by mentally flipping every row: Start becomes Right, End becomes Left.",
+    "Use 'sonner' for all notifications.",
+    "Add 'data-testid' to all interactive elements."
+  ]
+}

@@ -299,6 +299,48 @@ const AdminDashboard = () => {
     }
   };
 
+  // Download bilingual form PDF
+  const handleDownloadFormBilingual = async (formId) => {
+    try {
+      const response = await axios.get(`${API}/forms/${formId}/bilingual_pdf`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `form_bilingual_${formId.substring(0, 8)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading bilingual form:', error);
+      alert(t('errorDownloadingPDF') || 'Error downloading PDF');
+    }
+  };
+
+  // Download bilingual proposal PDF
+  const handleDownloadProposalBilingual = async (proposalId) => {
+    try {
+      const response = await axios.get(`${API}/proposals/${proposalId}/bilingual_pdf`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `proposal_bilingual_${proposalId.substring(0, 8)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading bilingual proposal:', error);
+      alert(t('errorDownloadingPDF') || 'Error downloading PDF');
+    }
+  };
+
   // Get status badge color
   const getStatusBadgeColor = (status) => {
     switch (status) {

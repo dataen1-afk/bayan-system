@@ -243,7 +243,10 @@ const DataTable = ({
       </div>
 
       {/* Table Header */}
-      <div className={`hidden lg:flex items-center px-5 py-3 bg-slate-50/80 border-b border-slate-100 text-xs font-semibold text-slate-600 uppercase tracking-wider ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+      <div 
+        className={`hidden lg:flex items-center px-5 py-3 bg-slate-50/80 border-b border-slate-100 text-xs font-semibold text-slate-600 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}
+        dir={isRTL ? 'rtl' : 'ltr'}
+      >
         {columns.map((column) => (
           <div 
             key={column.key}

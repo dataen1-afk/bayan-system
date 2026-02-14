@@ -1904,6 +1904,647 @@ async def request_proposal_modification(access_token: str, request: Modification
     
     return {"message": "Modification request submitted successfully"}
 
+# ================= CUSTOMER PORTAL / TRACKING ROUTES =================
+
+@api_router.get("/public/track/{tracking_id}")
+async def track_order(tracking_id: str):
+    """Public endpoint to track order status by tracking ID (form ID or access token)"""
+    
+    # Try to find by form ID first
+    form = await db.application_forms.find_one({"id": tracking_id}, {"_id": 0})
+    
+    # If not found, try by access token
+    if not form:
+        form = await db.application_forms.find_one({"access_token": tracking_id}, {"_id": 0})
+    
+    if not form:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Get proposal if exists
+    proposal = await db.proposals.find_one({"application_form_id": form['id']}, {"_id": 0})
+    
+    # Get agreement if exists
+    agreement = None
+    if proposal:
+        agreement = await db.certification_agreements.find_one({"proposal_id": proposal['id']}, {"_id": 0})
+    
+    # Determine current status
+    current_status = form.get('status', 'pending')
+    if agreement:
+        current_status = 'agreement_signed'
+    elif proposal and proposal.get('status') in ['accepted', 'agreement_signed']:
+        current_status = 'accepted'
+    elif proposal:
+        current_status = 'under_review'
+    
+    # Build timeline dates
+    timeline_dates = {
+        'pending': form.get('created_at')
+    }
+    if form.get('submitted_at'):
+        timeline_dates['submitted'] = form.get('submitted_at')
+    if proposal:
+        timeline_dates['under_review'] = proposal.get('created_at')
+        if proposal.get('status') in ['accepted', 'agreement_signed']:
+            timeline_dates['accepted'] = proposal.get('client_response_date')
+    if agreement:
+        timeline_dates['agreement_signed'] = agreement.get('created_at')
+        if agreement.get('status') == 'contract_generated':
+            timeline_dates['contract_generated'] = agreement.get('created_at')
+    
+    # Get standards from form data
+    standards = []
+    if form.get('company_data') and form['company_data'].get('certificationSchemes'):
+        standards = form['company_data']['certificationSchemes']
+    elif proposal:
+        standards = proposal.get('standards', [])
+    
+    response = {
+        "tracking_id": form['id'],
+        "company_name": form.get('client_info', {}).get('company_name', 'Unknown'),
+        "contact_email": form.get('client_info', {}).get('email', ''),
+        "contact_phone": form.get('client_info', {}).get('phone', ''),
+        "created_at": form.get('created_at'),
+        "submitted_at": form.get('submitted_at'),
+        "current_status": current_status,
+        "standards": standards,
+        "timeline_dates": timeline_dates,
+        "contract_available": agreement is not None and agreement.get('status') == 'contract_generated'
+    }
+    
+    # Add proposal info if available
+    if proposal:
+        response["proposal"] = {
+            "id": proposal['id'],
+            "access_token": proposal.get('access_token'),
+            "total_amount": proposal.get('total_amount', 0),
+            "status": proposal.get('status', 'pending')
+        }
+    
+    return response
+
+# ================= SITE MANAGEMENT ROUTES =================
+
+class Site(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    contract_id: str  # Links to proposal/contract
+    name: str
+    address: str
+    city: str = ""
+    country: str = "Saudi Arabia"
+    contact_name: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    is_main_site: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SiteCreate(BaseModel):
+    contract_id: str
+    name: str
+    address: str
+    city: str = ""
+    country: str = "Saudi Arabia"
+    contact_name: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    is_main_site: bool = False
+
+@api_router.get("/sites")
+async def get_sites(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all sites"""
+    await get_current_user(credentials)
+    sites = await db.sites.find({}, {"_id": 0}).to_list(1000)
+    return sites
+
+@api_router.post("/sites")
+async def create_site(site_data: SiteCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new site"""
+    await get_current_user(credentials)
+    
+    site = Site(
+        contract_id=site_data.contract_id,
+        name=site_data.name,
+        address=site_data.address,
+        city=site_data.city,
+        country=site_data.country,
+        contact_name=site_data.contact_name,
+        contact_email=site_data.contact_email,
+        contact_phone=site_data.contact_phone,
+        is_main_site=site_data.is_main_site
+    )
+    
+    site_doc = site.model_dump()
+    site_doc['created_at'] = site_doc['created_at'].isoformat()
+    
+    await db.sites.insert_one(site_doc)
+    return {"message": "Site created", "id": site.id}
+
+@api_router.delete("/sites/{site_id}")
+async def delete_site(site_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a site"""
+    await get_current_user(credentials)
+    await db.sites.delete_one({"id": site_id})
+    return {"message": "Site deleted"}
+
+# ================= AUDIT SCHEDULING ROUTES =================
+
+class AuditSchedule(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    contract_id: str  # Links to proposal/contract
+    site_id: str = ""  # Optional - for multi-site
+    organization_name: str = ""
+    site_name: str = ""
+    audit_type: str = "initial"  # initial, surveillance, recertification
+    scheduled_date: str
+    scheduled_time: str = "09:00"
+    duration_days: int = 1
+    auditors: str = ""
+    notes: str = ""
+    status: str = "scheduled"  # scheduled, in_progress, completed, cancelled
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AuditScheduleCreate(BaseModel):
+    contract_id: str
+    site_id: str = ""
+    audit_type: str = "initial"
+    scheduled_date: str
+    scheduled_time: str = "09:00"
+    duration_days: int = 1
+    auditors: str = ""
+    notes: str = ""
+
+@api_router.get("/audit-schedules")
+async def get_audit_schedules(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all audit schedules"""
+    await get_current_user(credentials)
+    audits = await db.audit_schedules.find({}, {"_id": 0}).to_list(1000)
+    
+    # Enrich with organization names
+    for audit in audits:
+        if audit.get('contract_id'):
+            proposal = await db.proposals.find_one({"id": audit['contract_id']}, {"_id": 0})
+            if proposal:
+                audit['organization_name'] = proposal.get('organization_name', '')
+        if audit.get('site_id'):
+            site = await db.sites.find_one({"id": audit['site_id']}, {"_id": 0})
+            if site:
+                audit['site_name'] = site.get('name', '')
+    
+    return audits
+
+@api_router.post("/audit-schedules")
+async def create_audit_schedule(audit_data: AuditScheduleCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new audit schedule"""
+    await get_current_user(credentials)
+    
+    # Get organization name from contract
+    organization_name = ""
+    if audit_data.contract_id:
+        proposal = await db.proposals.find_one({"id": audit_data.contract_id}, {"_id": 0})
+        if proposal:
+            organization_name = proposal.get('organization_name', '')
+    
+    # Get site name if provided
+    site_name = ""
+    if audit_data.site_id:
+        site = await db.sites.find_one({"id": audit_data.site_id}, {"_id": 0})
+        if site:
+            site_name = site.get('name', '')
+    
+    audit = AuditSchedule(
+        contract_id=audit_data.contract_id,
+        site_id=audit_data.site_id,
+        organization_name=organization_name,
+        site_name=site_name,
+        audit_type=audit_data.audit_type,
+        scheduled_date=audit_data.scheduled_date,
+        scheduled_time=audit_data.scheduled_time,
+        duration_days=audit_data.duration_days,
+        auditors=audit_data.auditors,
+        notes=audit_data.notes
+    )
+    
+    audit_doc = audit.model_dump()
+    audit_doc['created_at'] = audit_doc['created_at'].isoformat()
+    
+    await db.audit_schedules.insert_one(audit_doc)
+    return {"message": "Audit scheduled", "id": audit.id}
+
+@api_router.put("/audit-schedules/{audit_id}")
+async def update_audit_schedule(audit_id: str, audit_data: AuditScheduleCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update an audit schedule"""
+    await get_current_user(credentials)
+    
+    update_data = {
+        "contract_id": audit_data.contract_id,
+        "site_id": audit_data.site_id,
+        "audit_type": audit_data.audit_type,
+        "scheduled_date": audit_data.scheduled_date,
+        "scheduled_time": audit_data.scheduled_time,
+        "duration_days": audit_data.duration_days,
+        "auditors": audit_data.auditors,
+        "notes": audit_data.notes
+    }
+    
+    await db.audit_schedules.update_one(
+        {"id": audit_id},
+        {"$set": update_data}
+    )
+    return {"message": "Audit updated", "id": audit_id}
+
+@api_router.delete("/audit-schedules/{audit_id}")
+async def delete_audit_schedule(audit_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete an audit schedule"""
+    await get_current_user(credentials)
+    await db.audit_schedules.delete_one({"id": audit_id})
+    return {"message": "Audit deleted"}
+
+# ================= CUSTOMER CONTACT HISTORY ROUTES =================
+
+class ContactRecord(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    customer_id: str  # Links to form or proposal ID
+    customer_name: str = ""
+    contact_type: str = "call"  # call, email, meeting, other
+    subject: str
+    notes: str
+    contact_date: str
+    follow_up_date: str = ""
+    follow_up_completed: bool = False
+    created_by: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ContactRecordCreate(BaseModel):
+    customer_id: str
+    contact_type: str = "call"
+    subject: str
+    notes: str
+    contact_date: str
+    follow_up_date: str = ""
+
+@api_router.get("/contacts")
+async def get_contact_records(credentials: HTTPAuthorizationCredentials = Depends(security), customer_id: Optional[str] = None):
+    """Get all contact records or filtered by customer"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if customer_id:
+        query["customer_id"] = customer_id
+    
+    contacts = await db.contact_records.find(query, {"_id": 0}).sort("contact_date", -1).to_list(1000)
+    return contacts
+
+@api_router.post("/contacts")
+async def create_contact_record(contact_data: ContactRecordCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new contact record"""
+    current_user = await get_current_user(credentials)
+    
+    # Get customer name from form or proposal
+    customer_name = ""
+    form = await db.application_forms.find_one({"id": contact_data.customer_id}, {"_id": 0})
+    if form:
+        customer_name = form.get('client_info', {}).get('company_name', '')
+    else:
+        proposal = await db.proposals.find_one({"id": contact_data.customer_id}, {"_id": 0})
+        if proposal:
+            customer_name = proposal.get('organization_name', '')
+    
+    contact = ContactRecord(
+        customer_id=contact_data.customer_id,
+        customer_name=customer_name,
+        contact_type=contact_data.contact_type,
+        subject=contact_data.subject,
+        notes=contact_data.notes,
+        contact_date=contact_data.contact_date,
+        follow_up_date=contact_data.follow_up_date,
+        created_by=current_user.get('user_id', '')
+    )
+    
+    contact_doc = contact.model_dump()
+    contact_doc['created_at'] = contact_doc['created_at'].isoformat()
+    
+    await db.contact_records.insert_one(contact_doc)
+    return {"message": "Contact record created", "id": contact.id}
+
+@api_router.put("/contacts/{contact_id}/follow-up")
+async def mark_follow_up_completed(contact_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Mark a follow-up as completed"""
+    await get_current_user(credentials)
+    
+    await db.contact_records.update_one(
+        {"id": contact_id},
+        {"$set": {"follow_up_completed": True}}
+    )
+    return {"message": "Follow-up marked as completed"}
+
+@api_router.delete("/contacts/{contact_id}")
+async def delete_contact_record(contact_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a contact record"""
+    await get_current_user(credentials)
+    await db.contact_records.delete_one({"id": contact_id})
+    return {"message": "Contact record deleted"}
+
+# ================= REPORT EXPORT ROUTES =================
+
+@api_router.get("/reports/export")
+async def export_report(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    format: str = "excel",  # excel or pdf
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    status: Optional[str] = None,
+    standard: Optional[str] = None
+):
+    """Export reports to Excel or PDF"""
+    await get_current_user(credentials)
+    
+    # Build query for forms
+    forms_query = {}
+    if status and status != "all":
+        forms_query["status"] = status
+    if start_date or end_date:
+        forms_query["created_at"] = {}
+        if start_date:
+            forms_query["created_at"]["$gte"] = start_date
+        if end_date:
+            forms_query["created_at"]["$lte"] = end_date
+    
+    # Get data
+    forms = await db.application_forms.find(forms_query, {"_id": 0}).to_list(1000)
+    proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
+    
+    # Filter by standard if specified
+    if standard and standard != "all":
+        forms = [f for f in forms if f.get('company_data') and standard in f.get('company_data', {}).get('certificationSchemes', [])]
+        proposals = [p for p in proposals if standard in p.get('standards', [])]
+    
+    if format == "excel":
+        # Generate Excel file
+        import io
+        try:
+            import openpyxl
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            
+            wb = Workbook()
+            
+            # Forms Sheet
+            ws_forms = wb.active
+            ws_forms.title = "Application Forms"
+            
+            # Headers
+            headers = ["Company Name", "Contact", "Email", "Status", "Standards", "Created Date", "Submitted Date"]
+            header_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True)
+            
+            for col, header in enumerate(headers, 1):
+                cell = ws_forms.cell(row=1, column=col, value=header)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Data rows
+            for row, form in enumerate(forms, 2):
+                client_info = form.get('client_info', {})
+                company_data = form.get('company_data', {})
+                
+                ws_forms.cell(row=row, column=1, value=client_info.get('company_name', ''))
+                ws_forms.cell(row=row, column=2, value=client_info.get('name', ''))
+                ws_forms.cell(row=row, column=3, value=client_info.get('email', ''))
+                ws_forms.cell(row=row, column=4, value=form.get('status', ''))
+                ws_forms.cell(row=row, column=5, value=', '.join(company_data.get('certificationSchemes', [])))
+                ws_forms.cell(row=row, column=6, value=form.get('created_at', '')[:10] if form.get('created_at') else '')
+                ws_forms.cell(row=row, column=7, value=form.get('submitted_at', '')[:10] if form.get('submitted_at') else '')
+            
+            # Adjust column widths
+            for col in ws_forms.columns:
+                max_length = 0
+                column = col[0].column_letter
+                for cell in col:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                ws_forms.column_dimensions[column].width = min(max_length + 2, 50)
+            
+            # Proposals Sheet
+            ws_proposals = wb.create_sheet("Proposals")
+            
+            headers = ["Organization", "Contact", "Standards", "Status", "Total Amount", "Issued Date"]
+            for col, header in enumerate(headers, 1):
+                cell = ws_proposals.cell(row=1, column=col, value=header)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center")
+            
+            for row, proposal in enumerate(proposals, 2):
+                ws_proposals.cell(row=row, column=1, value=proposal.get('organization_name', ''))
+                ws_proposals.cell(row=row, column=2, value=proposal.get('contact_person', ''))
+                ws_proposals.cell(row=row, column=3, value=', '.join(proposal.get('standards', [])))
+                ws_proposals.cell(row=row, column=4, value=proposal.get('status', ''))
+                ws_proposals.cell(row=row, column=5, value=proposal.get('total_amount', 0))
+                ws_proposals.cell(row=row, column=6, value=proposal.get('issued_date', '')[:10] if proposal.get('issued_date') else '')
+            
+            # Adjust column widths for proposals
+            for col in ws_proposals.columns:
+                max_length = 0
+                column = col[0].column_letter
+                for cell in col:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                ws_proposals.column_dimensions[column].width = min(max_length + 2, 50)
+            
+            # Save to bytes
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            return Response(
+                content=output.getvalue(),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={
+                    "Content-Disposition": f"attachment; filename=report_{datetime.now().strftime('%Y%m%d')}.xlsx"
+                }
+            )
+        except ImportError:
+            raise HTTPException(status_code=500, detail="Excel export library not installed")
+    
+    elif format == "pdf":
+        # Generate PDF report
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.units import inch
+        import io
+        
+        output = io.BytesIO()
+        doc = SimpleDocTemplate(output, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=18, textColor=colors.HexColor('#1B365D'))
+        
+        elements = []
+        
+        # Title
+        elements.append(Paragraph("Reports Summary", title_style))
+        elements.append(Spacer(1, 20))
+        
+        # Summary stats
+        total_forms = len(forms)
+        submitted_forms = len([f for f in forms if f.get('status') in ['submitted', 'under_review', 'approved', 'agreement_signed']])
+        total_proposals = len(proposals)
+        accepted_proposals = len([p for p in proposals if p.get('status') in ['accepted', 'agreement_signed']])
+        total_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') in ['accepted', 'agreement_signed'])
+        
+        summary_data = [
+            ["Metric", "Value"],
+            ["Total Forms", str(total_forms)],
+            ["Submitted Forms", str(submitted_forms)],
+            ["Total Proposals", str(total_proposals)],
+            ["Accepted Proposals", str(accepted_proposals)],
+            ["Total Revenue (SAR)", f"{total_revenue:,.0f}"]
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[3*inch, 2*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B365D')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        elements.append(summary_table)
+        elements.append(Spacer(1, 30))
+        
+        # Forms table
+        elements.append(Paragraph("Application Forms", styles['Heading2']))
+        elements.append(Spacer(1, 10))
+        
+        forms_data = [["Company", "Status", "Standards"]]
+        for form in forms[:20]:  # Limit to 20 rows
+            client_info = form.get('client_info', {})
+            company_data = form.get('company_data', {})
+            forms_data.append([
+                client_info.get('company_name', '')[:30],
+                form.get('status', ''),
+                ', '.join(company_data.get('certificationSchemes', []))[:30]
+            ])
+        
+        forms_table = Table(forms_data, colWidths=[2.5*inch, 1.5*inch, 2.5*inch])
+        forms_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B365D')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
+        ]))
+        
+        elements.append(forms_table)
+        
+        doc.build(elements)
+        output.seek(0)
+        
+        return Response(
+            content=output.getvalue(),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=report_{datetime.now().strftime('%Y%m%d')}.pdf"
+            }
+        )
+    
+    raise HTTPException(status_code=400, detail="Invalid format. Use 'excel' or 'pdf'")
+
+# ================= DOCUMENT UPLOAD ROUTES =================
+
+class Document(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    related_id: str  # Links to form, proposal, or contract ID
+    related_type: str  # form, proposal, contract
+    name: str
+    file_type: str
+    file_size: int = 0
+    file_data: str  # Base64 encoded file data
+    uploaded_by: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class DocumentCreate(BaseModel):
+    related_id: str
+    related_type: str
+    name: str
+    file_type: str
+    file_data: str  # Base64 encoded
+
+@api_router.get("/documents")
+async def get_documents(credentials: HTTPAuthorizationCredentials = Depends(security), related_id: Optional[str] = None):
+    """Get documents, optionally filtered by related ID"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if related_id:
+        query["related_id"] = related_id
+    
+    # Return documents without file_data for listing (to reduce payload size)
+    documents = await db.documents.find(query, {"_id": 0, "file_data": 0}).sort("created_at", -1).to_list(100)
+    return documents
+
+@api_router.post("/documents")
+async def upload_document(doc_data: DocumentCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Upload a new document"""
+    current_user = await get_current_user(credentials)
+    
+    # Calculate file size from base64
+    import base64
+    try:
+        file_bytes = base64.b64decode(doc_data.file_data.split(',')[-1] if ',' in doc_data.file_data else doc_data.file_data)
+        file_size = len(file_bytes)
+    except:
+        file_size = 0
+    
+    document = Document(
+        related_id=doc_data.related_id,
+        related_type=doc_data.related_type,
+        name=doc_data.name,
+        file_type=doc_data.file_type,
+        file_size=file_size,
+        file_data=doc_data.file_data,
+        uploaded_by=current_user.get('user_id', '')
+    )
+    
+    doc_doc = document.model_dump()
+    doc_doc['created_at'] = doc_doc['created_at'].isoformat()
+    
+    await db.documents.insert_one(doc_doc)
+    return {"message": "Document uploaded", "id": document.id}
+
+@api_router.get("/documents/{document_id}")
+async def get_document(document_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get a specific document including file data"""
+    await get_current_user(credentials)
+    
+    document = await db.documents.find_one({"id": document_id}, {"_id": 0})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    return document
+
+@api_router.delete("/documents/{document_id}")
+async def delete_document(document_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a document"""
+    await get_current_user(credentials)
+    await db.documents.delete_one({"id": document_id})
+    return {"message": "Document deleted"}
+
 # ================= SEED DATA =================
 
 async def seed_default_templates():

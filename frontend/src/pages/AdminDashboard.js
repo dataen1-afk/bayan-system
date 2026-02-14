@@ -724,46 +724,125 @@ const AdminDashboard = () => {
         </main>
       </div>
 
-      {/* Assign Application Form Modal */}
-      {assignFormModal && (
+      {/* Create Application Form Modal */}
+      {createFormModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-lg">
             <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
               <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <CardTitle>{t('assignNewForm')}</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => setAssignFormModal(false)}>
+                <CardTitle>{t('createNewApplicationForm')}</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setCreateFormModal(false)}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-              <CardDescription>{t('selectClientToAssignForm')}</CardDescription>
+              <CardDescription>{t('enterClientInfoToCreateForm')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className={isRTL ? 'text-right block' : ''}>{t('selectClient')}</Label>
-                <Select value={selectedClientForForm} onValueChange={setSelectedClientForForm}>
-                  <SelectTrigger data-testid="select-client-dropdown">
-                    <SelectValue placeholder={t('selectClientPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name} ({client.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className={isRTL ? 'text-right block' : ''}>{t('clientName')} *</Label>
+                <Input
+                  value={newClientInfo.name}
+                  onChange={(e) => setNewClientInfo({ ...newClientInfo, name: e.target.value })}
+                  placeholder={t('enterClientName')}
+                  data-testid="client-name-input"
+                  className={isRTL ? 'text-right' : ''}
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                />
               </div>
-              <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Button variant="outline" onClick={() => setAssignFormModal(false)}>
+              <div className="space-y-2">
+                <Label className={isRTL ? 'text-right block' : ''}>{t('companyName')} *</Label>
+                <Input
+                  value={newClientInfo.company_name}
+                  onChange={(e) => setNewClientInfo({ ...newClientInfo, company_name: e.target.value })}
+                  placeholder={t('enterCompanyName')}
+                  data-testid="company-name-input"
+                  className={isRTL ? 'text-right' : ''}
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className={isRTL ? 'text-right block' : ''}>{t('email')} *</Label>
+                <Input
+                  type="email"
+                  value={newClientInfo.email}
+                  onChange={(e) => setNewClientInfo({ ...newClientInfo, email: e.target.value })}
+                  placeholder={t('enterEmail')}
+                  data-testid="client-email-input"
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className={isRTL ? 'text-right block' : ''}>{t('phone')} *</Label>
+                <Input
+                  type="tel"
+                  value={newClientInfo.phone}
+                  onChange={(e) => setNewClientInfo({ ...newClientInfo, phone: e.target.value })}
+                  placeholder={t('enterPhone')}
+                  data-testid="client-phone-input"
+                  dir="ltr"
+                />
+              </div>
+              <div className={`flex gap-2 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button variant="outline" onClick={() => setCreateFormModal(false)}>
                   {t('cancel')}
                 </Button>
                 <Button 
-                  onClick={handleAssignApplicationForm}
+                  onClick={handleCreateApplicationForm}
                   className="bg-bayan-navy hover:bg-bayan-navy-light"
-                  data-testid="confirm-assign-form"
+                  data-testid="confirm-create-form"
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  {t('assign')}
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t('createForm')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Form Link Modal (after creation) */}
+      {showFormLinkModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-lg">
+            <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+              <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <CardTitle>{t('formCreatedSuccess')}</CardTitle>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setShowFormLinkModal(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <CardDescription>{t('shareFormLinkWithClient')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className={isRTL ? 'text-right block' : ''}>{t('formLink')}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={createdFormLink}
+                    readOnly
+                    className="flex-1 bg-gray-50"
+                    dir="ltr"
+                  />
+                  <Button 
+                    onClick={handleCopyLink}
+                    variant={linkCopied ? "default" : "outline"}
+                    className={linkCopied ? "bg-green-500 hover:bg-green-600" : ""}
+                  >
+                    {linkCopied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  💡 {t('formLinkInstructions')}
+                </p>
+              </div>
+              <div className={`flex gap-2 pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button variant="outline" onClick={() => setShowFormLinkModal(false)}>
+                  {t('close')}
                 </Button>
               </div>
             </CardContent>
@@ -777,7 +856,7 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center z-10">
               <h2 className="text-xl font-bold text-bayan-navy">
-                {t('applicationFormDetails')} - {selectedApplicationForm.company_data?.companyName || t('unknownCompany')}
+                {t('applicationFormDetails')} - {selectedApplicationForm.company_data?.companyName || selectedApplicationForm.client_info?.company_name || t('unknownCompany')}
               </h2>
               <Button variant="ghost" size="sm" onClick={() => setShowApplicationForm(false)}>
                 <X className="w-5 h-5" />

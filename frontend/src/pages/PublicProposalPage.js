@@ -137,11 +137,19 @@ const PublicProposalPage = () => {
                   <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
                   <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('proposalAccepted')}</h2>
                   <p className="text-gray-600 mb-6">{t('thankYouForAccepting')}</p>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md mx-auto">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md mx-auto mb-6">
                     <p className="text-sm text-green-800">
-                      {t('contractWillBeGenerated')}
+                      {t('pleaseCompleteAgreementForm')}
                     </p>
                   </div>
+                  <Button 
+                    onClick={() => navigate(`/agreement/${accessToken}`)}
+                    size="lg"
+                    className="bg-bayan-navy hover:bg-bayan-navy-light"
+                    data-testid="continue-to-agreement-btn"
+                  >
+                    {t('continueToAgreement')}
+                  </Button>
                 </div>
               </CardContent>
             </Card>

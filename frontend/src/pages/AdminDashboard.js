@@ -438,8 +438,8 @@ const AdminDashboard = () => {
                         data-testid={`application-form-${form.id}`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        {/* Actions - LEFT side in RTL */}
-                        <div className={`flex items-center gap-2 mt-3 lg:mt-0 order-last lg:order-first ${isRTL ? '' : 'lg:order-last'}`}>
+                        {/* Actions - On LEFT in RTL mode */}
+                        <div className={`flex items-center gap-2 mt-3 lg:mt-0 ${isRTL ? 'lg:order-first' : 'lg:order-last'}`}>
                           {form.status === 'pending' && (
                             <>
                               <Button 

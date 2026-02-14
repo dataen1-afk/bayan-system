@@ -72,6 +72,15 @@ const AdminDashboard = () => {
     return () => i18n.off('languageChanged', checkRTL);
   }, [i18n]);
 
+  // Handle navigation for reports and templates tabs
+  useEffect(() => {
+    if (activeTab === 'reports') {
+      navigate('/reports');
+    } else if (activeTab === 'templates') {
+      navigate('/templates');
+    }
+  }, [activeTab, navigate]);
+
   useEffect(() => {
     loadData();
   }, []);

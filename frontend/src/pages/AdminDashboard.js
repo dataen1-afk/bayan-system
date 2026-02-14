@@ -608,6 +608,29 @@ const AdminDashboard = () => {
         const acceptedProposals = proposals.filter(p => ['accepted', 'agreement_signed'].includes(p.status)).length;
         const totalQuotedValue = proposals.reduce((sum, p) => sum + (p.total_amount || 0), 0);
         
+        // DataTable columns for proposals
+        const proposalColumns = [
+          { key: 'organization', label: t('organization'), width: 'w-[25%]', sortAccessor: (item) => item.organization_name || '' },
+          { key: 'contact', label: t('contact'), width: 'w-[18%]', sortAccessor: (item) => item.contact_person || '' },
+          { key: 'standards', label: t('standards'), width: 'w-[15%]' },
+          { key: 'status', label: t('status'), width: 'w-[12%]', sortAccessor: (item) => item.status },
+          { key: 'amount', label: t('amount'), width: 'w-[12%]', sortAccessor: (item) => item.total_amount || 0 },
+          { key: 'date', label: t('date'), width: 'w-[8%]', sortAccessor: (item) => new Date(item.issued_date || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'w-[10%]' }
+        ];
+
+        // Searchable columns for proposals
+        const proposalSearchableColumns = [
+          { accessor: (item) => item.organization_name },
+          { accessor: (item) => item.contact_person },
+          { accessor: (item) => item.contact_email }
+        ];
+
+        // Filter options for proposals
+        const proposalFilterOptions = [
+          { key: 'status', label: t('status'), accessor: (item) => item.status, options: proposalStatusOptions }
+        ];
+        
         return (
           <div className="space-y-6">
             {/* Quick Stats Header */}
@@ -660,134 +683,138 @@ const AdminDashboard = () => {
               </div>
             </div>
             
-            {/* Proposals/Quotations List */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className={`border-b border-slate-100 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <CardTitle className={`flex items-center gap-2 text-lg font-semibold text-slate-900 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <DollarSign className="w-5 h-5 text-bayan-navy" />
-                  {t('allProposals')}
-                </CardTitle>
-                <CardDescription className="text-sm text-slate-500">{t('trackProposalStatus')}</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-slate-100" data-testid="proposals-list">
-                  {proposals.length === 0 ? (
-                    <div className="text-center py-16 px-4">
-                      <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                        <DollarSign className="w-10 h-10 text-slate-400" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('noProposalsYet')}</h3>
-                      <p className="text-sm text-slate-500 mb-2 max-w-sm mx-auto">{t('createProposalFromForms')}</p>
-                    </div>
-                  ) : (
-                    proposals.map((proposal, index) => (
-                      <div 
-                        key={proposal.id} 
-                        className={`group flex flex-col lg:flex-row lg:items-center justify-between p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${!isRTL ? 'lg:flex-row-reverse' : ''}`}
-                        data-testid={`proposal-${proposal.id}`}
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        {/* Main Info - On RIGHT in RTL, LEFT in LTR */}
-                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            <h3 className="font-semibold text-slate-900 truncate">
-                              {proposal.organization_name}
-                            </h3>
-                            {/* Status Badge */}
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                              proposal.status === 'accepted' || proposal.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              proposal.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                              proposal.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              proposal.status === 'modification_requested' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                              'bg-amber-50 text-amber-700 border-amber-200'
-                            }`}>
-                              {t(proposal.status)}
-                            </span>
-                          </div>
-                          
-                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            <span>{proposal.contact_person}</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-slate-500">{proposal.contact_email}</span>
-                          </div>
-                          
-                          {/* Standards badges */}
-                          <div className={`flex flex-wrap gap-1.5 mt-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                            {proposal.standards?.map((std) => (
-                              <span key={std} className="px-2 py-0.5 bg-bayan-navy/10 text-bayan-navy text-xs font-medium rounded">
-                                {std}
-                              </span>
-                            ))}
-                          </div>
-                          
-                          {/* Date */}
-                          {proposal.issued_date && (
-                            <p className="text-xs text-slate-400 mt-2">
-                              {t('issuedOn')}: {formatDate(proposal.issued_date)}
-                            </p>
-                          )}
-                        </div>
-                        
-                        {/* Price & Actions - On LEFT in RTL, RIGHT in LTR */}
-                        <div className={`flex flex-col gap-3 mt-4 lg:mt-0 ${isRTL ? 'items-start' : 'items-end'}`}>
-                          {/* Price prominently displayed */}
-                          <div className={isRTL ? 'text-start' : 'text-end'}>
-                            <p className="text-2xl font-bold text-slate-900">
-                              {formatCurrency(proposal.total_amount)}
-                            </p>
-                            <p className="text-xs text-slate-500">{t('totalAmount')}</p>
-                          </div>
-                          
-                          {/* Action Buttons */}
-                          <div className="flex items-center gap-2">
-                            {proposal.access_token && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  const url = `${window.location.origin}/proposal/${proposal.access_token}`;
-                                  window.open(url, '_blank');
-                                }}
-                                className="h-9 border-slate-200"
-                              >
-                                <Eye className="w-4 h-4 me-1.5" />
-                                {t('viewProposal')}
-                              </Button>
-                            )}
-                            
-                            {proposal.status === 'agreement_signed' && (
-                              <Button
-                                size="sm"
-                                onClick={async () => {
-                                  try {
-                                    const response = await axios.get(`${API}/public/contracts/${proposal.access_token}/pdf`, {
-                                      responseType: 'blob'
-                                    });
-                                    const url = window.URL.createObjectURL(new Blob([response.data]));
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.setAttribute('download', `contract_${proposal.id.substring(0, 8)}.pdf`);
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    link.remove();
-                                  } catch (error) {
-                                    console.error('Error downloading contract:', error);
-                                  }
-                                }}
-                                className="h-9 bg-emerald-600 hover:bg-emerald-700 shadow-sm"
-                              >
-                                <Download className="w-4 h-4 me-1.5" />
-                                {t('downloadContract')}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
+            {/* Proposals/Quotations Data Table */}
+            <DataTable
+              data={proposals}
+              columns={proposalColumns}
+              searchableColumns={proposalSearchableColumns}
+              filterOptions={proposalFilterOptions}
+              isRTL={isRTL}
+              defaultSort={{ key: 'date', direction: 'desc' }}
+              title={t('allProposals')}
+              description={t('trackProposalStatus')}
+              emptyState={
+                <div className="text-center py-16 px-4">
+                  <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                    <DollarSign className="w-10 h-10 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('noProposalsYet')}</h3>
+                  <p className="text-sm text-slate-500 mb-2 max-w-sm mx-auto">{t('createProposalFromForms')}</p>
                 </div>
-              </CardContent>
-            </Card>
+              }
+              renderRow={(proposal, index) => (
+                <div 
+                  key={proposal.id} 
+                  className={`group flex flex-col lg:flex-row lg:items-center p-4 lg:p-5 hover:bg-slate-50/80 transition-colors ${isRTL ? 'lg:flex-row-reverse' : ''}`}
+                  data-testid={`proposal-${proposal.id}`}
+                >
+                  {/* Organization */}
+                  <div className={`lg:w-[25%] min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="font-semibold text-slate-900 truncate">
+                        {proposal.organization_name}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Contact */}
+                  <div className={`lg:w-[18%] min-w-0 mt-2 lg:mt-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
+                      <span className="text-sm text-slate-700 truncate">{proposal.contact_person || '-'}</span>
+                    </div>
+                    <span className="text-xs text-slate-500 truncate block lg:hidden">{proposal.contact_email}</span>
+                  </div>
+                  
+                  {/* Standards */}
+                  <div className={`lg:w-[15%] min-w-0 mt-2 lg:mt-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex flex-wrap gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      {proposal.standards?.slice(0, 2).map((std) => (
+                        <span key={std} className="px-1.5 py-0.5 bg-bayan-navy/10 text-bayan-navy text-xs font-medium rounded">
+                          {std}
+                        </span>
+                      ))}
+                      {proposal.standards?.length > 2 && (
+                        <span className="text-xs text-slate-400">+{proposal.standards.length - 2}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Status */}
+                  <div className={`lg:w-[12%] mt-2 lg:mt-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                      proposal.status === 'accepted' || proposal.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      proposal.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                      proposal.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      proposal.status === 'modification_requested' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                      'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}>
+                      {t(proposal.status)}
+                    </span>
+                  </div>
+                  
+                  {/* Amount */}
+                  <div className={`lg:w-[12%] min-w-0 mt-2 lg:mt-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <span className="font-bold text-slate-900">
+                      {formatCurrency(proposal.total_amount)}
+                    </span>
+                  </div>
+                  
+                  {/* Date */}
+                  <div className={`lg:w-[8%] hidden lg:block ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-1 text-sm text-slate-500 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <Calendar className="w-3.5 h-3.5" />
+                      {formatDate(proposal.issued_date)}
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className={`lg:w-[10%] flex items-center gap-2 mt-3 lg:mt-0 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-end'}`}>
+                    {proposal.access_token && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const url = `${window.location.origin}/proposal/${proposal.access_token}`;
+                          window.open(url, '_blank');
+                        }}
+                        className="h-8 px-2"
+                        title={t('viewProposal')}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
+                    
+                    {proposal.status === 'agreement_signed' && (
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const response = await axios.get(`${API}/public/contracts/${proposal.access_token}/pdf`, {
+                              responseType: 'blob'
+                            });
+                            const url = window.URL.createObjectURL(new Blob([response.data]));
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.setAttribute('download', `contract_${proposal.id.substring(0, 8)}.pdf`);
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                          } catch (error) {
+                            console.error('Error downloading contract:', error);
+                          }
+                        }}
+                        className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        <Download className="w-4 h-4 me-1" />
+                        <span className="hidden sm:inline">{t('pdf')}</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            />
           </div>
         );
 

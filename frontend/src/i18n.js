@@ -1570,6 +1570,7 @@ const resources = {
       "customerPortal": "بوابة العملاء",
       "trackYourApplicationStatus": "تتبع حالة طلبك وشهادتك",
       "trackYourOrder": "تتبع طلبك",
+      "redirectingToPortal": "سيتم توجيهك لتتبع طلبك...",
       "enterTrackingIdToViewStatus": "أدخل رقم التتبع أو رقم النموذج لعرض حالة طلبك",
       "enterTrackingIdPlaceholder": "أدخل رقم التتبع (مثال: abc123-def456...)",
       "pleaseEnterTrackingId": "يرجى إدخال رقم التتبع",

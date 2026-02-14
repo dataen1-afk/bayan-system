@@ -766,7 +766,7 @@ const AdminDashboard = () => {
                   data-testid={`proposal-${proposal.id}`}
                 >
                   {/* Organization */}
-                  <div className="lg:w-[25%] min-w-0 text-start">
+                  <div className="lg:w-[22%] min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="font-semibold text-slate-900 truncate">
@@ -776,7 +776,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Contact */}
-                  <div className="lg:w-[18%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
                       <span className="text-sm text-slate-700 truncate">{proposal.contact_person || '-'}</span>
@@ -785,7 +785,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Standards */}
-                  <div className="lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:w-[12%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex flex-wrap gap-1">
                       {proposal.standards?.slice(0, 2).map((std) => (
                         <span key={std} className="px-1.5 py-0.5 bg-bayan-navy/10 text-bayan-navy text-xs font-medium rounded">
@@ -799,8 +799,8 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Status */}
-                  <div className="lg:w-[12%] mt-2 lg:mt-0 text-start">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                  <div className="lg:w-[14%] mt-2 lg:mt-0 text-start">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${
                       proposal.status === 'accepted' || proposal.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                       proposal.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
                       proposal.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
@@ -812,22 +812,22 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Amount */}
-                  <div className="lg:w-[12%] min-w-0 mt-2 lg:mt-0 text-start">
-                    <span className="font-bold text-slate-900">
+                  <div className="lg:w-[13%] min-w-0 mt-2 lg:mt-0 text-start">
+                    <span className="font-bold text-slate-900 whitespace-nowrap">
                       {formatCurrency(proposal.total_amount)}
                     </span>
                   </div>
                   
                   {/* Date */}
-                  <div className="lg:w-[8%] hidden lg:block text-start">
-                    <div className="flex items-center gap-1 text-sm text-slate-500">
-                      <Calendar className="w-3.5 h-3.5" />
+                  <div className="lg:w-[10%] hidden lg:block text-start">
+                    <div className="flex items-center gap-1 text-sm text-slate-500 whitespace-nowrap">
+                      <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       {formatDate(proposal.issued_date)}
                     </div>
                   </div>
                   
                   {/* Actions */}
-                  <div className="lg:w-[10%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
+                  <div className="lg:w-[14%] flex items-center gap-1 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {proposal.access_token && (
                       <Button
                         size="sm"

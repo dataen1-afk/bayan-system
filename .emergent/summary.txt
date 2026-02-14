@@ -18,44 +18,55 @@
 **User's preferred language**: The user communicates in English, but the application's primary language is **Arabic**. The next agent MUST ensure all features work correctly in both Arabic (with RTL) and English and continue to respond in English.
 
 **what currently exists?**
-The application is a full-stack Service Contract Management System. In the last session, the agent successfully fixed a critical and recurring Right-to-Left (RTL) layout bug in the main dashboard's data tables. Following the fix, the agent verified the functionality of several previously-added features (Customer Portal, Audit Scheduling, Document Management, Contact Log).
-
-Two new features were then implemented:
-1.  **Dual-Language PDF Generation**: Contracts can now be downloaded as a bilingual PDF containing both Arabic and English.
-2.  **Google Calendar Integration (Foundation)**: The backend and frontend have been prepared for Google Calendar integration to sync audit schedules. It is currently inactive, pending user-provided API credentials.
-
-A new dedicated Documents page was also created and integrated into the application with a sidebar link.
+A full-stack Service Contract Management application with a FastAPI backend and React frontend. The system supports a full workflow from form creation to contract generation. Recent work focused heavily on UI/UX fixes and feature refinement based on user feedback. Several new features were added (Advanced Audit Scheduling, simulated SMS notifications, multilingual PDFs for all documents) and two less-used features (Contact Log and Documents) were removed to streamline the UI. The admin dashboard data tables have been adjusted to prevent content overlap, but the user is requesting further professional refinement of the layout.
 
 **Last working item**:
-The agent's last action was to successfully implement and verify the new features. The session concluded with the user asking a question about the core application workflow, seeking to understand where client-submitted data appears in the admin dashboard.
--   **Last item agent was working**: Responding to the user's question about the core workflow for accessing client-submitted data.
--   **Status**: NOT STARTED
--   **Agent Testing Done**: N/A (This is a user clarification question, not a feature/bug).
--   **Which testing method agent to use?**: N/A
--   **User Testing Done**: N/A
+The agent was refining the UI for the data tables on the Forms, Quotations, and Contracts tabs within the  component. The user reported that columns were overlapping, making data and icons difficult to see. The agent increased column widths, which improved the layout, but the user has asked for a more professional expansion as the icons are still not displaying perfectly.
+-   **Last item agent was working**: Refining the data table UI in  to improve icon visibility and overall layout professionalism.
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: Y (via screenshot)
+-   **Which testing method agent to use?**: screenshot tool
+-   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   None. The critical RTL bug has been resolved.
+-   **Issue 1 (P0)**: UI layout of data tables needs professional refinement.
+    -   **Description**: The user is not fully satisfied with the layout of the data tables in the admin dashboard. Despite recent fixes to expand column widths, the action icons are still not displaying perfectly, and the overall layout needs to be more professional. This applies to the Forms, Quotations, and Contracts tabs.
+    -   **Attempted fixes**: The agent adjusted the  Tailwind classes for the table headers and rows in  to give more space to the columns.
+    -   **Next debug checklist**:
+        1.  Re-examine .
+        2.  Instead of just widening columns, use flexbox (, , , ) for the Actions column to ensure consistent spacing and alignment of icons, regardless of column width.
+        3.  Ensure there is sufficient padding around the icons.
+        4.  Verify the fix on all three tabs (Forms, Quotations, Contracts) as they share a similar structure.
+    -   **Why fix this issue and what will be achieved with the fix?**: To satisfy the user's request for a professional and clean UI, ensuring all interactive elements are clearly visible and easy to use.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: Y (This is the second iteration of fixing this layout issue).
+    -   **Should Test frontend/backend/both after fix?**: frontend
 
 **In progress Task List**:
 -   None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   **(P0) Answer User's Workflow Question**: Explain to the user how to find and access client-submitted data in the admin dashboard, referencing the Forms tab.
-    -   **(P1) Finalize Google Calendar Integration**: Guide the user on how to obtain  and . Once they provide the credentials, add them to the  file and activate the sync functionality in  and .
+    -   **(P1) Finalize Google Calendar Integration**: Guide the user on obtaining  and . Once provided, add them to  and activate the sync functionality. The backend logic is in  and the frontend is in .
+    -   **(P1) Finalize Twilio SMS Integration**: Guide the user on obtaining Twilio credentials (, , ). Once provided, add them to  to enable live SMS notifications.
 -   **Future Tasks**:
-    -   Test the functionality of sending actual emails (currently simulated).
-    -   Implement advanced audit scheduling with recurring events.
-    -   Add multilingual support to all generated PDFs, not just contracts.
+    -   Test and enable the functionality of sending actual emails (e.g., via SendGrid/Resend integration).
 
 **Completed work in this session**
--   **RTL Bug Fix (RESOLVED)**: Fixed the critical, recurring RTL layout bug in , ensuring action buttons are on the left and text is right-aligned in Arabic across the Forms, Quotations, and Contracts tabs.
--   **Feature Verification**: Successfully tested and confirmed the functionality of the Customer Portal, Audit Scheduling, Document Management, and Contact Log pages.
--   **New Documents Page**: Created , added a route in , and a navigation link in .
--   **Bilingual PDF Generation**: Created  and a new endpoint () to generate PDFs with both Arabic and English content. Added a corresponding download button in .
--   **Google Calendar Integration Foundation**: Added placeholder backend endpoints in  and frontend UI elements/logic in  to support Google Calendar sync. This feature is inactive until the user provides credentials.
--   **Internationalization**: Added new translations for the new features in .
+-   **UI/UX Fixes**:
+    -   Fixed truncated Mark All as Read text in the notification dropdown by increasing its width.
+    -   Fixed the Mark All as Read functionality to delete notifications from the database instead of just marking them as read.
+    -   Fixed checkbox hitbox issue in the Certification Agreement form, making the entire checkbox area clickable.
+    -   Added missing Arabic translation for the COMPLETED status card on the Forms dashboard.
+    -   Added missing Arabic translation for the modification_requested status.
+    -   Adjusted column widths on Forms, Quotations, and Contracts tabs to prevent data overlap.
+-   **Feature Implementation**:
+    -   **Advanced Audit Scheduling**: Implemented recurring events functionality (backend and frontend).
+    -   **Simulated SMS Notifications**: Added backend logic and a frontend button to send SMS reminders (in simulation mode).
+    -   **Multilingual PDFs**: Extended bilingual PDF generation to Forms and Quotations.
+-   **Feature Refinement**:
+    -   **Removed Features**: Deleted the Contact History and Documents pages and their sidebar links per user request.
+    -   **Customer Portal Access**: Added a link to the Customer Portal in the admin sidebar and implemented an auto-redirect to the portal after a client signs a contract.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -63,78 +74,81 @@ The agent's last action was to successfully implement and verify the new feature
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork**: Incorrect RTL layout.
 -   **Recurrence count**: 3+
--   **Status**: RESOLVED
+-   **Status**: RESOLVED (The specific RTL bug from the previous fork was fixed. This session addressed new, related layout/spacing issues).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Motor, Pydantic, ReportLab
--   **Frontend**: React, , , , Tailwind CSS
+-   **Backend**: FastAPI, Motor, Pydantic, ReportLab, 
+-   **Frontend**: React, , , , Tailwind CSS, shadcn/ui
 -   **Database**: MongoDB
--   **Styling**: Tailwind CSS with  and  variants.
 
 **key DB schema**
--   No changes made in this session.
+-   **AuditSchedule**: Modified to include  (boolean),  (string), and  (string).
 
 **changes in tech stack**
--   No new libraries were installed.  usage was extended for custom font loading and bilingual document generation.
+-   **Added**:  for handling recurring event logic.
 
 **All files of reference**
--    (RTL fix)
--    (RTL fix and bilingual PDF button)
--    (New endpoints)
--    (New file)
--    (New file)
--    (New route)
--    (New link)
--    (Google Calendar foundation)
--    (New translations)
+-    (Primary file for UI layout fixes)
+-    (Notification fix)
+-    (Checkbox fix)
+-    (New endpoints/logic for features)
+-    (New scheduling UI)
+-    (Sidebar link changes)
+-    (Route changes)
+-    (Translation updates)
+-    (Redirect logic)
 
 **Areas that need refactoring**:
--   None.
+-   The  component has required multiple layout adjustments. It could benefit from a more robust and flexible layout system for its data tables (e.g., consistent use of flexbox for action columns) to avoid future tweaks.
 
 **key api endpoints**
--   : **(NEW)** Generates a bilingual (AR/EN) PDF for a contract.
--   : **(NEW)** Initiates the Google OAuth flow.
--   : **(NEW)** Handles the redirect from Google after authentication.
--   : **(NEW)** Syncs audit schedules to the user's Google Calendar.
+-   : **(Modified)** Now supports creating recurring audits.
+-   : **(NEW)** Checks if Twilio credentials are configured.
+-   : **(NEW)** Sends a simulated SMS reminder.
+-   : **(NEW)** Generates a bilingual PDF for a submitted form.
+-   : **(NEW)** Generates a bilingual PDF for a quotation.
+-   : **(NEW)** Deletes all notifications for the current user.
 
 **Critical Info for New Agent**
--   Your first task is to answer the user's question about the application's workflow: Where does this screen appear, and how do I access the clients data?". You should explain that new client submissions appear in the "Forms" tab on the Admin Dashboard.
--   The next priority is to finalize the Google Calendar integration. The foundation is built, but you must guide the user to obtain and provide the necessary OAuth credentials (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) to activate the feature.
--   The major recurring RTL layout bug has been fixed and verified. All previously implemented features have also been verified by the testing agent. The application is in a stable state.
+-   Your immediate priority (P0) is to address the user's feedback on the data table layout in . The user finds the icons are still not displaying perfectly and wants a more professional look. Focus on improving the spacing and alignment within the Actions column, likely using flexbox properties (, ) rather than just adjusting grid widths.
+-   The user has approved implementing several features (Google Calendar, Twilio SMS) in a simulated mode. The foundation is complete, but they require user-provided credentials to be fully activated. Your next major task after the UI fix will be to guide the user on obtaining and setting up these credentials.
+-   The user has been very direct with feedback. Be prepared to remove or significantly alter features that don't fit their workflow.
 
 **documents and test reports created in this job**
--   `/app/test_reports/iteration_2.json` (Verification of RTL fix)
--   `/app/test_reports/iteration_3.json` (Verification of new Documents page)
--   `/app/test_reports/iteration_4.json` (Verification of Bilingual PDF and Google Calendar UI)
--   `/app/memory/PRD.md` (Updated with completed tasks)
+-    (Updated to reflect new features and removed pages).
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Confirms plan to fix RTL bug. - **Status: DONE**
-2.  **User**: Asks to verify features: Customer Portal, Audit Scheduling, Document Management, Contact Log. - **Status: DONE**
-3.  **User**: Asks to keep email sending simulated. - **Status: DONE**
-4.  **User**: Asks for Google Calendar integration ("choose the best and recommended system"). - **Status: IN PROGRESS (Foundation laid)**
-5.  **User**: Asks for multilingual (Arabic + English) PDF contracts. - **Status: DONE**
-6.  **User**: (Latest message) "In our first step, we send the application to the client. When the client fills in the required information, it should be automatically reflected in the AIM Adwaiting account, as the price quote will be calculated based on this. Where does this screen appear, and how do I access the clients data? - **Status: PENDING (This is the next action item)**
+1.  **User**: Asks about the purpose of the Contact Log and Documents screens, stating they see no benefit. - **Status: DONE**
+2.  **User**: I dont need it, remove it." (referring to Contact Log and Documents). - **Status: DONE**
+3.  **User**: "Where is the customer portal? How will the customer access it to track their orders?" - **Status: DONE**
+4.  **User**: Asks how they were supposed to share the portal link with clients before. - **Status: DONE**
+5.  **User**: "The right approach should be professional." Requests auto-redirect to the portal after contract signing and a portal link in the admin sidebar. - **Status: DONE**
+6.  **User**: Points out untranslated "COMPLETED" text on the Forms screen. - **Status: DONE**
+7.  **User**: "Look at the price quotes screen. The quote icon is not visible, and some amounts are overlaid... Expand the quote card to display the data clearly. Do this on all screens beforehand." - **Status: IN PROGRESS**
+8.  **User**: "Does expanding the display area require payment? Expand it professionally; the icons are still not displaying perfectly." - **Status: PENDING (This is the current task)**
+9.  **User**: "Okay, Ive sent the link to the wallet now, but before, how was I supposed to share it with the clients? - **Status: DONE**
+10. **User**: Good. (after agent removed features). - **Status: DONE**
 
 **Project Health Check:**
--   **Healthy**: The critical blocking bug has been resolved, and recent features have been verified.
+-   **Healthy**: The application is functional. The current focus is on UI/UX refinement to meet the user's standards for professionalism. No broken functionality.
 
 **3rd Party Integrations**
 -   : Used for PDF generation.
--   : Used for Excel generation.
+-   : Used for recurring event logic.
 -   **Google Calendar API**: Foundation laid, pending user credentials for activation.
+-   **Twilio SMS**: Foundation laid, pending user credentials for activation.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. The agent was used multiple times to successfully verify the RTL bug fix and the new features.
+-   **Testing agent used after significant changes**: NO. Agent has been self-testing with screenshots and curl commands for recent changes.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: None. The previous regression was fixed.
+-   **Known regressions**: None.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
 
 **What agent forgot to execute**
--   The agent successfully completed all requested tasks in the previous session. The session ended on a pending user question, which is the natural starting point for the next session.</analysis>
+-   The agent has been responsive and has not forgotten any explicitly requested tasks. All planned work from the conversation has been addressed or is in progress.</analysis>

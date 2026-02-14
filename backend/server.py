@@ -3001,6 +3001,519 @@ async def disconnect_calendar(credentials: HTTPAuthorizationCredentials = Depend
     
     return {"message": "Google Calendar disconnected"}
 
+
+# ================= SMS NOTIFICATIONS (TWILIO) =================
+
+# Twilio configuration
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
+TWILIO_ENABLED = bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER)
+
+class SMSRequest(BaseModel):
+    to_phone: str
+    message: str
+    customer_name: str = ""
+
+class SMSNotificationSettings(BaseModel):
+    enabled: bool = True
+    reminder_days_before: int = 1  # Days before audit to send reminder
+    send_on_proposal_accepted: bool = True
+    send_on_agreement_signed: bool = True
+    send_on_audit_scheduled: bool = True
+
+@api_router.get("/sms/status")
+async def get_sms_status(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get SMS integration status"""
+    await get_current_user(credentials)
+    
+    return {
+        "enabled": TWILIO_ENABLED,
+        "configured": TWILIO_ENABLED,
+        "simulation_mode": not TWILIO_ENABLED,
+        "message": "SMS notifications active" if TWILIO_ENABLED else "SMS running in simulation mode (no Twilio credentials)"
+    }
+
+@api_router.post("/sms/send")
+async def send_sms(sms_data: SMSRequest, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Send SMS notification"""
+    await get_current_user(credentials)
+    
+    if TWILIO_ENABLED:
+        # Real Twilio integration
+        try:
+            from twilio.rest import Client
+            client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+            
+            message = client.messages.create(
+                body=sms_data.message,
+                from_=TWILIO_PHONE_NUMBER,
+                to=sms_data.to_phone
+            )
+            
+            # Log the SMS
+            sms_log = {
+                "id": str(uuid.uuid4()),
+                "to_phone": sms_data.to_phone,
+                "customer_name": sms_data.customer_name,
+                "message": sms_data.message,
+                "status": "sent",
+                "twilio_sid": message.sid,
+                "sent_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.sms_logs.insert_one(sms_log)
+            
+            return {"success": True, "message": "SMS sent successfully", "sid": message.sid}
+            
+        except Exception as e:
+            logging.error(f"Twilio SMS error: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to send SMS: {str(e)}")
+    else:
+        # Simulation mode
+        sms_log = {
+            "id": str(uuid.uuid4()),
+            "to_phone": sms_data.to_phone,
+            "customer_name": sms_data.customer_name,
+            "message": sms_data.message,
+            "status": "simulated",
+            "sent_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.sms_logs.insert_one(sms_log)
+        
+        logging.info(f"[SIMULATED SMS] To: {sms_data.to_phone}, Message: {sms_data.message}")
+        
+        return {
+            "success": True, 
+            "message": "SMS simulated (Twilio not configured)",
+            "simulated": True,
+            "log_id": sms_log["id"]
+        }
+
+@api_router.get("/sms/logs")
+async def get_sms_logs(credentials: HTTPAuthorizationCredentials = Depends(security), limit: int = 50):
+    """Get SMS notification logs"""
+    await get_current_user(credentials)
+    
+    logs = await db.sms_logs.find({}, {"_id": 0}).sort("sent_at", -1).limit(limit).to_list(limit)
+    return logs
+
+@api_router.post("/sms/send-audit-reminder")
+async def send_audit_reminder(audit_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Send SMS reminder for an upcoming audit"""
+    await get_current_user(credentials)
+    
+    # Get audit details
+    audit = await db.audit_schedules.find_one({"id": audit_id}, {"_id": 0})
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    # Get contract/proposal for contact info
+    proposal = await db.proposals.find_one({"id": audit.get('contract_id')}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    contact_phone = proposal.get('contact_phone', '')
+    if not contact_phone:
+        raise HTTPException(status_code=400, detail="No phone number available for this client")
+    
+    # Create reminder message (bilingual)
+    message_ar = f"تذكير: موعد التدقيق المجدول لشركة {audit.get('organization_name', '')} في {audit.get('scheduled_date')} الساعة {audit.get('scheduled_time', '09:00')}. بيان للتحقق والمطابقة"
+    message_en = f"Reminder: Audit scheduled for {audit.get('organization_name', '')} on {audit.get('scheduled_date')} at {audit.get('scheduled_time', '09:00')}. BAYAN Auditing"
+    
+    full_message = f"{message_ar}\n\n{message_en}"
+    
+    # Send the SMS
+    sms_request = SMSRequest(
+        to_phone=contact_phone,
+        message=full_message,
+        customer_name=proposal.get('contact_name', '')
+    )
+    
+    result = await send_sms(sms_request, credentials)
+    
+    # Mark audit as reminder sent
+    await db.audit_schedules.update_one(
+        {"id": audit_id},
+        {"$set": {"sms_reminder_sent": True, "sms_reminder_sent_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return result
+
+
+# ================= MULTILINGUAL PDF GENERATION =================
+
+@api_router.get("/proposals/{proposal_id}/bilingual_pdf")
+async def generate_bilingual_proposal_pdf(proposal_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate bilingual (Arabic + English) PDF for a proposal/quotation"""
+    await get_current_user(credentials)
+    
+    proposal = await db.proposals.find_one({"id": proposal_id}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    # Generate the PDF
+    pdf_path = await generate_bilingual_proposal_pdf_file(proposal)
+    
+    return FileResponse(
+        pdf_path,
+        media_type='application/pdf',
+        filename=f'proposal_{proposal_id}_bilingual.pdf'
+    )
+
+async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
+    """Generate a bilingual proposal PDF"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib.units import cm
+    from reportlab.lib import colors
+    import arabic_reshaper
+    from bidi.algorithm import get_display
+    
+    # Register Arabic font
+    font_path = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
+    if font_path.exists():
+        try:
+            pdfmetrics.registerFont(TTFont('Amiri', str(font_path)))
+        except:
+            pass
+    
+    pdf_path = CONTRACTS_DIR / f"proposal_{proposal['id']}_bilingual.pdf"
+    c = canvas.Canvas(str(pdf_path), pagesize=A4)
+    width, height = A4
+    
+    def draw_arabic_text(text, x, y, font_size=12):
+        """Draw Arabic text with proper reshaping"""
+        try:
+            reshaped = arabic_reshaper.reshape(text)
+            bidi_text = get_display(reshaped)
+            c.setFont('Amiri', font_size)
+            c.drawRightString(x, y, bidi_text)
+        except:
+            c.setFont('Helvetica', font_size)
+            c.drawRightString(x, y, text)
+    
+    # Header
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.rect(0, height - 100, width, 100, fill=True, stroke=False)
+    
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 24)
+    c.drawCentredString(width/2, height - 50, "PRICE QUOTATION / عرض السعر")
+    
+    y = height - 140
+    
+    # English Section
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica-Bold', 14)
+    c.drawString(50, y, "ENGLISH")
+    y -= 30
+    
+    c.setFont('Helvetica', 11)
+    c.drawString(50, y, f"Organization: {proposal.get('organization_name', 'N/A')}")
+    y -= 20
+    c.drawString(50, y, f"Contact: {proposal.get('contact_name', 'N/A')} - {proposal.get('contact_email', 'N/A')}")
+    y -= 20
+    c.drawString(50, y, f"Standards: {', '.join(proposal.get('standards', []))}")
+    y -= 20
+    c.drawString(50, y, f"Total Amount: SAR {proposal.get('total_amount', 0):,.2f}")
+    y -= 20
+    c.drawString(50, y, f"Status: {proposal.get('status', 'N/A').replace('_', ' ').title()}")
+    y -= 20
+    c.drawString(50, y, f"Valid Until: {proposal.get('valid_until', 'N/A')}")
+    
+    y -= 50
+    
+    # Divider
+    c.setStrokeColor(colors.HexColor('#1e3a5f'))
+    c.setLineWidth(2)
+    c.line(50, y, width - 50, y)
+    y -= 30
+    
+    # Arabic Section
+    c.setFont('Helvetica-Bold', 14)
+    draw_arabic_text("العربية", width - 50, y, 14)
+    y -= 30
+    
+    draw_arabic_text(f"المنظمة: {proposal.get('organization_name', 'غير متوفر')}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"جهة الاتصال: {proposal.get('contact_name', 'غير متوفر')}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"المعايير: {', '.join(proposal.get('standards', []))}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"المبلغ الإجمالي: {proposal.get('total_amount', 0):,.2f} ريال", width - 50, y)
+    y -= 20
+    status_ar = {
+        'draft': 'مسودة',
+        'sent': 'مرسل',
+        'accepted': 'مقبول',
+        'rejected': 'مرفوض',
+        'agreement_signed': 'تم توقيع الاتفاقية'
+    }
+    draw_arabic_text(f"الحالة: {status_ar.get(proposal.get('status', ''), proposal.get('status', ''))}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"صالح حتى: {proposal.get('valid_until', 'غير متوفر')}", width - 50, y)
+    
+    # Footer
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.rect(0, 0, width, 50, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica', 10)
+    c.drawCentredString(width/2, 20, "BAYAN Auditing & Conformity | بيان للتحقق والمطابقة")
+    
+    c.save()
+    return str(pdf_path)
+
+
+@api_router.get("/forms/{form_id}/bilingual_pdf")
+async def generate_bilingual_form_pdf(form_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate bilingual (Arabic + English) PDF for a submitted form"""
+    await get_current_user(credentials)
+    
+    form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
+    if not form:
+        raise HTTPException(status_code=404, detail="Form not found")
+    
+    # Generate the PDF
+    pdf_path = await generate_bilingual_form_pdf_file(form)
+    
+    return FileResponse(
+        pdf_path,
+        media_type='application/pdf',
+        filename=f'form_submission_{form_id}_bilingual.pdf'
+    )
+
+async def generate_bilingual_form_pdf_file(form: dict) -> str:
+    """Generate a bilingual form submission PDF"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib import colors
+    import arabic_reshaper
+    from bidi.algorithm import get_display
+    
+    # Register Arabic font
+    font_path = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
+    if font_path.exists():
+        try:
+            pdfmetrics.registerFont(TTFont('Amiri', str(font_path)))
+        except:
+            pass
+    
+    pdf_path = CONTRACTS_DIR / f"form_{form['id']}_bilingual.pdf"
+    c = canvas.Canvas(str(pdf_path), pagesize=A4)
+    width, height = A4
+    
+    def draw_arabic_text(text, x, y, font_size=12):
+        try:
+            reshaped = arabic_reshaper.reshape(str(text))
+            bidi_text = get_display(reshaped)
+            c.setFont('Amiri', font_size)
+            c.drawRightString(x, y, bidi_text)
+        except:
+            c.setFont('Helvetica', font_size)
+            c.drawRightString(x, y, str(text))
+    
+    # Header
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.rect(0, height - 100, width, 100, fill=True, stroke=False)
+    
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 24)
+    c.drawCentredString(width/2, height - 50, "APPLICATION FORM / طلب الاعتماد")
+    
+    y = height - 140
+    company_data = form.get('company_data', {})
+    
+    # English Section
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica-Bold', 14)
+    c.drawString(50, y, "ENGLISH")
+    y -= 30
+    
+    c.setFont('Helvetica', 11)
+    c.drawString(50, y, f"Company: {company_data.get('companyName', 'N/A')}")
+    y -= 20
+    c.drawString(50, y, f"Contact: {company_data.get('contactPerson', 'N/A')}")
+    y -= 20
+    c.drawString(50, y, f"Email: {company_data.get('email', 'N/A')}")
+    y -= 20
+    c.drawString(50, y, f"Phone: {company_data.get('phone', 'N/A')}")
+    y -= 20
+    c.drawString(50, y, f"Employees: {company_data.get('totalEmployees', 'N/A')}")
+    y -= 20
+    c.drawString(50, y, f"Standards: {', '.join(company_data.get('certificationSchemes', []))}")
+    y -= 20
+    c.drawString(50, y, f"Status: {form.get('status', 'N/A').replace('_', ' ').title()}")
+    
+    y -= 50
+    
+    # Divider
+    c.setStrokeColor(colors.HexColor('#1e3a5f'))
+    c.setLineWidth(2)
+    c.line(50, y, width - 50, y)
+    y -= 30
+    
+    # Arabic Section
+    c.setFont('Helvetica-Bold', 14)
+    draw_arabic_text("العربية", width - 50, y, 14)
+    y -= 30
+    
+    draw_arabic_text(f"الشركة: {company_data.get('companyName', 'غير متوفر')}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"جهة الاتصال: {company_data.get('contactPerson', 'غير متوفر')}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"البريد الإلكتروني: {company_data.get('email', 'غير متوفر')}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"الهاتف: {company_data.get('phone', 'غير متوفر')}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"عدد الموظفين: {company_data.get('totalEmployees', 'غير متوفر')}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"المعايير: {', '.join(company_data.get('certificationSchemes', []))}", width - 50, y)
+    
+    # Footer
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.rect(0, 0, width, 50, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica', 10)
+    c.drawCentredString(width/2, 20, "BAYAN Auditing & Conformity | بيان للتحقق والمطابقة")
+    
+    c.save()
+    return str(pdf_path)
+
+
+@api_router.get("/reports/bilingual_pdf")
+async def generate_bilingual_report_pdf(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    report_type: str = "summary",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """Generate bilingual (Arabic + English) PDF report"""
+    await get_current_user(credentials)
+    
+    # Get data based on report type
+    if report_type == "summary":
+        # Get all relevant data
+        forms = await db.application_forms.find({}, {"_id": 0}).to_list(1000)
+        proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
+        agreements = await db.certification_agreements.find({}, {"_id": 0}).to_list(1000)
+        
+        report_data = {
+            "total_forms": len(forms),
+            "total_proposals": len(proposals),
+            "total_agreements": len(agreements),
+            "accepted_proposals": len([p for p in proposals if p.get('status') in ['accepted', 'agreement_signed']]),
+            "total_revenue": sum(p.get('total_amount', 0) for p in proposals if p.get('status') in ['accepted', 'agreement_signed'])
+        }
+    else:
+        report_data = {}
+    
+    # Generate the PDF
+    pdf_path = await generate_bilingual_report_pdf_file(report_data, report_type)
+    
+    return FileResponse(
+        pdf_path,
+        media_type='application/pdf',
+        filename=f'report_{report_type}_bilingual.pdf'
+    )
+
+async def generate_bilingual_report_pdf_file(data: dict, report_type: str) -> str:
+    """Generate a bilingual report PDF"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib import colors
+    import arabic_reshaper
+    from bidi.algorithm import get_display
+    
+    # Register Arabic font
+    font_path = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
+    if font_path.exists():
+        try:
+            pdfmetrics.registerFont(TTFont('Amiri', str(font_path)))
+        except:
+            pass
+    
+    pdf_path = CONTRACTS_DIR / f"report_{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    c = canvas.Canvas(str(pdf_path), pagesize=A4)
+    width, height = A4
+    
+    def draw_arabic_text(text, x, y, font_size=12):
+        try:
+            reshaped = arabic_reshaper.reshape(str(text))
+            bidi_text = get_display(reshaped)
+            c.setFont('Amiri', font_size)
+            c.drawRightString(x, y, bidi_text)
+        except:
+            c.setFont('Helvetica', font_size)
+            c.drawRightString(x, y, str(text))
+    
+    # Header
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.rect(0, height - 100, width, 100, fill=True, stroke=False)
+    
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 24)
+    c.drawCentredString(width/2, height - 50, "SUMMARY REPORT / تقرير ملخص")
+    
+    y = height - 140
+    
+    # English Section
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica-Bold', 14)
+    c.drawString(50, y, "ENGLISH")
+    y -= 30
+    
+    c.setFont('Helvetica', 11)
+    c.drawString(50, y, f"Total Applications: {data.get('total_forms', 0)}")
+    y -= 20
+    c.drawString(50, y, f"Total Proposals: {data.get('total_proposals', 0)}")
+    y -= 20
+    c.drawString(50, y, f"Accepted Proposals: {data.get('accepted_proposals', 0)}")
+    y -= 20
+    c.drawString(50, y, f"Total Contracts: {data.get('total_agreements', 0)}")
+    y -= 20
+    c.drawString(50, y, f"Total Revenue: SAR {data.get('total_revenue', 0):,.2f}")
+    y -= 20
+    c.drawString(50, y, f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    
+    y -= 50
+    
+    # Divider
+    c.setStrokeColor(colors.HexColor('#1e3a5f'))
+    c.setLineWidth(2)
+    c.line(50, y, width - 50, y)
+    y -= 30
+    
+    # Arabic Section
+    c.setFont('Helvetica-Bold', 14)
+    draw_arabic_text("العربية", width - 50, y, 14)
+    y -= 30
+    
+    draw_arabic_text(f"إجمالي الطلبات: {data.get('total_forms', 0)}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"إجمالي العروض: {data.get('total_proposals', 0)}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"العروض المقبولة: {data.get('accepted_proposals', 0)}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"إجمالي العقود: {data.get('total_agreements', 0)}", width - 50, y)
+    y -= 20
+    draw_arabic_text(f"إجمالي الإيرادات: {data.get('total_revenue', 0):,.2f} ريال", width - 50, y)
+    
+    # Footer
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.rect(0, 0, width, 50, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica', 10)
+    c.drawCentredString(width/2, 20, "BAYAN Auditing & Conformity | بيان للتحقق والمطابقة")
+    
+    c.save()
+    return str(pdf_path)
+
 @app.on_event("startup")
 async def startup_event():
     """Run startup tasks"""

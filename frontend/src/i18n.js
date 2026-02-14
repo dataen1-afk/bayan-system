@@ -1302,7 +1302,37 @@ const resources = {
       "viewContract": "عرض العقد",
       "totalContracts": "إجمالي العقود",
       "totalRevenue": "إجمالي الإيرادات",
-      "mostRecentContract": "أحدث عقد"
+      "mostRecentContract": "أحدث عقد",
+      
+      // Enhanced Reports
+      "filters": "التصفية",
+      "filterReports": "تصفية التقارير",
+      "filterDescription": "طبّق الفلاتر لتضييق نطاق بيانات التقرير",
+      "startDate": "تاريخ البداية",
+      "endDate": "تاريخ النهاية",
+      "applyFilters": "تطبيق الفلاتر",
+      "clearFilters": "مسح الفلاتر",
+      "filtersActive": "الفلاتر نشطة. يتم عرض النتائج المصفاة.",
+      "from": "من",
+      "to": "إلى",
+      "standard": "المعيار",
+      "all": "الكل",
+      "standardsBreakdown": "توزيع المعايير",
+      "proposalsByStandard": "العروض مجمعة حسب معيار الاعتماد",
+      
+      // Modification Request
+      "requestModification": "طلب تعديل",
+      "modificationRequested": "تم طلب تعديل",
+      "modificationRequestSent": "تم إرسال طلب التعديل إلى المسؤول.",
+      "waitingForResponse": "سيراجع المسؤول طلبك ويرد قريباً.",
+      "yourComment": "تعليقك",
+      "modificationModalDescription": "صف التغييرات التي ترغب في رؤيتها في العرض",
+      "enterModificationComment": "اشرح التعديلات التي تحتاجها...",
+      "requestedChanges": "التغييرات المطلوبة المحددة",
+      "enterRequestedChanges": "مثال: تعديل الأسعار، تغيير مواعيد التدقيق، تعديل النطاق...",
+      "sendRequest": "إرسال الطلب",
+      "pleaseEnterModificationComment": "يرجى إدخال تعليق يوضح التعديلات المطلوبة",
+      "errorRequestingModification": "خطأ في طلب التعديل"
     }
   }
 };

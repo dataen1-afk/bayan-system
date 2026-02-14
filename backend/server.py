@@ -1278,7 +1278,9 @@ async def get_public_proposal(access_token: str):
         status=proposal['status'],
         issuer_name=proposal.get('issuer_name', ''),
         issuer_designation=proposal.get('issuer_designation', ''),
-        issued_date=datetime.fromisoformat(proposal['issued_date']) if proposal.get('issued_date') else None
+        issued_date=datetime.fromisoformat(proposal['issued_date']) if proposal.get('issued_date') else None,
+        modification_comment=proposal.get('modification_comment', ''),
+        modification_requested_changes=proposal.get('modification_requested_changes', '')
     )
 
 @api_router.post("/public/proposal/{access_token}/respond")

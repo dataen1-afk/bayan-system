@@ -999,7 +999,7 @@ const AdminDashboard = () => {
                   data-testid={`contract-${contract.id}`}
                 >
                   {/* Organization */}
-                  <div className="lg:w-[25%] min-w-0 text-start">
+                  <div className="lg:w-[22%] min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                       <span className="font-semibold text-slate-900 truncate">
@@ -1009,7 +1009,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Contact */}
-                  <div className="lg:w-[18%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
                       <span className="text-sm text-slate-700 truncate">{contract.contact_person || '-'}</span>

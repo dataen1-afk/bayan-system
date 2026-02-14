@@ -6,7 +6,6 @@ import '@/i18n'; // Initialize i18n
 import { useTranslation } from 'react-i18next';
 import LoginPage from '@/pages/LoginPage';
 import AdminDashboard from '@/pages/AdminDashboard';
-import ClientDashboard from '@/pages/ClientDashboard';
 import PublicFormPage from '@/pages/PublicFormPage';
 import PublicProposalPage from '@/pages/PublicProposalPage';
 import CreateProposalPage from '@/pages/CreateProposalPage';
@@ -91,11 +90,7 @@ function App() {
             <Route 
               path="/dashboard" 
               element={
-                user ? (
-                  user.role === 'admin' ? <AdminDashboard /> : <ClientDashboard />
-                ) : (
-                  <Navigate to="/login" />
-                )
+                user ? <AdminDashboard /> : <Navigate to="/login" />
               } 
             />
             <Route 

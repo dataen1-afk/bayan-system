@@ -158,6 +158,33 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **New menu items**:
   - جدولة التدقيق (Audit Scheduling) → `/audit-scheduling`
   - سجل الاتصالات (Contact History) → `/contact-history`
+  - المستندات (Documents) → `/documents`
+
+### Bilingual PDF Contracts ✅ (NEW - Dec 2025)
+- **Dual-language PDF generation**: Arabic + English in same PDF
+- **Arabic text processing**: Uses arabic-reshaper and python-bidi for proper RTL display
+- **Arabic fonts**: Noto Sans Arabic font registration
+- **Admin endpoint**: `/api/contracts/{agreement_id}/pdf/bilingual`
+- **Public endpoint**: `/api/public/contracts/{access_token}/pdf/bilingual`
+- **UI**: Two PDF buttons on Contracts tab - standard and bilingual (AR/EN)
+- Includes all contract sections in both languages
+
+### Google Calendar Integration ✅ (NEW - Dec 2025)
+- **Status endpoint**: `/api/calendar/status` - Check connection status
+- **Auth URL endpoint**: `/api/calendar/auth/url` - Get OAuth URL
+- **OAuth callback**: `/api/oauth/calendar/callback` - Handle Google auth
+- **Sync audit**: `/api/calendar/sync-audit` - Sync audit to Google Calendar
+- **Disconnect**: `/api/calendar/disconnect` - Remove calendar connection
+- **UI**: Connect/Disconnect buttons on Audit Scheduling page
+- **Sync button**: Per-audit sync to Google Calendar when connected
+- **Note**: Requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in environment
+
+### Documents Page ✅ (NEW - Dec 2025)
+- **Dedicated page**: `/documents`
+- **Sidebar link**: Added to admin navigation
+- **Features**: Upload, download, delete documents
+- **Grid layout**: Responsive document cards
+- **RTL support**: Full Arabic layout support
 - Proper navigation with route handling
 
 ## API Endpoints

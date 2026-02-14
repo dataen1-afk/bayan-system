@@ -45,6 +45,7 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Quotations Screen**: Quick Stats header (Total Proposals, Pending Review, Accepted, Total Quoted), prominent pricing
 - **Contracts Screen**: Stats cards (Total Contracts, Revenue, Most Recent), Download PDF buttons
 - **Notification Dropdown**: "Mark All as Read" button fully visible (wider dropdown), clicking clears/deletes all notifications from database to prevent accumulation
+- **Certification Agreement Checkboxes**: Fixed checkbox hitbox issue - clicking anywhere on the checkbox row (box or text) now properly toggles the selection for both Standards and Acknowledgements sections
 - **Numeral Standardization**: All numbers display in Western Arabic numerals (0-9)
 - **Currency Standardization**: All amounts show "SAR" instead of "ر.س."
 

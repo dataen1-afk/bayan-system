@@ -1316,12 +1316,10 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
         </CardContent>
       </Card>
 
-      {/* Navigation Buttons */}
-      <div className={cn(
-        "flex justify-between mt-6",
-        isRTL && "flex-row-reverse"
-      )}>
-        <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
+      {/* Navigation Buttons - Fixed positioning for RTL */}
+      <div className="flex justify-between mt-6">
+        {/* Previous Button - Right side in RTL */}
+        <div className={cn("flex gap-2", isRTL ? "order-2" : "order-1")}>
           {currentStep > 1 && (
             <Button
               type="button"
@@ -1335,7 +1333,8 @@ const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly =
           )}
         </div>
 
-        <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
+        {/* Next/Submit Button - Left side in RTL */}
+        <div className={cn("flex gap-2", isRTL ? "order-1 flex-row-reverse" : "order-2")}>
           {!readOnly && (
             <Button
               type="button"

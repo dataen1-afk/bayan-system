@@ -25,6 +25,7 @@ const TemplatesPage = () => {
   const [activeTab, setActiveTab] = useState('packages');
   const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
   // Form states
   const [newPackage, setNewPackage] = useState({

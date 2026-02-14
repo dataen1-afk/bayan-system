@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -22,6 +22,9 @@ from email.mime.multipart import MIMEMultipart
 
 # Import audit calculator
 from audit_calculator import calculate_total_audit_time
+
+# Import PDF generator
+from pdf_generator import generate_contract_pdf
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

@@ -81,6 +81,7 @@ const AuditSchedulingPage = () => {
   useEffect(() => {
     loadData();
     loadCalendarStatus();
+    loadSmsStatus();
     
     // Check if returning from calendar connection
     if (searchParams.get('calendar_connected') === 'true') {

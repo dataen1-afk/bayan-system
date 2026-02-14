@@ -91,6 +91,64 @@ class ContractPDFGenerator:
             textColor=colors.gray
         ))
 
+    def _process_image_for_pdf(self, image_data, width, height, fallback=''):
+        """
+        Process a base64 image for PDF embedding with robust error handling.
+        Returns an Image element or fallback string if processing fails.
+        """
+        if not image_data:
+            return fallback
+        
+        try:
+            # Extract base64 data from data URL
+            if image_data.startswith('data:image'):
+                base64_data = image_data.split(',')[1]
+            else:
+                base64_data = image_data
+            
+            image_bytes = base64.b64decode(base64_data)
+            
+            # Try PIL processing first for better compatibility
+            try:
+                from PIL import Image as PILImage
+                pil_img = PILImage.open(io.BytesIO(image_bytes))
+                
+                # Force load to check if data is valid
+                pil_img.load()
+                
+                # Convert to RGB if needed (handle RGBA, P, LA modes)
+                if pil_img.mode in ('RGBA', 'LA'):
+                    background = PILImage.new('RGB', pil_img.size, (255, 255, 255))
+                    background.paste(pil_img, mask=pil_img.split()[-1])
+                    pil_img = background
+                elif pil_img.mode == 'P':
+                    pil_img = pil_img.convert('RGB')
+                elif pil_img.mode != 'RGB':
+                    pil_img = pil_img.convert('RGB')
+                
+                # Save to a clean PNG buffer
+                clean_buffer = io.BytesIO()
+                pil_img.save(clean_buffer, format='PNG')
+                clean_buffer.seek(0)
+                
+                return Image(clean_buffer, width=width, height=height)
+            except Exception as pil_error:
+                print(f"PIL image processing failed: {pil_error}")
+                
+                # Fallback: try reportlab directly
+                try:
+                    direct_buffer = io.BytesIO(image_bytes)
+                    direct_buffer.seek(0)
+                    return Image(direct_buffer, width=width, height=height)
+                except Exception as direct_error:
+                    print(f"Direct reportlab image also failed: {direct_error}")
+                    return fallback
+                    
+        except Exception as e:
+            print(f"Error processing image for PDF: {e}")
+            return fallback
+
+
     def _create_header(self, canvas, doc):
         """Create document header with logo and company info"""
         canvas.saveState()

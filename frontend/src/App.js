@@ -14,6 +14,7 @@ import ReportsPage from '@/pages/ReportsPage';
 import TemplatesPage from '@/pages/TemplatesPage';
 import CustomerPortalPage from '@/pages/CustomerPortalPage';
 import AuditSchedulingPage from '@/pages/AuditSchedulingPage';
+import ContactHistoryPage from '@/pages/ContactHistoryPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

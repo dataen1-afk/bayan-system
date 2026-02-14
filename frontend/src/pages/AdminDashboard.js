@@ -231,6 +231,38 @@ const AdminDashboard = () => {
     setShowApplicationForm(true);
   };
 
+  // Download contract PDF
+  const handleDownloadContract = async (formId) => {
+    try {
+      // First find the agreement for this form
+      const proposalsRes = await axios.get(`${API}/proposals`);
+      const proposal = proposalsRes.data.find(p => p.application_form_id === formId && p.status === 'agreement_signed');
+      
+      if (!proposal) {
+        alert(t('noAgreementFound'));
+        return;
+      }
+      
+      // Download PDF using the agreement endpoint
+      const response = await axios.get(`${API}/public/contracts/${proposal.access_token}/pdf`, {
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contract_${formId.substring(0, 8)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading contract:', error);
+      alert(t('errorDownloadingContract'));
+    }
+  };
+
   // Get status badge color
   const getStatusBadgeColor = (status) => {
     switch (status) {

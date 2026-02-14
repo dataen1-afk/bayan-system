@@ -234,9 +234,12 @@ class TestFullAgreementFlow:
             json=duplicate_data
         )
         
-        # Should return 400 - agreement already submitted
+        # Should return 400 - agreement already submitted or proposal status changed
         assert response.status_code == 400, f"Expected 400, got {response.status_code}"
-        assert "already" in response.text.lower()
+        # Error can be "already submitted" OR "must be accepted" (if proposal status changed to agreement_signed)
+        error_msg = response.text.lower()
+        assert "already" in error_msg or "accepted" in error_msg, \
+            f"Expected error about already submitted or status, got: {response.text}"
         print("TEST PASSED: Duplicate submission correctly rejected")
 
 

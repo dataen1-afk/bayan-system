@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,16 @@ import {
   Save
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// FormField component defined OUTSIDE the main component to prevent re-creation
+const FormField = ({ label, required, children, className, isRTL }) => (
+  <div className={cn("space-y-2", className)}>
+    <Label className={cn("font-medium", isRTL && "text-right block")}>
+      {label} {required && <span className="text-red-500">*</span>}
+    </Label>
+    {children}
+  </div>
+);
 
 const ApplicationForm = ({ onSubmit, onSaveDraft, initialData = null, readOnly = false }) => {
   const { t, i18n } = useTranslation();

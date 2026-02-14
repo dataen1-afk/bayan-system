@@ -772,6 +772,21 @@ const resources = {
       "delete": "Delete",
       "time": "Time",
       
+      // Google Calendar Integration
+      "connectGoogleCalendar": "Connect Google Calendar",
+      "calendarConnected": "Calendar Connected",
+      "confirmDisconnectCalendar": "Are you sure you want to disconnect Google Calendar?",
+      "syncToCalendar": "Sync to Google Calendar",
+      "auditSyncedToCalendar": "Audit synced to Google Calendar successfully",
+      "calendarSyncError": "Error syncing to calendar",
+      "calendarConnectError": "Error connecting to Google Calendar",
+      "synced": "Synced",
+      
+      // Bilingual PDF
+      "downloadBilingualPDF": "Download Bilingual PDF (AR/EN)",
+      "downloadEnglishPDF": "Download English PDF",
+      "downloadArabicPDF": "Download Arabic PDF",
+      
       // Contact History
       "contactHistory": "Contact History",
       "addContact": "Add Contact",

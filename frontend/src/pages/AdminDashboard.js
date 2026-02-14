@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { API, AuthContext } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import ApplicationForm from '@/components/ApplicationForm';
 
 const AdminDashboard = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [isRTL, setIsRTL] = useState(() => {
     return i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
   });

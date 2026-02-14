@@ -116,10 +116,10 @@ const PublicProposalPage = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', {
-      style: 'currency',
-      currency: proposal?.service_fees?.currency || 'SAR'
-    }).format(amount);
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount || 0) + ' SAR';
   };
 
   if (loading) {

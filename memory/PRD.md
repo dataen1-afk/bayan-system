@@ -188,6 +188,32 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **RTL support**: Full Arabic layout support
 - Proper navigation with route handling
 
+### Advanced Audit Scheduling with Recurring Events ✅ (NEW - Feb 2026)
+- **Recurring Event Support**: Create audits that automatically repeat
+- **Frequency Options**: Weekly, Monthly, Quarterly (every 3 months), Yearly
+- **End Date Configuration**: Set when recurring series should end
+- **Auto-generation**: System automatically creates all recurring audit instances
+- **UI**: Checkbox to enable recurring + frequency dropdown + end date picker
+- **Backend**: Uses python-dateutil for date calculations
+
+### SMS Notifications via Twilio ✅ (NEW - Feb 2026)
+- **Status endpoint**: `/api/sms/status` - Check SMS configuration status
+- **Send endpoint**: `/api/sms/send` - Send SMS notification
+- **Audit reminder**: `/api/sms/send-audit-reminder` - Send audit reminder SMS
+- **Logs endpoint**: `/api/sms/logs` - View SMS sending history
+- **Simulation Mode**: Works without Twilio credentials (logs simulated messages)
+- **Bilingual Messages**: Reminders sent in both Arabic and English
+- **UI**: SMS reminder button on each audit in list view
+- **Note**: Requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in environment for real SMS
+
+### Multilingual PDF Generation ✅ (NEW - Feb 2026)
+- **Forms PDF**: `/api/forms/{form_id}/bilingual_pdf` - Bilingual form submission PDF
+- **Proposals PDF**: `/api/proposals/{proposal_id}/bilingual_pdf` - Bilingual quotation PDF
+- **Reports PDF**: `/api/reports/bilingual_pdf` - Bilingual summary report PDF
+- **UI Buttons**: Added bilingual PDF download buttons in Forms and Quotations tabs
+- **Arabic + English**: All PDFs contain both languages side by side
+- **Professional formatting**: Company branding, color scheme, proper RTL text
+
 ## API Endpoints
 
 ### Authentication

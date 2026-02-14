@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle, AlertCircle, Loader2, FileText, Building, Shield, Clock, Users, MapPin, FileSignature } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, FileText, Building, Shield, Clock, Users, MapPin, FileSignature, Pen } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import SignaturePad from '@/components/SignaturePad';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 

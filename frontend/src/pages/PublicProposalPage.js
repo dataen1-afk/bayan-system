@@ -94,6 +94,27 @@ const PublicProposalPage = () => {
     }
   };
 
+  const handleRequestModification = async () => {
+    if (!modificationComment.trim()) {
+      alert(t('pleaseEnterModificationComment') || 'Please enter a comment explaining the requested modifications');
+      return;
+    }
+    
+    setResponding(true);
+    try {
+      await axios.post(`${API}/public/proposal/${accessToken}/request_modification`, {
+        comment: modificationComment,
+        requested_changes: modificationChanges
+      });
+      setShowModificationModal(false);
+      loadProposal();
+    } catch (error) {
+      alert(t('errorRequestingModification') || 'Error requesting modification: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setResponding(false);
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', {
       style: 'currency',

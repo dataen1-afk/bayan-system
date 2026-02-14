@@ -2171,15 +2171,19 @@ async def get_audit_schedules(credentials: HTTPAuthorizationCredentials = Depend
 
 @api_router.post("/audit-schedules")
 async def create_audit_schedule(audit_data: AuditScheduleCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Create a new audit schedule"""
+    """Create a new audit schedule with optional recurring events"""
     await get_current_user(credentials)
     
     # Get organization name from contract
     organization_name = ""
+    contact_phone = ""
+    contact_email = ""
     if audit_data.contract_id:
         proposal = await db.proposals.find_one({"id": audit_data.contract_id}, {"_id": 0})
         if proposal:
             organization_name = proposal.get('organization_name', '')
+            contact_phone = proposal.get('contact_phone', '')
+            contact_email = proposal.get('contact_email', '')
     
     # Get site name if provided
     site_name = ""
@@ -2188,6 +2192,7 @@ async def create_audit_schedule(audit_data: AuditScheduleCreate, credentials: HT
         if site:
             site_name = site.get('name', '')
     
+    # Create the main audit
     audit = AuditSchedule(
         contract_id=audit_data.contract_id,
         site_id=audit_data.site_id,
@@ -2198,14 +2203,86 @@ async def create_audit_schedule(audit_data: AuditScheduleCreate, credentials: HT
         scheduled_time=audit_data.scheduled_time,
         duration_days=audit_data.duration_days,
         auditors=audit_data.auditors,
-        notes=audit_data.notes
+        notes=audit_data.notes,
+        is_recurring=audit_data.is_recurring,
+        recurrence_type=audit_data.recurrence_type,
+        recurrence_end_date=audit_data.recurrence_end_date
     )
     
     audit_doc = audit.model_dump()
     audit_doc['created_at'] = audit_doc['created_at'].isoformat()
     
     await db.audit_schedules.insert_one(audit_doc)
-    return {"message": "Audit scheduled", "id": audit.id}
+    
+    created_audits = [audit.id]
+    
+    # Generate recurring events if enabled
+    if audit_data.is_recurring and audit_data.recurrence_type and audit_data.recurrence_end_date:
+        recurring_audits = generate_recurring_audits(
+            parent_audit=audit,
+            organization_name=organization_name,
+            site_name=site_name,
+            recurrence_type=audit_data.recurrence_type,
+            end_date=audit_data.recurrence_end_date
+        )
+        
+        for recurring_audit in recurring_audits:
+            recurring_doc = recurring_audit.model_dump()
+            recurring_doc['created_at'] = recurring_doc['created_at'].isoformat()
+            await db.audit_schedules.insert_one(recurring_doc)
+            created_audits.append(recurring_audit.id)
+    
+    return {"message": "Audit scheduled", "id": audit.id, "total_created": len(created_audits)}
+
+
+def generate_recurring_audits(parent_audit: AuditSchedule, organization_name: str, site_name: str, recurrence_type: str, end_date: str) -> List[AuditSchedule]:
+    """Generate recurring audit schedules based on recurrence type"""
+    from dateutil.relativedelta import relativedelta
+    
+    recurring_audits = []
+    
+    try:
+        start_date = datetime.strptime(parent_audit.scheduled_date, "%Y-%m-%d")
+        end_date_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        
+        # Calculate next dates based on recurrence type
+        delta = None
+        if recurrence_type == "weekly":
+            delta = relativedelta(weeks=1)
+        elif recurrence_type == "monthly":
+            delta = relativedelta(months=1)
+        elif recurrence_type == "quarterly":
+            delta = relativedelta(months=3)
+        elif recurrence_type == "yearly":
+            delta = relativedelta(years=1)
+        else:
+            return recurring_audits
+        
+        current_date = start_date + delta
+        
+        while current_date <= end_date_dt:
+            recurring_audit = AuditSchedule(
+                contract_id=parent_audit.contract_id,
+                site_id=parent_audit.site_id,
+                organization_name=organization_name,
+                site_name=site_name,
+                audit_type=parent_audit.audit_type,
+                scheduled_date=current_date.strftime("%Y-%m-%d"),
+                scheduled_time=parent_audit.scheduled_time,
+                duration_days=parent_audit.duration_days,
+                auditors=parent_audit.auditors,
+                notes=parent_audit.notes,
+                is_recurring=True,
+                recurrence_type=recurrence_type,
+                parent_audit_id=parent_audit.id
+            )
+            recurring_audits.append(recurring_audit)
+            current_date += delta
+        
+    except Exception as e:
+        logging.error(f"Error generating recurring audits: {e}")
+    
+    return recurring_audits
 
 @api_router.put("/audit-schedules/{audit_id}")
 async def update_audit_schedule(audit_id: str, audit_data: AuditScheduleCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):

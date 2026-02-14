@@ -67,12 +67,13 @@ const NotificationBell = () => {
       await axios.put(`${API}/notifications/read-all`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Clear notifications from the dropdown and close it
+      // Clear all notifications from the dropdown
       setNotifications([]);
       setUnreadCount(0);
-      setIsOpen(false); // Close dropdown after clearing notifications
+      // Keep dropdown open briefly to show empty state, then auto-close
+      setTimeout(() => setIsOpen(false), 1000);
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      console.error('Error clearing notifications:', error);
     } finally {
       setLoading(false);
     }

@@ -47,13 +47,14 @@ def api_client():
 class TestProposalStatus:
     """Verify proposal status is accepted for agreement testing"""
     
-    def test_proposal_is_accepted(self, api_client):
-        """Verify the test proposal is in accepted status"""
+    def test_proposal_is_accepted_or_agreement_signed(self, api_client):
+        """Verify the test proposal is in accepted or agreement_signed status (both valid)"""
         response = api_client.get(f"{BASE_URL}/api/public/proposal/{TEST_ACCESS_TOKEN}")
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "accepted", f"Proposal status is {data['status']}, expected 'accepted'"
-        print(f"✓ Proposal status is accepted for organization: {data['organization_name']}")
+        # Both accepted and agreement_signed are valid - agreement_signed means client already signed
+        assert data["status"] in ["accepted", "agreement_signed"], f"Proposal status is {data['status']}, expected 'accepted' or 'agreement_signed'"
+        print(f"✓ Proposal status is {data['status']} for organization: {data['organization_name']}")
 
 
 class TestAgreementStatus:

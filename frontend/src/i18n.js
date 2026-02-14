@@ -15,6 +15,7 @@ const resources = {
       "createNewAccount": "Create a new account",
       "email": "Email",
       "password": "Password",
+      "phone": "Phone",
       "fullName": "Full Name",
       "role": "Role",
       "signingIn": "Signing in...",

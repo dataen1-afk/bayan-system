@@ -102,6 +102,14 @@ function App() {
               path="/create-proposal/:formId" 
               element={user?.role === 'admin' ? <CreateProposalPage /> : <Navigate to="/login" />} 
             />
+            <Route 
+              path="/reports" 
+              element={user?.role === 'admin' ? <ReportsPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/templates" 
+              element={user?.role === 'admin' ? <TemplatesPage /> : <Navigate to="/login" />} 
+            />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
           </Routes>
         </BrowserRouter>

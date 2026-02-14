@@ -610,8 +610,8 @@ async def send_email(to: str, subject: str, body: str):
     except Exception as e:
         logging.error(f"Failed to send email: {e}")
 
-def generate_contract_pdf(quotation: Quotation, user: dict) -> str:
-    """Generate PDF contract"""
+def generate_legacy_contract_pdf(quotation: Quotation, user: dict) -> str:
+    """Generate PDF contract (legacy - for old quotation system)"""
     filename = f"contract_{quotation.id}_{int(datetime.now().timestamp())}.pdf"
     filepath = CONTRACTS_DIR / filename
     

@@ -1429,6 +1429,7 @@ const resources = {
       "rejected": "مرفوض",
       "pending": "قيد الانتظار",
       "completed": "مكتمل",
+      "modification_requested": "طلب تعديل",
       
       // Notifications
       "notifications": "الإشعارات",

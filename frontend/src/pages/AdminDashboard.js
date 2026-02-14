@@ -155,7 +155,7 @@ const AdminDashboard = () => {
   };
 
   // Handle creating quotation from submitted application form
-  const handleCreateQuotation = (form) => {
+  const handleCreateQuotationFromForm = (form) => {
     // Pre-fill quotation data from form
     setNewQuotation({
       form_id: form.id,

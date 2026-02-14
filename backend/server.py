@@ -186,6 +186,10 @@ class ProposalResponse(BaseModel):
     signatory_designation: str = ""
     rejection_reason: str = ""
 
+class ModificationRequest(BaseModel):
+    comment: str
+    requested_changes: str = ""
+
 class PublicProposalResponse(BaseModel):
     id: str
     organization_name: str

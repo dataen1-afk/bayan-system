@@ -623,7 +623,12 @@ const resources = {
       // Contract Download
       "downloadContract": "Download Contract",
       "noAgreementFound": "No signed agreement found for this form",
-      "errorDownloadingContract": "Error downloading contract"
+      "errorDownloadingContract": "Error downloading contract",
+      
+      // Contracts Page
+      "signedDate": "Signed Date",
+      "contractValue": "Contract Value",
+      "viewContract": "View Contract"
     }
   },
   ar: {

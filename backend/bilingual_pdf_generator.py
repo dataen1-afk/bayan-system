@@ -568,10 +568,10 @@ class BilingualContractPDFGenerator:
             ['', '3879 Al Khadar Street, Riyadh, Saudi Arabia', ''],
             ['', '', ''],
             [self.TRANSLATIONS['client_organization']['en'] + ':',
-             agreement_data.get('organization_name', 'N/A'),
+             process_dynamic_text(agreement_data.get('organization_name', 'N/A')),
              ':' + process_arabic_text(self.TRANSLATIONS['client_organization']['ar'])],
             [self.TRANSLATIONS['address']['en'] + ':',
-             agreement_data.get('organization_address', 'N/A'),
+             process_dynamic_text(agreement_data.get('organization_address', 'N/A')),
              ':' + process_arabic_text(self.TRANSLATIONS['address']['ar'])],
         ]
         

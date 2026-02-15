@@ -519,6 +519,7 @@ class ContractPDFGenerator:
         sig_table = Table(sig_data, colWidths=[3*inch, 3*inch])
         sig_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 1), (1, -1), 'Amiri' if ARABIC_FONT_REGISTERED else 'Helvetica'),  # Client column may have Arabic text
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),

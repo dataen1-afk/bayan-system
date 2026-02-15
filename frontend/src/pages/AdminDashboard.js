@@ -665,15 +665,15 @@ const AdminDashboard = () => {
         const acceptedProposals = proposals.filter(p => ['accepted', 'agreement_signed'].includes(p.status)).length;
         const totalQuotedValue = proposals.reduce((sum, p) => sum + (p.total_amount || 0), 0);
         
-        // DataTable columns for proposals - use min-width for better content visibility
+        // DataTable columns for proposals - optimized for full-width display
         const proposalColumns = [
-          { key: 'organization', label: t('organization'), width: 'min-w-[200px] flex-1', sortAccessor: (item) => item.organization_name || '' },
-          { key: 'contact', label: t('contact'), width: 'min-w-[130px] w-[13%]', sortAccessor: (item) => item.contact_person || '' },
+          { key: 'organization', label: t('organization'), width: 'min-w-[220px] w-[22%]', sortAccessor: (item) => item.organization_name || '' },
+          { key: 'contact', label: t('contact'), width: 'min-w-[150px] w-[14%]', sortAccessor: (item) => item.contact_person || '' },
           { key: 'standards', label: t('standards'), width: 'min-w-[100px] w-[10%]' },
-          { key: 'status', label: t('status'), width: 'min-w-[130px] w-[13%]', sortAccessor: (item) => item.status },
-          { key: 'amount', label: t('amount'), width: 'min-w-[110px] w-[11%]', sortAccessor: (item) => item.total_amount || 0 },
-          { key: 'date', label: t('date'), width: 'min-w-[100px] w-[10%]', sortAccessor: (item) => new Date(item.issued_date || 0).getTime() },
-          { key: 'actions', label: t('actions'), width: 'min-w-[160px] w-[14%]' }
+          { key: 'status', label: t('status'), width: 'min-w-[140px] w-[14%]', sortAccessor: (item) => item.status },
+          { key: 'amount', label: t('amount'), width: 'min-w-[120px] w-[12%]', sortAccessor: (item) => item.total_amount || 0 },
+          { key: 'date', label: t('date'), width: 'min-w-[110px] w-[10%]', sortAccessor: (item) => new Date(item.issued_date || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'min-w-[180px] w-[18%]' }
         ];
 
         // Searchable columns for proposals

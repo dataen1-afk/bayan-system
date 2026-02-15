@@ -355,6 +355,10 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - PDF generation (standard & bilingual) ✅
 - Arabic text rendering in PDF ✅ (Amiri font embedded)
 - **Clickable Notifications** ✅ (Navigate to item, mark as read, highlight row)
+- **UI Cleanup - Redundant Download Buttons Removed** ✅ (Feb 2026)
+  - Quotations tab: Removed standalone bilingual PDF button; only green PDF button for signed agreements remains
+  - Contracts tab: Removed all download buttons; downloads are available from Forms tab (agreement_signed status)
+  - Forms tab: Primary download button preserved for agreement_signed forms
 
 ## MOCKED Integrations
 - **Email Sending**: MOCKED - Logs to console instead of sending real emails

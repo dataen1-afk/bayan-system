@@ -193,23 +193,13 @@ const SignaturePad = ({
         {!useUpload ? (
           /* Drawing Canvas */
           <div className="space-y-2">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white relative">
-              {/* Pen Plus Icon - Shows when no signature */}
-              {!hasSignature && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                  <div className="text-center opacity-40">
-                    <PenPlusIcon className="w-16 h-16 mx-auto text-gray-400" />
-                    <p className="text-sm text-gray-400 mt-2">
-                      {t('clickToSign') || 'Click here to sign'}
-                    </p>
-                  </div>
-                </div>
-              )}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white">
               <canvas
                 ref={canvasRef}
                 width={500}
                 height={150}
-                className="w-full h-36 cursor-crosshair touch-none"
+                className="w-full h-36 touch-none"
+                style={{ cursor: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23333333\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z\'/%3E%3Cpath d=\'m15 5 4 4\'/%3E%3C/svg%3E") 0 24, crosshair' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}

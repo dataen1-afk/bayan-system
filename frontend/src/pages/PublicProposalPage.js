@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, AlertCircle, Loader2, FileText, Calendar, Users, Building, DollarSign, Clock, X, Edit3 } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, FileText, Calendar, Users, Building, DollarSign, Clock, X, Edit3, Download } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';

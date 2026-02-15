@@ -1192,11 +1192,11 @@ const AdminDashboard = () => {
           dashboardTitle={t('adminDashboard')}
         />
         
-        {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8 min-h-screen">
-          <div className="max-w-6xl mx-auto">
+        {/* Main Content - Full width utilization */}
+        <main className="flex-1 p-4 lg:p-6 min-h-screen">
+          <div className="w-full">
             {/* Page Title */}
-            <div className={`mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className={`mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
               <h2 className="text-2xl font-bold text-gray-800">
                 {activeTab === 'forms' && t('forms')}
                 {activeTab === 'quotations' && t('quotations')}

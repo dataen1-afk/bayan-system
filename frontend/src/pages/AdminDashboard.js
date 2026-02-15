@@ -98,6 +98,27 @@ const AdminDashboard = () => {
     return () => i18n.off('languageChanged', checkRTL);
   }, [i18n]);
 
+  // Handle URL params for tab switching and highlighting from notifications
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const highlightParam = searchParams.get('highlight');
+    
+    if (tabParam && ['forms', 'quotations', 'contracts'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+    
+    if (highlightParam) {
+      setHighlightedId(highlightParam);
+      // Clear the highlight after 3 seconds
+      const timer = setTimeout(() => {
+        setHighlightedId(null);
+        // Clear URL params after highlight fades
+        setSearchParams({});
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams]);
+
   // Handle navigation for reports and templates tabs
   useEffect(() => {
     if (activeTab === 'reports') {

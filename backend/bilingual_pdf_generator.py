@@ -715,8 +715,11 @@ class BilingualContractPDFGenerator:
         fees_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a365d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),  # EN and fee columns header
+            ('FONTNAME', (2, 0), (2, 0), 'Amiri'),  # AR column header
+            ('FONTNAME', (0, 1), (1, -1), 'Helvetica'),  # EN and fee columns data
+            ('FONTNAME', (2, 1), (2, -1), 'Amiri'),  # AR column data - use Amiri font
+            ('FONTNAME', (0, -1), (1, -1), 'Helvetica-Bold'),  # Total row EN/fee
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e8f4e8')),
             ('FONTSIZE', (0, 0), (-1, -1), 8),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),

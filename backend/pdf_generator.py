@@ -319,8 +319,8 @@ class ContractPDFGenerator:
             ['', 'Arabia Limited Certification Body'],
             ['', '3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia'],
             ['', ''],
-            ['Client Organization:', agreement_data.get('organization_name', 'N/A')],
-            ['Address:', agreement_data.get('organization_address', 'N/A')],
+            ['Client Organization:', process_dynamic_text(agreement_data.get('organization_name', 'N/A'))],
+            ['Address:', process_dynamic_text(agreement_data.get('organization_address', 'N/A'))],
         ]
         
         parties_table = Table(parties_data, colWidths=[2*inch, 4*inch])

@@ -703,6 +703,7 @@ const resources = {
       "signatureCaptured": "Signature captured",
       "signatureInstructions": "Please provide your digital signature. You can draw it or upload an image.",
       "clickToUploadSignature": "Click to upload signature image",
+      "clickToSign": "Click here to sign",
       "companySealStamp": "Company Seal / Stamp",
       "optional": "Optional",
       "clickToUploadStamp": "Click to upload company seal/stamp",

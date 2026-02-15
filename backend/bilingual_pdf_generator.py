@@ -27,19 +27,38 @@ except ImportError:
 
 # Register Arabic font
 ARABIC_FONT_REGISTERED = False
+ARABIC_FONT_BOLD_REGISTERED = False
+
+# Try to register Amiri font from our fonts directory
 try:
-    arabic_font_paths = [
-        "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
-        "/usr/share/fonts/truetype/noto/NotoKufiArabic-Regular.ttf",
-        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ]
-    for font_path in arabic_font_paths:
-        if os.path.exists(font_path):
-            pdfmetrics.registerFont(TTFont('ArabicFont', font_path))
-            ARABIC_FONT_REGISTERED = True
-            print(f"Registered Arabic font: {font_path}")
-            break
+    import pathlib
+    ROOT_DIR = pathlib.Path(__file__).parent
+    amiri_regular = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
+    amiri_bold = ROOT_DIR / "fonts" / "Amiri-Bold.ttf"
+    
+    if amiri_regular.exists():
+        pdfmetrics.registerFont(TTFont('ArabicFont', str(amiri_regular)))
+        ARABIC_FONT_REGISTERED = True
+        print(f"Registered Arabic font: {amiri_regular}")
+        
+        if amiri_bold.exists():
+            pdfmetrics.registerFont(TTFont('ArabicFontBold', str(amiri_bold)))
+            ARABIC_FONT_BOLD_REGISTERED = True
+            print(f"Registered Arabic Bold font: {amiri_bold}")
+    else:
+        # Fallback to system fonts
+        arabic_font_paths = [
+            "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
+            "/usr/share/fonts/truetype/noto/NotoKufiArabic-Regular.ttf",
+            "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ]
+        for font_path in arabic_font_paths:
+            if os.path.exists(font_path):
+                pdfmetrics.registerFont(TTFont('ArabicFont', font_path))
+                ARABIC_FONT_REGISTERED = True
+                print(f"Registered Arabic font: {font_path}")
+                break
 except Exception as e:
     print(f"Warning: Could not register Arabic font: {e}")
 

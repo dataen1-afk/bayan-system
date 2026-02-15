@@ -578,7 +578,8 @@ class BilingualContractPDFGenerator:
         parties_table = Table(parties_data, colWidths=[1.6*inch, 2.6*inch, 1.6*inch])
         parties_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (2, 0), (2, -1), 'ArabicFont' if ARABIC_FONT_REGISTERED else 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Amiri'),  # Center column may contain Arabic (dynamic text)
+            ('FONTNAME', (2, 0), (2, -1), 'Amiri'),  # AR column - use Amiri font
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'CENTER'),

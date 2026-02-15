@@ -3171,28 +3171,40 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     import arabic_reshaper
     from bidi.algorithm import get_display
     
-    # Register Arabic font
+    # Register Arabic fonts
     font_path = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
+    font_bold_path = ROOT_DIR / "fonts" / "Amiri-Bold.ttf"
+    arabic_font_available = False
+    
     if font_path.exists():
         try:
             pdfmetrics.registerFont(TTFont('Amiri', str(font_path)))
-        except:
-            pass
+            arabic_font_available = True
+            if font_bold_path.exists():
+                pdfmetrics.registerFont(TTFont('Amiri-Bold', str(font_bold_path)))
+        except Exception as e:
+            print(f"Error registering Arabic font: {e}")
+            arabic_font_available = False
     
     pdf_path = CONTRACTS_DIR / f"proposal_{proposal['id']}_bilingual.pdf"
     c = canvas.Canvas(str(pdf_path), pagesize=A4)
     width, height = A4
     
-    def draw_arabic_text(text, x, y, font_size=12):
+    def draw_arabic_text(text, x, y, font_size=12, bold=False):
         """Draw Arabic text with proper reshaping"""
-        try:
-            reshaped = arabic_reshaper.reshape(text)
-            bidi_text = get_display(reshaped)
-            c.setFont('Amiri', font_size)
-            c.drawRightString(x, y, bidi_text)
-        except:
-            c.setFont('Helvetica', font_size)
-            c.drawRightString(x, y, text)
+        if arabic_font_available:
+            try:
+                reshaped = arabic_reshaper.reshape(str(text))
+                bidi_text = get_display(reshaped)
+                font_name = 'Amiri-Bold' if bold and font_bold_path.exists() else 'Amiri'
+                c.setFont(font_name, font_size)
+                c.drawRightString(x, y, bidi_text)
+                return
+            except Exception as e:
+                print(f"Error drawing Arabic text: {e}")
+        # Fallback - just draw the text as-is (won't look right but won't be black boxes)
+        c.setFont('Helvetica', font_size)
+        c.drawRightString(x, y, str(text))
     
     # Header
     c.setFillColor(colors.HexColor('#1e3a5f'))
@@ -3200,7 +3212,17 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Bold', 24)
-    c.drawCentredString(width/2, height - 50, "PRICE QUOTATION / عرض السعر")
+    c.drawCentredString(width/2, height - 50, "PRICE QUOTATION")
+    
+    # Arabic title using the font
+    if arabic_font_available:
+        try:
+            reshaped = arabic_reshaper.reshape("عرض السعر")
+            bidi_text = get_display(reshaped)
+            c.setFont('Amiri', 20)
+            c.drawCentredString(width/2, height - 75, bidi_text)
+        except:
+            pass
     
     y = height - 140
     
@@ -3213,7 +3235,7 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     c.setFont('Helvetica', 11)
     c.drawString(50, y, f"Organization: {proposal.get('organization_name', 'N/A')}")
     y -= 20
-    c.drawString(50, y, f"Contact: {proposal.get('contact_name', 'N/A')} - {proposal.get('contact_email', 'N/A')}")
+    c.drawString(50, y, f"Contact: {proposal.get('contact_person', proposal.get('contact_name', 'N/A'))} - {proposal.get('contact_email', 'N/A')}")
     y -= 20
     c.drawString(50, y, f"Standards: {', '.join(proposal.get('standards', []))}")
     y -= 20
@@ -3232,13 +3254,13 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     y -= 30
     
     # Arabic Section
-    c.setFont('Helvetica-Bold', 14)
-    draw_arabic_text("العربية", width - 50, y, 14)
+    c.setFillColor(colors.black)
+    draw_arabic_text("العربية", width - 50, y, 14, bold=True)
     y -= 30
     
     draw_arabic_text(f"المنظمة: {proposal.get('organization_name', 'غير متوفر')}", width - 50, y)
     y -= 20
-    draw_arabic_text(f"جهة الاتصال: {proposal.get('contact_name', 'غير متوفر')}", width - 50, y)
+    draw_arabic_text(f"جهة الاتصال: {proposal.get('contact_person', proposal.get('contact_name', 'غير متوفر'))}", width - 50, y)
     y -= 20
     draw_arabic_text(f"المعايير: {', '.join(proposal.get('standards', []))}", width - 50, y)
     y -= 20
@@ -3249,7 +3271,8 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
         'sent': 'مرسل',
         'accepted': 'مقبول',
         'rejected': 'مرفوض',
-        'agreement_signed': 'تم توقيع الاتفاقية'
+        'agreement_signed': 'تم توقيع الاتفاقية',
+        'modification_requested': 'طلب تعديل'
     }
     draw_arabic_text(f"الحالة: {status_ar.get(proposal.get('status', ''), proposal.get('status', ''))}", width - 50, y)
     y -= 20
@@ -3260,7 +3283,16 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     c.rect(0, 0, width, 50, fill=True, stroke=False)
     c.setFillColor(colors.white)
     c.setFont('Helvetica', 10)
-    c.drawCentredString(width/2, 20, "BAYAN Auditing & Conformity | بيان للتحقق والمطابقة")
+    c.drawCentredString(width/2, 25, "BAYAN Auditing & Conformity")
+    
+    if arabic_font_available:
+        try:
+            reshaped = arabic_reshaper.reshape("بيان للتحقق والمطابقة")
+            bidi_text = get_display(reshaped)
+            c.setFont('Amiri', 10)
+            c.drawCentredString(width/2, 12, bidi_text)
+        except:
+            pass
     
     c.save()
     return str(pdf_path)

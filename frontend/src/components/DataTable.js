@@ -246,7 +246,6 @@ const DataTable = ({
       <div 
         className={`hidden lg:flex items-center px-5 py-3 bg-slate-50/80 border-b border-slate-100 text-xs font-semibold text-slate-600 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}
         dir={isRTL ? 'rtl' : 'ltr'}
-        style={{ minWidth: '900px' }}
       >
         {columns.map((column) => (
           <div 
@@ -271,7 +270,7 @@ const DataTable = ({
       </div>
 
       {/* Table Body */}
-      <div className="divide-y divide-slate-100" data-testid="table-body" dir={isRTL ? 'rtl' : 'ltr'} style={{ minWidth: '900px' }}>
+      <div className="divide-y divide-slate-100" data-testid="table-body" dir={isRTL ? 'rtl' : 'ltr'}>
         {paginatedData.length === 0 ? (
           emptyState || (
             <div className="text-center py-16 px-4">

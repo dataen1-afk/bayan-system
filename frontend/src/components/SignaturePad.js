@@ -234,7 +234,18 @@ const SignaturePad = ({
         {!useUpload ? (
           /* Drawing Canvas */
           <div className="space-y-2">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white relative">
+              {/* Pen Plus Icon - Shows when no signature */}
+              {!hasSignature && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                  <div className="text-center opacity-40">
+                    <PenPlusIcon className="w-16 h-16 mx-auto text-gray-400" />
+                    <p className="text-sm text-gray-400 mt-2">
+                      {t('clickToSign') || 'Click here to sign'}
+                    </p>
+                  </div>
+                </div>
+              )}
               <canvas
                 ref={canvasRef}
                 width={500}

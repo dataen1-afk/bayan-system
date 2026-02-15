@@ -8,7 +8,7 @@ import os
 import uuid
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://quote-manager-45.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://audit-forms.preview.emergentagent.com')
 
 # Known test data from the main agent
 TEST_ACCESS_TOKEN = "7e9465b4-fa2d-4ba9-8baf-05e5d32cd971"  # Proposal already accepted

@@ -667,8 +667,10 @@ class BilingualContractPDFGenerator:
         duration_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a365d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTNAME', (2, 0), (2, 0), 'ArabicFont' if ARABIC_FONT_REGISTERED else 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),  # EN columns header
+            ('FONTNAME', (2, 0), (2, 0), 'Amiri'),  # AR column header
+            ('FONTNAME', (0, 1), (1, -1), 'Helvetica'),  # EN columns data
+            ('FONTNAME', (2, 1), (2, -1), 'Amiri'),  # AR column data - use Amiri font
             ('FONTSIZE', (0, 0), (-1, -1), 8),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'CENTER'),

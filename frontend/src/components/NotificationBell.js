@@ -128,10 +128,12 @@ const NotificationBell = () => {
       {/* Dropdown */}
       {isOpen && (
         <div 
-          className={`absolute top-full mt-2 w-[420px] bg-white rounded-lg shadow-xl border z-50 ${
-            isRTL ? 'right-0' : 'left-0'
-          }`}
-          style={{ minWidth: '420px', maxWidth: '90vw' }}
+          className="absolute top-full mt-2 bg-white rounded-lg shadow-xl border z-50"
+          style={{ 
+            width: '400px',
+            right: isRTL ? '0' : 'auto',
+            left: isRTL ? 'auto' : '0'
+          }}
           data-testid="notification-dropdown"
         >
           {/* Header */}

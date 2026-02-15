@@ -18,137 +18,131 @@
 **User's preferred language**: The user communicates in English, but the application's primary language is **Arabic**. The next agent MUST ensure all features work correctly in both Arabic (with RTL) and English and continue to respond in English.
 
 **what currently exists?**
-A full-stack Service Contract Management application with a FastAPI backend and React frontend. The system supports a full workflow from form creation to contract generation. Recent work focused heavily on UI/UX fixes and feature refinement based on user feedback. Several new features were added (Advanced Audit Scheduling, simulated SMS notifications, multilingual PDFs for all documents) and two less-used features (Contact Log and Documents) were removed to streamline the UI. The admin dashboard data tables have been adjusted to prevent content overlap, but the user is requesting further professional refinement of the layout.
+A functional full-stack application for managing service contracts. The previous session focused on verifying the entire application workflow by clearing the database and running an end-to-end test. Several UI/UX improvements were made, including fixing a notification dropdown layout bug, changing the signature pad cursor, and ensuring all data lists are sorted by the most recent entry. A new feature was added to allow clients to download a PDF of their price quote. A recurring bug with Arabic text rendering in PDFs resurfaced, this time in the standard (non-bilingual) contract PDF, which was subsequently fixed by the agent.
 
 **Last working item**:
-The agent was refining the UI for the data tables on the Forms, Quotations, and Contracts tabs within the  component. The user reported that columns were overlapping, making data and icons difficult to see. The agent increased column widths, which improved the layout, but the user has asked for a more professional expansion as the icons are still not displaying perfectly.
--   **Last item agent was working**: Refining the data table UI in  to improve icon visibility and overall layout professionalism.
--   **Status**: IN PROGRESS
--   **Agent Testing Done**: Y (via screenshot)
--   **Which testing method agent to use?**: screenshot tool
+The user requested a new feature for the notification system. When an admin clicks on a notification, it should be marked as read, disappear from the dropdown, and navigate the admin to the specific page for that item (e.g., a specific form, quote, or contract).
+-   **Last item agent was working**: Implementing clickable notifications that navigate to the relevant item and get marked as read.
+-   **Status**: NOT STARTED
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: both. Frontend testing to verify navigation and UI changes (dropdown updated), and backend testing to verify the notification's 'read' status is updated in the database.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P0)**: UI layout of data tables needs professional refinement.
-    -   **Description**: The user is not fully satisfied with the layout of the data tables in the admin dashboard. Despite recent fixes to expand column widths, the action icons are still not displaying perfectly, and the overall layout needs to be more professional. This applies to the Forms, Quotations, and Contracts tabs.
-    -   **Attempted fixes**: The agent adjusted the  Tailwind classes for the table headers and rows in  to give more space to the columns.
-    -   **Next debug checklist**:
-        1.  Re-examine .
-        2.  Instead of just widening columns, use flexbox (, , , ) for the Actions column to ensure consistent spacing and alignment of icons, regardless of column width.
-        3.  Ensure there is sufficient padding around the icons.
-        4.  Verify the fix on all three tabs (Forms, Quotations, Contracts) as they share a similar structure.
-    -   **Why fix this issue and what will be achieved with the fix?**: To satisfy the user's request for a professional and clean UI, ensuring all interactive elements are clearly visible and easy to use.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: Y (This is the second iteration of fixing this layout issue).
-    -   **Should Test frontend/backend/both after fix?**: frontend
+-   **Issue 1 (P1)**: Arabic text rendering incorrectly in standard (non-bilingual) contract PDFs.
+    -   **Description**: The user reported seeing black boxes in a downloaded contract PDF. The agent identified that the standard PDF generator () was not using the Amiri font or correctly reshaping Arabic text, unlike the bilingual generator.
+    -   **Attempted fixes**: The agent updated  to register and use the Amiri font, apply  and , and replace Unicode checkmarks with ASCII . The agent tested the fix by downloading a new PDF.
+    -   **Next debug checklist**: Guide the user to download a new *standard* contract PDF (not the AR/EN one) and confirm the text and checkmarks render correctly.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical document generation feature. This bug has recurred in different parts of the PDF generation system and needs to be fully resolved.
+    -   **Status**: USER VERIFICATION PENDING
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   None.
+-   **Task 1 (P0)**: Implement clickable notifications.
+    -   **Description**: Notifications should navigate the user to the relevant item and be marked as read upon clicking.
+    -   **Where to resume**:
+        1.  Modify . Wrap each notification item in a  or use  from .
+        2.  Create a new backend endpoint (e.g., ) to update the notification's status in the database.
+        3.  Implement the  handler in the frontend to call this new endpoint and then perform the navigation.
+        4.  Filter out read notifications from the frontend display.
+    -   **What will be achieved with this?**: This will improve the admin's workflow by making notifications actionable.
+    -   **Status**: NOT STARTED
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on something**: None
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
     -   **(P1) Finalize Google Calendar Integration**: Guide the user on obtaining  and . Once provided, add them to  and activate the sync functionality. The backend logic is in  and the frontend is in .
     -   **(P1) Finalize Twilio SMS Integration**: Guide the user on obtaining Twilio credentials (, , ). Once provided, add them to  to enable live SMS notifications.
 -   **Future Tasks**:
-    -   Test and enable the functionality of sending actual emails (e.g., via SendGrid/Resend integration).
+    -   **(P2)** Test and enable the functionality of sending actual emails (e.g., via SendGrid/Resend integration).
 
 **Completed work in this session**
+-   **End-to-End Workflow Verification**: Cleared all test data and ran a full workflow test using the testing agent, confirming the core functionality is working as expected.
+-   **PDF Arabic Font Fix Verification**: Verified that the bilingual PDF generation fix from the previous session works correctly.
+-   **PDF Download Feature**: Added a Download PDF option to the public client quote review page () and created a new public backend endpoint () to serve the file.
+-   **Backend Data Sorting**: Updated all primary data endpoints (, , ) in  to sort results by creation date, ensuring the newest items always appear first.
 -   **UI/UX Fixes**:
-    -   Fixed truncated Mark All as Read text in the notification dropdown by increasing its width.
-    -   Fixed the Mark All as Read functionality to delete notifications from the database instead of just marking them as read.
-    -   Fixed checkbox hitbox issue in the Certification Agreement form, making the entire checkbox area clickable.
-    -   Added missing Arabic translation for the COMPLETED status card on the Forms dashboard.
-    -   Added missing Arabic translation for the modification_requested status.
-    -   Adjusted column widths on Forms, Quotations, and Contracts tabs to prevent data overlap.
--   **Feature Implementation**:
-    -   **Advanced Audit Scheduling**: Implemented recurring events functionality (backend and frontend).
-    -   **Simulated SMS Notifications**: Added backend logic and a frontend button to send SMS reminders (in simulation mode).
-    -   **Multilingual PDFs**: Extended bilingual PDF generation to Forms and Quotations.
--   **Feature Refinement**:
-    -   **Removed Features**: Deleted the Contact History and Documents pages and their sidebar links per user request.
-    -   **Customer Portal Access**: Added a link to the Customer Portal in the admin sidebar and implemented an auto-redirect to the portal after a client signs a contract.
+    -   **Notifications Dropdown**: Fixed a bug where notification text was cut off by widening the dropdown and improving text wrapping in .
+    -   **Signature Pad**: Removed the placeholder icon from the signature pad and implemented a CSS-only change to turn the cursor into a pen on hover in .
+    -   **Quote Action Buttons**: Reordered the Accept, Reject, and Request Modification buttons on the public quote page as per user request.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: Incorrect RTL layout.
--   **Recurrence count**: 3+
--   **Status**: RESOLVED (The specific RTL bug from the previous fork was fixed. This session addressed new, related layout/spacing issues).
+-   **Issue recurrence in previous fork**: Incorrect Arabic text rendering in PDFs.
+-   **Recurrence count**: 4+ (Occurred in bilingual proposals, bilingual contracts, and now standard contracts).
+-   **Status**: IN PROGRESS (A fix was implemented for the latest instance, but user verification is pending). This is a persistent issue. The root cause is always a PDF generation function that fails to use the Amiri font and text reshaping logic.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Motor, Pydantic, ReportLab, 
+-   **Backend**: FastAPI, Motor, Pydantic, ReportLab, , 
 -   **Frontend**: React, , , , Tailwind CSS, shadcn/ui
 -   **Database**: MongoDB
 
 **key DB schema**
--   **AuditSchedule**: Modified to include  (boolean),  (string), and  (string).
+-   : (Implicitly exists) Contains fields like , , , and a  status (boolean, to be added/utilized).
 
 **changes in tech stack**
--   **Added**:  for handling recurring event logic.
+-   None.
 
 **All files of reference**
--    (Primary file for UI layout fixes)
--    (Notification fix)
--    (Checkbox fix)
--    (New endpoints/logic for features)
--    (New scheduling UI)
--    (Sidebar link changes)
--    (Route changes)
--    (Translation updates)
--    (Redirect logic)
+-    (Modified for data sorting and new public PDF endpoint)
+-    (Modified to fix Arabic rendering in standard contract PDFs)
+-    (UI fixes; will be the main file for the next task)
+-    (UI/UX improvement)
+-    (New feature and button reordering)
+-    &  (New translations added)
 
 **Areas that need refactoring**:
--   The  component has required multiple layout adjustments. It could benefit from a more robust and flexible layout system for its data tables (e.g., consistent use of flexbox for action columns) to avoid future tweaks.
+-   The PDF generation logic is scattered across  (proposals),  (bilingual contracts), and  (standard contracts). Consolidating this into a single, robust PDF generation service would prevent recurring font/rendering bugs and improve maintainability.
 
 **key api endpoints**
--   : **(Modified)** Now supports creating recurring audits.
--   : **(NEW)** Checks if Twilio credentials are configured.
--   : **(NEW)** Sends a simulated SMS reminder.
--   : **(NEW)** Generates a bilingual PDF for a submitted form.
--   : **(NEW)** Generates a bilingual PDF for a quotation.
--   : **(NEW)** Deletes all notifications for the current user.
+-   **NEW**: : Public endpoint for clients to download their quote PDF.
+-   **MODIFIED**: , , : Now sorted by  descending.
+-   **TO BE CREATED**: : Endpoint to mark a notification as read.
 
 **Critical Info for New Agent**
--   Your immediate priority (P0) is to address the user's feedback on the data table layout in . The user finds the icons are still not displaying perfectly and wants a more professional look. Focus on improving the spacing and alignment within the Actions column, likely using flexbox properties (, ) rather than just adjusting grid widths.
--   The user has approved implementing several features (Google Calendar, Twilio SMS) in a simulated mode. The foundation is complete, but they require user-provided credentials to be fully activated. Your next major task after the UI fix will be to guide the user on obtaining and setting up these credentials.
--   The user has been very direct with feedback. Be prepared to remove or significantly alter features that don't fit their workflow.
+-   Your immediate P0 task is to implement the clickable notifications feature as requested by the user. This involves both frontend and backend changes.
+-   Your P1 task is to follow up with the user to verify that the fix for the standard contract PDF was successful. This PDF rendering issue is a recurring problem, so be thorough.
+-   The consolidation of PDF generation logic is a valuable refactoring task that would prevent future bugs. Consider proposing this after the immediate tasks are completed.
 
 **documents and test reports created in this job**
--    (Updated to reflect new features and removed pages).
+-    (Updated)
+-    (From the full E2E test)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Asks about the purpose of the Contact Log and Documents screens, stating they see no benefit. - **Status: DONE**
-2.  **User**: I dont need it, remove it." (referring to Contact Log and Documents). - **Status: DONE**
-3.  **User**: "Where is the customer portal? How will the customer access it to track their orders?" - **Status: DONE**
-4.  **User**: Asks how they were supposed to share the portal link with clients before. - **Status: DONE**
-5.  **User**: "The right approach should be professional." Requests auto-redirect to the portal after contract signing and a portal link in the admin sidebar. - **Status: DONE**
-6.  **User**: Points out untranslated "COMPLETED" text on the Forms screen. - **Status: DONE**
-7.  **User**: "Look at the price quotes screen. The quote icon is not visible, and some amounts are overlaid... Expand the quote card to display the data clearly. Do this on all screens beforehand." - **Status: IN PROGRESS**
-8.  **User**: "Does expanding the display area require payment? Expand it professionally; the icons are still not displaying perfectly." - **Status: PENDING (This is the current task)**
-9.  **User**: "Okay, Ive sent the link to the wallet now, but before, how was I supposed to share it with the clients? - **Status: DONE**
-10. **User**: Good. (after agent removed features). - **Status: DONE**
+1.  **User**: Asks why offer details are hidden on the quote page. - **Status: DONE** (Agent clarified with a full-page screenshot that details were not hidden).
+2.  **User**: Reports a problem with boxes appearing in a downloaded contract PDF. - **Status: DONE** (Agent identified the issue in the standard PDF generator and applied a fix).
+3.  **User**: Requests that clicking a notification should make it disappear and navigate to the relevant item. - **Status: PENDING** (This is the current P0 task).
+4.  **User**: When sending a price quote, provide an option to download a PDF, and place Accept/Reject buttons on the right/left. - **Status: DONE**
+5.  **User**: No, that's not what I meant for the signature. Make the panel white and change the cursor to a pen on hover. Also, make all lists show the most recent items first. - **Status: DONE**
+6.  **User**: We want to create a plus sign (+) in the shape of a pen when the client signs the contract. - **Status: SUPERSEDED** (User changed their mind in the next message).
+7.  **User**: Mentions notification text is cut off. - **Status: DONE**
 
 **Project Health Check:**
--   **Healthy**: The application is functional. The current focus is on UI/UX refinement to meet the user's standards for professionalism. No broken functionality.
+-   **Healthy**: The application is stable and the core workflow has been verified. However, it suffers from a **recurring** critical bug in PDF generation that requires careful attention whenever PDF-related code is touched.
 
 **3rd Party Integrations**
 -   : Used for PDF generation.
 -   : Used for recurring event logic.
+-   , : Used for rendering Arabic text in PDFs.
 -   **Google Calendar API**: Foundation laid, pending user credentials for activation.
 -   **Twilio SMS**: Foundation laid, pending user credentials for activation.
 
 **Testing status**
--   **Testing agent used after significant changes**: NO. Agent has been self-testing with screenshots and curl commands for recent changes.
+-   **Testing agent used after significant changes**: YES, once at the beginning of the session for a full E2E test.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: None.
+-   **Known regressions**: The Arabic text rendering issue in PDFs is a recurring regression that appears in new places after being fixed elsewhere.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
 
 **What agent forgot to execute**
--   The agent has been responsive and has not forgotten any explicitly requested tasks. All planned work from the conversation has been addressed or is in progress.</analysis>
+-   The agent acknowledged the user's final request for clickable notifications but did not begin implementation. This is the starting point for the next session.</analysis>

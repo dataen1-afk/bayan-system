@@ -1093,6 +1093,32 @@ const AdminDashboard = () => {
                       </Button>
                     )}
                     
+                    {/* Bilingual PDF Download (AR/EN) */}
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const response = await axios.get(`${API}/public/contracts/${contract.access_token}/pdf/bilingual`, {
+                            responseType: 'blob'
+                          });
+                          const url = window.URL.createObjectURL(new Blob([response.data]));
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.setAttribute('download', `contract_${contract.organization_name.replace(/\s+/g, '_')}_${contract.id.substring(0, 8)}.pdf`);
+                          document.body.appendChild(link);
+                          link.click();
+                          link.remove();
+                          window.URL.revokeObjectURL(url);
+                        } catch (error) {
+                          console.error('Error downloading contract:', error);
+                        }
+                      }}
+                      className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700"
+                      data-testid={`download-contract-${contract.id}`}
+                    >
+                      <Download className="w-4 h-4" />
+                      <span className="ms-1">{t('download')}</span>
+                    </Button>
                   </div>
                 </div>
               )}

@@ -1353,6 +1353,24 @@ async def respond_to_proposal(access_token: str, response: ProposalResponse):
     
     return {"message": f"Proposal {response.status} successfully"}
 
+# ================= PUBLIC PROPOSAL PDF DOWNLOAD =================
+
+@api_router.get("/public/proposals/{access_token}/bilingual_pdf")
+async def get_public_proposal_bilingual_pdf(access_token: str):
+    """Public access to download bilingual proposal PDF (no login required)"""
+    proposal = await db.proposals.find_one({"access_token": access_token}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
+    
+    # Generate the PDF
+    pdf_path = await generate_bilingual_proposal_pdf_file(proposal)
+    
+    return FileResponse(
+        pdf_path,
+        media_type='application/pdf',
+        filename=f'proposal_{proposal["id"][:8]}_ar_en.pdf'
+    )
+
 # ================= CERTIFICATION AGREEMENT ROUTES =================
 
 @api_router.post("/public/agreement/{access_token}/submit")

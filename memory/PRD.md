@@ -84,6 +84,11 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - Dropdown shows recent notifications
 - Notification types: form_submitted, proposal_accepted, proposal_rejected, agreement_signed
 - Mark as read / **Mark all as read** functionality
+- **NEW: Clickable Notifications** - Click a notification to:
+  - Mark it as read automatically
+  - Navigate to the relevant tab (Forms/Quotations/Contracts)
+  - Highlight the specific item with yellow background for 3 seconds
+  - Close the dropdown
 
 ### Contract Status Timeline ✅
 - Compact view on dashboard form cards (X/6 progress indicator)

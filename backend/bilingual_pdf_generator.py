@@ -634,7 +634,7 @@ class BilingualContractPDFGenerator:
             story.append(Paragraph(sites_header, self.styles['TextEN']))
             for i, site in enumerate(sites, 1):
                 if site.strip():
-                    story.append(Paragraph(f"  {i}. {site}", self.styles['TextEN']))
+                    story.append(Paragraph(f"  {i}. {process_dynamic_text(site)}", self.styles['TextEN']))
         
         story.append(Spacer(1, 12))
         

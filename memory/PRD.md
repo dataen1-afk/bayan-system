@@ -326,14 +326,28 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Professional layout across all three tabs (Forms, Quotations, Contracts)
   - Hover tooltips show full text for truncated fields
 
-## Testing Status (December 2025)
+## Testing Status (February 2026)
 - Backend API: 100% (All tests passed)
 - Frontend UI: 100% (All features working)
 - RTL Layout Tests: 100% (All 6 scenarios passed)
-- Bilingual PDF Tests: 100% (Both endpoints working)
+- Bilingual PDF Tests: 100% (Both endpoints working - Amiri Arabic font verified)
 - Google Calendar API: 100% (Status endpoint tested)
-- Latest Test Report: `/app/test_reports/iteration_15.json`
-- New Features Test File: `/app/backend/tests/test_iteration15_features.py`
+- **Full E2E Workflow Test**: PASSED (Iteration 16 - 21/21 tests)
+- Latest Test Report: `/app/test_reports/iteration_16.json`
+- New Test Files:
+  - `/app/backend/tests/test_iteration15_features.py`
+  - `/app/backend/tests/test_iteration16_full_workflow.py`
+
+### Latest E2E Test Results (Feb 2026)
+- Admin login ✅
+- Create application form ✅
+- Client fills public form ✅
+- Audit duration auto-calculation ✅
+- Admin creates proposal ✅
+- Client accepts proposal ✅
+- Client signs certification agreement ✅
+- PDF generation (standard & bilingual) ✅
+- Arabic text rendering in PDF ✅ (Amiri font embedded)
 
 ## MOCKED Integrations
 - **Email Sending**: MOCKED - Logs to console instead of sending real emails

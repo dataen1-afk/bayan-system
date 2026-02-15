@@ -917,7 +917,8 @@ async def get_contracts(current_user: dict = Depends(get_current_user)):
     if current_user['role'] == UserRole.CLIENT:
         query = {"client_id": current_user['user_id']}
     
-    contracts = await db.contracts.find(query, {"_id": 0}).to_list(1000)
+    # Sort by most recent first
+    contracts = await db.contracts.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
     for contract in contracts:
         if isinstance(contract['created_at'], str):

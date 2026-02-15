@@ -1564,6 +1564,7 @@ const resources = {
       "signatureCaptured": "تم التقاط التوقيع",
       "signatureInstructions": "يرجى تقديم توقيعك الرقمي. يمكنك رسمه أو تحميل صورة.",
       "clickToUploadSignature": "انقر لتحميل صورة التوقيع",
+      "clickToSign": "انقر هنا للتوقيع",
       "companySealStamp": "ختم الشركة",
       "optional": "اختياري",
       "clickToUploadStamp": "انقر لتحميل ختم الشركة",

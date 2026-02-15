@@ -6,6 +6,7 @@ Generates professional certification contracts with company branding
 import io
 import os
 import base64
+import pathlib
 from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -16,19 +17,56 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-# Try to register Arabic font if available
+# Arabic text processing
 try:
-    # Check for common Arabic fonts
-    arabic_font_paths = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
-    ]
-    for font_path in arabic_font_paths:
-        if os.path.exists(font_path):
-            pdfmetrics.registerFont(TTFont('Arabic', font_path))
-            break
-except:
-    pass
+    import arabic_reshaper
+    from bidi.algorithm import get_display
+    ARABIC_SUPPORT = True
+except ImportError:
+    ARABIC_SUPPORT = False
+    print("Warning: arabic-reshaper or python-bidi not installed. Arabic text may not display correctly.")
+
+# Register Arabic fonts
+ARABIC_FONT_REGISTERED = False
+ROOT_DIR = pathlib.Path(__file__).parent
+
+try:
+    amiri_regular = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
+    amiri_bold = ROOT_DIR / "fonts" / "Amiri-Bold.ttf"
+    
+    if amiri_regular.exists():
+        pdfmetrics.registerFont(TTFont('Amiri', str(amiri_regular)))
+        ARABIC_FONT_REGISTERED = True
+        print(f"PDF Generator: Registered Arabic font: {amiri_regular}")
+        
+        if amiri_bold.exists():
+            pdfmetrics.registerFont(TTFont('Amiri-Bold', str(amiri_bold)))
+            print(f"PDF Generator: Registered Arabic Bold font: {amiri_bold}")
+    else:
+        # Fallback to system fonts
+        arabic_font_paths = [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+        ]
+        for font_path in arabic_font_paths:
+            if os.path.exists(font_path):
+                pdfmetrics.registerFont(TTFont('Arabic', font_path))
+                break
+except Exception as e:
+    print(f"Warning: Could not register Arabic font: {e}")
+
+
+def process_arabic_text(text):
+    """Process Arabic text for proper RTL display in PDF"""
+    if not text or not ARABIC_SUPPORT:
+        return text
+    try:
+        reshaped = arabic_reshaper.reshape(str(text))
+        bidi_text = get_display(reshaped)
+        return bidi_text
+    except Exception as e:
+        print(f"Error processing Arabic text: {e}")
+        return text
 
 
 class ContractPDFGenerator:

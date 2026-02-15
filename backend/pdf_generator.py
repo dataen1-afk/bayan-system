@@ -501,11 +501,11 @@ class ContractPDFGenerator:
         sig_data = [
             ['FOR THE CERTIFICATION BODY', 'FOR THE CLIENT'],
             ['', ''],
-            ['BAYAN AUDITING & CONFORMITY', agreement_data.get('organization_name', '')],
+            ['BAYAN AUDITING & CONFORMITY', process_dynamic_text(agreement_data.get('organization_name', ''))],
             ['', ''],
             ['_________________________', client_signature_element if isinstance(client_signature_element, Image) else client_signature_element],
-            ['Authorized Signatory', agreement_data.get('signatory_name', '')],
-            ['', agreement_data.get('signatory_position', '')],
+            ['Authorized Signatory', process_dynamic_text(agreement_data.get('signatory_name', ''))],
+            ['', process_dynamic_text(agreement_data.get('signatory_position', ''))],
             ['', ''],
             [f"Date: {datetime.now().strftime('%Y-%m-%d')}", f"Date: {agreement_data.get('signatory_date', '')}"],
         ]

@@ -9,6 +9,7 @@ const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
 const NotificationBell = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const isRTL = i18n.language?.startsWith('ar');
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);

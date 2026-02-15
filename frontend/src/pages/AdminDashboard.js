@@ -1093,61 +1093,6 @@ const AdminDashboard = () => {
                       </Button>
                     )}
                     
-                    {/* Standard PDF Download */}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={async () => {
-                        try {
-                          const response = await axios.get(`${API}/public/contracts/${contract.access_token}/pdf`, {
-                            responseType: 'blob'
-                          });
-                          const url = window.URL.createObjectURL(new Blob([response.data]));
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.setAttribute('download', `contract_${contract.organization_name.replace(/\s+/g, '_')}_${contract.id.substring(0, 8)}.pdf`);
-                          document.body.appendChild(link);
-                          link.click();
-                          link.remove();
-                          window.URL.revokeObjectURL(url);
-                        } catch (error) {
-                          console.error('Error downloading contract:', error);
-                        }
-                      }}
-                      className="h-9 w-9 p-0"
-                      data-testid={`download-contract-${contract.id}`}
-                      title={t('downloadEnglishPDF')}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                    
-                    {/* Bilingual PDF Download */}
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const response = await axios.get(`${API}/public/contracts/${contract.access_token}/pdf/bilingual`, {
-                            responseType: 'blob'
-                          });
-                          const url = window.URL.createObjectURL(new Blob([response.data]));
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.setAttribute('download', `contract_bilingual_${contract.organization_name.replace(/\s+/g, '_')}_${contract.id.substring(0, 8)}.pdf`);
-                          document.body.appendChild(link);
-                          link.click();
-                          link.remove();
-                          window.URL.revokeObjectURL(url);
-                        } catch (error) {
-                          console.error('Error downloading bilingual contract:', error);
-                        }
-                      }}
-                      className="h-9 px-3 bg-bayan-navy hover:bg-bayan-navy-light"
-                      data-testid={`download-bilingual-contract-${contract.id}`}
-                      title={t('downloadBilingualPDF')}
-                    >
-                      <Download className="w-4 h-4" />
-                      <span className="ms-1">AR/EN</span>
-                    </Button>
                   </div>
                 </div>
               )}

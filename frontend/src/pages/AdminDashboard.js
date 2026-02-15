@@ -1034,7 +1034,9 @@ const AdminDashboard = () => {
               renderRow={(contract, index, rtl) => (
                 <div 
                   key={contract.id} 
-                  className="group flex flex-col lg:flex-row lg:items-center p-4 lg:px-5 lg:py-4 hover:bg-slate-50/80 transition-colors"
+                  className={`group flex flex-col lg:flex-row lg:items-center p-4 lg:px-5 lg:py-4 hover:bg-slate-50/80 transition-all duration-500 ${
+                    highlightedId === contract.id ? 'bg-yellow-100 ring-2 ring-yellow-400' : ''
+                  }`}
                   data-testid={`contract-${contract.id}`}
                 >
                   {/* Organization */}

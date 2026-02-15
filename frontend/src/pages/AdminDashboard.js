@@ -38,11 +38,17 @@ const formatDate = (dateString) => {
 const AdminDashboard = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isRTL, setIsRTL] = useState(() => {
     return i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
   });
   const { user, logout } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('forms');
+  const [activeTab, setActiveTab] = useState(() => {
+    // Initialize from URL params if available
+    const tabParam = new URLSearchParams(window.location.search).get('tab');
+    return tabParam || 'forms';
+  });
+  const [highlightedId, setHighlightedId] = useState(null);
   const [forms, setForms] = useState([]);
   const [applicationForms, setApplicationForms] = useState([]);
   const [quotations, setQuotations] = useState([]);

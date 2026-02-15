@@ -354,7 +354,7 @@ class ContractPDFGenerator:
         scope_table = Table(scope_data, colWidths=[2*inch, 4*inch])
         scope_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTNAME', (1, 0), (1, -1), 'Amiri' if ARABIC_FONT_REGISTERED else 'Helvetica'),  # Use Amiri for Arabic support
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('TOPPADDING', (0, 0), (-1, -1), 3),

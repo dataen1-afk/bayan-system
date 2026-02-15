@@ -62,6 +62,41 @@ const NotificationBell = () => {
     }
   };
 
+  // Get the navigation URL based on notification type and related item
+  const getNavigationUrl = (notification) => {
+    const { related_type, related_id } = notification;
+    if (!related_type || !related_id) return null;
+
+    switch (related_type) {
+      case 'form':
+        // Navigate to dashboard with Forms tab, including the form ID as query param
+        return `/dashboard?tab=forms&highlight=${related_id}`;
+      case 'proposal':
+        // Navigate to dashboard with Quotations tab
+        return `/dashboard?tab=quotations&highlight=${related_id}`;
+      case 'agreement':
+        // Navigate to dashboard with Contracts tab
+        return `/dashboard?tab=contracts&highlight=${related_id}`;
+      default:
+        return '/dashboard';
+    }
+  };
+
+  // Handle notification click - mark as read, navigate, and close dropdown
+  const handleNotificationClick = async (notification) => {
+    // Mark as read if not already read
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+
+    // Get navigation URL and navigate
+    const url = getNavigationUrl(notification);
+    if (url) {
+      setIsOpen(false); // Close dropdown
+      navigate(url);
+    }
+  };
+
   const markAllAsRead = async () => {
     try {
       setLoading(true);

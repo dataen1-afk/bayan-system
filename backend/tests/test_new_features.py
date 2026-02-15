@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta
 import base64
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://audit-quotes.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://compliance-forms-1.preview.emergentagent.com').rstrip('/')
 
 # Test data constants
 ADMIN_EMAIL = "admin@test.com"

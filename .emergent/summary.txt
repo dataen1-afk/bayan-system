@@ -18,39 +18,52 @@
 **User's preferred language**: The user communicates in English, but the application's primary language is **Arabic**. The next agent MUST ensure all features work correctly in both Arabic (with RTL) and English and continue to respond in English.
 
 **what currently exists?**
-A functional full-stack application for managing service contracts. The previous session focused on verifying the entire application workflow by clearing the database and running an end-to-end test. Several UI/UX improvements were made, including fixing a notification dropdown layout bug, changing the signature pad cursor, and ensuring all data lists are sorted by the most recent entry. A new feature was added to allow clients to download a PDF of their price quote. A recurring bug with Arabic text rendering in PDFs resurfaced, this time in the standard (non-bilingual) contract PDF, which was subsequently fixed by the agent.
+A functional full-stack application. The agent successfully implemented the clickable notifications feature, allowing admins to click a notification, navigate to the relevant item page (e.g., a specific form or quote), and have that item highlighted. The notification is also automatically marked as read.
+
+Following this, the user reported a critical and recurring bug where dynamic Arabic text (like company names and signatory names) was rendering as black boxes in generated PDFs. The agent implemented a comprehensive fix by ensuring all dynamic data is processed with an Arabic text reshaper and that the Amiri font is consistently applied to all tables in both the standard and bilingual PDF generators. This fix is pending user verification.
+
+The user has just requested a new UI cleanup task to remove redundant download buttons from the admin dashboard.
 
 **Last working item**:
-The user requested a new feature for the notification system. When an admin clicks on a notification, it should be marked as read, disappear from the dropdown, and navigate the admin to the specific page for that item (e.g., a specific form, quote, or contract).
--   **Last item agent was working**: Implementing clickable notifications that navigate to the relevant item and get marked as read.
+-   **Last item agent was working**: The user requested to remove duplicate/redundant download buttons from the Forms, Quotations, and Contracts tabs on the admin dashboard. The agent had just begun investigating by listing the relevant frontend component files.
 -   **Status**: NOT STARTED
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. Frontend testing to verify navigation and UI changes (dropdown updated), and backend testing to verify the notification's 'read' status is updated in the database.
+-   **Which testing method agent to use?**: frontend testing agent. The agent should verify that only the correct buttons remain visible and functional on each of the three tabs (, , ).
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P1)**: Arabic text rendering incorrectly in standard (non-bilingual) contract PDFs.
-    -   **Description**: The user reported seeing black boxes in a downloaded contract PDF. The agent identified that the standard PDF generator () was not using the Amiri font or correctly reshaping Arabic text, unlike the bilingual generator.
-    -   **Attempted fixes**: The agent updated  to register and use the Amiri font, apply  and , and replace Unicode checkmarks with ASCII . The agent tested the fix by downloading a new PDF.
-    -   **Next debug checklist**: Guide the user to download a new *standard* contract PDF (not the AR/EN one) and confirm the text and checkmarks render correctly.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical document generation feature. This bug has recurred in different parts of the PDF generation system and needs to be fully resolved.
+-   **Issue 1**:  (P0) Remove duplicate download buttons from dashboard screens.
+-   **Issue 2**:  (P1) Arabic text renders as black boxes in generated PDFs.
+
+**Issues Detail**:
+-   **Issue 1**:
+    -   **Description**: The user reported redundant buttons on the dashboard.
+        -   **Quotes screen**: A bilingual button is redundant; the main green button should suffice.
+        -   **Contracts screen**: There are multiple buttons to download the same agreement. The user feels this is duplicative and that the download action initiated from the Forms screen is sufficient.
+    -   **Attempted fixes**: None yet. The agent was about to start.
+    -   **Next debug checklist**:
+        1.  Examine  and remove the unnecessary bilingual download button.
+        2.  Examine  and remove the redundant agreement download buttons.
+        3.  Examine  to ensure the primary download button remains.
+        4.  Verify that the intended download functionality is preserved.
+    -   **Why fix this issue and what will be achieved with the fix?**: To clean up the UI and improve user experience by removing confusion and redundancy.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: frontend
+    -   **Blocked on other issue**: None
+
+-   **Issue 2**:
+    -   **Description**: Dynamic Arabic text (client names, addresses, etc.) and text within tables in generated PDFs appear as black boxes. This is a highly recurring issue.
+    -   **Attempted fixes**: The agent implemented a comprehensive fix across  and . A new  helper function was created to reshape all dynamic string data. Additionally, the table styles in both files were corrected to explicitly use the Amiri font for all columns containing Arabic text. The agent performed a technical verification by confirming the Amiri font was properly embedded in newly generated PDFs.
+    -   **Next debug checklist**: Guide the user to go to the Contracts tab, download both the standard and the bilingual (AR/EN) PDF for a contract with Arabic data, and visually confirm that all text renders correctly, especially client names, signatory details, and table content.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical business function. Fixing it ensures that legally binding contracts are generated correctly in the primary business language.
     -   **Status**: USER VERIFICATION PENDING
     -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: backend
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   **Task 1 (P0)**: Implement clickable notifications.
-    -   **Description**: Notifications should navigate the user to the relevant item and be marked as read upon clicking.
-    -   **Where to resume**:
-        1.  Modify . Wrap each notification item in a  or use  from .
-        2.  Create a new backend endpoint (e.g., ) to update the notification's status in the database.
-        3.  Implement the  handler in the frontend to call this new endpoint and then perform the navigation.
-        4.  Filter out read notifications from the frontend display.
-    -   **What will be achieved with this?**: This will improve the admin's workflow by making notifications actionable.
-    -   **Status**: NOT STARTED
-    -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on something**: None
+-   None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
@@ -58,24 +71,19 @@ The user requested a new feature for the notification system. When an admin clic
     -   **(P1) Finalize Twilio SMS Integration**: Guide the user on obtaining Twilio credentials (, , ). Once provided, add them to  to enable live SMS notifications.
 -   **Future Tasks**:
     -   **(P2)** Test and enable the functionality of sending actual emails (e.g., via SendGrid/Resend integration).
+    -   **(P2)** Refactor the scattered PDF generation logic into a single, robust service to prevent recurring font/rendering bugs.
 
 **Completed work in this session**
--   **End-to-End Workflow Verification**: Cleared all test data and ran a full workflow test using the testing agent, confirming the core functionality is working as expected.
--   **PDF Arabic Font Fix Verification**: Verified that the bilingual PDF generation fix from the previous session works correctly.
--   **PDF Download Feature**: Added a Download PDF option to the public client quote review page () and created a new public backend endpoint () to serve the file.
--   **Backend Data Sorting**: Updated all primary data endpoints (, , ) in  to sort results by creation date, ensuring the newest items always appear first.
--   **UI/UX Fixes**:
-    -   **Notifications Dropdown**: Fixed a bug where notification text was cut off by widening the dropdown and improving text wrapping in .
-    -   **Signature Pad**: Removed the placeholder icon from the signature pad and implemented a CSS-only change to turn the cursor into a pen on hover in .
-    -   **Quote Action Buttons**: Reordered the Accept, Reject, and Request Modification buttons on the public quote page as per user request.
+-   **Clickable Notifications**: Implemented a feature where clicking a notification navigates the user to the correct tab on the dashboard, highlights the corresponding item, and marks the notification as read. The feature was fully tested and verified by the testing agent.
+-   **Comprehensive PDF Arabic Font Fix**: Addressed the recurring issue of dynamic Arabic text appearing as black boxes. This involved creating a new text processing helper and fixing font styles in tables across both  and .
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork**: Incorrect Arabic text rendering in PDFs.
--   **Recurrence count**: 4+ (Occurred in bilingual proposals, bilingual contracts, and now standard contracts).
--   **Status**: IN PROGRESS (A fix was implemented for the latest instance, but user verification is pending). This is a persistent issue. The root cause is always a PDF generation function that fails to use the Amiri font and text reshaping logic.
+-   **Recurrence count**: 5+
+-   **Status**: IN PROGRESS (A comprehensive fix has been implemented and is pending user verification).
 
 **Code Architecture**
 
@@ -86,47 +94,44 @@ The user requested a new feature for the notification system. When an admin clic
 -   **Database**: MongoDB
 
 **key DB schema**
--   : (Implicitly exists) Contains fields like , , , and a  status (boolean, to be added/utilized).
+-   : Contains fields like , , ,  (boolean), , and .
+-   : Stores submitted agreement data, including dynamic Arabic text fields like , , etc.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--    (Modified for data sorting and new public PDF endpoint)
--    (Modified to fix Arabic rendering in standard contract PDFs)
--    (UI fixes; will be the main file for the next task)
--    (UI/UX improvement)
--    (New feature and button reordering)
--    &  (New translations added)
+-    (Modified for Arabic PDF fix)
+-    (Modified for Arabic PDF fix)
+-    (Modified for clickable notifications)
+-    (Modified for navigation/highlighting)
+-    (To be modified for button cleanup)
+-    (To be modified for button cleanup)
+-    (To be modified for button cleanup)
 
 **Areas that need refactoring**:
--   The PDF generation logic is scattered across  (proposals),  (bilingual contracts), and  (standard contracts). Consolidating this into a single, robust PDF generation service would prevent recurring font/rendering bugs and improve maintainability.
+-   The PDF generation logic is scattered across , , and . Consolidating this into a single, robust PDF generation service would prevent recurring font/rendering bugs and improve maintainability. This should be proposed to the user after the current tasks.
 
 **key api endpoints**
--   **NEW**: : Public endpoint for clients to download their quote PDF.
--   **MODIFIED**: , , : Now sorted by  descending.
--   **TO BE CREATED**: : Endpoint to mark a notification as read.
+-   **USED**: 
+-   **USED**: 
+-   **USED**: 
 
 **Critical Info for New Agent**
--   Your immediate P0 task is to implement the clickable notifications feature as requested by the user. This involves both frontend and backend changes.
--   Your P1 task is to follow up with the user to verify that the fix for the standard contract PDF was successful. This PDF rendering issue is a recurring problem, so be thorough.
--   The consolidation of PDF generation logic is a valuable refactoring task that would prevent future bugs. Consider proposing this after the immediate tasks are completed.
+-   Your immediate P0 task is to address the user's request to remove duplicate download buttons from the dashboard tabs, as described in Issue 1.
+-   Your next P1 task is to guide the user to verify the comprehensive fix for the Arabic PDF rendering issue. This is a critical, long-standing bug, and confirming the fix is essential before moving on. Do not assume it is fixed until the user confirms it visually.
+-   The previous P0 task (clickable notifications) has been completed and verified.
 
 **documents and test reports created in this job**
 -    (Updated)
--    (From the full E2E test)
+-    (Test report for the clickable notifications feature)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Asks why offer details are hidden on the quote page. - **Status: DONE** (Agent clarified with a full-page screenshot that details were not hidden).
-2.  **User**: Reports a problem with boxes appearing in a downloaded contract PDF. - **Status: DONE** (Agent identified the issue in the standard PDF generator and applied a fix).
-3.  **User**: Requests that clicking a notification should make it disappear and navigate to the relevant item. - **Status: PENDING** (This is the current P0 task).
-4.  **User**: When sending a price quote, provide an option to download a PDF, and place Accept/Reject buttons on the right/left. - **Status: DONE**
-5.  **User**: No, that's not what I meant for the signature. Make the panel white and change the cursor to a pen on hover. Also, make all lists show the most recent items first. - **Status: DONE**
-6.  **User**: We want to create a plus sign (+) in the shape of a pen when the client signs the contract. - **Status: SUPERSEDED** (User changed their mind in the next message).
-7.  **User**: Mentions notification text is cut off. - **Status: DONE**
+1.  **User**: Reports Arabic text rendering as black boxes in PDFs with multiple screenshots. - **Status: IN PROGRESS** (Fix implemented, verification pending).
+2.  **User**: Requests to remove duplicate/redundant download buttons on the Quotes and Contracts screens. - **Status: PENDING** (This is the current P0 task).
 
 **Project Health Check:**
--   **Healthy**: The application is stable and the core workflow has been verified. However, it suffers from a **recurring** critical bug in PDF generation that requires careful attention whenever PDF-related code is touched.
+-   **Healthy**: The application is stable. However, it suffers from a **recurring** critical bug in PDF generation. The latest fix is the most comprehensive so far but requires careful user verification.
 
 **3rd Party Integrations**
 -   : Used for PDF generation.
@@ -136,13 +141,13 @@ The user requested a new feature for the notification system. When an admin clic
 -   **Twilio SMS**: Foundation laid, pending user credentials for activation.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, once at the beginning of the session for a full E2E test.
+-   **Testing agent used after significant changes**: YES, the testing agent successfully verified the clickable notifications feature.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: The Arabic text rendering issue in PDFs is a recurring regression that appears in new places after being fixed elsewhere.
+-   **Known regressions**: The Arabic text rendering issue in PDFs is a persistent regression. The latest applied fix needs to be verified by the user.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
 
 **What agent forgot to execute**
--   The agent acknowledged the user's final request for clickable notifications but did not begin implementation. This is the starting point for the next session.</analysis>
+-   Nothing was forgotten. The agent completed the previous P0 task and was about to start the user's new request before the session ended.</analysis>

@@ -75,7 +75,7 @@ const LoginPage = () => {
               <img 
                 src="/bayan-logo.png" 
                 alt="Bayan Auditing & Conformity" 
-                className="h-24 w-auto object-contain mx-auto"
+                className="h-32 w-auto object-contain mx-auto"
               />
             </div>
             

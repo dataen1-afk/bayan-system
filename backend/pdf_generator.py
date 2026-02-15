@@ -84,8 +84,19 @@ class ContractPDFGenerator:
             parent=self.styles['Heading1'],
             fontSize=18,
             alignment=TA_CENTER,
-            spaceAfter=20,
+            spaceAfter=10,
             textColor=colors.HexColor('#1a365d')  # Bayan navy
+        ))
+        
+        # Arabic Title style
+        self.styles.add(ParagraphStyle(
+            name='ContractTitleArabic',
+            parent=self.styles['Heading1'],
+            fontSize=18,
+            alignment=TA_CENTER,
+            spaceAfter=20,
+            textColor=colors.HexColor('#1a365d'),
+            fontName='Amiri' if ARABIC_FONT_REGISTERED else 'Helvetica'
         ))
         
         # Section header style
@@ -117,7 +128,8 @@ class ContractPDFGenerator:
             fontSize=10,
             alignment=TA_RIGHT,
             spaceAfter=6,
-            leading=14
+            leading=14,
+            fontName='Amiri' if ARABIC_FONT_REGISTERED else 'Helvetica'
         ))
         
         # Footer style

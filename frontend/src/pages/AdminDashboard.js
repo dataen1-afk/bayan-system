@@ -694,8 +694,9 @@ const AdminDashboard = () => {
         
         return (
           <div className="space-y-6">
-            {/* Quick Stats Header */}
+            {/* Quick Stats Header - Order: Total, Accepted, Under Review, Total Quoted (right to left in RTL) */}
             <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {/* Total Proposals */}
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:shadow-md transition-shadow">
                 <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="p-2 bg-slate-100 rounded-lg">
@@ -707,17 +708,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-xl border border-amber-200 shadow-sm p-4 hover:shadow-md transition-shadow">
-                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="p-2 bg-amber-50 rounded-lg">
-                    <Clock className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-amber-700">{pendingProposals}</p>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('pendingReview')}</p>
-                  </div>
-                </div>
-              </div>
+              {/* Accepted */}
               <div className="bg-white rounded-xl border border-emerald-200 shadow-sm p-4 hover:shadow-md transition-shadow">
                 <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="p-2 bg-emerald-50 rounded-lg">
@@ -729,6 +720,19 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
+              {/* Under Review / Pending */}
+              <div className="bg-white rounded-xl border border-amber-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2 bg-amber-50 rounded-lg">
+                    <Clock className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-amber-700">{pendingProposals}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t('pendingReview')}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Total Quoted Value */}
               <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-4 hover:shadow-md transition-shadow">
                 <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="p-2 bg-blue-50 rounded-lg">

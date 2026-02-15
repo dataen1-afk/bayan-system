@@ -745,6 +745,11 @@ const resources = {
       "contractReady": "Contract Ready",
       "underReview": "Under Review",
       
+      // PDF Download
+      "downloadProposal": "Download Proposal",
+      "downloadPDFDescription": "Save this proposal as a PDF file",
+      "errorDownloadingPDF": "Error downloading PDF",
+      
       // Audit Scheduling
       "auditScheduling": "Audit Scheduling",
       "scheduleAudit": "Schedule Audit",

@@ -131,8 +131,7 @@ const NotificationBell = () => {
           className="absolute top-full mt-2 bg-white rounded-lg shadow-xl border z-50"
           style={{ 
             width: '400px',
-            right: isRTL ? '0' : 'auto',
-            left: isRTL ? 'auto' : '0'
+            left: '0'
           }}
           data-testid="notification-dropdown"
         >

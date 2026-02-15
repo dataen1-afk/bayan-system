@@ -269,7 +269,34 @@ class BilingualContractPDFGenerator:
     
     def __init__(self):
         self.styles = getSampleStyleSheet()
+        self._ensure_arabic_fonts()
         self._setup_custom_styles()
+    
+    def _ensure_arabic_fonts(self):
+        """Ensure Arabic fonts are registered"""
+        global ARABIC_FONT_REGISTERED, ARABIC_FONT_BOLD_REGISTERED
+        
+        try:
+            import pathlib
+            ROOT_DIR = pathlib.Path(__file__).parent
+            amiri_regular = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
+            amiri_bold = ROOT_DIR / "fonts" / "Amiri-Bold.ttf"
+            
+            if amiri_regular.exists():
+                try:
+                    pdfmetrics.registerFont(TTFont('ArabicFont', str(amiri_regular)))
+                    ARABIC_FONT_REGISTERED = True
+                except Exception:
+                    pass  # Font already registered
+                    
+                if amiri_bold.exists():
+                    try:
+                        pdfmetrics.registerFont(TTFont('ArabicFontBold', str(amiri_bold)))
+                        ARABIC_FONT_BOLD_REGISTERED = True
+                    except Exception:
+                        pass  # Font already registered
+        except Exception as e:
+            print(f"Error ensuring Arabic fonts: {e}")
         
     def _setup_custom_styles(self):
         """Setup custom paragraph styles for both languages"""

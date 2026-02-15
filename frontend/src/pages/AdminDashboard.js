@@ -999,7 +999,7 @@ const AdminDashboard = () => {
                   data-testid={`contract-${contract.id}`}
                 >
                   {/* Organization */}
-                  <div className="lg:min-w-[200px] lg:flex-1 min-w-0 text-start">
+                  <div className="lg:min-w-[220px] lg:w-[22%] min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                       <span className="font-semibold text-slate-900 truncate" title={contract.organization_name}>
@@ -1009,7 +1009,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Contact */}
-                  <div className="lg:min-w-[130px] lg:w-[13%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[150px] lg:w-[14%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
                       <span className="text-sm text-slate-700 truncate" title={contract.contact_person}>{contract.contact_person || '-'}</span>
@@ -1018,7 +1018,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Standards */}
-                  <div className="lg:min-w-[120px] lg:w-[12%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[130px] lg:w-[13%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex flex-wrap gap-1">
                       {contract.standards?.slice(0, 2).map((std) => (
                         <span key={std} className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded border border-emerald-100">
@@ -1032,14 +1032,14 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Amount */}
-                  <div className="lg:min-w-[130px] lg:w-[14%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[140px] lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
                     <span className="font-bold text-emerald-600 text-lg whitespace-nowrap">
                       {formatCurrency(contract.total_amount)}
                     </span>
                   </div>
                   
                   {/* Date */}
-                  <div className="lg:min-w-[110px] lg:w-[12%] hidden lg:block text-start">
+                  <div className="lg:min-w-[120px] lg:w-[12%] hidden lg:block text-start">
                     <div className="flex items-center gap-1 text-sm text-slate-500 whitespace-nowrap">
                       <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       {formatDate(contract.client_response_date)}
@@ -1047,7 +1047,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Actions - Professional layout with proper spacing */}
-                  <div className="lg:min-w-[170px] lg:w-[16%] flex items-center gap-1.5 mt-3 lg:mt-0 justify-end" dir="ltr">
+                  <div className="lg:min-w-[220px] lg:w-[24%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {contract.access_token && (
                       <Button
                         size="sm"
@@ -1056,7 +1056,7 @@ const AdminDashboard = () => {
                           const url = `${window.location.origin}/proposal/${contract.access_token}`;
                           window.open(url, '_blank');
                         }}
-                        className="h-8 w-8 p-0"
+                        className="h-9 w-9 p-0"
                         title={t('viewProposal')}
                       >
                         <Eye className="w-4 h-4" />
@@ -1084,7 +1084,7 @@ const AdminDashboard = () => {
                           console.error('Error downloading contract:', error);
                         }
                       }}
-                      className="h-8 w-8 p-0"
+                      className="h-9 w-9 p-0"
                       data-testid={`download-contract-${contract.id}`}
                       title={t('downloadEnglishPDF')}
                     >
@@ -1111,12 +1111,12 @@ const AdminDashboard = () => {
                           console.error('Error downloading bilingual contract:', error);
                         }
                       }}
-                      className="h-8 px-2.5 bg-bayan-navy hover:bg-bayan-navy-light"
+                      className="h-9 px-3 bg-bayan-navy hover:bg-bayan-navy-light"
                       data-testid={`download-bilingual-contract-${contract.id}`}
                       title={t('downloadBilingualPDF')}
                     >
                       <Download className="w-4 h-4" />
-                      <span className="hidden xl:inline ms-1">AR/EN</span>
+                      <span className="ms-1">AR/EN</span>
                     </Button>
                   </div>
                 </div>

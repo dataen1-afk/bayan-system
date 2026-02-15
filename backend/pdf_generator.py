@@ -369,7 +369,7 @@ class ContractPDFGenerator:
             story.append(Paragraph("<b>Sites for Certification:</b>", self.styles['ContractText']))
             for i, site in enumerate(sites, 1):
                 if site.strip():
-                    story.append(Paragraph(f"  {i}. {site}", self.styles['ContractText']))
+                    story.append(Paragraph(f"  {i}. {process_dynamic_text(site)}", self.styles['ContractText']))
         
         story.append(Spacer(1, 20))
         

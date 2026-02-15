@@ -269,9 +269,12 @@ class ContractPDFGenerator:
         
         story = []
         
-        # Title
+        # Title - English
         story.append(Paragraph("CERTIFICATION AGREEMENT", self.styles['ContractTitle']))
-        story.append(Paragraph("اتفاقية الاعتماد", self.styles['ContractTitle']))
+        # Title - Arabic (properly processed)
+        if ARABIC_FONT_REGISTERED and ARABIC_SUPPORT:
+            ar_title = process_arabic_text("اتفاقية الاعتماد")
+            story.append(Paragraph(ar_title, self.styles['ContractTitleArabic']))
         story.append(Spacer(1, 20))
         
         # Agreement Reference

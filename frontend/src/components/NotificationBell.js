@@ -93,10 +93,9 @@ const NotificationBell = () => {
     const url = getNavigationUrl(notification);
     if (url) {
       setIsOpen(false); // Close dropdown
-      // Use window.location for full navigation to ensure URL params are set
-      // This is needed because react-router navigate() doesn't update searchParams
-      // when already on the same base path
-      window.location.href = url;
+      // Use navigate for SPA navigation with search params
+      // The AdminDashboard will pick up the tab and highlight params
+      navigate(url, { replace: false });
     }
   };
 

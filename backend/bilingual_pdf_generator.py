@@ -601,14 +601,14 @@ class BilingualContractPDFGenerator:
              standards_text,
              ':' + process_arabic_text(self.TRANSLATIONS['management_standards']['ar'])],
             [self.TRANSLATIONS['scope_of_services']['en'] + ':',
-             agreement_data.get('scope_of_services', 'N/A'),
+             process_dynamic_text(agreement_data.get('scope_of_services', 'N/A')),
              ':' + process_arabic_text(self.TRANSLATIONS['scope_of_services']['ar'])],
         ]
         
         if agreement_data.get('other_standard'):
             scope_data.append([
                 self.TRANSLATIONS['other_standard']['en'] + ':',
-                agreement_data.get('other_standard'),
+                process_dynamic_text(agreement_data.get('other_standard')),
                 ':' + process_arabic_text(self.TRANSLATIONS['other_standard']['ar'])
             ])
         

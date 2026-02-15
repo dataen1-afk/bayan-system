@@ -397,6 +397,13 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 └── test_reports/
 ```
 
+## Pending Verification
+- **Arabic PDF Text Rendering Fix** - Comprehensive fix applied for dynamic Arabic text (company names, signatory names) rendering as black boxes. Awaiting user verification by downloading contract PDFs with Arabic data.
+
+## Upcoming Tasks
+- **Google Calendar Integration**: Pending user credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+- **Twilio SMS Integration**: Pending user credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
+
 ## Future Enhancements
 - Enable real email sending (SendGrid integration)
 - Advanced audit scheduling with recurring events

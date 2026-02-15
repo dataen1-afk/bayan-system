@@ -807,7 +807,8 @@ class BilingualContractPDFGenerator:
         
         sig_table = Table(sig_data, colWidths=[2.8*inch, 2.8*inch])
         sig_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (0, -1), 'Amiri'),  # First column (headers have Arabic)
+            ('FONTNAME', (1, 0), (1, -1), 'Amiri'),  # Client column may have Arabic text
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),

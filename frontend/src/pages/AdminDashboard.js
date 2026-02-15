@@ -766,7 +766,7 @@ const AdminDashboard = () => {
                   data-testid={`proposal-${proposal.id}`}
                 >
                   {/* Organization */}
-                  <div className="lg:min-w-[200px] lg:flex-1 min-w-0 text-start">
+                  <div className="lg:min-w-[220px] lg:w-[22%] min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="font-semibold text-slate-900 truncate" title={proposal.organization_name}>
@@ -776,7 +776,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Contact */}
-                  <div className="lg:min-w-[130px] lg:w-[13%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[150px] lg:w-[14%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
                       <span className="text-sm text-slate-700 truncate" title={proposal.contact_person}>{proposal.contact_person || '-'}</span>
@@ -799,7 +799,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Status */}
-                  <div className="lg:min-w-[130px] lg:w-[13%] mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[140px] lg:w-[14%] mt-2 lg:mt-0 text-start">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${
                       proposal.status === 'accepted' || proposal.status === 'agreement_signed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                       proposal.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
@@ -812,14 +812,14 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Amount */}
-                  <div className="lg:min-w-[110px] lg:w-[11%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[120px] lg:w-[12%] min-w-0 mt-2 lg:mt-0 text-start">
                     <span className="font-bold text-slate-900 whitespace-nowrap">
                       {formatCurrency(proposal.total_amount)}
                     </span>
                   </div>
                   
                   {/* Date */}
-                  <div className="lg:min-w-[100px] lg:w-[10%] hidden lg:block text-start">
+                  <div className="lg:min-w-[110px] lg:w-[10%] hidden lg:block text-start">
                     <div className="flex items-center gap-1 text-sm text-slate-500 whitespace-nowrap">
                       <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       {formatDate(proposal.issued_date)}
@@ -827,7 +827,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Actions - Professional layout with proper spacing */}
-                  <div className="lg:min-w-[160px] lg:w-[14%] flex items-center gap-1.5 mt-3 lg:mt-0 justify-end" dir="ltr">
+                  <div className="lg:min-w-[180px] lg:w-[18%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {proposal.access_token && (
                       <Button
                         size="sm"
@@ -836,7 +836,7 @@ const AdminDashboard = () => {
                           const url = `${window.location.origin}/proposal/${proposal.access_token}`;
                           window.open(url, '_blank');
                         }}
-                        className="h-8 w-8 p-0"
+                        className="h-9 w-9 p-0"
                         title={t('viewProposal')}
                       >
                         <Eye className="w-4 h-4" />
@@ -848,7 +848,7 @@ const AdminDashboard = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleDownloadProposalBilingual(proposal.id)}
-                      className="h-8 w-8 p-0"
+                      className="h-9 w-9 p-0"
                       title={t('downloadBilingualPDF') || 'Download Bilingual PDF (AR/EN)'}
                     >
                       <FileText className="w-4 h-4" />
@@ -873,10 +873,10 @@ const AdminDashboard = () => {
                             console.error('Error downloading contract:', error);
                           }
                         }}
-                        className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700"
+                        className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700"
                       >
                         <Download className="w-4 h-4" />
-                        <span className="hidden xl:inline ms-1">{t('pdf')}</span>
+                        <span className="ms-1">{t('pdf')}</span>
                       </Button>
                     )}
                   </div>

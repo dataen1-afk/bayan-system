@@ -455,7 +455,8 @@ class ContractPDFGenerator:
         ]
         
         for key, desc in ack_items:
-            status = "✓" if acks.get(key, False) else "☐"
+            # Use ASCII checkmark characters that work without special fonts
+            status = "[X]" if acks.get(key, False) else "[ ]"
             story.append(Paragraph(f"{status} {desc}", self.styles['ContractText']))
         
         story.append(Spacer(1, 30))

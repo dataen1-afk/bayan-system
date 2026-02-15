@@ -736,7 +736,8 @@ class BilingualContractPDFGenerator:
                     'surveillanceSchedule', 'nonconformityResolution', 'feesAndPayment']
         
         for key in ack_keys:
-            status = "✓" if acks.get(key, False) else "☐"
+            # Use ASCII checkmark characters that work without special fonts
+            status = "[X]" if acks.get(key, False) else "[ ]"
             en_desc = self.TRANSLATIONS['acknowledgements']['en'].get(key, key)
             ar_desc = self.TRANSLATIONS['acknowledgements']['ar'].get(key, key)
             story.append(Paragraph(f"{status} {en_desc}", self.styles['TextEN']))

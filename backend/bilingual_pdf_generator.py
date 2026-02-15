@@ -730,7 +730,7 @@ class BilingualContractPDFGenerator:
         
         if proposal_data.get('notes'):
             story.append(Spacer(1, 6))
-            story.append(Paragraph(f"<b>{self.TRANSLATIONS['notes']['en']} | {process_arabic_text(self.TRANSLATIONS['notes']['ar'])}:</b> {proposal_data.get('notes')}", self.styles['TextEN']))
+            story.append(Paragraph(f"<b>{self.TRANSLATIONS['notes']['en']} | {process_arabic_text(self.TRANSLATIONS['notes']['ar'])}:</b> {process_dynamic_text(proposal_data.get('notes'))}", self.styles['TextEN']))
         
         story.append(Spacer(1, 12))
         

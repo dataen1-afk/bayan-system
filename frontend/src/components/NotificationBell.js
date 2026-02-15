@@ -93,9 +93,16 @@ const NotificationBell = () => {
     const url = getNavigationUrl(notification);
     if (url) {
       setIsOpen(false); // Close dropdown
-      // Use navigate for SPA navigation with search params
-      // The AdminDashboard will pick up the tab and highlight params
-      navigate(url, { replace: false });
+      
+      // Parse the URL to get path and search params
+      const [path, queryString] = url.split('?');
+      const params = new URLSearchParams(queryString);
+      
+      // Navigate with search params - use navigate with options
+      navigate({
+        pathname: path,
+        search: queryString ? `?${queryString}` : ''
+      });
     }
   };
 

@@ -122,6 +122,33 @@ const PublicProposalPage = () => {
     }).format(amount || 0) + ' SAR';
   };
 
+  const handleDownloadPDF = async (bilingual = false) => {
+    try {
+      const endpoint = bilingual 
+        ? `${API}/public/proposals/${accessToken}/bilingual_pdf`
+        : `${API}/public/proposals/${accessToken}/pdf`;
+      
+      const response = await axios.get(endpoint, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = bilingual 
+        ? `proposal_${proposal?.id?.slice(0, 8)}_ar_en.pdf`
+        : `proposal_${proposal?.id?.slice(0, 8)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert(t('errorDownloadingPDF') || 'Error downloading PDF');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

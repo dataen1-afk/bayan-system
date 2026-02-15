@@ -84,8 +84,6 @@ const NotificationBell = () => {
 
   // Handle notification click - mark as read, navigate, and close dropdown
   const handleNotificationClick = async (notification) => {
-    console.log('Notification clicked:', notification);
-    
     // Mark as read if not already read
     if (!notification.is_read) {
       await markAsRead(notification.id);
@@ -93,7 +91,6 @@ const NotificationBell = () => {
 
     // Get navigation URL and navigate
     const url = getNavigationUrl(notification);
-    console.log('Navigating to:', url);
     
     if (url) {
       setIsOpen(false); // Close dropdown
@@ -101,9 +98,7 @@ const NotificationBell = () => {
       // Parse the URL to get path and search params
       const [path, queryString] = url.split('?');
       
-      console.log('Path:', path, 'Query:', queryString);
-      
-      // Navigate with search params - use navigate with options
+      // Navigate with search params
       navigate({
         pathname: path,
         search: queryString ? `?${queryString}` : ''

@@ -1611,6 +1611,11 @@ const resources = {
       "contractReady": "العقد جاهز",
       "underReview": "قيد المراجعة",
       
+      // PDF Download
+      "downloadProposal": "تحميل العرض",
+      "downloadPDFDescription": "احفظ هذا العرض كملف PDF",
+      "errorDownloadingPDF": "خطأ في تحميل ملف PDF",
+      
       // Audit Scheduling
       "auditScheduling": "جدولة التدقيق",
       "scheduleAudit": "جدولة تدقيق",

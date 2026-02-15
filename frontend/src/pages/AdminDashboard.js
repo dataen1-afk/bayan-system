@@ -527,7 +527,7 @@ const AdminDashboard = () => {
                   data-testid={`application-form-${form.id}`}
                 >
                   {/* Company */}
-                  <div className="lg:min-w-[200px] lg:flex-1 min-w-0 text-start">
+                  <div className="lg:min-w-[220px] lg:w-[22%] min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span className="font-semibold text-slate-900 truncate" title={form.client_info?.company_name}>
@@ -547,7 +547,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Contact */}
-                  <div className="lg:min-w-[140px] lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[150px] lg:w-[15%] min-w-0 mt-2 lg:mt-0 text-start">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
                       <span className="text-sm text-slate-700 truncate" title={form.client_info?.name}>{form.client_info?.name || '-'}</span>
@@ -555,12 +555,12 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Email */}
-                  <div className="lg:min-w-[180px] lg:w-[18%] min-w-0 hidden lg:block text-start">
+                  <div className="lg:min-w-[200px] lg:w-[20%] min-w-0 hidden lg:block text-start">
                     <span className="text-sm text-slate-500 truncate block" title={form.client_info?.email}>{form.client_info?.email || '-'}</span>
                   </div>
                   
                   {/* Status */}
-                  <div className="lg:min-w-[120px] lg:w-[12%] mt-2 lg:mt-0 text-start">
+                  <div className="lg:min-w-[130px] lg:w-[12%] mt-2 lg:mt-0 text-start">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${
                       form.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                       form.status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
@@ -573,7 +573,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Date */}
-                  <div className="lg:min-w-[100px] lg:w-[10%] hidden lg:block text-start">
+                  <div className="lg:min-w-[110px] lg:w-[11%] hidden lg:block text-start">
                     <div className="flex items-center gap-1 text-sm text-slate-500 whitespace-nowrap">
                       <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                       {formatDate(form.created_at)}
@@ -581,15 +581,15 @@ const AdminDashboard = () => {
                   </div>
                   
                   {/* Actions - Professional layout with proper spacing */}
-                  <div className="lg:min-w-[180px] lg:w-[15%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
+                  <div className="lg:min-w-[200px] lg:w-[20%] flex items-center gap-2 mt-3 lg:mt-0 justify-end" dir="ltr">
                     {form.status === 'pending' && (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => copyFormLink(form)}
                           data-testid={`copy-link-${form.id}`}
-                          className="h-8 w-8 p-0 text-slate-600 hover:text-bayan-navy hover:border-bayan-navy"
+                          className="h-9 w-9 p-0 text-slate-600 hover:text-bayan-navy hover:border-bayan-navy"
                           title={t('copyLink')}
                         >
                           <Copy className="w-4 h-4" />
@@ -600,7 +600,7 @@ const AdminDashboard = () => {
                           onClick={() => handleSendEmail(form.id)}
                           disabled={sendingEmail}
                           data-testid={`send-email-${form.id}`}
-                          className="h-8 w-8 p-0 text-slate-600 hover:text-bayan-navy hover:border-bayan-navy"
+                          className="h-9 w-9 p-0 text-slate-600 hover:text-bayan-navy hover:border-bayan-navy"
                           title={t('sendEmail')}
                         >
                           <Mail className="w-4 h-4" />
@@ -608,13 +608,13 @@ const AdminDashboard = () => {
                       </div>
                     )}
                     {form.status === 'submitted' && (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleViewApplicationForm(form)}
                           data-testid={`view-form-${form.id}`}
-                          className="h-8 w-8 p-0"
+                          className="h-9 w-9 p-0"
                           title={t('view')}
                         >
                           <Eye className="w-4 h-4" />
@@ -624,7 +624,7 @@ const AdminDashboard = () => {
                           size="sm"
                           onClick={() => handleDownloadFormBilingual(form.id)}
                           data-testid={`download-form-bilingual-${form.id}`}
-                          className="h-8 w-8 p-0"
+                          className="h-9 w-9 p-0"
                           title={t('downloadBilingualPDF') || 'Download Bilingual PDF'}
                         >
                           <FileText className="w-4 h-4" />
@@ -633,10 +633,10 @@ const AdminDashboard = () => {
                           size="sm"
                           onClick={() => handleCreateQuotationFromForm(form)}
                           data-testid={`create-quote-${form.id}`}
-                          className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700"
+                          className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700"
                         >
                           <DollarSign className="w-4 h-4" />
-                          <span className="hidden xl:inline ms-1">{t('quote')}</span>
+                          <span className="ms-1">{t('quote')}</span>
                         </Button>
                       </div>
                     )}
@@ -645,10 +645,10 @@ const AdminDashboard = () => {
                         size="sm"
                         onClick={() => handleDownloadContract(form.id)}
                         data-testid={`download-contract-${form.id}`}
-                        className="h-8 px-3 bg-bayan-navy hover:bg-bayan-navy-light"
+                        className="h-9 px-4 bg-bayan-navy hover:bg-bayan-navy-light"
                       >
                         <Download className="w-4 h-4" />
-                        <span className="hidden xl:inline ms-1">{t('download')}</span>
+                        <span className="ms-1">{t('download')}</span>
                       </Button>
                     )}
                   </div>

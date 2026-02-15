@@ -344,12 +344,12 @@ class ContractPDFGenerator:
         
         scope_data = [
             ['Management System Standards:', standards_text],
-            ['Scope of Services:', agreement_data.get('scope_of_services', 'N/A')],
+            ['Scope of Services:', process_dynamic_text(agreement_data.get('scope_of_services', 'N/A'))],
         ]
         
         # Add other standard if exists
         if agreement_data.get('other_standard'):
-            scope_data.append(['Other Standard:', agreement_data.get('other_standard')])
+            scope_data.append(['Other Standard:', process_dynamic_text(agreement_data.get('other_standard'))])
         
         scope_table = Table(scope_data, colWidths=[2*inch, 4*inch])
         scope_table.setStyle(TableStyle([

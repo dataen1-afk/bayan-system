@@ -338,7 +338,8 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - Bilingual PDF Tests: 100% (Both endpoints working - Amiri Arabic font verified)
 - Google Calendar API: 100% (Status endpoint tested)
 - **Full E2E Workflow Test**: PASSED (Iteration 16 - 21/21 tests)
-- Latest Test Report: `/app/test_reports/iteration_16.json`
+- **Clickable Notifications Test**: PASSED (Iteration 17 - 5/5 features)
+- Latest Test Report: `/app/test_reports/iteration_17.json`
 - New Test Files:
   - `/app/backend/tests/test_iteration15_features.py`
   - `/app/backend/tests/test_iteration16_full_workflow.py`
@@ -353,6 +354,7 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - Client signs certification agreement ✅
 - PDF generation (standard & bilingual) ✅
 - Arabic text rendering in PDF ✅ (Amiri font embedded)
+- **Clickable Notifications** ✅ (Navigate to item, mark as read, highlight row)
 
 ## MOCKED Integrations
 - **Email Sending**: MOCKED - Logs to console instead of sending real emails

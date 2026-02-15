@@ -199,10 +199,10 @@ const NotificationBell = () => {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer ${
+                  className={`px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors ${
                     !notification.is_read ? 'bg-blue-50' : ''
                   }`}
-                  onClick={() => !notification.is_read && markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                   data-testid={`notification-${notification.id}`}
                 >
                   <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>

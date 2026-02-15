@@ -896,14 +896,14 @@ const AdminDashboard = () => {
           ? signedContracts.sort((a, b) => new Date(b.client_response_date) - new Date(a.client_response_date))[0]
           : null;
         
-        // DataTable columns for contracts - use min-width for better content visibility
+        // DataTable columns for contracts - optimized for full-width display
         const contractColumns = [
-          { key: 'organization', label: t('organization'), width: 'min-w-[200px] flex-1', sortAccessor: (item) => item.organization_name || '' },
-          { key: 'contact', label: t('contact'), width: 'min-w-[130px] w-[13%]', sortAccessor: (item) => item.contact_person || '' },
-          { key: 'standards', label: t('standards'), width: 'min-w-[120px] w-[12%]' },
-          { key: 'amount', label: t('contractValue'), width: 'min-w-[130px] w-[14%]', sortAccessor: (item) => item.total_amount || 0 },
-          { key: 'date', label: t('signedDate'), width: 'min-w-[110px] w-[12%]', sortAccessor: (item) => new Date(item.client_response_date || 0).getTime() },
-          { key: 'actions', label: t('actions'), width: 'min-w-[170px] w-[16%]' }
+          { key: 'organization', label: t('organization'), width: 'min-w-[220px] w-[22%]', sortAccessor: (item) => item.organization_name || '' },
+          { key: 'contact', label: t('contact'), width: 'min-w-[150px] w-[14%]', sortAccessor: (item) => item.contact_person || '' },
+          { key: 'standards', label: t('standards'), width: 'min-w-[130px] w-[13%]' },
+          { key: 'amount', label: t('contractValue'), width: 'min-w-[140px] w-[15%]', sortAccessor: (item) => item.total_amount || 0 },
+          { key: 'date', label: t('signedDate'), width: 'min-w-[120px] w-[12%]', sortAccessor: (item) => new Date(item.client_response_date || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'min-w-[220px] w-[24%]' }
         ];
 
         // Searchable columns for contracts

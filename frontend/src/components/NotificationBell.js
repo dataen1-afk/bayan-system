@@ -128,9 +128,10 @@ const NotificationBell = () => {
       {/* Dropdown */}
       {isOpen && (
         <div 
-          className={`absolute top-full mt-2 w-96 bg-white rounded-lg shadow-xl border z-50 ${
+          className={`absolute top-full mt-2 w-[420px] bg-white rounded-lg shadow-xl border z-50 ${
             isRTL ? 'right-0' : 'left-0'
           }`}
+          style={{ minWidth: '420px', maxWidth: '90vw' }}
           data-testid="notification-dropdown"
         >
           {/* Header */}
@@ -140,7 +141,7 @@ const NotificationBell = () => {
               <button
                 onClick={markAllAsRead}
                 disabled={loading}
-                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 whitespace-nowrap"
                 data-testid="mark-all-read-btn"
               >
                 <CheckCheck className="w-4 h-4" />
@@ -170,11 +171,11 @@ const NotificationBell = () => {
                     <div className="flex-shrink-0 mt-1">
                       {getNotificationIcon(notification.type)}
                     </div>
-                    <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                       <p className={`text-sm font-medium text-gray-800 ${!notification.is_read ? 'font-semibold' : ''}`}>
                         {notification.title}
                       </p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-sm text-gray-600 mt-1 break-words leading-relaxed">
                         {notification.message}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">

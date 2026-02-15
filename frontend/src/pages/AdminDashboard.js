@@ -412,14 +412,14 @@ const AdminDashboard = () => {
         const submittedForms = applicationForms.filter(f => f.status === 'submitted').length;
         const completedForms = applicationForms.filter(f => ['approved', 'agreement_signed'].includes(f.status)).length;
         
-        // DataTable columns for forms - use min-width for better content visibility
+        // DataTable columns for forms - optimized for full-width display
         const formColumns = [
-          { key: 'company', label: t('companyName'), width: 'min-w-[200px] flex-1', sortAccessor: (item) => item.client_info?.company_name || '' },
-          { key: 'contact', label: t('contact'), width: 'min-w-[140px] w-[15%]', sortAccessor: (item) => item.client_info?.name || '' },
-          { key: 'email', label: t('email'), width: 'min-w-[180px] w-[18%]' },
-          { key: 'status', label: t('status'), width: 'min-w-[120px] w-[12%]', sortAccessor: (item) => item.status },
-          { key: 'date', label: t('date'), width: 'min-w-[100px] w-[10%]', sortAccessor: (item) => new Date(item.created_at || 0).getTime() },
-          { key: 'actions', label: t('actions'), width: 'min-w-[180px] w-[15%]' }
+          { key: 'company', label: t('companyName'), width: 'min-w-[220px] w-[22%]', sortAccessor: (item) => item.client_info?.company_name || '' },
+          { key: 'contact', label: t('contact'), width: 'min-w-[150px] w-[15%]', sortAccessor: (item) => item.client_info?.name || '' },
+          { key: 'email', label: t('email'), width: 'min-w-[200px] w-[20%]' },
+          { key: 'status', label: t('status'), width: 'min-w-[130px] w-[12%]', sortAccessor: (item) => item.status },
+          { key: 'date', label: t('date'), width: 'min-w-[110px] w-[11%]', sortAccessor: (item) => new Date(item.created_at || 0).getTime() },
+          { key: 'actions', label: t('actions'), width: 'min-w-[200px] w-[20%]' }
         ];
 
         // Searchable columns for forms

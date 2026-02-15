@@ -437,13 +437,39 @@ const PublicProposalPage = () => {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {/* PDF Download Section */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="pt-6">
+              <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Download className="w-6 h-6 text-blue-600" />
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <p className="font-medium text-blue-800">{t('downloadProposal') || 'Download Proposal'}</p>
+                    <p className="text-sm text-blue-700">{t('downloadPDFDescription') || 'Save this proposal as a PDF file'}</p>
+                  </div>
+                </div>
+                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Button
+                    onClick={() => handleDownloadPDF(true)}
+                    variant="outline"
+                    className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    data-testid="download-bilingual-pdf-btn"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    AR/EN
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons - Reject on Left, Accept on Right */}
+          <div className={`flex flex-col sm:flex-row gap-4 justify-center ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
             <Button
               onClick={() => setShowRejectModal(true)}
               variant="outline"
               size="lg"
-              className="px-8 border-red-300 text-red-600 hover:bg-red-50"
+              className="px-8 border-red-300 text-red-600 hover:bg-red-50 order-1 sm:order-1"
               data-testid="reject-proposal-btn"
             >
               {t('rejectProposal')}
@@ -452,7 +478,7 @@ const PublicProposalPage = () => {
               onClick={() => setShowModificationModal(true)}
               variant="outline"
               size="lg"
-              className="px-8 border-orange-300 text-orange-600 hover:bg-orange-50"
+              className="px-8 border-orange-300 text-orange-600 hover:bg-orange-50 order-2 sm:order-2"
               data-testid="request-modification-btn"
             >
               <Edit3 className="w-4 h-4 mr-2" />
@@ -461,7 +487,7 @@ const PublicProposalPage = () => {
             <Button
               onClick={() => setShowAcceptModal(true)}
               size="lg"
-              className="px-8 bg-green-600 hover:bg-green-700"
+              className="px-8 bg-green-600 hover:bg-green-700 order-3 sm:order-3"
               data-testid="accept-proposal-btn"
             >
               {t('acceptProposal')}

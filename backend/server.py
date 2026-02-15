@@ -1183,8 +1183,8 @@ async def create_proposal(proposal_data: ProposalCreate, current_user: dict = De
 
 @api_router.get("/proposals", response_model=List[Proposal])
 async def get_proposals(current_user: dict = Depends(require_admin)):
-    """Get all proposals (admin only)"""
-    proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
+    """Get all proposals (admin only) - sorted by most recent first"""
+    proposals = await db.proposals.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
     for p in proposals:
         if isinstance(p.get('created_at'), str):

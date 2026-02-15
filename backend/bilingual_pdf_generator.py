@@ -76,6 +76,25 @@ def process_arabic_text(text):
         return text
 
 
+def process_dynamic_text(text):
+    """
+    Process dynamic text that may contain Arabic characters.
+    Detects if text contains Arabic and processes accordingly.
+    """
+    if not text:
+        return text
+    
+    text = str(text)
+    
+    # Check if text contains Arabic characters (Unicode range for Arabic)
+    has_arabic = any('\u0600' <= char <= '\u06FF' or '\u0750' <= char <= '\u077F' for char in text)
+    
+    if has_arabic and ARABIC_SUPPORT:
+        return process_arabic_text(text)
+    
+    return text
+
+
 class BilingualContractPDFGenerator:
     """Generate professional bilingual PDF contracts (Arabic + English)"""
     

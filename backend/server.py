@@ -3665,8 +3665,12 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     c.drawCentredString(width/2, 10, "Page 1")
     
     # ========== PAGE 2 (if more data) ==========
-    audit_info = company_data.get('auditInfo', {})
-    if audit_info or company_data.get('previousCertification') or company_data.get('consultantUsed'):
+    # Check if we have additional data to show
+    has_certification_info = company_data.get('isAlreadyCertified') == 'yes' or company_data.get('currentCertifications')
+    has_consultant_info = company_data.get('isConsultantInvolved') == 'yes'
+    has_declaration = company_data.get('declarationName') or company_data.get('declarationAgreed')
+    
+    if has_certification_info or has_consultant_info or has_declaration:
         c.showPage()
         
         # Header for page 2
@@ -3686,24 +3690,30 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         
         y = height - 90
         
-        # Section 6: Audit Information
-        y = draw_section_header("6. AUDIT INFORMATION", "٦. معلومات التدقيق", y)
-        y = draw_field("Preferred Audit Date", "تاريخ التدقيق المفضل", audit_info.get('preferredDate', 'N/A'), y)
-        y = draw_field("Audit Language", "لغة التدقيق", audit_info.get('language', 'N/A'), y)
+        # Section 6: Current Certification Status
+        y = draw_section_header("6. CERTIFICATION STATUS", "٦. حالة الاعتماد", y)
+        y = draw_field("Already Certified?", "معتمد حالياً؟", company_data.get('isAlreadyCertified', 'N/A'), y)
+        if company_data.get('isAlreadyCertified') == 'yes':
+            certs = company_data.get('currentCertifications', [])
+            for i, cert in enumerate(certs, 1):
+                if isinstance(cert, dict) and cert.get('system'):
+                    y = draw_field(f"Certification {i}", f"الاعتماد {i}", f"{cert.get('system', '')} - {cert.get('body', '')}", y)
         y -= 10
         
-        # Section 7: Previous Certification
-        if company_data.get('previousCertification'):
-            y = draw_section_header("7. PREVIOUS CERTIFICATION", "٧. الشهادات السابقة", y)
-            y = draw_field("Previous Cert. Body", "جهة الاعتماد السابقة", company_data.get('previousCertBody', 'N/A'), y)
-            y = draw_field("Previous Cert. Expiry", "انتهاء الشهادة السابقة", company_data.get('previousCertExpiry', 'N/A'), y)
+        # Section 7: Consultant Information
+        if has_consultant_info:
+            y = draw_section_header("7. CONSULTANT INFORMATION", "٧. معلومات المستشار", y)
+            y = draw_field("Consultant Involved?", "هل يوجد مستشار؟", company_data.get('isConsultantInvolved', 'N/A'), y)
+            if company_data.get('consultantName'):
+                y = draw_field("Consultant Name", "اسم المستشار", company_data.get('consultantName', 'N/A'), y)
             y -= 10
         
-        # Section 8: Consultant
-        if company_data.get('consultantUsed'):
-            y = draw_section_header("8. CONSULTANT INFORMATION", "٨. معلومات المستشار", y)
-            y = draw_field("Consultant Name", "اسم المستشار", company_data.get('consultantName', 'N/A'), y)
-            y = draw_field("Consultant Contact", "اتصال المستشار", company_data.get('consultantContact', 'N/A'), y)
+        # Section 8: Declaration
+        if has_declaration:
+            y = draw_section_header("8. DECLARATION", "٨. الإقرار", y)
+            y = draw_field("Declared By", "المُقِر", company_data.get('declarationName', 'N/A'), y)
+            y = draw_field("Designation", "المنصب", company_data.get('declarationDesignation', 'N/A'), y)
+            y = draw_field("Declaration Agreed", "تم الموافقة", "Yes" if company_data.get('declarationAgreed') else "No", y)
         
         # Footer for page 2
         c.setFillColor(colors.HexColor('#1e3a5f'))

@@ -349,7 +349,7 @@ const CustomerPortalPage = () => {
                           onClick={async () => {
                             try {
                               const response = await axios.get(
-                                `${API}/public/contracts/${orderData.proposal.access_token}/pdf`,
+                                `${API}/public/contracts/${orderData.proposal.access_token}/pdf/bilingual`,
                                 { responseType: 'blob' }
                               );
                               const url = window.URL.createObjectURL(new Blob([response.data]));

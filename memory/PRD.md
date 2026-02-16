@@ -406,8 +406,18 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 └── test_reports/
 ```
 
-## Pending Verification
-- **Arabic PDF Text Rendering Fix** - Comprehensive fix applied for dynamic Arabic text (company names, signatory names) rendering as black boxes. Awaiting user verification by downloading contract PDFs with Arabic data.
+## Completed Fixes (February 2026)
+
+### PDF Layout Fixes ✅
+- **Overlapping Text Fix** - Fixed bilingual PDF layout in Forms and Quotations tabs:
+  - English labels at X=50, values at X=145 (left side)
+  - Arabic values at X=width-160, labels at X=width-50 (right side)
+  - Clear column separation prevents text overlap
+- **Company Seal Fix** - Fixed seal cutoff in Quotation PDFs:
+  - Seal Y-position now uses `max(y - 80, 55)` to ensure minimum 55px above footer
+  - Seal dimensions: 80x80 pixels, centered horizontally
+- **Arabic Text Rendering** - All Arabic text renders correctly using Amiri font (no black boxes)
+- **Test Report**: `/app/test_reports/iteration_18.json` - 11/11 tests passed (100%)
 
 ## Upcoming Tasks
 - **Google Calendar Integration**: Pending user credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)

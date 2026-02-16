@@ -166,7 +166,17 @@ const CreateProposalPage = () => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Error creating proposal:', error);
-      alert(t('errorCreatingProposal') + ' ' + (error.response?.data?.detail || error.message));
+      let errorMessage = '';
+      if (error.response?.data?.detail) {
+        errorMessage = typeof error.response.data.detail === 'string' 
+          ? error.response.data.detail 
+          : JSON.stringify(error.response.data.detail);
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = 'Unknown error occurred';
+      }
+      alert(t('errorCreatingProposal') + ' ' + errorMessage);
     } finally {
       setSaving(false);
     }

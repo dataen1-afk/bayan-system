@@ -114,6 +114,10 @@ function App() {
               path="/audit-scheduling" 
               element={user?.role === 'admin' ? <AuditSchedulingPage /> : <Navigate to="/login" />} 
             />
+            <Route 
+              path="/invoices" 
+              element={user?.role === 'admin' ? <InvoicesPage /> : <Navigate to="/login" />} 
+            />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
           </Routes>
         </BrowserRouter>

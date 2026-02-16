@@ -3567,9 +3567,29 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     def draw_section_box(title_en, title_ar, y_start, fields, box_height=None):
         """Draw a section with background box and fields
         Layout: English Label | VALUE (centered) | Arabic Label
+        Dropdown values are translated to Arabic
         """
         if box_height is None:
             box_height = len(fields) * 18 + 30
+        
+        # Translation map for dropdown values (show Arabic as client selected)
+        translations = {
+            # Legal Status
+            'private': 'خاص',
+            'public': 'عام',
+            'government': 'حكومي',
+            'non-profit': 'غير ربحي',
+            # Certification Program
+            'initial': 'أولي',
+            'renewal': 'تجديد',
+            'transfer': 'نقل',
+            'surveillance': 'مراقبة',
+            # Yes/No
+            'yes': 'نعم',
+            'no': 'لا',
+            'Yes': 'نعم',
+            'No': 'لا',
+        }
         
         # Section header bar
         c.setFillColor(primary_color)
@@ -3599,6 +3619,12 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
             c.setFillColor(colors.black)
             val_str = str(value) if value else 'N/A'
             val_display = val_str[:35] + '...' if len(val_str) > 35 else val_str
+            
+            # Translate dropdown values to Arabic
+            if val_display in translations:
+                val_display = translations[val_display]
+            elif val_display.lower() in translations:
+                val_display = translations[val_display.lower()]
             
             # LEFT: English label
             c.setFont('Helvetica-Bold', 9)

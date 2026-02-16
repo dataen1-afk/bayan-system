@@ -1956,6 +1956,7 @@ const resources = {
       "specializations": "التخصصات",
       "maxAuditsPerMonth": "الحد الأقصى للتدقيق شهرياً",
       "auditorNotes": "ملاحظات عن هذا المدقق...",
+      "notes": "ملاحظات",
       "fillRequiredFields": "يرجى ملء جميع الحقول المطلوبة",
       "errorSavingAuditor": "خطأ في حفظ المدقق",
       "confirmDeactivateAuditor": "هل أنت متأكد من إلغاء تفعيل هذا المدقق؟",

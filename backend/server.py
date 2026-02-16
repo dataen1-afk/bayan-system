@@ -3530,33 +3530,31 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
             c.drawString(x, y, text_str)
     
     def draw_section_header(en_text, ar_text, y_pos):
-        """Draw bilingual section header"""
+        """Draw bilingual section header - compact version"""
         c.setFillColor(colors.HexColor('#1e3a5f'))
-        c.setFont('Helvetica-Bold', 12)
+        c.setFont('Helvetica-Bold', 10)
         c.drawString(50, y_pos, en_text)
-        draw_arabic_text(ar_text, width - 50, y_pos, 12, bold=True)
+        draw_arabic_text(ar_text, width - 50, y_pos, 10, bold=True)
         c.setStrokeColor(colors.HexColor('#1e3a5f'))
-        c.setLineWidth(1)
-        c.line(50, y_pos - 5, width - 50, y_pos - 5)
-        return y_pos - 25
+        c.setLineWidth(0.5)
+        c.line(50, y_pos - 3, width - 50, y_pos - 3)
+        return y_pos - 16
     
     def draw_field(label_en, label_ar, value, y_pos, value_ar=None):
-        """Draw bilingual field with value on both sides - separated columns to prevent overlap"""
+        """Draw bilingual field - compact version with tighter spacing"""
         value_str = str(value) if value else 'N/A'
-        # Truncate long values to prevent overflow (max ~25 chars for each side)
-        value_display = value_str[:30] + '...' if len(value_str) > 30 else value_str
+        # Truncate long values to prevent overflow
+        value_display = value_str[:28] + '...' if len(value_str) > 28 else value_str
         c.setFillColor(colors.black)
-        # English side (left half of page) - label at 50, value at 145
-        c.setFont('Helvetica-Bold', 9)
+        # English side (left half of page)
+        c.setFont('Helvetica-Bold', 8)
         c.drawString(50, y_pos, f"{label_en}:")
-        # Draw value using appropriate font (Amiri for Arabic, Helvetica for English)
-        draw_text_value(value_display, 145, y_pos, 9)
-        # Arabic side (right half of page) - value at center-right, label at far right
-        draw_arabic_text(f"{label_ar}:", width - 50, y_pos, 9, bold=True)
-        # Use Arabic value if provided, otherwise use the same value
+        draw_text_value(value_display, 140, y_pos, 8)
+        # Arabic side (right half of page)
+        draw_arabic_text(f"{label_ar}:", width - 50, y_pos, 8, bold=True)
         display_value = str(value_ar) if value_ar else value_display
-        draw_arabic_text(display_value, width - 160, y_pos, 9)
-        return y_pos - 18
+        draw_arabic_text(display_value, width - 155, y_pos, 8)
+        return y_pos - 14
     
     # ========== PAGE 1 ==========
     # Header with logo

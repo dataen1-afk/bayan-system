@@ -433,6 +433,25 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 
 ## Completed Fixes (February 2026)
 
+### Auditor Management System ✅ (NEW - February 2026)
+- **Full CRUD Operations**: Create, Read, Update, Delete (soft delete) auditors
+- **API Endpoints**: 
+  - `GET /api/auditors` - List all auditors with filtering
+  - `POST /api/auditors` - Create new auditor
+  - `GET /api/auditors/{id}` - Get auditor details
+  - `PUT /api/auditors/{id}` - Update auditor
+  - `DELETE /api/auditors/{id}` - Soft delete (status -> inactive)
+  - `POST /api/auditors/{id}/availability` - Set auditor availability
+- **Frontend Page**: `/auditors` - Complete management UI
+  - Stats cards: Total Auditors, Active Auditors, Lead Auditors, Active Assignments
+  - Search and filter by status/specialization
+  - Add/Edit auditor modal with all fields
+  - Set availability modal
+  - Auditor cards with full details
+- **Data Fields**: name, name_ar, email, phone, mobile, employee_id, certification_level (trainee/auditor/lead_auditor/technical_expert), specializations (ISO standards), years_experience, max_audits_per_month, notes
+- **Full Bilingual Support**: Arabic/English translations with RTL layout
+- **Test Report**: `/app/test_reports/iteration_20.json` - 100% passed (Backend: 14/14, Frontend: All UI working)
+
 ### PDF Layout Fixes ✅
 - **Overlapping Text Fix** - Fixed bilingual PDF layout in Forms and Quotations tabs:
   - English labels at X=50, values at X=145 (left side)

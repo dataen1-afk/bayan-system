@@ -387,6 +387,17 @@ class BilingualContractPDFGenerator:
             fontName='ArabicFont' if ARABIC_FONT_REGISTERED else 'Helvetica'
         ))
         
+        # Mixed language text style (for content that may have Arabic)
+        self.styles.add(ParagraphStyle(
+            name='TextMixed',
+            parent=self.styles['Normal'],
+            fontSize=9,
+            alignment=TA_LEFT,
+            spaceAfter=4,
+            leading=12,
+            fontName='ArabicFont' if ARABIC_FONT_REGISTERED else 'Helvetica'
+        ))
+        
         # Footer style
         self.styles.add(ParagraphStyle(
             name='FooterBilingual',

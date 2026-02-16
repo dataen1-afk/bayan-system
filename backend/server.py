@@ -3659,6 +3659,40 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         cert_fields.append(("Other Standard", "معيار آخر", company_data.get('otherStandard')))
     y = draw_section_box("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y, cert_fields)
     
+    # Section 5: Important Notes (to fill page 1)
+    c.setFillColor(primary_color)
+    c.rect(30, y - 22, width - 60, 22, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(40, y - 16, "IMPORTANT NOTES / ملاحظات هامة")
+    
+    c.setFillColor(light_bg)
+    notes_height = height - 100 - y + 22 - 50  # Fill remaining space above footer
+    c.rect(30, 50, width - 60, notes_height, fill=True, stroke=False)
+    c.setStrokeColor(colors.HexColor('#d1d5db'))
+    c.setLineWidth(0.5)
+    c.rect(30, 50, width - 60, notes_height + 22, fill=False, stroke=True)
+    
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica', 9)
+    notes = [
+        "• Please ensure all information provided is accurate and up-to-date.",
+        "• Incomplete applications may delay the certification process.",
+        "• Additional documentation may be requested during the review process.",
+        "• For inquiries, contact us at: info@bayan.sa or +966 11 XXX XXXX",
+        "",
+        "• يرجى التأكد من صحة جميع المعلومات المقدمة وحداثتها",
+        "• قد تؤدي الطلبات غير المكتملة إلى تأخير عملية الاعتماد",
+        "• قد يتم طلب وثائق إضافية خلال عملية المراجعة",
+    ]
+    ny = y - 35
+    for note in notes:
+        if has_arabic(note):
+            draw_arabic(note, width - 40, ny, 9, right_align=True)
+        else:
+            c.drawString(40, ny, note)
+        ny -= 16
+    
     # Footer for page 1
     c.setFillColor(primary_color)
     c.rect(0, 0, width, 35, fill=True, stroke=False)

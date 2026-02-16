@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -11,9 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   ArrowLeft, Plus, X, Users, User, Mail, Phone, Award, Calendar,
   Search, Filter, Edit, Trash2, CheckCircle, Clock, AlertCircle,
-  Briefcase, Star, Shield
+  Briefcase, Star, Shield, LogOut
 } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import NotificationBell from '@/components/NotificationBell';
+import { AuthContext } from '@/App';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 

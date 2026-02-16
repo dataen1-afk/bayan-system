@@ -1280,6 +1280,8 @@ const resources = {
       "enterCompanyName": "أدخل اسم الشركة",
       "enterEmail": "أدخل البريد الإلكتروني",
       "enterPhone": "أدخل رقم الهاتف",
+      "mobile": "الجوال",
+      "enterMobile": "أدخل رقم الجوال",
       "fillAllClientFields": "يرجى ملء جميع حقول معلومات العميل",
       "errorCreatingForm": "خطأ في إنشاء النموذج:",
       "createFirstApplicationForm": "أنشئ نموذج طلب وشاركه مع عميلك",

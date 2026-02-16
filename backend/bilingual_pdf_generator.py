@@ -843,12 +843,20 @@ class BilingualContractPDFGenerator:
         # Fall back to company seal file if no stamp uploaded
         if not bayan_seal_element:
             import pathlib
-            bayan_seal_path = pathlib.Path(__file__).parent / "assets" / "company-seal.png"
+            bayan_seal_path = pathlib.Path(__file__).parent / "assets" / "bayan-stamp.png"
             if bayan_seal_path.exists():
                 try:
-                    bayan_seal_element = Image(str(bayan_seal_path), width=0.9*inch, height=0.9*inch)
+                    bayan_seal_element = Image(str(bayan_seal_path), width=1.0*inch, height=1.0*inch)
                 except:
                     pass
+            # Fallback to company-seal.png if bayan-stamp.png doesn't exist
+            if not bayan_seal_element:
+                bayan_seal_path = pathlib.Path(__file__).parent / "assets" / "company-seal.png"
+                if bayan_seal_path.exists():
+                    try:
+                        bayan_seal_element = Image(str(bayan_seal_path), width=1.0*inch, height=1.0*inch)
+                    except:
+                        pass
         
         # First Party (Bayan) details - from proposal data (editable when creating quote)
         bayan_signatory_name = proposal_data.get('issuer_name', 'Abdullah Al-Rashid')

@@ -3565,7 +3565,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     # ============ SECTION DRAWING FUNCTIONS ============
     def draw_section_box(title_en, title_ar, y_start, fields, box_height=None):
-        """Draw a section with background box and fields"""
+        """Draw a section with background box and fields - bilingual layout"""
         if box_height is None:
             box_height = len(fields) * 18 + 30
         
@@ -3589,24 +3589,54 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         c.setLineWidth(0.5)
         c.rect(30, y_start - box_height, width - 60, box_height, fill=False, stroke=True)
         
-        # Draw fields
+        # Draw fields - bilingual: English label | Value | Value | Arabic label
         y = y_start - 40
+        mid_point = width / 2
+        
         for label_en, label_ar, value in fields:
             c.setFillColor(colors.black)
+            val_str = str(value) if value else 'N/A'
+            val_display = val_str[:30] + '...' if len(val_str) > 30 else val_str
+            
+            # LEFT SIDE: English label + Value
             c.setFont('Helvetica-Bold', 9)
             c.drawString(40, y, f"{label_en}:")
             
-            # Value - handle truncation
-            val_str = str(value) if value else 'N/A'
-            val_display = val_str[:35] + '...' if len(val_str) > 35 else val_str
-            draw_value(val_display, 160, y, 9)
+            # Draw value with appropriate font (Amiri for Arabic, Helvetica for English)
+            if has_arabic(val_display):
+                if arabic_font_available:
+                    try:
+                        reshaped_val = arabic_reshaper.reshape(val_display)
+                        bidi_val = get_display(reshaped_val)
+                        c.setFont('Amiri', 9)
+                        c.drawString(160, y, bidi_val)
+                    except:
+                        c.setFont('Helvetica', 9)
+                        c.drawString(160, y, val_display)
+                else:
+                    c.setFont('Helvetica', 9)
+                    c.drawString(160, y, val_display)
+            else:
+                c.setFont('Helvetica', 9)
+                c.drawString(160, y, val_display)
             
-            # Arabic label (right side)
+            # RIGHT SIDE: Value + Arabic label
             if arabic_font_available:
                 try:
+                    # Arabic label (right-aligned at edge)
                     ar_label = get_display(arabic_reshaper.reshape(f"{label_ar}:"))
                     c.setFont('Amiri-Bold', 9)
                     c.drawRightString(width - 40, y, ar_label)
+                    
+                    # Value before Arabic label (with proper font)
+                    if has_arabic(val_display):
+                        reshaped_val = arabic_reshaper.reshape(val_display)
+                        bidi_val = get_display(reshaped_val)
+                        c.setFont('Amiri', 9)
+                        c.drawRightString(width - 120, y, bidi_val)
+                    else:
+                        c.setFont('Helvetica', 9)
+                        c.drawRightString(width - 120, y, val_display)
                 except: pass
             
             y -= 18

@@ -3611,7 +3611,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
             
             y -= 18
         
-        return y_start - box_height - 10
+        return y_start - box_height - 8
     
     # ============ PAGE 1 CONTENT ============
     y = height - 100
@@ -3639,13 +3639,25 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     # Section 3: Organization Details
     org_fields = [
         ("Total Employees", "إجمالي الموظفين", company_data.get('totalEmployees', 'N/A')),
-        ("Full-Time", "دوام كامل", company_data.get('fullTimeEmployees', 'N/A')),
-        ("Part-Time", "دوام جزئي", company_data.get('partTimeEmployees', 'N/A')),
+        ("Full-Time Employees", "دوام كامل", company_data.get('fullTimeEmployees', 'N/A')),
+        ("Part-Time Employees", "دوام جزئي", company_data.get('partTimeEmployees', 'N/A')),
         ("Number of Sites", "عدد المواقع", company_data.get('numberOfSites', 'N/A')),
-        ("Shifts", "الورديات", company_data.get('locationShifts', 'N/A')),
-        ("Key Processes", "العمليات الرئيسية", company_data.get('keyBusinessProcesses', 'N/A')),
+        ("Location Shifts", "الورديات", company_data.get('locationShifts', 'N/A')),
+        ("Key Business Processes", "العمليات الرئيسية", company_data.get('keyBusinessProcesses', 'N/A')),
     ]
     y = draw_section_box("3. ORGANIZATION DETAILS", "٣. تفاصيل المنظمة", y, org_fields)
+    
+    # Section 4: Certification Standards (moved to page 1)
+    standards = company_data.get('certificationSchemes', [])
+    standards_text = ', '.join(standards) if standards else 'N/A'
+    cert_fields = [
+        ("Selected Standards", "المعايير المختارة", standards_text),
+        ("Certification Program", "برنامج الاعتماد", company_data.get('certificationProgram', 'N/A')),
+        ("Already Certified?", "معتمد حالياً؟", company_data.get('isAlreadyCertified', 'N/A')),
+    ]
+    if company_data.get('otherStandard'):
+        cert_fields.append(("Other Standard", "معيار آخر", company_data.get('otherStandard')))
+    y = draw_section_box("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y, cert_fields)
     
     # Footer for page 1
     c.setFillColor(primary_color)

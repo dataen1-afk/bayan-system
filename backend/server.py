@@ -3637,23 +3637,31 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         if box_height is None:
             box_height = len(fields) * 18 + 30
         
-        # Translation map for dropdown values (show Arabic as client selected)
+        # Translation map for dropdown values (show full Arabic label as in dropdown)
         translations = {
-            # Legal Status
-            'private': 'خاص',
-            'public': 'عام',
-            'government': 'حكومي',
-            'non-profit': 'غير ربحي',
+            # Legal Status - match dropdown exactly
+            'private': 'شركة خاصة',
+            'public': 'شركة عامة',
+            'government': 'مؤسسة حكومية',
+            'public_sector': 'قطاع عام',
+            'sole_proprietorship': 'ملكية فردية',
+            'non-profit': 'منظمة غير ربحية',
+            'partnership': 'شراكة',
+            'other': 'أخرى',
             # Certification Program
-            'initial': 'أولي',
-            'renewal': 'تجديد',
-            'transfer': 'نقل',
-            'surveillance': 'مراقبة',
+            'initial': 'اعتماد أولي',
+            'renewal': 'تجديد الاعتماد',
+            'transfer': 'نقل الاعتماد',
+            'surveillance': 'تدقيق مراقبة',
             # Yes/No
             'yes': 'نعم',
             'no': 'لا',
             'Yes': 'نعم',
             'No': 'لا',
+            'true': 'نعم',
+            'false': 'لا',
+            'True': 'نعم',
+            'False': 'لا',
         }
         
         # Section header bar (different color from main header/footer)

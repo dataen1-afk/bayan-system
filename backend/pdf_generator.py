@@ -227,26 +227,30 @@ class ContractPDFGenerator:
         canvas.setFillColor(colors.HexColor('#1a365d'))
         canvas.rect(0, A4[1] - 80, A4[0], 80, fill=True)
         
-        # Draw company logo
+        # Draw company logo with white background
         logo_path = ROOT_DIR / "assets" / "bayan-logo.png"
         if logo_path.exists():
             try:
-                canvas.drawImage(str(logo_path), 30, A4[1] - 75, width=60, height=60, preserveAspectRatio=True, mask='auto')
+                # White rounded rectangle background for logo
+                canvas.setFillColor(colors.white)
+                canvas.roundRect(25, A4[1] - 78, 70, 70, 5, fill=True, stroke=False)
+                # Draw logo
+                canvas.drawImage(str(logo_path), 30, A4[1] - 73, width=60, height=60, preserveAspectRatio=True, mask='auto')
             except Exception as e:
                 print(f"Error drawing logo: {e}")
         
         # Company name (after logo)
         canvas.setFillColor(colors.white)
         canvas.setFont('Helvetica-Bold', 16)
-        canvas.drawString(100, A4[1] - 35, "BAYAN AUDITING & CONFORMITY")
+        canvas.drawString(105, A4[1] - 35, "BAYAN AUDITING & CONFORMITY")
         
         # Subtitle
         canvas.setFont('Helvetica', 10)
-        canvas.drawString(100, A4[1] - 50, "Arabia Limited Certification Body")
+        canvas.drawString(105, A4[1] - 50, "Arabia Limited Certification Body")
         
         # Contact info
         canvas.setFont('Helvetica', 8)
-        canvas.drawString(100, A4[1] - 65, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
+        canvas.drawString(105, A4[1] - 65, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
         
         # Contract number on right
         canvas.setFont('Helvetica-Bold', 10)

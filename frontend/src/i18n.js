@@ -1337,6 +1337,11 @@ const resources = {
       "errorCreatingProposal": "خطأ في إنشاء عرض السعر:",
       "pleaseEnterRequiredFields": "يرجى إدخال جميع الحقول المطلوبة",
       "backToDashboard": "العودة للوحة التحكم",
+      "authorizedSignatory": "المفوض بالتوقيع (الطرف الأول)",
+      "firstPartySignatoryDetails": "أدخل بيانات المفوض بالتوقيع من بيان لهذا العرض",
+      "signatoryName": "اسم الموقّع",
+      "jobTitle": "المسمى الوظيفي",
+      "signatoryDetailsNote": "ستظهر هذه البيانات في العقد عند موافقة العميل على العرض.",
       
       // Public Proposal Page
       "loadingProposal": "جاري تحميل عرض السعر...",

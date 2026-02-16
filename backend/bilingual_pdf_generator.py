@@ -508,8 +508,7 @@ class BilingualContractPDFGenerator:
         canvas.drawString(100, A4[1] - 30, "BAYAN AUDITING & CONFORMITY")
         
         canvas.setFont('Helvetica', 9)
-        canvas.drawString(100, A4[1] - 44, "Arabia Limited Certification Body")
-        canvas.drawString(100, A4[1] - 58, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
+        canvas.drawString(100, A4[1] - 44, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
         
         # Arabic company name (right)
         if ARABIC_FONT_REGISTERED:

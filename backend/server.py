@@ -3666,12 +3666,16 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     c.setFont('Helvetica-Bold', 10)
     c.drawString(40, y - 16, "IMPORTANT NOTES / ملاحظات هامة")
     
+    # Calculate remaining space from current y position down to footer
+    notes_box_top = y - 22  # Top of notes content area
+    notes_box_bottom = 50   # Just above footer
+    notes_content_height = notes_box_top - notes_box_bottom
+    
     c.setFillColor(light_bg)
-    notes_height = height - 100 - y + 22 - 50  # Fill remaining space above footer
-    c.rect(30, 50, width - 60, notes_height, fill=True, stroke=False)
+    c.rect(30, notes_box_bottom, width - 60, notes_content_height, fill=True, stroke=False)
     c.setStrokeColor(colors.HexColor('#d1d5db'))
     c.setLineWidth(0.5)
-    c.rect(30, 50, width - 60, notes_height + 22, fill=False, stroke=True)
+    c.rect(30, notes_box_bottom, width - 60, notes_content_height + 22, fill=False, stroke=True)
     
     c.setFillColor(colors.black)
     c.setFont('Helvetica', 9)

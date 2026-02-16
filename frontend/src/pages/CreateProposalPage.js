@@ -489,6 +489,99 @@ const CreateProposalPage = () => {
                   />
                 </div>
               </div>
+              
+              {/* Signature and Stamp Upload */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <Label>{t('signature')}</Label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center">
+                    {formData.issuer_signature ? (
+                      <div className="relative">
+                        <img 
+                          src={formData.issuer_signature} 
+                          alt="Signature" 
+                          className="max-h-20 mx-auto"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-0 right-0"
+                          onClick={() => handleInputChange('issuer_signature', '')}
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                handleInputChange('issuer_signature', reader.result);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        <div className="text-slate-500 text-sm">
+                          {t('uploadSignature')}
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('stamp')}</Label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center">
+                    {formData.issuer_stamp ? (
+                      <div className="relative">
+                        <img 
+                          src={formData.issuer_stamp} 
+                          alt="Stamp" 
+                          className="max-h-20 mx-auto"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-0 right-0"
+                          onClick={() => handleInputChange('issuer_stamp', '')}
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                handleInputChange('issuer_stamp', reader.result);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        <div className="text-slate-500 text-sm">
+                          {t('uploadStamp')}
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
               <p className="text-sm text-slate-500 mt-3">
                 {t('signatoryDetailsNote')}
               </p>

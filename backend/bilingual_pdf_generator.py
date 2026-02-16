@@ -856,6 +856,15 @@ class BilingualContractPDFGenerator:
         bayan_signatory_name_ar = process_arabic_text(self._get_arabic_name(bayan_signatory_name))
         bayan_signatory_title_ar = process_arabic_text(self._get_arabic_title(bayan_signatory_title))
         
+        # Format the issued date properly (remove timestamp if present)
+        issued_date = proposal_data.get('issued_date', '')
+        if isinstance(issued_date, str) and 'T' in issued_date:
+            issued_date = issued_date.split('T')[0]
+        elif hasattr(issued_date, 'strftime'):
+            issued_date = issued_date.strftime('%Y-%m-%d')
+        else:
+            issued_date = datetime.now().strftime('%Y-%m-%d')
+        
         sig_data = [
             [f"{self.TRANSLATIONS['for_cert_body']['en']}\n{process_arabic_text(self.TRANSLATIONS['for_cert_body']['ar'])}", 
              f"{self.TRANSLATIONS['for_client']['en']}\n{process_arabic_text(self.TRANSLATIONS['for_client']['ar'])}"],
@@ -870,7 +879,7 @@ class BilingualContractPDFGenerator:
             [f"{bayan_signatory_title}\n{bayan_signatory_title_ar}", 
              process_dynamic_text(agreement_data.get('signatory_position', ''))],
             ['', ''],
-            [f"{self.TRANSLATIONS['date']['en']}: {proposal_data.get('issued_date', datetime.now().strftime('%Y-%m-%d'))}", 
+            [f"{self.TRANSLATIONS['date']['en']}: {issued_date}", 
              f"{self.TRANSLATIONS['date']['en']}: {agreement_data.get('signatory_date', '')}"],
             ['', ''],
             [bayan_seal_element if bayan_seal_element else '', ''],
@@ -878,10 +887,10 @@ class BilingualContractPDFGenerator:
         
         # Add client stamp if provided
         if stamp_image:
-            stamp_img = self._process_image_for_pdf(stamp_image, 0.8*inch, 0.8*inch, '')
+            stamp_img = self._process_image_for_pdf(stamp_image, 1.0*inch, 1.0*inch, '')
             if isinstance(stamp_img, Image):
                 sig_data[-1] = [bayan_seal_element if bayan_seal_element else '', stamp_img]
-                sig_data.append([f"{self.TRANSLATIONS['company_seal']['en']}", f"{self.TRANSLATIONS['company_seal']['en']}"])
+                sig_data.append([process_arabic_text(self.TRANSLATIONS['company_seal']['ar']), process_arabic_text(self.TRANSLATIONS['company_seal']['ar'])])
         
         sig_table = Table(sig_data, colWidths=[2.8*inch, 2.8*inch])
         sig_table.setStyle(TableStyle([

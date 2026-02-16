@@ -3655,11 +3655,21 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         
         # Footer for page 2
         c.setFillColor(colors.HexColor('#1e3a5f'))
-        c.rect(0, 0, width, 40, fill=True, stroke=False)
+        c.rect(0, 0, width, 45, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica', 9)
-        c.drawCentredString(width/2, 25, "BAYAN Auditing & Conformity | بيان للتدقيق والمطابقة")
-        c.drawCentredString(width/2, 12, "Page 2")
+        # English part
+        c.drawString(width/2 - 180, 28, "BAYAN Auditing & Conformity |")
+        # Arabic part with proper reshaping
+        if arabic_font_available:
+            try:
+                footer_ar = arabic_reshaper.reshape("بيان للتدقيق والمطابقة")
+                c.setFont('Amiri', 10)
+                c.drawString(width/2 + 10, 26, get_display(footer_ar))
+            except:
+                pass
+        c.setFont('Helvetica', 9)
+        c.drawCentredString(width/2, 10, "Page 2")
     
     c.save()
     return str(pdf_path)

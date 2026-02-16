@@ -246,7 +246,7 @@ class BilingualContractPDFGenerator:
         },
         'digital_signature_notice': {
             'en': 'This document has been digitally signed through the Bayan Auditing & Conformity online portal.',
-            'ar': 'تم توقيع هذه الوثيقة إلكترونياً من خلال بوابة بيان للتدقيق والمطابقة.'
+            'ar': 'تم توقيع هذه الوثيقة إلكترونياً من خلال بوابة بيان للتحقق والمطابقة.'
         },
         'terms': {
             'en': [
@@ -493,7 +493,7 @@ class BilingualContractPDFGenerator:
             canvas.setFont('ArabicFont', 14)
         else:
             canvas.setFont('Helvetica-Bold', 14)
-        ar_company = process_arabic_text("بيان للتدقيق والمطابقة")
+        ar_company = process_arabic_text("بيان للتحقق والمطابقة")
         canvas.drawRightString(A4[0] - 40, A4[1] - 30, ar_company)
         
         if ARABIC_FONT_REGISTERED:
@@ -515,7 +515,7 @@ class BilingualContractPDFGenerator:
         canvas.setFillColor(colors.gray)
         canvas.setFont('Helvetica', 7)
         canvas.drawCentredString(A4[0] / 2, 32, 
-            f"© {datetime.now().year} Bayan Auditing & Conformity. All Rights Reserved. | جميع الحقوق محفوظة لبيان للتدقيق والمطابقة")
+            f"© {datetime.now().year} Bayan Auditing & Conformity. All Rights Reserved. | جميع الحقوق محفوظة لبيان للتحقق والمطابقة")
         canvas.drawCentredString(A4[0] / 2, 22, 
             f"Page {doc.page}")
         

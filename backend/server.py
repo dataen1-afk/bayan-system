@@ -3430,7 +3430,7 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     # Arabic part with proper reshaping
     if arabic_font_available:
         try:
-            footer_ar = arabic_reshaper.reshape("بيان للتدقيق والمطابقة")
+            footer_ar = arabic_reshaper.reshape("بيان للتحقق والمطابقة")
             c.setFont('Amiri', 10)
             c.drawString(width/2 + 10, 26, get_display(footer_ar))
         except:
@@ -3658,7 +3658,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     # Arabic part with proper reshaping
     if arabic_font_available:
         try:
-            footer_ar = arabic_reshaper.reshape("بيان للتدقيق والمطابقة")
+            footer_ar = arabic_reshaper.reshape("بيان للتحقق والمطابقة")
             c.setFont('Amiri', 10)
             c.drawString(width/2 + 10, 26, get_display(footer_ar))
         except:
@@ -3717,7 +3717,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         # Arabic part with proper reshaping
         if arabic_font_available:
             try:
-                footer_ar = arabic_reshaper.reshape("بيان للتدقيق والمطابقة")
+                footer_ar = arabic_reshaper.reshape("بيان للتحقق والمطابقة")
                 c.setFont('Amiri', 10)
                 c.drawString(width/2 + 10, 26, get_display(footer_ar))
             except:

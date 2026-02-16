@@ -3241,17 +3241,20 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
         return y_pos - 25
     
     def draw_field(label_en, label_ar, value, y_pos):
-        """Draw bilingual field with value on both sides"""
+        """Draw bilingual field with value on both sides - separated columns to prevent overlap"""
         value_str = str(value) if value else 'N/A'
+        # Truncate long values to prevent overflow (max ~25 chars for each side)
+        value_display = value_str[:30] + '...' if len(value_str) > 30 else value_str
         c.setFillColor(colors.black)
-        # English side (left)
-        c.setFont('Helvetica-Bold', 10)
+        # English side (left half of page) - label at 50, value at 150
+        c.setFont('Helvetica-Bold', 9)
         c.drawString(50, y_pos, f"{label_en}:")
-        c.setFont('Helvetica', 10)
-        c.drawString(180, y_pos, value_str)
-        # Arabic side (right) - label and value
-        draw_arabic_text(f"{label_ar}:", width - 50, y_pos, 10, bold=True)
-        draw_arabic_text(value_str, width - 130, y_pos, 10)
+        c.setFont('Helvetica', 9)
+        c.drawString(145, y_pos, value_display)
+        # Arabic side (right half of page) - value at center-right, label at far right
+        # Use separate columns to avoid overlap: Arabic label at width-50, Arabic value at width-160
+        draw_arabic_text(f"{label_ar}:", width - 50, y_pos, 9, bold=True)
+        draw_arabic_text(value_display, width - 160, y_pos, 9)
         return y_pos - 18
     
     # Header with logo

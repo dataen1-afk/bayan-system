@@ -23,6 +23,7 @@ const API = process.env.REACT_APP_BACKEND_URL + '/api';
 const AuditorsPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user, logout } = useContext(AuthContext);
   const isRTL = i18n.language?.startsWith('ar');
   
   const [loading, setLoading] = useState(true);

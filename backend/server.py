@@ -30,6 +30,7 @@ from audit_calculator import calculate_total_audit_time
 # Import PDF generators
 from pdf_generator import generate_contract_pdf
 from bilingual_pdf_generator import generate_bilingual_contract_pdf
+from certificate_generator import generate_certificate_pdf, get_qr_code_base64
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

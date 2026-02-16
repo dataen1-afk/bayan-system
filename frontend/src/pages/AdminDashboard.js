@@ -1036,6 +1036,13 @@ const AdminDashboard = () => {
                       <span className="text-sm text-slate-700 truncate" title={contract.contact_person}>{contract.contact_person || '-'}</span>
                     </div>
                     <span className="text-xs text-slate-500 truncate block lg:hidden">{contract.contact_email}</span>
+                    {/* Show mobile/phone if available */}
+                    {contract.organization_phone && (
+                      <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500">
+                        <Phone className="w-3 h-3 flex-shrink-0" />
+                        <span dir="ltr">{contract.organization_phone}</span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Standards */}

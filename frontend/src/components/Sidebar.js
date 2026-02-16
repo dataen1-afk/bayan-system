@@ -14,7 +14,10 @@ import {
   Calendar,
   ExternalLink,
   Receipt,
-  Users
+  Users,
+  Award,
+  Bell,
+  TrendingUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

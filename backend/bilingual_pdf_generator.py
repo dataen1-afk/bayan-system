@@ -518,12 +518,13 @@ class BilingualContractPDFGenerator:
         ar_company = process_arabic_text("بيان للتحقق والمطابقة")
         canvas.drawRightString(A4[0] - 40, A4[1] - 30, ar_company)
         
+        # Address in Arabic
         if ARABIC_FONT_REGISTERED:
             canvas.setFont('ArabicFont', 9)
         else:
             canvas.setFont('Helvetica', 9)
-        ar_subtitle = process_arabic_text("جهة اعتماد عربية محدودة")
-        canvas.drawRightString(A4[0] - 40, A4[1] - 44, ar_subtitle)
+        ar_address = process_arabic_text("شارع الخضار 3879، الرياض 12282، المملكة العربية السعودية")
+        canvas.drawRightString(A4[0] - 40, A4[1] - 44, ar_address)
         
         canvas.restoreState()
 

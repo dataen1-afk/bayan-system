@@ -1499,6 +1499,78 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
         related_type="agreement"
     )
     
+    # ===== AUTO-SCHEDULE AUDITS =====
+    # Automatically create audit schedules based on the proposal's audit duration
+    try:
+        audit_duration = proposal.get('audit_duration', {})
+        organization_name = proposal.get('organization_name', '')
+        sites = agreement_data.sites or ['Main Site']
+        
+        # Calculate audit dates starting from today
+        from dateutil.relativedelta import relativedelta
+        base_date = datetime.now(timezone.utc)
+        
+        # Define the audit schedule (audit type, days from contract signing, duration field)
+        audit_schedule_plan = [
+            ("stage_1", 30, "stage_1", "Initial Audit - Stage 1 | التدقيق الأولي - المرحلة 1"),
+            ("stage_2", 60, "stage_2", "Initial Audit - Stage 2 | التدقيق الأولي - المرحلة 2"),
+            ("surveillance_1", 365, "surveillance_1", "Surveillance Audit 1 | تدقيق المراقبة 1"),
+            ("surveillance_2", 730, "surveillance_2", "Surveillance Audit 2 | تدقيق المراقبة 2"),
+            ("recertification", 1065, "recertification", "Recertification Audit | تدقيق إعادة الاعتماد"),
+        ]
+        
+        created_audits = []
+        for audit_type, days_offset, duration_field, audit_notes in audit_schedule_plan:
+            duration_days = audit_duration.get(duration_field, 1)
+            if duration_days and duration_days > 0:
+                scheduled_date = base_date + timedelta(days=days_offset)
+                
+                # Create audit for each site
+                for site_idx, site in enumerate(sites):
+                    site_name = site if isinstance(site, str) else site.get('name', f'Site {site_idx + 1}')
+                    
+                    audit_entry = {
+                        "id": str(uuid.uuid4()),
+                        "contract_id": proposal['id'],
+                        "site_id": str(site_idx),
+                        "organization_name": organization_name,
+                        "site_name": site_name,
+                        "audit_type": audit_type,
+                        "scheduled_date": scheduled_date.strftime("%Y-%m-%d"),
+                        "scheduled_time": "09:00",
+                        "duration_days": int(duration_days),
+                        "auditors": "",
+                        "notes": audit_notes,
+                        "status": "scheduled",
+                        "is_recurring": False,
+                        "recurrence_type": "",
+                        "recurrence_end_date": "",
+                        "parent_audit_id": "",
+                        "calendar_event_id": "",
+                        "calendar_synced": False,
+                        "sms_reminder_sent": False,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "auto_generated": True  # Mark as auto-generated
+                    }
+                    
+                    await db.audit_schedules.insert_one(audit_entry)
+                    created_audits.append(audit_entry['id'])
+        
+        print(f"Auto-scheduled {len(created_audits)} audits for contract {proposal['id']}")
+        
+        # Create notification for auto-scheduled audits
+        if created_audits:
+            await create_notification(
+                notification_type="audits_scheduled",
+                title="تم جدولة التدقيقات تلقائياً",
+                message=f"تم إنشاء {len(created_audits)} جدولة تدقيق تلقائياً لـ {organization_name}",
+                related_id=agreement.id,
+                related_type="audit_schedule"
+            )
+    except Exception as e:
+        print(f"Warning: Failed to auto-schedule audits: {e}")
+        # Don't fail the agreement signing if audit scheduling fails
+    
     return {"message": "Certification agreement submitted successfully", "agreement_id": agreement.id}
 
 @api_router.get("/public/agreement/{access_token}")

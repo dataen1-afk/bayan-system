@@ -3628,7 +3628,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = draw_section_box("1. COMPANY INFORMATION", "١. معلومات الشركة", y, company_fields)
     
     # Consistent spacing between sections on page 1
-    section_gap = 12
+    section_gap = 18
     y -= section_gap
     
     # Section 2: Contact Information

@@ -308,8 +308,8 @@ const AuditSchedulingPage = () => {
                 key={audit.id}
                 className={`
                   text-xs px-1.5 py-0.5 rounded truncate
-                  ${audit.audit_type === 'initial' ? 'bg-blue-100 text-blue-700' :
-                    audit.audit_type === 'surveillance' ? 'bg-amber-100 text-amber-700' :
+                  ${audit.audit_type === 'initial' || audit.audit_type === 'stage_1' || audit.audit_type === 'stage_2' ? 'bg-blue-100 text-blue-700' :
+                    audit.audit_type === 'surveillance' || audit.audit_type === 'surveillance_1' || audit.audit_type === 'surveillance_2' ? 'bg-amber-100 text-amber-700' :
                     'bg-emerald-100 text-emerald-700'}
                 `}
                 onClick={(e) => {

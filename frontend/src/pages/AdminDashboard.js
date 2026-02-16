@@ -237,7 +237,7 @@ const AdminDashboard = () => {
       setCreatedFormLink(formLink);
       setShowFormLinkModal(true);
       setCreateFormModal(false);
-      setNewClientInfo({ name: '', company_name: '', email: '', phone: '' });
+      setNewClientInfo({ name: '', company_name: '', email: '', phone: '', mobile: '' });
       loadData();
     } catch (error) {
       alert(t('errorCreatingForm') + ' ' + (error.response?.data?.detail || error.message));

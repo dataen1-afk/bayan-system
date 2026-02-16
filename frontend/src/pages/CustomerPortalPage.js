@@ -248,7 +248,7 @@ const CustomerPortalPage = () => {
               </CardContent>
             </Card>
 
-            {/* Status Timeline */}
+            {/* Status Timeline - Enhanced with Glowing Dots */}
             <Card className="border-slate-200 shadow-lg" data-testid="status-timeline-card">
               <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -259,51 +259,70 @@ const CustomerPortalPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="relative">
-                  {/* Timeline Line */}
-                  <div className={`absolute ${isRTL ? 'right-6' : 'left-6'} top-0 bottom-0 w-0.5 bg-slate-200`} />
-                  
                   {/* Timeline Steps */}
-                  <div className="space-y-6">
+                  <div className="space-y-0">
                     {timelineSteps.map((step, index) => {
                       const currentStep = getStatusStep(orderData.current_status);
                       const isCompleted = index <= currentStep;
                       const isCurrent = index === currentStep;
+                      const isLast = index === timelineSteps.length - 1;
                       const Icon = step.icon;
                       
                       return (
                         <div 
                           key={step.key}
-                          className={`relative flex items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}
+                          className={`relative flex ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}
                           data-testid={`timeline-step-${step.key}`}
                         >
-                          {/* Step Circle */}
-                          <div className={`
-                            relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all
-                            ${isCompleted 
-                              ? 'bg-emerald-500 border-emerald-500 text-white' 
-                              : 'bg-white border-slate-300 text-slate-400'}
-                            ${isCurrent ? 'ring-4 ring-emerald-100' : ''}
-                          `}>
-                            <Icon className="w-5 h-5" />
+                          {/* Timeline Line & Dot Column - On RIGHT for RTL, LEFT for LTR */}
+                          <div className={`flex flex-col items-center ${isRTL ? 'order-2' : 'order-1'}`}>
+                            {/* Glowing Dot for Completed Steps */}
+                            <div className={`
+                              relative flex items-center justify-center w-10 h-10 rounded-full transition-all z-10
+                              ${isCompleted 
+                                ? 'bg-emerald-500' 
+                                : 'bg-slate-200'}
+                              ${isCurrent ? 'ring-4 ring-emerald-200' : ''}
+                            `}>
+                              {/* Glow effect for completed steps */}
+                              {isCompleted && (
+                                <div className="absolute inset-0 rounded-full bg-emerald-400 animate-pulse opacity-40" />
+                              )}
+                              <Icon className={`w-4 h-4 relative z-10 ${isCompleted ? 'text-white' : 'text-slate-400'}`} />
+                              {/* Small success indicator dot */}
+                              {isCompleted && !isCurrent && (
+                                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-300 rounded-full border-2 border-white shadow-sm">
+                                  <div className="absolute inset-0 rounded-full bg-emerald-300 animate-ping opacity-60" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Vertical Line - Below the dot */}
+                            {!isLast && (
+                              <div className={`w-0.5 h-16 ${isCompleted ? 'bg-emerald-300' : 'bg-slate-200'}`} />
+                            )}
                           </div>
                           
-                          {/* Step Content */}
-                          <div className={`flex-1 pb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {/* Step Content - On LEFT for RTL, RIGHT for LTR */}
+                          <div className={`
+                            flex-1 pb-6 pt-2
+                            ${isRTL ? 'order-1 text-right pr-4' : 'order-2 text-left pl-4'}
+                          `}>
                             <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                              <h4 className={`font-semibold ${isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
+                              <h4 className={`font-semibold text-sm ${isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {step.label}
                               </h4>
                               {isCurrent && (
-                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
+                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full animate-pulse">
                                   {t('current')}
                                 </span>
                               )}
                             </div>
-                            <p className={`text-sm mt-1 ${isCompleted ? 'text-slate-600' : 'text-slate-400'}`}>
+                            <p className={`text-xs mt-1 ${isCompleted ? 'text-slate-600' : 'text-slate-400'}`}>
                               {step.description}
                             </p>
                             {isCompleted && orderData.timeline_dates?.[step.key] && (
-                              <p className="text-xs text-slate-500 mt-1">
+                              <p className="text-xs text-slate-500 mt-1 font-medium">
                                 {formatDate(orderData.timeline_dates[step.key])}
                               </p>
                             )}

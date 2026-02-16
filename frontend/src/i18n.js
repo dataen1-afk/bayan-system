@@ -17,6 +17,7 @@ const resources = {
       "password": "Password",
       "phone": "Phone",
       "fullName": "Full Name",
+      "name": "Name",
       "role": "Role",
       "signingIn": "Signing in...",
       "creatingAccount": "Creating account...",

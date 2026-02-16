@@ -433,7 +433,38 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 
 ## Completed Fixes (February 2026)
 
-### Auditor Management System ✅ (NEW - February 2026)
+### Phase 4: Certificate Generation with QR Codes ✅ (NEW)
+- **Backend**: Full certificate CRUD API (`/api/certificates`)
+- **Features**:
+  - Auto-generated certificate numbers (CERT-YYYY-XXXX)
+  - QR code generation for verification
+  - 3-year validity period
+  - Status management (active, suspended, withdrawn, expired)
+  - PDF certificate generation with bilingual support
+  - Public verification endpoint (`/api/public/verify/{cert_number}`)
+- **Frontend**: `/certificates` - Certificate management page with stats, search, filter
+
+### Phase 5: Expiration Alerts Dashboard ✅ (NEW)
+- **Backend**: `/api/alerts/expiring` endpoint
+- **Features**:
+  - Categorized alerts (Critical: 30 days, Warning: 60 days, Info: 90 days)
+  - Configurable time period (30/60/90/180 days)
+  - Tracks certificate expirations and upcoming audits
+  - Clickable alerts navigate to relevant pages
+- **Frontend**: `/alerts` - Expiration alerts dashboard
+
+### Phase 6: Analytics Dashboard ✅ (NEW)
+- **Backend**: `/api/dashboard/analytics` endpoint
+- **Features**:
+  - Overview stats (forms, proposals, contracts, certificates)
+  - Conversion funnel (form→proposal→contract rates)
+  - Revenue overview (quoted, accepted, invoiced, collected)
+  - Monthly trends chart (last 6 months)
+  - Standards breakdown
+  - Audit statistics
+- **Frontend**: `/analytics` - Comprehensive analytics dashboard
+
+### Auditor Management System ✅ (February 2026)
 - **Full CRUD Operations**: Create, Read, Update, Delete (soft delete) auditors
 - **API Endpoints**: 
   - `GET /api/auditors` - List all auditors with filtering

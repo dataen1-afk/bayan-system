@@ -3592,8 +3592,8 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
             'No': 'لا',
         }
         
-        # Section header bar
-        c.setFillColor(primary_color)
+        # Section header bar (different color from main header/footer)
+        c.setFillColor(section_color)
         c.rect(30, y_start - 22, width - 60, 22, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica-Bold', 10)

@@ -350,7 +350,7 @@ const CertificationAgreementPage = () => {
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <Label className="text-gray-500 text-sm">{t('certificationBody')}</Label>
                   <p className="font-semibold text-bayan-navy">BAYAN AUDITING & CONFORMITY (BAC)</p>
-                  <p className="text-sm text-gray-600">Arabia Limited Certification Body</p>
+                  <p className="text-sm text-gray-600">بيان للتحقق والمطابقة</p>
                   <p className="text-sm text-gray-600">3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia</p>
                 </div>
                 

@@ -43,6 +43,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
     { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },
+    { id: 'auditors', icon: Users, label: t('auditors'), color: 'text-teal-600', route: '/auditors' },
     { id: 'invoices', icon: Receipt, label: t('invoices'), color: 'text-amber-600', route: '/invoices' },
     { id: 'customer-portal', icon: ExternalLink, label: t('customerPortal'), color: 'text-emerald-600', route: '/track', external: true },
   ] : [

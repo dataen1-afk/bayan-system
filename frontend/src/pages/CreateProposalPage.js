@@ -97,7 +97,7 @@ const CreateProposalPage = () => {
         ...prev,
         organization_name: form.company_data?.companyName || form.client_info?.company_name || '',
         organization_address: form.company_data?.address || '',
-        organization_phone: form.company_data?.phoneNumber || form.client_info?.phone || '',
+        organization_phone: form.company_data?.mobileNumber || form.company_data?.phoneNumber || form.client_info?.mobile || form.client_info?.phone || '',
         contact_person: form.company_data?.contactPerson || form.client_info?.name || '',
         contact_position: form.company_data?.designation || '',
         contact_email: form.company_data?.contactEmail || form.client_info?.email || '',

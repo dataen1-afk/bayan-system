@@ -3593,6 +3593,9 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     company_data = form.get('company_data', {})
     client_info = form.get('client_info', {})
     
+    # Calculate available space: from y=height-130 to footer at y=50 = about 560 points
+    # With 6 sections and ~25 fields, we need to distribute evenly
+    
     # Section 1: Company Information
     y = draw_section_header("1. COMPANY INFORMATION", "١. معلومات الشركة", y)
     y = draw_field("Company Name", "اسم الشركة", company_data.get('companyName', client_info.get('company_name', 'N/A')), y)
@@ -3601,7 +3604,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = draw_field("Phone", "الهاتف", company_data.get('phoneNumber', client_info.get('phone', 'N/A')), y)
     y = draw_field("Email", "البريد الإلكتروني", company_data.get('email', client_info.get('email', 'N/A')), y)
     y = draw_field("Website", "الموقع الإلكتروني", company_data.get('website', 'N/A'), y)
-    y -= 6
+    y -= 12
     
     # Section 2: Contact Information
     y = draw_section_header("2. CONTACT INFORMATION", "٢. معلومات الاتصال", y)
@@ -3609,7 +3612,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = draw_field("Designation", "المنصب", company_data.get('designation', 'N/A'), y)
     y = draw_field("Mobile", "الجوال", company_data.get('mobileNumber', 'N/A'), y)
     y = draw_field("Contact Email", "البريد الإلكتروني للتواصل", company_data.get('contactEmail', 'N/A'), y)
-    y -= 6
+    y -= 12
     
     # Section 3: Organization Details
     y = draw_section_header("3. ORGANIZATION DETAILS", "٣. تفاصيل المنظمة", y)
@@ -3619,7 +3622,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = draw_field("Number of Sites", "عدد المواقع", company_data.get('numberOfSites', 'N/A'), y)
     y = draw_field("Location Shifts", "عدد الورديات", company_data.get('locationShifts', 'N/A'), y)
     y = draw_field("Key Business Processes", "العمليات الرئيسية", company_data.get('keyBusinessProcesses', 'N/A'), y)
-    y -= 6
+    y -= 12
     
     # Section 4: Certification Standards
     y = draw_section_header("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y)
@@ -3630,7 +3633,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = draw_field("Already Certified?", "معتمد حالياً؟", company_data.get('isAlreadyCertified', 'N/A'), y)
     if company_data.get('otherStandard'):
         y = draw_field("Other Standard", "معيار آخر", company_data.get('otherStandard'), y)
-    y -= 6
+    y -= 12
     
     # Section 5: Sites Information
     y = draw_section_header("5. SITES INFORMATION", "٥. معلومات المواقع", y)
@@ -3642,9 +3645,9 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         y = draw_field("Site 2", "الموقع 2", site2, y)
     if not site1 and not site2:
         y = draw_field("Sites", "المواقع", "Main site only", y)
-    y -= 6
+    y -= 12
     
-    # Section 6: Declaration (moved to page 1)
+    # Section 6: Declaration
     y = draw_section_header("6. DECLARATION", "٦. الإقرار", y)
     y = draw_field("Declared By", "المُقِر", company_data.get('declarationName', 'N/A'), y)
     y = draw_field("Designation", "المنصب", company_data.get('declarationDesignation', 'N/A'), y)
@@ -3652,19 +3655,19 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     # Footer
     c.setFillColor(colors.HexColor('#1e3a5f'))
-    c.rect(0, 0, width, 40, fill=True, stroke=False)
+    c.rect(0, 0, width, 45, fill=True, stroke=False)
     c.setFillColor(colors.white)
-    c.setFont('Helvetica', 8)
-    c.drawString(width/2 - 150, 25, "BAYAN Auditing & Conformity |")
+    c.setFont('Helvetica', 9)
+    c.drawString(width/2 - 150, 28, "BAYAN Auditing & Conformity |")
     if arabic_font_available:
         try:
             footer_ar = arabic_reshaper.reshape("بيان للتحقق والمطابقة")
-            c.setFont('Amiri', 9)
-            c.drawString(width/2 + 10, 23, get_display(footer_ar))
+            c.setFont('Amiri', 10)
+            c.drawString(width/2 + 10, 26, get_display(footer_ar))
         except:
             pass
     c.setFont('Helvetica', 8)
-    c.drawCentredString(width/2, 10, f"Generated: {form.get('submitted_at', form.get('created_at', 'N/A'))[:10] if form.get('submitted_at') or form.get('created_at') else 'N/A'}")
+    c.drawCentredString(width/2, 12, f"Generated: {form.get('submitted_at', form.get('created_at', 'N/A'))[:10] if form.get('submitted_at') or form.get('created_at') else 'N/A'}")
     
     c.save()
     return str(pdf_path)

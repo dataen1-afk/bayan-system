@@ -1131,6 +1131,17 @@ async def respond_to_quotation(quotation_id: str, response: QuotationResponse, c
     
     return {"message": f"Quotation {response.status}"}
 
+# Certification Agreement routes
+@api_router.get("/certification-agreements")
+async def get_certification_agreements(status: str = None, current_user: dict = Depends(get_current_user)):
+    """Get all certification agreements (signed contracts)"""
+    query = {}
+    if status and status != 'all':
+        query['status'] = status
+    
+    agreements = await db.certification_agreements.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return agreements
+
 # Contract routes
 @api_router.get("/contracts", response_model=List[Contract])
 async def get_contracts(current_user: dict = Depends(get_current_user)):

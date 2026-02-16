@@ -3348,18 +3348,27 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     # Section 6: Status
     status_ar = {
         'draft': 'مسودة',
-        'sent': 'مرسل',
+        'sent': 'تم الإرسال للعميل',
         'pending': 'قيد الانتظار',
         'accepted': 'مقبول',
         'rejected': 'مرفوض',
-        'agreement_signed': 'تم توقيع الاتفاقية',
+        'agreement_signed': 'تم الإرسال للعميل',
         'modification_requested': 'طلب تعديل'
+    }
+    status_en = {
+        'draft': 'Draft',
+        'sent': 'Sent to Client',
+        'pending': 'Pending',
+        'accepted': 'Accepted',
+        'rejected': 'Rejected',
+        'agreement_signed': 'Sent to Client',
+        'modification_requested': 'Modification Requested'
     }
     status = proposal.get('status', 'pending')
     y = draw_section_header("6. STATUS", "٦. الحالة", y)
     c.setFillColor(colors.black)
     c.setFont('Helvetica', 11)
-    c.drawString(50, y, f"Current Status: {status.replace('_', ' ').title()}")
+    c.drawString(50, y, f"Current Status: {status_en.get(status, status.replace('_', ' ').title())}")
     draw_arabic_text(f"الحالة الحالية: {status_ar.get(status, status)}", width - 50, y, 11)
     y -= 30
     

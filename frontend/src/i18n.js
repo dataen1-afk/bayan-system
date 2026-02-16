@@ -466,6 +466,11 @@ const resources = {
       "errorCreatingProposal": "Error creating proposal:",
       "pleaseEnterRequiredFields": "Please enter all required fields",
       "backToDashboard": "Back to Dashboard",
+      "authorizedSignatory": "Authorized Signatory (First Party)",
+      "firstPartySignatoryDetails": "Enter the details of Bayan's authorized signatory for this proposal",
+      "signatoryName": "Signatory Name",
+      "jobTitle": "Job Title",
+      "signatoryDetailsNote": "These details will appear on the contract when the client approves the proposal.",
       
       // Public Proposal Page
       "loadingProposal": "Loading proposal...",

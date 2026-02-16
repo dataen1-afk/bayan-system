@@ -836,7 +836,7 @@ class BilingualContractPDFGenerator:
         # Process issuer stamp - fall back to company seal if not provided
         bayan_seal_element = ''
         if issuer_stamp:
-            stamp_img = self._process_image_for_pdf(issuer_stamp, 0.9*inch, 0.9*inch, '')
+            stamp_img = self._process_image_for_pdf(issuer_stamp, 1.0*inch, 1.0*inch, '')
             if isinstance(stamp_img, Image):
                 bayan_seal_element = stamp_img
         

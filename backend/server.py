@@ -3363,35 +3363,26 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     draw_arabic_text(f"الحالة الحالية: {status_ar.get(status, status)}", width - 50, y, 11)
     y -= 30
     
-    # Company Stamp Section (No Signature - Not Yet Approved)
+    # Company Seal Section (No Names/Signatures)
     c.setFillColor(colors.HexColor('#1e3a5f'))
-    c.setFont('Helvetica-Bold', 11)
-    c.drawCentredString(width/2, y, "AUTHORIZED BY BAYAN AUDITING & CONFORMITY")
-    y -= 15
-    draw_arabic_text("معتمد من بيان للتدقيق والمطابقة", width/2 + 100, y, 11, bold=True)
-    y -= 25
+    c.setFont('Helvetica-Bold', 10)
+    c.drawCentredString(width/2, y, "Company Seal / ختم الشركة")
+    y -= 20
     
-    # Draw company stamp/seal placeholder
+    # Draw company stamp/seal
     c.setStrokeColor(colors.HexColor('#1e3a5f'))
     c.setLineWidth(2)
-    c.circle(width/2, y - 30, 40, stroke=True, fill=False)
-    c.setFont('Helvetica', 8)
+    c.circle(width/2, y - 35, 45, stroke=True, fill=False)
+    c.setFont('Helvetica-Bold', 9)
     c.setFillColor(colors.HexColor('#1e3a5f'))
-    c.drawCentredString(width/2, y - 25, "COMPANY")
-    c.drawCentredString(width/2, y - 35, "SEAL")
-    draw_arabic_text("ختم الشركة", width/2 + 30, y - 45, 8)
-    
-    # Note about pending approval
-    y -= 90
-    c.setFillColor(colors.gray)
-    c.setFont('Helvetica-Oblique', 9)
-    c.drawCentredString(width/2, y, "This quotation is pending client approval. Client signature will be added upon acceptance.")
-    y -= 12
+    c.drawCentredString(width/2, y - 20, "BAYAN")
+    c.drawCentredString(width/2, y - 32, "AUDITING &")
+    c.drawCentredString(width/2, y - 44, "CONFORMITY")
     if arabic_font_available:
         try:
-            note_ar = arabic_reshaper.reshape("هذا العرض في انتظار موافقة العميل. سيتم إضافة توقيع العميل عند القبول.")
-            c.setFont('Amiri', 9)
-            c.drawCentredString(width/2, y, get_display(note_ar))
+            seal_ar = arabic_reshaper.reshape("بيان للتدقيق والمطابقة")
+            c.setFont('Amiri', 8)
+            c.drawCentredString(width/2, y - 56, get_display(seal_ar))
         except:
             pass
     

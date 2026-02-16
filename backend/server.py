@@ -3602,7 +3602,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = draw_field("Phone", "الهاتف", company_data.get('phoneNumber', client_info.get('phone', 'N/A')), y)
     y = draw_field("Email", "البريد الإلكتروني", company_data.get('email', client_info.get('email', 'N/A')), y)
     y = draw_field("Website", "الموقع الإلكتروني", company_data.get('website', 'N/A'), y)
-    y -= 10
+    y -= 6
     
     # Section 2: Contact Information
     y = draw_section_header("2. CONTACT INFORMATION", "٢. معلومات الاتصال", y)
@@ -3610,7 +3610,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = draw_field("Designation", "المنصب", company_data.get('designation', 'N/A'), y)
     y = draw_field("Mobile", "الجوال", company_data.get('mobileNumber', 'N/A'), y)
     y = draw_field("Contact Email", "البريد الإلكتروني للتواصل", company_data.get('contactEmail', 'N/A'), y)
-    y -= 10
+    y -= 6
     
     # Section 3: Organization Details
     y = draw_section_header("3. ORGANIZATION DETAILS", "٣. تفاصيل المنظمة", y)
@@ -3619,8 +3619,8 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = draw_field("Part-Time Employees", "موظفين دوام جزئي", company_data.get('partTimeEmployees', 'N/A'), y)
     y = draw_field("Number of Sites", "عدد المواقع", company_data.get('numberOfSites', 'N/A'), y)
     y = draw_field("Location Shifts", "عدد الورديات", company_data.get('locationShifts', 'N/A'), y)
-    y = draw_field("Key Business Processes", "العمليات التجارية الرئيسية", company_data.get('keyBusinessProcesses', 'N/A'), y)
-    y -= 10
+    y = draw_field("Key Business Processes", "العمليات الرئيسية", company_data.get('keyBusinessProcesses', 'N/A'), y)
+    y -= 6
     
     # Section 4: Certification Standards
     y = draw_section_header("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y)
@@ -3628,13 +3628,13 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     standards_text = ', '.join(standards) if standards else 'N/A'
     y = draw_field("Selected Standards", "المعايير المختارة", standards_text, y)
     y = draw_field("Certification Program", "برنامج الاعتماد", company_data.get('certificationProgram', 'N/A'), y)
+    y = draw_field("Already Certified?", "معتمد حالياً؟", company_data.get('isAlreadyCertified', 'N/A'), y)
     if company_data.get('otherStandard'):
         y = draw_field("Other Standard", "معيار آخر", company_data.get('otherStandard'), y)
-    y -= 10
+    y -= 6
     
     # Section 5: Sites Information
     y = draw_section_header("5. SITES INFORMATION", "٥. معلومات المواقع", y)
-    # Check for site addresses
     site1 = company_data.get('site1Address', '')
     site2 = company_data.get('site2Address', '')
     if site1:
@@ -3643,30 +3643,29 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         y = draw_field("Site 2", "الموقع 2", site2, y)
     if not site1 and not site2:
         y = draw_field("Sites", "المواقع", "Main site only", y)
+    y -= 6
     
-    # Footer for page 1
+    # Section 6: Declaration (moved to page 1)
+    y = draw_section_header("6. DECLARATION", "٦. الإقرار", y)
+    y = draw_field("Declared By", "المُقِر", company_data.get('declarationName', 'N/A'), y)
+    y = draw_field("Designation", "المنصب", company_data.get('declarationDesignation', 'N/A'), y)
+    y = draw_field("Declaration Agreed", "تم الموافقة", "Yes" if company_data.get('declarationAgreed') else "No", y)
+    
+    # Footer
     c.setFillColor(colors.HexColor('#1e3a5f'))
-    c.rect(0, 0, width, 45, fill=True, stroke=False)
+    c.rect(0, 0, width, 40, fill=True, stroke=False)
     c.setFillColor(colors.white)
-    c.setFont('Helvetica', 9)
-    # English part
-    c.drawString(width/2 - 180, 28, "BAYAN Auditing & Conformity |")
-    # Arabic part with proper reshaping
+    c.setFont('Helvetica', 8)
+    c.drawString(width/2 - 150, 25, "BAYAN Auditing & Conformity |")
     if arabic_font_available:
         try:
             footer_ar = arabic_reshaper.reshape("بيان للتحقق والمطابقة")
-            c.setFont('Amiri', 10)
-            c.drawString(width/2 + 10, 26, get_display(footer_ar))
+            c.setFont('Amiri', 9)
+            c.drawString(width/2 + 10, 23, get_display(footer_ar))
         except:
             pass
-    c.setFont('Helvetica', 9)
-    c.drawCentredString(width/2, 10, "Page 1")
-    
-    # ========== PAGE 2 (if more data) ==========
-    # Check if we have additional data to show
-    has_certification_info = company_data.get('isAlreadyCertified') == 'yes' or company_data.get('currentCertifications')
-    has_consultant_info = company_data.get('isConsultantInvolved') == 'yes'
-    has_declaration = company_data.get('declarationName') or company_data.get('declarationAgreed')
+    c.setFont('Helvetica', 8)
+    c.drawCentredString(width/2, 10, f"Generated: {form.get('submitted_at', form.get('created_at', 'N/A'))[:10] if form.get('submitted_at') or form.get('created_at') else 'N/A'}")
     
     if has_certification_info or has_consultant_info or has_declaration:
         c.showPage()

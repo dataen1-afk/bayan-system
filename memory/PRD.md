@@ -387,6 +387,15 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 
 ## MOCKED Integrations
 - **Email Sending**: MOCKED - Logs to console instead of sending real emails
+- **SMS Notifications**: MOCKED (simulation mode) - Requires Twilio credentials for real SMS
+
+## Bug Fixes (February 2026)
+### P0: Proposal Creation with Signature/Stamp Images ✅ (FIXED)
+- **Issue**: Creating a price quote with signature and stamp images showed `[object Object]` error
+- **Root Cause**: Frontend error handling didn't properly parse Pydantic validation error arrays
+- **Fix**: Updated `CreateProposalPage.js` lines 167-216 to handle Array.isArray(detail) case
+- **Result**: Proposals with ~400KB payloads (including base64 signature/stamp) now work correctly
+- **Test File**: `/app/backend/tests/test_proposal_creation.py`
 
 ## File Structure
 ```

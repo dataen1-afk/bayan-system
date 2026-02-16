@@ -3666,68 +3666,6 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
             pass
     c.setFont('Helvetica', 8)
     c.drawCentredString(width/2, 10, f"Generated: {form.get('submitted_at', form.get('created_at', 'N/A'))[:10] if form.get('submitted_at') or form.get('created_at') else 'N/A'}")
-    
-    if has_certification_info or has_consultant_info or has_declaration:
-        c.showPage()
-        
-        # Header for page 2
-        c.setFillColor(colors.HexColor('#1e3a5f'))
-        c.rect(0, height - 60, width, 60, fill=True, stroke=False)
-        if logo_path.exists():
-            try:
-                # White background for logo
-                c.setFillColor(colors.white)
-                c.roundRect(25, height - 58, 55, 55, 4, fill=True, stroke=False)
-                c.drawImage(str(logo_path), 28, height - 55, width=50, height=50, preserveAspectRatio=True, mask='auto')
-            except:
-                pass
-        c.setFillColor(colors.white)
-        c.setFont('Helvetica-Bold', 14)
-        c.drawCentredString(width/2, height - 35, "APPLICATION FORM (Continued)")
-        
-        y = height - 90
-        
-        # Section 6: Current Certification Status
-        y = draw_section_header("6. CERTIFICATION STATUS", "٦. حالة الاعتماد", y)
-        y = draw_field("Already Certified?", "معتمد حالياً؟", company_data.get('isAlreadyCertified', 'N/A'), y)
-        if company_data.get('isAlreadyCertified') == 'yes':
-            certs = company_data.get('currentCertifications', [])
-            for i, cert in enumerate(certs, 1):
-                if isinstance(cert, dict) and cert.get('system'):
-                    y = draw_field(f"Certification {i}", f"الاعتماد {i}", f"{cert.get('system', '')} - {cert.get('body', '')}", y)
-        y -= 10
-        
-        # Section 7: Consultant Information
-        if has_consultant_info:
-            y = draw_section_header("7. CONSULTANT INFORMATION", "٧. معلومات المستشار", y)
-            y = draw_field("Consultant Involved?", "هل يوجد مستشار؟", company_data.get('isConsultantInvolved', 'N/A'), y)
-            if company_data.get('consultantName'):
-                y = draw_field("Consultant Name", "اسم المستشار", company_data.get('consultantName', 'N/A'), y)
-            y -= 10
-        
-        # Section 8: Declaration
-        if has_declaration:
-            y = draw_section_header("8. DECLARATION", "٨. الإقرار", y)
-            y = draw_field("Declared By", "المُقِر", company_data.get('declarationName', 'N/A'), y)
-            y = draw_field("Designation", "المنصب", company_data.get('declarationDesignation', 'N/A'), y)
-            y = draw_field("Declaration Agreed", "تم الموافقة", "Yes" if company_data.get('declarationAgreed') else "No", y)
-        
-        # Footer for page 2
-        c.setFillColor(colors.HexColor('#1e3a5f'))
-        c.rect(0, 0, width, 45, fill=True, stroke=False)
-        c.setFillColor(colors.white)
-        c.setFont('Helvetica', 9)
-        # English part
-        c.drawString(width/2 - 180, 28, "BAYAN Auditing & Conformity |")
-        # Arabic part with proper reshaping
-        if arabic_font_available:
-            try:
-                footer_ar = arabic_reshaper.reshape("بيان للتحقق والمطابقة")
-                c.setFont('Amiri', 10)
-                c.drawString(width/2 + 10, 26, get_display(footer_ar))
-            except:
-                pass
-        c.setFont('Helvetica', 9)
         c.drawCentredString(width/2, 10, "Page 2")
     
     c.save()

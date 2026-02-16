@@ -324,7 +324,7 @@ class ContractPDFGenerator:
         
         parties_data = [
             ['Certification Body:', 'BAYAN AUDITING & CONFORMITY (BAC)'],
-            ['', 'Arabia Limited Certification Body'],
+            ['', 'بيان للتحقق والمطابقة'],
             ['', '3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia'],
             ['', ''],
             ['Client Organization:', process_dynamic_text(agreement_data.get('organization_name', 'N/A'))],

@@ -879,8 +879,32 @@ class BilingualContractPDFGenerator:
         # First Party (Bayan) details - from proposal data (editable when creating quote)
         bayan_signatory_name = proposal_data.get('issuer_name', 'Abdullah Al-Rashid')
         bayan_signatory_title = proposal_data.get('issuer_designation', 'General Manager')
-        bayan_signatory_name_ar = process_arabic_text(self._get_arabic_name(bayan_signatory_name))
-        bayan_signatory_title_ar = process_arabic_text(self._get_arabic_title(bayan_signatory_title))
+        
+        # Check if the name is already Arabic
+        name_is_arabic = any('\u0600' <= char <= '\u06FF' or '\u0750' <= char <= '\u077F' for char in str(bayan_signatory_name))
+        title_is_arabic = any('\u0600' <= char <= '\u06FF' or '\u0750' <= char <= '\u077F' for char in str(bayan_signatory_title))
+        
+        # Get Arabic versions (translations or same if already Arabic)
+        arabic_name = self._get_arabic_name(bayan_signatory_name)
+        arabic_title = self._get_arabic_title(bayan_signatory_title)
+        
+        # Only process Arabic text for bidi display - do NOT double process
+        bayan_signatory_name_ar = process_arabic_text(arabic_name) if arabic_name else ''
+        bayan_signatory_title_ar = process_arabic_text(arabic_title) if arabic_title else ''
+        
+        # If name/title are already Arabic, don't show duplicate (name would be same as arabic version)
+        if name_is_arabic:
+            # Show Arabic name only once, properly processed for RTL
+            bayan_signatory_name_display = process_arabic_text(bayan_signatory_name)
+            bayan_signatory_name_ar = ''  # Don't duplicate
+        else:
+            bayan_signatory_name_display = bayan_signatory_name
+            
+        if title_is_arabic:
+            bayan_signatory_title_display = process_arabic_text(bayan_signatory_title)
+            bayan_signatory_title_ar = ''  # Don't duplicate
+        else:
+            bayan_signatory_title_display = bayan_signatory_title
         
         # Format the issued date properly (remove timestamp if present)
         issued_date = proposal_data.get('issued_date', '')

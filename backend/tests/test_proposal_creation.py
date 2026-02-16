@@ -65,15 +65,16 @@ class TestProposalCreation:
         assert forms_response.status_code == 200
         forms = forms_response.json()
         
-        # Find a form with submitted status
+        # Find a form that can have proposals created (any except pending)
         submitted_form = None
         for form in forms:
-            if form.get("status") == "submitted":
+            # Allow submitted or under_review status
+            if form.get("status") in ["submitted", "under_review"]:
                 submitted_form = form
                 break
         
         if not submitted_form:
-            pytest.skip("No submitted form available for testing")
+            pytest.skip("No eligible form available for testing")
         
         # Create proposal payload with signature and stamp
         proposal_data = {
@@ -141,12 +142,12 @@ class TestProposalCreation:
         
         submitted_form = None
         for form in forms:
-            if form.get("status") == "submitted":
+            if form.get("status") in ["submitted", "under_review"]:
                 submitted_form = form
                 break
         
         if not submitted_form:
-            pytest.skip("No submitted form available for testing")
+            pytest.skip("No eligible form available for testing")
         
         # Create proposal with INVALID email
         proposal_data = {

@@ -403,6 +403,8 @@ const resources = {
       "enterCompanyName": "Enter company name",
       "enterEmail": "Enter email address",
       "enterPhone": "Enter phone number",
+      "mobile": "Mobile",
+      "enterMobile": "Enter mobile number",
       "fillAllClientFields": "Please fill all client information fields",
       "errorCreatingForm": "Error creating form:",
       "createFirstApplicationForm": "Create an application form and share it with your client",

@@ -51,7 +51,10 @@ const CreateProposalPage = () => {
       currency: 'SAR'
     },
     notes: '',
-    validity_days: 30
+    validity_days: 30,
+    // First Party (Bayan) authorized signatory
+    issuer_name: 'Abdullah Al-Rashid',
+    issuer_designation: 'General Manager'
   });
 
   useEffect(() => {

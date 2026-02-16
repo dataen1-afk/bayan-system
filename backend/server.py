@@ -3254,9 +3254,13 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     c.setFillColor(colors.HexColor('#1e3a5f'))
     c.rect(0, height - 100, width, 100, fill=True, stroke=False)
     
-    # Draw logo if exists
+    # Draw white background for logo then logo
     if logo_path.exists():
         try:
+            # White rounded rectangle background for logo
+            c.setFillColor(colors.white)
+            c.roundRect(25, height - 95, 80, 80, 5, fill=True, stroke=False)
+            # Draw logo
             c.drawImage(str(logo_path), 30, height - 90, width=70, height=70, preserveAspectRatio=True, mask='auto')
         except:
             pass

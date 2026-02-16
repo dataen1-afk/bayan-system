@@ -459,6 +459,40 @@ const CreateProposalPage = () => {
             </CardContent>
           </Card>
 
+          {/* Authorized Signatory (First Party - Bayan) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                {t('authorizedSignatory')}
+              </CardTitle>
+              <CardDescription>{t('firstPartySignatoryDetails')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('signatoryName')}</Label>
+                  <Input
+                    value={formData.issuer_name}
+                    onChange={(e) => handleInputChange('issuer_name', e.target.value)}
+                    placeholder="Abdullah Al-Rashid"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('jobTitle')}</Label>
+                  <Input
+                    value={formData.issuer_designation}
+                    onChange={(e) => handleInputChange('issuer_designation', e.target.value)}
+                    placeholder="General Manager"
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-slate-500 mt-3">
+                {t('signatoryDetailsNote')}
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Action Buttons */}
           <div className="flex gap-4 justify-end">
             <Button

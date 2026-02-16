@@ -3247,7 +3247,7 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
         c.drawString(50, y_pos, f"{label_en}:")
         c.setFont('Helvetica', 10)
         c.drawString(180, y_pos, str(value) if value else 'N/A')
-        draw_arabic_text(f":{label_ar}", width - 50, y_pos, 10, bold=True)
+        draw_arabic_text(f"{label_ar}:", width - 50, y_pos, 10, bold=True)
         return y_pos - 18
     
     # Header with logo

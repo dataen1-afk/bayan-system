@@ -396,6 +396,29 @@ class BilingualContractPDFGenerator:
             textColor=colors.gray
         ))
 
+    def _get_arabic_name(self, english_name):
+        """Get Arabic version of signatory name - returns the name as-is if no translation"""
+        # Common name translations (can be extended)
+        name_translations = {
+            'Abdullah Al-Rashid': 'عبدالله الراشد',
+            'Mohammed Al-Saud': 'محمد آل سعود',
+            'Ahmed Al-Fahad': 'أحمد الفهد',
+        }
+        return name_translations.get(english_name, english_name)
+    
+    def _get_arabic_title(self, english_title):
+        """Get Arabic translation of job title"""
+        title_translations = {
+            'General Manager': 'المدير العام',
+            'CEO': 'الرئيس التنفيذي',
+            'Director': 'المدير',
+            'Manager': 'مدير',
+            'Certification Manager': 'مدير الاعتماد',
+            'Operations Manager': 'مدير العمليات',
+            'Technical Director': 'المدير الفني',
+        }
+        return title_translations.get(english_title, english_title)
+
     def _bilingual_text(self, en_text, ar_text, en_style='TextEN', ar_style='TextAR'):
         """Create bilingual text block with English and Arabic"""
         elements = []

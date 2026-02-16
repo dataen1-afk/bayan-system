@@ -3627,6 +3627,10 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     ]
     y = draw_section_box("1. COMPANY INFORMATION", "١. معلومات الشركة", y, company_fields)
     
+    # Consistent spacing between sections on page 1
+    section_gap = 12
+    y -= section_gap
+    
     # Section 2: Contact Information
     contact_fields = [
         ("Contact Person", "جهة الاتصال", company_data.get('contactPerson', client_info.get('name', 'N/A'))),
@@ -3635,6 +3639,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         ("Contact Email", "البريد الإلكتروني", company_data.get('contactEmail', 'N/A')),
     ]
     y = draw_section_box("2. CONTACT INFORMATION", "٢. معلومات الاتصال", y, contact_fields)
+    y -= section_gap
     
     # Section 3: Organization Details
     org_fields = [
@@ -3646,6 +3651,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         ("Key Business Processes", "العمليات الرئيسية", company_data.get('keyBusinessProcesses', 'N/A')),
     ]
     y = draw_section_box("3. ORGANIZATION DETAILS", "٣. تفاصيل المنظمة", y, org_fields)
+    y -= section_gap
     
     # Section 4: Certification Standards (moved to page 1)
     standards = company_data.get('certificationSchemes', [])
@@ -3658,6 +3664,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     if company_data.get('otherStandard'):
         cert_fields.append(("Other Standard", "معيار آخر", company_data.get('otherStandard')))
     y = draw_section_box("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y, cert_fields)
+    y -= section_gap
     
     # Section 5: Sites Information (on page 1)
     site_fields = []
@@ -3670,6 +3677,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     if not site_fields:
         site_fields.append(("Primary Location", "الموقع الرئيسي", "Main office only"))
     y = draw_section_box("5. SITES INFORMATION", "٥. معلومات المواقع", y, site_fields)
+    y -= section_gap
     
     # Section 6: Consultant Information (on page 1)
     consultant_fields = [

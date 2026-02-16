@@ -806,11 +806,11 @@ class BilingualContractPDFGenerator:
             except:
                 pass
         
-        # First Party (Bayan) details - authorized signatory
-        bayan_signatory_name = "Abdullah Al-Rashid"  # Authorized signatory name
-        bayan_signatory_title = "General Manager"    # Job title
-        bayan_signatory_name_ar = process_arabic_text("عبدالله الراشد")
-        bayan_signatory_title_ar = process_arabic_text("المدير العام")
+        # First Party (Bayan) details - from proposal data (editable when creating quote)
+        bayan_signatory_name = proposal_data.get('issuer_name', 'Abdullah Al-Rashid')
+        bayan_signatory_title = proposal_data.get('issuer_designation', 'General Manager')
+        bayan_signatory_name_ar = process_arabic_text(self._get_arabic_name(bayan_signatory_name))
+        bayan_signatory_title_ar = process_arabic_text(self._get_arabic_title(bayan_signatory_title))
         
         sig_data = [
             [f"{self.TRANSLATIONS['for_cert_body']['en']}\n{process_arabic_text(self.TRANSLATIONS['for_cert_body']['ar'])}", 
@@ -826,7 +826,7 @@ class BilingualContractPDFGenerator:
             [f"{bayan_signatory_title}\n{bayan_signatory_title_ar}", 
              process_dynamic_text(agreement_data.get('signatory_position', ''))],
             ['', ''],
-            [f"{self.TRANSLATIONS['date']['en']}: {datetime.now().strftime('%Y-%m-%d')}", 
+            [f"{self.TRANSLATIONS['date']['en']}: {proposal_data.get('issued_date', datetime.now().strftime('%Y-%m-%d'))}", 
              f"{self.TRANSLATIONS['date']['en']}: {agreement_data.get('signatory_date', '')}"],
         ]
         

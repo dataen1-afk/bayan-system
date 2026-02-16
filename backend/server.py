@@ -174,9 +174,11 @@ class Proposal(BaseModel):
     validity_days: int = 30
     # Status
     status: str = "pending"  # pending, accepted, rejected, expired
-    # Signatures
+    # First Party (Bayan) Signatures
     issuer_name: str = ""
     issuer_designation: str = ""
+    issuer_signature: str = ""  # Base64 encoded signature image
+    issuer_stamp: str = ""  # Base64 encoded stamp image
     issued_date: Optional[datetime] = None
     # Client response
     client_response_date: Optional[datetime] = None

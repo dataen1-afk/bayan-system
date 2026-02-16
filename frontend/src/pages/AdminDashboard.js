@@ -586,6 +586,13 @@ const AdminDashboard = () => {
                       <User className="w-4 h-4 text-slate-400 flex-shrink-0 hidden lg:block" />
                       <span className="text-sm text-slate-700 truncate" title={form.client_info?.name}>{form.client_info?.name || '-'}</span>
                     </div>
+                    {/* Show mobile number if available */}
+                    {(form.client_info?.mobile || form.company_data?.mobileNumber) && (
+                      <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500">
+                        <Phone className="w-3 h-3 flex-shrink-0" />
+                        <span dir="ltr">{form.client_info?.mobile || form.company_data?.mobileNumber}</span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Email */}

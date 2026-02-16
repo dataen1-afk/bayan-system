@@ -1249,6 +1249,17 @@ const AdminDashboard = () => {
                   dir="ltr"
                 />
               </div>
+              <div className="space-y-2">
+                <Label className={isRTL ? 'text-right block' : ''}>{t('mobile')}</Label>
+                <Input
+                  type="tel"
+                  value={newClientInfo.mobile}
+                  onChange={(e) => setNewClientInfo({ ...newClientInfo, mobile: e.target.value })}
+                  placeholder={t('enterMobile')}
+                  data-testid="client-mobile-input"
+                  dir="ltr"
+                />
+              </div>
               <div className={`flex gap-2 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Button variant="outline" onClick={() => setCreateFormModal(false)}>
                   {t('cancel')}

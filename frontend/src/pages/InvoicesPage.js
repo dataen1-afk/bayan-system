@@ -39,6 +39,7 @@ const formatDate = (dateString) => {
 const InvoicesPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user, logout } = useContext(AuthContext);
   const isRTL = i18n.language?.startsWith('ar');
   
   const [loading, setLoading] = useState(true);

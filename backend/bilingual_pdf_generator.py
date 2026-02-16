@@ -796,32 +796,50 @@ class BilingualContractPDFGenerator:
             if isinstance(sig_img, Image):
                 client_signature_element = sig_img
         
+        # Bayan company seal
+        import pathlib
+        bayan_seal_path = pathlib.Path(__file__).parent / "assets" / "company-seal.png"
+        bayan_seal_element = ''
+        if bayan_seal_path.exists():
+            try:
+                bayan_seal_element = Image(str(bayan_seal_path), width=0.9*inch, height=0.9*inch)
+            except:
+                pass
+        
+        # First Party (Bayan) details - authorized signatory
+        bayan_signatory_name = "Abdullah Al-Rashid"  # Authorized signatory name
+        bayan_signatory_title = "General Manager"    # Job title
+        bayan_signatory_name_ar = process_arabic_text("عبدالله الراشد")
+        bayan_signatory_title_ar = process_arabic_text("المدير العام")
+        
         sig_data = [
             [f"{self.TRANSLATIONS['for_cert_body']['en']}\n{process_arabic_text(self.TRANSLATIONS['for_cert_body']['ar'])}", 
              f"{self.TRANSLATIONS['for_client']['en']}\n{process_arabic_text(self.TRANSLATIONS['for_client']['ar'])}"],
             ['', ''],
             ['BAYAN AUDITING & CONFORMITY', process_dynamic_text(agreement_data.get('organization_name', ''))],
+            [process_arabic_text('بيان للتحقق والمطابقة'), ''],
             ['', ''],
-            ['_________________________', client_signature_element],
-            [f"{self.TRANSLATIONS['authorized_signatory']['en']}", 
+            [bayan_seal_element if bayan_seal_element else '', client_signature_element],
+            ['', ''],
+            [f"{bayan_signatory_name}\n{bayan_signatory_name_ar}", 
              process_dynamic_text(agreement_data.get('signatory_name', ''))],
-            ['', process_dynamic_text(agreement_data.get('signatory_position', ''))],
+            [f"{bayan_signatory_title}\n{bayan_signatory_title_ar}", 
+             process_dynamic_text(agreement_data.get('signatory_position', ''))],
             ['', ''],
             [f"{self.TRANSLATIONS['date']['en']}: {datetime.now().strftime('%Y-%m-%d')}", 
              f"{self.TRANSLATIONS['date']['en']}: {agreement_data.get('signatory_date', '')}"],
         ]
         
+        # Add client stamp if provided
         if stamp_image:
             stamp_img = self._process_image_for_pdf(stamp_image, 0.8*inch, 0.8*inch, '')
             if isinstance(stamp_img, Image):
                 sig_data.append(['', ''])
-                sig_data.append(['', stamp_img])
-                sig_data.append(['', f"{self.TRANSLATIONS['company_seal']['en']} | {process_arabic_text(self.TRANSLATIONS['company_seal']['ar'])}"])
+                sig_data.append([f"{self.TRANSLATIONS['company_seal']['en']} | {process_arabic_text(self.TRANSLATIONS['company_seal']['ar'])}", stamp_img])
         
         sig_table = Table(sig_data, colWidths=[2.8*inch, 2.8*inch])
         sig_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (0, -1), 'Amiri'),  # First column (headers have Arabic)
-            ('FONTNAME', (1, 0), (1, -1), 'Amiri'),  # Client column may have Arabic text
+            ('FONTNAME', (0, 0), (-1, -1), 'Amiri'),  # Use Amiri for all (supports both EN and AR)
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),

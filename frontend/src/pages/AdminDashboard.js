@@ -70,7 +70,8 @@ const AdminDashboard = () => {
     name: '',
     company_name: '',
     email: '',
-    phone: ''
+    phone: '',
+    mobile: ''
   });
 
   // Form creation state (legacy simple forms)

@@ -3601,7 +3601,10 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         c.rect(0, height - 60, width, 60, fill=True, stroke=False)
         if logo_path.exists():
             try:
-                c.drawImage(str(logo_path), 30, height - 55, width=50, height=50, preserveAspectRatio=True, mask='auto')
+                # White background for logo
+                c.setFillColor(colors.white)
+                c.roundRect(25, height - 58, 55, 55, 4, fill=True, stroke=False)
+                c.drawImage(str(logo_path), 28, height - 55, width=50, height=50, preserveAspectRatio=True, mask='auto')
             except:
                 pass
         c.setFillColor(colors.white)

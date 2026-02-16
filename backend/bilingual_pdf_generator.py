@@ -958,7 +958,7 @@ class BilingualContractPDFGenerator:
         
         sig_table = Table(sig_data, colWidths=[2.8*inch, 2.8*inch])
         sig_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), 'Amiri'),  # Use Amiri for all (supports both EN and AR)
+            ('FONTNAME', (0, 0), (-1, -1), 'ArabicFont' if ARABIC_FONT_REGISTERED else 'Helvetica'),  # Use registered Arabic font
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),

@@ -3240,19 +3240,42 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
         c.line(50, y_pos - 5, width - 50, y_pos - 5)
         return y_pos - 25
     
+    def has_arabic_chars(text):
+        """Check if text contains Arabic characters"""
+        if not text:
+            return False
+        return any('\u0600' <= char <= '\u06FF' or '\u0750' <= char <= '\u077F' for char in str(text))
+    
+    def draw_text_value(text, x, y, font_size=9):
+        """Draw text value using appropriate font based on content"""
+        text_str = str(text) if text else 'N/A'
+        if has_arabic_chars(text_str) and arabic_font_available:
+            # Use Arabic font for Arabic text
+            try:
+                reshaped = arabic_reshaper.reshape(text_str)
+                bidi_text = get_display(reshaped)
+                c.setFont('Amiri', font_size)
+                c.drawString(x, y, bidi_text)
+            except Exception as e:
+                print(f"Error rendering Arabic value: {e}")
+                c.setFont('Helvetica', font_size)
+                c.drawString(x, y, text_str)
+        else:
+            c.setFont('Helvetica', font_size)
+            c.drawString(x, y, text_str)
+    
     def draw_field(label_en, label_ar, value, y_pos):
         """Draw bilingual field with value on both sides - separated columns to prevent overlap"""
         value_str = str(value) if value else 'N/A'
         # Truncate long values to prevent overflow (max ~25 chars for each side)
         value_display = value_str[:30] + '...' if len(value_str) > 30 else value_str
         c.setFillColor(colors.black)
-        # English side (left half of page) - label at 50, value at 150
+        # English side (left half of page) - label at 50, value at 145
         c.setFont('Helvetica-Bold', 9)
         c.drawString(50, y_pos, f"{label_en}:")
-        c.setFont('Helvetica', 9)
-        c.drawString(145, y_pos, value_display)
+        # Draw value using appropriate font (Amiri for Arabic, Helvetica for English)
+        draw_text_value(value_display, 145, y_pos, 9)
         # Arabic side (right half of page) - value at center-right, label at far right
-        # Use separate columns to avoid overlap: Arabic label at width-50, Arabic value at width-160
         draw_arabic_text(f"{label_ar}:", width - 50, y_pos, 9, bold=True)
         draw_arabic_text(value_display, width - 160, y_pos, 9)
         return y_pos - 18

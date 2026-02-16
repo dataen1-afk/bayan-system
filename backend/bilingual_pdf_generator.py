@@ -526,7 +526,7 @@ class BilingualContractPDFGenerator:
             pagesize=A4,
             rightMargin=40,
             leftMargin=40,
-            topMargin=85,
+            topMargin=95,
             bottomMargin=60
         )
         

@@ -3666,7 +3666,6 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
             pass
     c.setFont('Helvetica', 8)
     c.drawCentredString(width/2, 10, f"Generated: {form.get('submitted_at', form.get('created_at', 'N/A'))[:10] if form.get('submitted_at') or form.get('created_at') else 'N/A'}")
-        c.drawCentredString(width/2, 10, "Page 2")
     
     c.save()
     return str(pdf_path)

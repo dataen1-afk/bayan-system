@@ -3241,13 +3241,17 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
         return y_pos - 25
     
     def draw_field(label_en, label_ar, value, y_pos):
-        """Draw bilingual field with value"""
+        """Draw bilingual field with value on both sides"""
+        value_str = str(value) if value else 'N/A'
         c.setFillColor(colors.black)
+        # English side (left)
         c.setFont('Helvetica-Bold', 10)
         c.drawString(50, y_pos, f"{label_en}:")
         c.setFont('Helvetica', 10)
-        c.drawString(180, y_pos, str(value) if value else 'N/A')
+        c.drawString(180, y_pos, value_str)
+        # Arabic side (right) - label and value
         draw_arabic_text(f"{label_ar}:", width - 50, y_pos, 10, bold=True)
+        draw_arabic_text(value_str, width - 130, y_pos, 10)
         return y_pos - 18
     
     # Header with logo

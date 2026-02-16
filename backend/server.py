@@ -3461,13 +3461,12 @@ async def generate_bilingual_form_pdf(form_id: str, credentials: HTTPAuthorizati
     )
 
 async def generate_bilingual_form_pdf_file(form: dict) -> str:
-    """Generate a comprehensive bilingual form submission PDF with all client data"""
+    """Generate a professional bilingual form submission PDF"""
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.lib import colors
-    from reportlab.lib.units import cm
     import arabic_reshaper
     from bidi.algorithm import get_display
     
@@ -3484,20 +3483,272 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         except:
             pass
     
-    # Logo path
     logo_path = ROOT_DIR / "assets" / "bayan-logo.png"
-    
     pdf_path = CONTRACTS_DIR / f"form_{form['id']}_bilingual.pdf"
     c = canvas.Canvas(str(pdf_path), pagesize=A4)
     width, height = A4
     
-    def draw_arabic_text(text, x, y, font_size=11, bold=False):
+    # Colors
+    primary_color = colors.HexColor('#1e3a5f')
+    light_bg = colors.HexColor('#f0f4f8')
+    accent_color = colors.HexColor('#2563eb')
+    
+    def draw_arabic(text, x, y, size=10, bold=False, right_align=False):
+        """Draw Arabic text with proper reshaping"""
         if arabic_font_available:
             try:
                 reshaped = arabic_reshaper.reshape(str(text))
                 bidi_text = get_display(reshaped)
-                font_name = 'Amiri-Bold' if bold and font_bold_path.exists() else 'Amiri'
-                c.setFont(font_name, font_size)
+                font = 'Amiri-Bold' if bold and font_bold_path.exists() else 'Amiri'
+                c.setFont(font, size)
+                if right_align:
+                    c.drawRightString(x, y, bidi_text)
+                else:
+                    c.drawString(x, y, bidi_text)
+            except:
+                c.setFont('Helvetica', size)
+                c.drawString(x, y, str(text))
+        else:
+            c.setFont('Helvetica', size)
+            c.drawString(x, y, str(text))
+    
+    def has_arabic(text):
+        if not text: return False
+        return any('\u0600' <= c <= '\u06FF' for c in str(text))
+    
+    def draw_value(text, x, y, size=10):
+        """Draw value with appropriate font"""
+        text_str = str(text) if text else 'N/A'
+        if has_arabic(text_str) and arabic_font_available:
+            try:
+                reshaped = arabic_reshaper.reshape(text_str)
+                bidi_text = get_display(reshaped)
+                c.setFont('Amiri', size)
+                c.drawString(x, y, bidi_text)
+            except:
+                c.setFont('Helvetica', size)
+                c.drawString(x, y, text_str)
+        else:
+            c.setFont('Helvetica', size)
+            c.drawString(x, y, text_str)
+    
+    # ============ HEADER ============
+    c.setFillColor(primary_color)
+    c.rect(0, height - 80, width, 80, fill=True, stroke=False)
+    
+    # Logo with white background
+    if logo_path.exists():
+        try:
+            c.setFillColor(colors.white)
+            c.roundRect(20, height - 70, 60, 60, 5, fill=True, stroke=False)
+            c.drawImage(str(logo_path), 23, height - 67, width=54, height=54, preserveAspectRatio=True, mask='auto')
+        except: pass
+    
+    # Title
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 20)
+    c.drawCentredString(width/2, height - 40, "APPLICATION FORM")
+    if arabic_font_available:
+        try:
+            ar_title = get_display(arabic_reshaper.reshape("طلب الاعتماد"))
+            c.setFont('Amiri-Bold', 16)
+            c.drawCentredString(width/2, height - 60, ar_title)
+        except: pass
+    
+    # Reference and Date
+    c.setFont('Helvetica', 9)
+    c.drawRightString(width - 25, height - 30, f"Ref: {form.get('id', 'N/A')[:8].upper()}")
+    c.drawRightString(width - 25, height - 45, f"Date: {str(form.get('submitted_at', form.get('created_at', '')))[:10]}")
+    
+    company_data = form.get('company_data', {})
+    client_info = form.get('client_info', {})
+    
+    # ============ SECTION DRAWING FUNCTIONS ============
+    def draw_section_box(title_en, title_ar, y_start, fields, box_height=None):
+        """Draw a section with background box and fields"""
+        if box_height is None:
+            box_height = len(fields) * 18 + 30
+        
+        # Section header bar
+        c.setFillColor(primary_color)
+        c.rect(30, y_start - 22, width - 60, 22, fill=True, stroke=False)
+        c.setFillColor(colors.white)
+        c.setFont('Helvetica-Bold', 10)
+        c.drawString(40, y_start - 16, title_en)
+        if arabic_font_available:
+            try:
+                ar = get_display(arabic_reshaper.reshape(title_ar))
+                c.setFont('Amiri-Bold', 10)
+                c.drawRightString(width - 40, y_start - 16, ar)
+            except: pass
+        
+        # Content box
+        c.setFillColor(light_bg)
+        c.rect(30, y_start - box_height, width - 60, box_height - 22, fill=True, stroke=False)
+        c.setStrokeColor(colors.HexColor('#d1d5db'))
+        c.setLineWidth(0.5)
+        c.rect(30, y_start - box_height, width - 60, box_height, fill=False, stroke=True)
+        
+        # Draw fields
+        y = y_start - 40
+        for label_en, label_ar, value in fields:
+            c.setFillColor(colors.black)
+            c.setFont('Helvetica-Bold', 9)
+            c.drawString(40, y, f"{label_en}:")
+            
+            # Value - handle truncation
+            val_str = str(value) if value else 'N/A'
+            val_display = val_str[:35] + '...' if len(val_str) > 35 else val_str
+            draw_value(val_display, 160, y, 9)
+            
+            # Arabic label (right side)
+            if arabic_font_available:
+                try:
+                    ar_label = get_display(arabic_reshaper.reshape(f"{label_ar}:"))
+                    c.setFont('Amiri-Bold', 9)
+                    c.drawRightString(width - 40, y, ar_label)
+                except: pass
+            
+            y -= 18
+        
+        return y_start - box_height - 10
+    
+    # ============ PAGE 1 CONTENT ============
+    y = height - 100
+    
+    # Section 1: Company Information
+    company_fields = [
+        ("Company Name", "اسم الشركة", company_data.get('companyName', client_info.get('company_name', 'N/A'))),
+        ("Legal Status", "الحالة القانونية", company_data.get('legalStatus', 'N/A')),
+        ("Address", "العنوان", company_data.get('address', 'N/A')),
+        ("Phone", "الهاتف", company_data.get('phoneNumber', client_info.get('phone', 'N/A'))),
+        ("Email", "البريد الإلكتروني", company_data.get('email', client_info.get('email', 'N/A'))),
+        ("Website", "الموقع الإلكتروني", company_data.get('website', 'N/A')),
+    ]
+    y = draw_section_box("1. COMPANY INFORMATION", "١. معلومات الشركة", y, company_fields)
+    
+    # Section 2: Contact Information
+    contact_fields = [
+        ("Contact Person", "جهة الاتصال", company_data.get('contactPerson', client_info.get('name', 'N/A'))),
+        ("Designation", "المنصب", company_data.get('designation', 'N/A')),
+        ("Mobile", "الجوال", company_data.get('mobileNumber', 'N/A')),
+        ("Contact Email", "البريد الإلكتروني", company_data.get('contactEmail', 'N/A')),
+    ]
+    y = draw_section_box("2. CONTACT INFORMATION", "٢. معلومات الاتصال", y, contact_fields)
+    
+    # Section 3: Organization Details
+    org_fields = [
+        ("Total Employees", "إجمالي الموظفين", company_data.get('totalEmployees', 'N/A')),
+        ("Full-Time", "دوام كامل", company_data.get('fullTimeEmployees', 'N/A')),
+        ("Part-Time", "دوام جزئي", company_data.get('partTimeEmployees', 'N/A')),
+        ("Number of Sites", "عدد المواقع", company_data.get('numberOfSites', 'N/A')),
+        ("Shifts", "الورديات", company_data.get('locationShifts', 'N/A')),
+        ("Key Processes", "العمليات الرئيسية", company_data.get('keyBusinessProcesses', 'N/A')),
+    ]
+    y = draw_section_box("3. ORGANIZATION DETAILS", "٣. تفاصيل المنظمة", y, org_fields)
+    
+    # Footer for page 1
+    c.setFillColor(primary_color)
+    c.rect(0, 0, width, 35, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica', 9)
+    c.drawCentredString(width/2 - 60, 18, "BAYAN Auditing & Conformity")
+    if arabic_font_available:
+        try:
+            ar_footer = get_display(arabic_reshaper.reshape("بيان للتحقق والمطابقة"))
+            c.setFont('Amiri', 9)
+            c.drawString(width/2 + 20, 16, ar_footer)
+        except: pass
+    c.setFont('Helvetica', 8)
+    c.drawCentredString(width/2, 6, "Page 1 of 2")
+    
+    # ============ PAGE 2 ============
+    c.showPage()
+    
+    # Header for page 2
+    c.setFillColor(primary_color)
+    c.rect(0, height - 50, width, 50, fill=True, stroke=False)
+    if logo_path.exists():
+        try:
+            c.setFillColor(colors.white)
+            c.roundRect(20, height - 45, 40, 40, 4, fill=True, stroke=False)
+            c.drawImage(str(logo_path), 22, height - 43, width=36, height=36, preserveAspectRatio=True, mask='auto')
+        except: pass
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 14)
+    c.drawCentredString(width/2, height - 30, "APPLICATION FORM (Continued)")
+    
+    y = height - 70
+    
+    # Section 4: Certification Standards
+    standards = company_data.get('certificationSchemes', [])
+    standards_text = ', '.join(standards) if standards else 'N/A'
+    cert_fields = [
+        ("Selected Standards", "المعايير المختارة", standards_text),
+        ("Certification Program", "برنامج الاعتماد", company_data.get('certificationProgram', 'N/A')),
+        ("Already Certified?", "معتمد حالياً؟", company_data.get('isAlreadyCertified', 'N/A')),
+    ]
+    if company_data.get('otherStandard'):
+        cert_fields.append(("Other Standard", "معيار آخر", company_data.get('otherStandard')))
+    y = draw_section_box("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y, cert_fields)
+    
+    # Section 5: Sites Information
+    site_fields = []
+    site1 = company_data.get('site1Address', '')
+    site2 = company_data.get('site2Address', '')
+    if site1:
+        site_fields.append(("Site 1 Address", "عنوان الموقع 1", site1))
+    if site2:
+        site_fields.append(("Site 2 Address", "عنوان الموقع 2", site2))
+    if not site_fields:
+        site_fields.append(("Primary Location", "الموقع الرئيسي", "Main office only"))
+    y = draw_section_box("5. SITES INFORMATION", "٥. معلومات المواقع", y, site_fields)
+    
+    # Section 6: Consultant Information
+    consultant_fields = [
+        ("Consultant Used?", "هل تم استخدام مستشار؟", company_data.get('isConsultantInvolved', 'N/A')),
+    ]
+    if company_data.get('consultantName'):
+        consultant_fields.append(("Consultant Name", "اسم المستشار", company_data.get('consultantName')))
+    y = draw_section_box("6. CONSULTANT", "٦. المستشار", y, consultant_fields)
+    
+    # Section 7: Declaration
+    decl_fields = [
+        ("Declared By", "المُقِر", company_data.get('declarationName', 'N/A')),
+        ("Designation", "المنصب", company_data.get('declarationDesignation', 'N/A')),
+        ("Agreement", "الموافقة", "Yes / نعم" if company_data.get('declarationAgreed') else "No / لا"),
+    ]
+    y = draw_section_box("7. DECLARATION", "٧. الإقرار", y, decl_fields)
+    
+    # Signature Box
+    c.setStrokeColor(primary_color)
+    c.setLineWidth(1)
+    c.rect(30, y - 80, width - 60, 70, fill=False, stroke=True)
+    c.setFillColor(primary_color)
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(40, y - 20, "Authorized Signature / التوقيع المعتمد")
+    c.setFont('Helvetica', 9)
+    c.drawString(40, y - 45, "Name / الاسم: _______________________________")
+    c.drawString(40, y - 65, "Date / التاريخ: _______________________________")
+    c.drawString(width/2 + 20, y - 45, "Signature / التوقيع: ___________________")
+    
+    # Footer for page 2
+    c.setFillColor(primary_color)
+    c.rect(0, 0, width, 35, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica', 9)
+    c.drawCentredString(width/2 - 60, 18, "BAYAN Auditing & Conformity")
+    if arabic_font_available:
+        try:
+            ar_footer = get_display(arabic_reshaper.reshape("بيان للتحقق والمطابقة"))
+            c.setFont('Amiri', 9)
+            c.drawString(width/2 + 20, 16, ar_footer)
+        except: pass
+    c.setFont('Helvetica', 8)
+    c.drawCentredString(width/2, 6, "Page 2 of 2")
+    
+    c.save()
+    return str(pdf_path)
                 c.drawRightString(x, y, bidi_text)
                 return
             except:

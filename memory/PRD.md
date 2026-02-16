@@ -300,6 +300,13 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Admin**: admin@test.com / admin123
 
 ## Latest Test Report (February 2026)
+- **Iteration 19**: Proposal Creation with Signature/Stamp Fix
+  - Create proposal with signature/stamp images: PASS
+  - ~400KB payload with base64 images: PASS
+  - Error handling (no more [object Object]): PASS
+  - Pydantic validation errors display properly: PASS
+  - **Overall: 100% tests passed (backend 3/3, frontend all scenarios)**
+
 - **Iteration 18**: Bilingual PDF Visual Verification
   - Form PDF Text Layout: PASS
   - Proposal PDF Text Layout: PASS  

@@ -504,11 +504,11 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Contact line "للاستفسارات، تواصل معنا على" now matches English equivalent
 
 ## Upcoming Tasks
-- **Phase 2: Invoice Management**: Build out the Invoice Management UI for manual tracking (Stripe rejected)
-- **Phase 4: Certificate Generation**: Auto-generate certificate PDFs with QR codes after successful audits
-- **Phase 5: Expiration Alerts Dashboard**: Dashboard widget + email/SMS reminders (90/60/30 days)
+- **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts
+- **PayTabs Payment Integration** - Ready for activation when API keys are provided
 - **Google Calendar Integration**: Pending user credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 - **Twilio SMS Integration**: Pending user credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
+- **CRITICAL REFACTOR**: Break down `server.py` monolith into modular routers
 
 ## Future Enhancements
 - Enable real email sending (SendGrid integration)

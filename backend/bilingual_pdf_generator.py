@@ -644,8 +644,8 @@ class BilingualContractPDFGenerator:
         parties_table = Table(parties_data, colWidths=[1.6*inch, 2.6*inch, 1.6*inch])
         parties_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (1, 0), (1, -1), 'Amiri'),  # Center column may contain Arabic (dynamic text)
-            ('FONTNAME', (2, 0), (2, -1), 'Amiri'),  # AR column - use Amiri font
+            ('FONTNAME', (1, 0), (1, -1), 'ArabicFont'),  # Center column may contain Arabic (dynamic text)
+            ('FONTNAME', (2, 0), (2, -1), 'ArabicFont'),  # AR column - use Amiri font
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'CENTER'),
@@ -682,8 +682,8 @@ class BilingualContractPDFGenerator:
         scope_table = Table(scope_data, colWidths=[1.6*inch, 2.6*inch, 1.6*inch])
         scope_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (1, 0), (1, -1), 'Amiri'),  # Center column may contain Arabic (dynamic text)
-            ('FONTNAME', (2, 0), (2, -1), 'Amiri'),  # AR column - use Amiri font
+            ('FONTNAME', (1, 0), (1, -1), 'ArabicFont'),  # Center column may contain Arabic (dynamic text)
+            ('FONTNAME', (2, 0), (2, -1), 'ArabicFont'),  # AR column - use Amiri font
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'CENTER'),
@@ -737,9 +737,9 @@ class BilingualContractPDFGenerator:
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a365d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),  # EN columns header
-            ('FONTNAME', (2, 0), (2, 0), 'Amiri'),  # AR column header
+            ('FONTNAME', (2, 0), (2, 0), 'ArabicFont'),  # AR column header
             ('FONTNAME', (0, 1), (1, -1), 'Helvetica'),  # EN columns data
-            ('FONTNAME', (2, 1), (2, -1), 'Amiri'),  # AR column data - use Amiri font
+            ('FONTNAME', (2, 1), (2, -1), 'ArabicFont'),  # AR column data - use Amiri font
             ('FONTSIZE', (0, 0), (-1, -1), 8),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'CENTER'),
@@ -790,9 +790,9 @@ class BilingualContractPDFGenerator:
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a365d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),  # EN and fee columns header
-            ('FONTNAME', (2, 0), (2, 0), 'Amiri'),  # AR column header
+            ('FONTNAME', (2, 0), (2, 0), 'ArabicFont'),  # AR column header
             ('FONTNAME', (0, 1), (1, -1), 'Helvetica'),  # EN and fee columns data
-            ('FONTNAME', (2, 1), (2, -1), 'Amiri'),  # AR column data - use Amiri font
+            ('FONTNAME', (2, 1), (2, -1), 'ArabicFont'),  # AR column data - use Amiri font
             ('FONTNAME', (0, -1), (1, -1), 'Helvetica-Bold'),  # Total row EN/fee
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e8f4e8')),
             ('FONTSIZE', (0, 0), (-1, -1), 8),

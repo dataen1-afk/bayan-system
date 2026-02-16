@@ -2619,6 +2619,318 @@ async def delete_contact_record(contact_id: str, credentials: HTTPAuthorizationC
     await db.contact_records.delete_one({"id": contact_id})
     return {"message": "Contact record deleted"}
 
+# ================= INVOICE & PAYMENT ROUTES =================
+
+async def generate_invoice_number():
+    """Generate unique invoice number: INV-YYYY-XXXX"""
+    year = datetime.now().year
+    # Find the last invoice number for this year
+    last_invoice = await db.invoices.find_one(
+        {"invoice_number": {"$regex": f"^INV-{year}-"}},
+        sort=[("invoice_number", -1)]
+    )
+    if last_invoice:
+        last_num = int(last_invoice['invoice_number'].split('-')[-1])
+        new_num = last_num + 1
+    else:
+        new_num = 1
+    return f"INV-{year}-{new_num:04d}"
+
+@api_router.get("/invoices")
+async def get_invoices(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    status: Optional[str] = None,
+    contract_id: Optional[str] = None
+):
+    """Get all invoices with optional filtering"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if status:
+        query["status"] = status
+    if contract_id:
+        query["contract_id"] = contract_id
+    
+    invoices = await db.invoices.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Check for overdue invoices and update status
+    today = datetime.now().strftime("%Y-%m-%d")
+    for invoice in invoices:
+        if invoice.get('status') == 'sent' and invoice.get('due_date') and invoice.get('due_date') < today:
+            await db.invoices.update_one(
+                {"id": invoice['id']},
+                {"$set": {"status": "overdue"}}
+            )
+            invoice['status'] = 'overdue'
+    
+    return invoices
+
+@api_router.get("/invoices/stats")
+async def get_invoice_stats(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get invoice statistics"""
+    await get_current_user(credentials)
+    
+    invoices = await db.invoices.find({}, {"_id": 0}).to_list(1000)
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    total_invoiced = sum(inv.get('total_amount', 0) for inv in invoices)
+    total_paid = sum(inv.get('paid_amount', 0) for inv in invoices if inv.get('status') == 'paid')
+    total_pending = sum(inv.get('total_amount', 0) for inv in invoices if inv.get('status') in ['sent', 'viewed'])
+    total_overdue = sum(inv.get('total_amount', 0) for inv in invoices if inv.get('status') == 'overdue' or (inv.get('status') == 'sent' and inv.get('due_date', '') < today))
+    
+    return {
+        "total_invoices": len(invoices),
+        "total_invoiced": total_invoiced,
+        "total_paid": total_paid,
+        "total_pending": total_pending,
+        "total_overdue": total_overdue,
+        "paid_count": len([inv for inv in invoices if inv.get('status') == 'paid']),
+        "pending_count": len([inv for inv in invoices if inv.get('status') in ['sent', 'viewed']]),
+        "overdue_count": len([inv for inv in invoices if inv.get('status') == 'overdue' or (inv.get('status') == 'sent' and inv.get('due_date', '') < today)]),
+        "draft_count": len([inv for inv in invoices if inv.get('status') == 'draft'])
+    }
+
+@api_router.post("/invoices")
+async def create_invoice(invoice_data: InvoiceCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new invoice from a contract/proposal"""
+    await get_current_user(credentials)
+    
+    # Get contract/proposal details
+    proposal = await db.proposals.find_one({"id": invoice_data.contract_id}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    # Generate invoice number
+    invoice_number = await generate_invoice_number()
+    
+    # Calculate due date based on payment terms
+    issue_date = datetime.now()
+    if invoice_data.due_date:
+        due_date = invoice_data.due_date
+    else:
+        days_map = {"due_on_receipt": 0, "net_15": 15, "net_30": 30, "net_60": 60}
+        days = days_map.get(invoice_data.payment_terms, 30)
+        due_date = (issue_date + timedelta(days=days)).strftime("%Y-%m-%d")
+    
+    # Create invoice items from proposal if not provided
+    items = invoice_data.items
+    if not items:
+        service_fees = proposal.get('service_fees', {})
+        items = []
+        
+        if service_fees.get('initial_certification', 0) > 0:
+            items.append(InvoiceItem(
+                description="Initial Certification Fee",
+                description_ar="رسوم الشهادة الأولية",
+                quantity=1,
+                unit_price=service_fees['initial_certification'],
+                total=service_fees['initial_certification']
+            ).model_dump())
+        
+        if service_fees.get('surveillance_1', 0) > 0:
+            items.append(InvoiceItem(
+                description="Surveillance Audit 1 Fee",
+                description_ar="رسوم تدقيق المراقبة 1",
+                quantity=1,
+                unit_price=service_fees['surveillance_1'],
+                total=service_fees['surveillance_1']
+            ).model_dump())
+        
+        if service_fees.get('surveillance_2', 0) > 0:
+            items.append(InvoiceItem(
+                description="Surveillance Audit 2 Fee",
+                description_ar="رسوم تدقيق المراقبة 2",
+                quantity=1,
+                unit_price=service_fees['surveillance_2'],
+                total=service_fees['surveillance_2']
+            ).model_dump())
+        
+        if service_fees.get('recertification', 0) > 0:
+            items.append(InvoiceItem(
+                description="Recertification Fee",
+                description_ar="رسوم إعادة الاعتماد",
+                quantity=1,
+                unit_price=service_fees['recertification'],
+                total=service_fees['recertification']
+            ).model_dump())
+    
+    # Calculate totals
+    subtotal = sum(item.get('total', item.get('unit_price', 0) * item.get('quantity', 1)) for item in items)
+    tax_amount = subtotal * (invoice_data.tax_rate / 100)
+    total_amount = subtotal + tax_amount
+    
+    invoice = Invoice(
+        invoice_number=invoice_number,
+        contract_id=invoice_data.contract_id,
+        organization_name=proposal.get('organization_name', ''),
+        organization_address=proposal.get('organization_address', ''),
+        contact_email=proposal.get('contact_email', ''),
+        contact_phone=proposal.get('organization_phone', ''),
+        items=items,
+        subtotal=subtotal,
+        tax_rate=invoice_data.tax_rate,
+        tax_amount=tax_amount,
+        total_amount=total_amount,
+        currency=proposal.get('service_fees', {}).get('currency', 'SAR'),
+        issue_date=issue_date.strftime("%Y-%m-%d"),
+        due_date=due_date,
+        payment_terms=invoice_data.payment_terms,
+        notes=invoice_data.notes,
+        status="draft"
+    )
+    
+    invoice_doc = invoice.model_dump()
+    invoice_doc['created_at'] = invoice_doc['created_at'].isoformat()
+    
+    await db.invoices.insert_one(invoice_doc)
+    
+    return {"message": "Invoice created", "invoice_id": invoice.id, "invoice_number": invoice_number}
+
+@api_router.get("/invoices/{invoice_id}")
+async def get_invoice(invoice_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get invoice details"""
+    await get_current_user(credentials)
+    
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    return invoice
+
+@api_router.put("/invoices/{invoice_id}")
+async def update_invoice(invoice_id: str, updates: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update invoice details"""
+    await get_current_user(credentials)
+    
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Don't allow editing paid invoices
+    if invoice.get('status') == 'paid':
+        raise HTTPException(status_code=400, detail="Cannot edit paid invoice")
+    
+    updates['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    # Recalculate totals if items changed
+    if 'items' in updates:
+        subtotal = sum(item.get('total', item.get('unit_price', 0) * item.get('quantity', 1)) for item in updates['items'])
+        tax_rate = updates.get('tax_rate', invoice.get('tax_rate', 15))
+        tax_amount = subtotal * (tax_rate / 100)
+        updates['subtotal'] = subtotal
+        updates['tax_amount'] = tax_amount
+        updates['total_amount'] = subtotal + tax_amount
+    
+    await db.invoices.update_one({"id": invoice_id}, {"$set": updates})
+    
+    return {"message": "Invoice updated"}
+
+@api_router.post("/invoices/{invoice_id}/send")
+async def send_invoice(invoice_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Mark invoice as sent (would send email in production)"""
+    await get_current_user(credentials)
+    
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    await db.invoices.update_one(
+        {"id": invoice_id},
+        {"$set": {
+            "status": "sent",
+            "sent_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Create notification
+    await create_notification(
+        notification_type="invoice_sent",
+        title="تم إرسال فاتورة",
+        message=f"تم إرسال الفاتورة {invoice.get('invoice_number')} إلى {invoice.get('organization_name')}",
+        related_id=invoice_id,
+        related_type="invoice"
+    )
+    
+    return {"message": "Invoice sent"}
+
+@api_router.post("/invoices/{invoice_id}/record-payment")
+async def record_payment(invoice_id: str, payment_data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Record a payment against an invoice"""
+    current_user = await get_current_user(credentials)
+    
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    amount = payment_data.get('amount', 0)
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Payment amount must be positive")
+    
+    # Create payment record
+    payment = PaymentRecord(
+        invoice_id=invoice_id,
+        amount=amount,
+        payment_date=payment_data.get('payment_date', datetime.now().strftime("%Y-%m-%d")),
+        payment_method=payment_data.get('payment_method', 'bank_transfer'),
+        reference=payment_data.get('reference', ''),
+        notes=payment_data.get('notes', ''),
+        recorded_by=current_user.get('email', '')
+    )
+    
+    payment_doc = payment.model_dump()
+    payment_doc['created_at'] = payment_doc['created_at'].isoformat()
+    await db.payments.insert_one(payment_doc)
+    
+    # Update invoice
+    new_paid_amount = invoice.get('paid_amount', 0) + amount
+    new_status = 'paid' if new_paid_amount >= invoice.get('total_amount', 0) else invoice.get('status')
+    
+    await db.invoices.update_one(
+        {"id": invoice_id},
+        {"$set": {
+            "paid_amount": new_paid_amount,
+            "status": new_status,
+            "paid_date": payment_data.get('payment_date') if new_status == 'paid' else None,
+            "payment_method": payment_data.get('payment_method', ''),
+            "payment_reference": payment_data.get('reference', ''),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Create notification
+    await create_notification(
+        notification_type="payment_received",
+        title="تم استلام دفعة",
+        message=f"تم استلام دفعة بقيمة {amount} {invoice.get('currency', 'SAR')} للفاتورة {invoice.get('invoice_number')}",
+        related_id=invoice_id,
+        related_type="invoice"
+    )
+    
+    return {"message": "Payment recorded", "new_status": new_status, "paid_amount": new_paid_amount}
+
+@api_router.get("/invoices/{invoice_id}/payments")
+async def get_invoice_payments(invoice_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all payments for an invoice"""
+    await get_current_user(credentials)
+    
+    payments = await db.payments.find({"invoice_id": invoice_id}, {"_id": 0}).sort("payment_date", -1).to_list(100)
+    return payments
+
+@api_router.delete("/invoices/{invoice_id}")
+async def delete_invoice(invoice_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a draft invoice"""
+    await get_current_user(credentials)
+    
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    if invoice.get('status') != 'draft':
+        raise HTTPException(status_code=400, detail="Only draft invoices can be deleted")
+    
+    await db.invoices.delete_one({"id": invoice_id})
+    return {"message": "Invoice deleted"}
+
 # ================= REPORT EXPORT ROUTES =================
 
 @api_router.get("/reports/export")

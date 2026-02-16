@@ -3363,28 +3363,28 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     draw_arabic_text(f"الحالة الحالية: {status_ar.get(status, status)}", width - 50, y, 11)
     y -= 30
     
-    # Company Seal Section (No Names/Signatures)
+    # Company Seal Section - Use official seal image
+    seal_path = ROOT_DIR / "assets" / "company-seal.png"
     c.setFillColor(colors.HexColor('#1e3a5f'))
     c.setFont('Helvetica-Bold', 10)
     c.drawCentredString(width/2, y, "Company Seal / ختم الشركة")
-    y -= 20
+    y -= 15
     
-    # Draw company stamp/seal
-    c.setStrokeColor(colors.HexColor('#1e3a5f'))
-    c.setLineWidth(2)
-    c.circle(width/2, y - 35, 45, stroke=True, fill=False)
-    c.setFont('Helvetica-Bold', 9)
-    c.setFillColor(colors.HexColor('#1e3a5f'))
-    c.drawCentredString(width/2, y - 20, "BAYAN")
-    c.drawCentredString(width/2, y - 32, "AUDITING &")
-    c.drawCentredString(width/2, y - 44, "CONFORMITY")
-    if arabic_font_available:
+    # Draw the official company seal image
+    if seal_path.exists():
         try:
-            seal_ar = arabic_reshaper.reshape("بيان للتدقيق والمطابقة")
-            c.setFont('Amiri', 8)
-            c.drawCentredString(width/2, y - 56, get_display(seal_ar))
-        except:
-            pass
+            c.drawImage(str(seal_path), width/2 - 50, y - 110, width=100, height=100, preserveAspectRatio=True, mask='auto')
+        except Exception as e:
+            print(f"Error drawing seal: {e}")
+            # Fallback to drawn seal if image fails
+            c.setStrokeColor(colors.HexColor('#1e3a5f'))
+            c.setLineWidth(2)
+            c.circle(width/2, y - 55, 45, stroke=True, fill=False)
+    else:
+        # Fallback to drawn seal if image not found
+        c.setStrokeColor(colors.HexColor('#1e3a5f'))
+        c.setLineWidth(2)
+        c.circle(width/2, y - 55, 45, stroke=True, fill=False)
     
     # Footer
     c.setFillColor(colors.HexColor('#1e3a5f'))

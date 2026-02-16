@@ -640,7 +640,7 @@ const AdminDashboard = () => {
                         </Button>
                       </div>
                     )}
-                    {form.status === 'submitted' && (
+                    {(form.status === 'submitted' || form.status === 'under_review' || form.status === 'approved' || form.status === 'agreement_signed') && form.status !== 'pending' && (
                       <div className="flex items-center gap-2">
                         <Button 
                           variant="outline" 
@@ -653,36 +653,27 @@ const AdminDashboard = () => {
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button 
-                          variant="outline" 
                           size="sm"
                           onClick={() => handleDownloadFormBilingual(form.id)}
-                          data-testid={`download-form-bilingual-${form.id}`}
-                          className="h-9 w-9 p-0"
-                          title={t('downloadBilingualPDF') || 'Download Bilingual PDF'}
+                          data-testid={`download-form-${form.id}`}
+                          className="h-9 px-3 bg-bayan-navy hover:bg-bayan-navy-light"
+                          title={t('downloadFormPDF') || 'Download Form PDF'}
                         >
-                          <FileText className="w-4 h-4" />
+                          <Download className="w-4 h-4" />
+                          <span className="ms-1">{t('download')}</span>
                         </Button>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleCreateQuotationFromForm(form)}
-                          data-testid={`create-quote-${form.id}`}
-                          className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700"
-                        >
-                          <DollarSign className="w-4 h-4" />
-                          <span className="ms-1">{t('quote')}</span>
-                        </Button>
+                        {form.status === 'submitted' && (
+                          <Button 
+                            size="sm"
+                            onClick={() => handleCreateQuotationFromForm(form)}
+                            data-testid={`create-quote-${form.id}`}
+                            className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700"
+                          >
+                            <DollarSign className="w-4 h-4" />
+                            <span className="ms-1">{t('quote')}</span>
+                          </Button>
+                        )}
                       </div>
-                    )}
-                    {form.status === 'agreement_signed' && (
-                      <Button 
-                        size="sm"
-                        onClick={() => handleDownloadContract(form.id)}
-                        data-testid={`download-contract-${form.id}`}
-                        className="h-9 px-4 bg-bayan-navy hover:bg-bayan-navy-light"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span className="ms-1">{t('download')}</span>
-                      </Button>
                     )}
                   </div>
                 </div>

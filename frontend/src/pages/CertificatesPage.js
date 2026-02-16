@@ -77,7 +77,8 @@ const CertificatesPage = () => {
   const fetchContracts = async () => {
     try {
       const response = await axios.get(`${API}/certification-agreements`, { headers });
-      setContracts(response.data.filter(c => c.status === 'signed'));
+      // Include all agreements that are submitted or have contracts generated
+      setContracts(response.data.filter(c => c.status === 'signed' || c.status === 'submitted' || c.status === 'contract_generated'));
     } catch (error) {
       console.error('Error fetching contracts:', error);
     }

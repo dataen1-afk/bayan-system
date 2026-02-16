@@ -5096,7 +5096,7 @@ async def get_certificates(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Get all certificates with optional status filtering"""
-    verify_token(credentials.credentials)
+    await get_current_user(credentials)
     
     query = {}
     if status and status != 'all':
@@ -5119,7 +5119,7 @@ async def get_certificates(
 @api_router.get("/certificates/stats")
 async def get_certificate_stats(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get certificate statistics"""
-    verify_token(credentials.credentials)
+    await get_current_user(credentials)
     
     certificates = await db.certificates.find({}, {"_id": 0}).to_list(1000)
     today = datetime.now().strftime("%Y-%m-%d")
@@ -5138,7 +5138,7 @@ async def get_certificate_stats(credentials: HTTPAuthorizationCredentials = Depe
 @api_router.post("/certificates")
 async def create_certificate(cert_data: CertificateCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Create a new certificate after successful audit"""
-    verify_token(credentials.credentials)
+    await get_current_user(credentials)
     
     # Get contract/agreement data
     agreement = await db.certification_agreements.find_one({"id": cert_data.contract_id}, {"_id": 0})
@@ -5212,7 +5212,7 @@ async def create_certificate(cert_data: CertificateCreate, credentials: HTTPAuth
 @api_router.get("/certificates/{certificate_id}")
 async def get_certificate(certificate_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get certificate details"""
-    verify_token(credentials.credentials)
+    await get_current_user(credentials)
     
     certificate = await db.certificates.find_one({"id": certificate_id}, {"_id": 0})
     if not certificate:
@@ -5223,7 +5223,7 @@ async def get_certificate(certificate_id: str, credentials: HTTPAuthorizationCre
 @api_router.put("/certificates/{certificate_id}/status")
 async def update_certificate_status(certificate_id: str, status_data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Update certificate status (suspend, withdraw, reactivate)"""
-    verify_token(credentials.credentials)
+    await get_current_user(credentials)
     
     certificate = await db.certificates.find_one({"id": certificate_id})
     if not certificate:
@@ -5247,7 +5247,7 @@ async def update_certificate_status(certificate_id: str, status_data: dict, cred
 @api_router.get("/certificates/{certificate_id}/pdf")
 async def download_certificate_pdf(certificate_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Generate and download certificate PDF"""
-    verify_token(credentials.credentials)
+    await get_current_user(credentials)
     
     certificate = await db.certificates.find_one({"id": certificate_id}, {"_id": 0})
     if not certificate:
@@ -5305,7 +5305,7 @@ async def get_expiring_items(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Get all items expiring within specified days (certificates, contracts)"""
-    verify_token(credentials.credentials)
+    await get_current_user(credentials)
     
     today = datetime.now()
     expiry_date = (today + timedelta(days=days)).strftime("%Y-%m-%d")
@@ -5385,7 +5385,7 @@ async def get_expiring_items(
 @api_router.get("/dashboard/analytics")
 async def get_dashboard_analytics(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get comprehensive analytics for the dashboard"""
-    verify_token(credentials.credentials)
+    await get_current_user(credentials)
     
     # Get all data
     forms = await db.forms.find({}, {"_id": 0}).to_list(1000)

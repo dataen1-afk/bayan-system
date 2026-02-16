@@ -142,6 +142,9 @@ class ProposalCreate(BaseModel):
     notes: str = ""
     # Validity
     validity_days: int = 30
+    # First Party (Bayan) authorized signatory
+    issuer_name: str = "Abdullah Al-Rashid"  # Default authorized signatory
+    issuer_designation: str = "General Manager"  # Default job title
 
 class Proposal(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

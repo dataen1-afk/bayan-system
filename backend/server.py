@@ -750,6 +750,53 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     )
 
 # Form routes
+@api_router.get("/defaults/signature")
+async def get_default_signature():
+    """Get the default Bayan signature as base64"""
+    signature_path = ROOT_DIR / "assets" / "bayan-signature.png"
+    if signature_path.exists():
+        import base64
+        with open(signature_path, "rb") as f:
+            data = base64.b64encode(f.read()).decode('utf-8')
+            return {"signature": f"data:image/png;base64,{data}"}
+    return {"signature": ""}
+
+@api_router.get("/defaults/stamp")
+async def get_default_stamp():
+    """Get the default Bayan stamp as base64"""
+    stamp_path = ROOT_DIR / "assets" / "bayan-stamp.png"
+    if stamp_path.exists():
+        import base64
+        with open(stamp_path, "rb") as f:
+            data = base64.b64encode(f.read()).decode('utf-8')
+            return {"stamp": f"data:image/png;base64,{data}"}
+    return {"stamp": ""}
+
+@api_router.get("/defaults/signatory")
+async def get_default_signatory():
+    """Get all default signatory details (name, title, signature, stamp)"""
+    import base64
+    result = {
+        "issuer_name": "Abdullah Al-Rashid",
+        "issuer_designation": "General Manager",
+        "issuer_signature": "",
+        "issuer_stamp": ""
+    }
+    
+    signature_path = ROOT_DIR / "assets" / "bayan-signature.png"
+    if signature_path.exists():
+        with open(signature_path, "rb") as f:
+            data = base64.b64encode(f.read()).decode('utf-8')
+            result["issuer_signature"] = f"data:image/png;base64,{data}"
+    
+    stamp_path = ROOT_DIR / "assets" / "bayan-stamp.png"
+    if stamp_path.exists():
+        with open(stamp_path, "rb") as f:
+            data = base64.b64encode(f.read()).decode('utf-8')
+            result["issuer_stamp"] = f"data:image/png;base64,{data}"
+    
+    return result
+
 @api_router.post("/forms", response_model=Form)
 async def create_form(form_data: FormCreate, current_user: dict = Depends(require_admin)):
     form = Form(

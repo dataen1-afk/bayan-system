@@ -13,12 +13,16 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 import jwt
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, A4
 from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
+from reportlab.lib.units import inch, cm
+from reportlab.lib.colors import HexColor
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import qrcode
+from io import BytesIO
+import base64
 
 # Import audit calculator
 from audit_calculator import calculate_total_audit_time

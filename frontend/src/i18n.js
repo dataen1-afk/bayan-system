@@ -1345,6 +1345,10 @@ const resources = {
       "firstPartySignatoryDetails": "أدخل بيانات المفوض بالتوقيع من بيان لهذا العرض",
       "signatoryName": "اسم الموقّع",
       "jobTitle": "المسمى الوظيفي",
+      "signature": "التوقيع",
+      "stamp": "الختم",
+      "uploadSignature": "انقر لتحميل صورة التوقيع",
+      "uploadStamp": "انقر لتحميل صورة الختم",
       "signatoryDetailsNote": "ستظهر هذه البيانات في العقد عند موافقة العميل على العرض.",
       
       // Public Proposal Page

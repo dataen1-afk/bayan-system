@@ -435,6 +435,7 @@ class ClientInfo(BaseModel):
     company_name: str
     email: EmailStr
     phone: str
+    mobile: str = ""  # Optional mobile number for easier customer communication
 
 class AuditCalculationResult(BaseModel):
     certifications: Dict[str, Any] = {}

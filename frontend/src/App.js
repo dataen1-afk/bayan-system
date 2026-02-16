@@ -126,6 +126,18 @@ function App() {
               path="/auditors" 
               element={user?.role === 'admin' ? <AuditorsPage /> : <Navigate to="/login" />} 
             />
+            <Route 
+              path="/certificates" 
+              element={user?.role === 'admin' ? <CertificatesPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/alerts" 
+              element={user?.role === 'admin' ? <ExpirationAlertsPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/analytics" 
+              element={user?.role === 'admin' ? <AnalyticsDashboardPage /> : <Navigate to="/login" />} 
+            />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
           </Routes>
         </BrowserRouter>

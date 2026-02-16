@@ -3380,32 +3380,35 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     seal_path = ROOT_DIR / "assets" / "company-seal.png"
     c.setFillColor(colors.HexColor('#1e3a5f'))
     c.setFont('Helvetica-Bold', 10)
-    c.drawCentredString(width/2, y, "Company Seal / ختم الشركة")
+    # Draw bilingual header for seal section
+    c.drawString(width/2 - 80, y, "Company Seal /")
+    draw_arabic_text("ختم الشركة", width/2 + 80, y, 10, bold=True)
     y -= 15
     
-    # Draw the official company seal image
+    # Draw the official company seal image - positioned higher to avoid footer overlap
     if seal_path.exists():
         try:
-            c.drawImage(str(seal_path), width/2 - 50, y - 110, width=100, height=100, preserveAspectRatio=True, mask='auto')
+            c.drawImage(str(seal_path), width/2 - 45, y - 95, width=90, height=90, preserveAspectRatio=True, mask='auto')
         except Exception as e:
             print(f"Error drawing seal: {e}")
-            # Fallback to drawn seal if image fails
-            c.setStrokeColor(colors.HexColor('#1e3a5f'))
-            c.setLineWidth(2)
-            c.circle(width/2, y - 55, 45, stroke=True, fill=False)
-    else:
-        # Fallback to drawn seal if image not found
-        c.setStrokeColor(colors.HexColor('#1e3a5f'))
-        c.setLineWidth(2)
-        c.circle(width/2, y - 55, 45, stroke=True, fill=False)
     
-    # Footer
+    # Footer with proper Arabic text rendering
     c.setFillColor(colors.HexColor('#1e3a5f'))
-    c.rect(0, 0, width, 40, fill=True, stroke=False)
+    c.rect(0, 0, width, 45, fill=True, stroke=False)
     c.setFillColor(colors.white)
     c.setFont('Helvetica', 9)
-    c.drawCentredString(width/2, 25, "BAYAN Auditing & Conformity | بيان للتدقيق والمطابقة")
-    c.drawCentredString(width/2, 12, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
+    # English part
+    c.drawString(width/2 - 180, 28, "BAYAN Auditing & Conformity |")
+    # Arabic part with proper reshaping
+    if arabic_font_available:
+        try:
+            footer_ar = arabic_reshaper.reshape("بيان للتدقيق والمطابقة")
+            c.setFont('Amiri', 10)
+            c.drawString(width/2 + 10, 26, get_display(footer_ar))
+        except:
+            pass
+    c.setFont('Helvetica', 9)
+    c.drawCentredString(width/2, 10, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
     
     c.save()
     return str(pdf_path)

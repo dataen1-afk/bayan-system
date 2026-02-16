@@ -168,15 +168,25 @@ const CreateProposalPage = () => {
       console.error('Error creating proposal:', error);
       let errorMessage = '';
       if (error.response?.data?.detail) {
-        errorMessage = typeof error.response.data.detail === 'string' 
-          ? error.response.data.detail 
-          : JSON.stringify(error.response.data.detail);
+        const detail = error.response.data.detail;
+        if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (Array.isArray(detail)) {
+          // Handle Pydantic validation errors
+          errorMessage = detail.map(err => `${err.loc?.join(' -> ') || 'Field'}: ${err.msg}`).join('\n');
+        } else {
+          errorMessage = JSON.stringify(detail);
+        }
+      } else if (error.response?.status) {
+        errorMessage = `Server error: ${error.response.status} ${error.response.statusText || ''}`;
       } else if (error.message) {
         errorMessage = error.message;
+      } else if (error.code) {
+        errorMessage = `Network error: ${error.code}`;
       } else {
-        errorMessage = 'Unknown error occurred';
+        errorMessage = String(error) || 'Unknown error occurred';
       }
-      alert(t('errorCreatingProposal') + ' ' + errorMessage);
+      alert(t('errorCreatingProposal') + '\n' + errorMessage);
     } finally {
       setSaving(false);
     }
@@ -201,15 +211,25 @@ const CreateProposalPage = () => {
       console.error('Error creating proposal:', error);
       let errorMessage = '';
       if (error.response?.data?.detail) {
-        errorMessage = typeof error.response.data.detail === 'string' 
-          ? error.response.data.detail 
-          : JSON.stringify(error.response.data.detail);
+        const detail = error.response.data.detail;
+        if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (Array.isArray(detail)) {
+          // Handle Pydantic validation errors
+          errorMessage = detail.map(err => `${err.loc?.join(' -> ') || 'Field'}: ${err.msg}`).join('\n');
+        } else {
+          errorMessage = JSON.stringify(detail);
+        }
+      } else if (error.response?.status) {
+        errorMessage = `Server error: ${error.response.status} ${error.response.statusText || ''}`;
       } else if (error.message) {
         errorMessage = error.message;
+      } else if (error.code) {
+        errorMessage = `Network error: ${error.code}`;
       } else {
-        errorMessage = 'Unknown error occurred';
+        errorMessage = String(error) || 'Unknown error occurred';
       }
-      alert(t('errorCreatingProposal') + ' ' + errorMessage);
+      alert(t('errorCreatingProposal') + '\n' + errorMessage);
     } finally {
       setSaving(false);
     }

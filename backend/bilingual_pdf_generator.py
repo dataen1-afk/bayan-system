@@ -698,10 +698,11 @@ class BilingualContractPDFGenerator:
         if sites:
             story.append(Spacer(1, 6))
             sites_header = f"<b>{self.TRANSLATIONS['sites_for_certification']['en']} | {process_arabic_text(self.TRANSLATIONS['sites_for_certification']['ar'])}</b>"
-            story.append(Paragraph(sites_header, self.styles['TextEN']))
+            story.append(Paragraph(sites_header, self.styles['TextMixed']))
             for i, site in enumerate(sites, 1):
                 if site.strip():
-                    story.append(Paragraph(f"  {i}. {process_dynamic_text(site)}", self.styles['TextEN']))
+                    # Use TextMixed style for sites as they may contain Arabic text
+                    story.append(Paragraph(f"  {i}. {process_dynamic_text(site)}", self.styles['TextMixed']))
         
         story.append(Spacer(1, 12))
         

@@ -428,6 +428,15 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Arabic Text Rendering** - All Arabic text renders correctly using Amiri font (no black boxes)
 - **Test Report**: `/app/test_reports/iteration_18.json` - 11/11 tests passed (100%)
 
+### Important Notes Section Fix ✅ (December 2025)
+- **Arabic Header Fix** - Fixed "ملاحظات هامة" rendering as square boxes:
+  - Split header into separate English (Helvetica-Bold) and Arabic (Amiri-Bold) parts
+  - Arabic text now properly right-aligned with correct font
+- **Notes Content Alignment** - Fixed mismatch between English and Arabic notes:
+  - Added missing 4th Arabic bullet point for contact information
+  - All 4 notes now correspond side-by-side (English left, Arabic right)
+  - Contact line "للاستفسارات، تواصل معنا على" now matches English equivalent
+
 ## Upcoming Tasks
 - **Google Calendar Integration**: Pending user credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 - **Twilio SMS Integration**: Pending user credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)

@@ -1009,6 +1009,7 @@ const resources = {
       "password": "كلمة المرور",
       "phone": "رقم الهاتف",
       "fullName": "الاسم الكامل",
+      "name": "الاسم",
       "role": "الدور",
       "signingIn": "جاري تسجيل الدخول...",
       "creatingAccount": "جاري إنشاء الحساب...",

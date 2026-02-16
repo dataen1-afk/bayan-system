@@ -5074,6 +5074,404 @@ async def generate_bilingual_report_pdf_file(data: dict, report_type: str) -> st
     c.save()
     return str(pdf_path)
 
+# ================= CERTIFICATE ENDPOINTS =================
+
+async def generate_certificate_number():
+    """Generate unique certificate number: CERT-YYYY-XXXX"""
+    year = datetime.now().year
+    last_cert = await db.certificates.find_one(
+        {"certificate_number": {"$regex": f"^CERT-{year}-"}},
+        sort=[("certificate_number", -1)]
+    )
+    if last_cert:
+        last_num = int(last_cert['certificate_number'].split('-')[-1])
+        new_num = last_num + 1
+    else:
+        new_num = 1
+    return f"CERT-{year}-{new_num:04d}"
+
+@api_router.get("/certificates")
+async def get_certificates(
+    status: str = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all certificates with optional status filtering"""
+    verify_token(credentials.credentials)
+    
+    query = {}
+    if status and status != 'all':
+        query['status'] = status
+    
+    certificates = await db.certificates.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Check for expired certificates and update status
+    today = datetime.now().strftime("%Y-%m-%d")
+    for cert in certificates:
+        if cert.get('status') == 'active' and cert.get('expiry_date') and cert.get('expiry_date') < today:
+            await db.certificates.update_one(
+                {"id": cert['id']},
+                {"$set": {"status": "expired"}}
+            )
+            cert['status'] = 'expired'
+    
+    return certificates
+
+@api_router.get("/certificates/stats")
+async def get_certificate_stats(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get certificate statistics"""
+    verify_token(credentials.credentials)
+    
+    certificates = await db.certificates.find({}, {"_id": 0}).to_list(1000)
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # Calculate expiring soon (within 90 days)
+    expiring_date = (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")
+    
+    return {
+        "total_certificates": len(certificates),
+        "active_count": len([c for c in certificates if c.get('status') == 'active']),
+        "expired_count": len([c for c in certificates if c.get('status') == 'expired' or (c.get('status') == 'active' and c.get('expiry_date', '') < today)]),
+        "suspended_count": len([c for c in certificates if c.get('status') == 'suspended']),
+        "expiring_soon_count": len([c for c in certificates if c.get('status') == 'active' and today < c.get('expiry_date', '') <= expiring_date])
+    }
+
+@api_router.post("/certificates")
+async def create_certificate(cert_data: CertificateCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new certificate after successful audit"""
+    verify_token(credentials.credentials)
+    
+    # Get contract/agreement data
+    agreement = await db.certification_agreements.find_one({"id": cert_data.contract_id}, {"_id": 0})
+    if not agreement:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    
+    # Get proposal data for organization info
+    proposal = await db.proposals.find_one({"id": agreement.get('proposal_id')}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    # Get form data for detailed info
+    form = await db.forms.find_one({"id": proposal.get('form_id')}, {"_id": 0})
+    
+    # Generate certificate number
+    cert_number = await generate_certificate_number()
+    
+    # Calculate dates
+    issue_date = datetime.now().strftime("%Y-%m-%d")
+    expiry_date = (datetime.now() + timedelta(days=365*3)).strftime("%Y-%m-%d")  # 3 years validity
+    
+    # Generate verification URL
+    base_url = os.environ.get('FRONTEND_URL', 'https://cert-workflow-3.preview.emergentagent.com')
+    verification_url = f"{base_url}/verify/{cert_number}"
+    
+    # Generate QR code
+    qr_base64 = get_qr_code_base64(verification_url)
+    
+    # Get organization names
+    org_name = form.get('responses', {}).get('organizationName', '') if form else agreement.get('organizationName', '')
+    org_name_ar = form.get('responses', {}).get('organizationNameAr', '') if form else ''
+    
+    # Get standards
+    standards = cert_data.standards if cert_data.standards else proposal.get('certification_standards', [])
+    
+    # Create certificate
+    certificate = Certificate(
+        certificate_number=cert_number,
+        contract_id=cert_data.contract_id,
+        audit_id=cert_data.audit_id,
+        organization_name=org_name,
+        organization_name_ar=org_name_ar,
+        standards=standards,
+        scope=cert_data.scope or proposal.get('scope', ''),
+        scope_ar=cert_data.scope_ar or '',
+        issue_date=issue_date,
+        expiry_date=expiry_date,
+        status="active",
+        verification_url=verification_url,
+        qr_code_data=qr_base64,
+        lead_auditor=cert_data.lead_auditor,
+        audit_team=cert_data.audit_team
+    )
+    
+    cert_doc = certificate.model_dump()
+    cert_doc['created_at'] = cert_doc['created_at'].isoformat()
+    
+    await db.certificates.insert_one(cert_doc)
+    
+    # Create notification
+    await create_notification(
+        notification_type="certificate_issued",
+        title="Certificate Issued",
+        message=f"Certificate {cert_number} has been issued for {org_name}",
+        related_id=certificate.id,
+        related_type="certificate"
+    )
+    
+    return {"message": "Certificate created", "certificate_id": certificate.id, "certificate_number": cert_number}
+
+@api_router.get("/certificates/{certificate_id}")
+async def get_certificate(certificate_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get certificate details"""
+    verify_token(credentials.credentials)
+    
+    certificate = await db.certificates.find_one({"id": certificate_id}, {"_id": 0})
+    if not certificate:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    
+    return certificate
+
+@api_router.put("/certificates/{certificate_id}/status")
+async def update_certificate_status(certificate_id: str, status_data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update certificate status (suspend, withdraw, reactivate)"""
+    verify_token(credentials.credentials)
+    
+    certificate = await db.certificates.find_one({"id": certificate_id})
+    if not certificate:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    
+    new_status = status_data.get('status')
+    valid_statuses = ['active', 'suspended', 'withdrawn', 'expired']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {valid_statuses}")
+    
+    await db.certificates.update_one(
+        {"id": certificate_id},
+        {"$set": {
+            "status": new_status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": f"Certificate status updated to {new_status}"}
+
+@api_router.get("/certificates/{certificate_id}/pdf")
+async def download_certificate_pdf(certificate_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate and download certificate PDF"""
+    verify_token(credentials.credentials)
+    
+    certificate = await db.certificates.find_one({"id": certificate_id}, {"_id": 0})
+    if not certificate:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    
+    # Generate PDF
+    CERTIFICATES_DIR = ROOT_DIR / "certificates"
+    CERTIFICATES_DIR.mkdir(exist_ok=True)
+    
+    pdf_filename = f"certificate_{certificate['certificate_number'].replace('-', '_')}.pdf"
+    pdf_path = CERTIFICATES_DIR / pdf_filename
+    
+    generate_certificate_pdf(certificate, str(pdf_path))
+    
+    return FileResponse(
+        str(pdf_path),
+        media_type="application/pdf",
+        filename=pdf_filename
+    )
+
+@api_router.get("/public/verify/{certificate_number}")
+async def verify_certificate_public(certificate_number: str):
+    """Public endpoint to verify a certificate via QR code scan"""
+    certificate = await db.certificates.find_one(
+        {"certificate_number": certificate_number},
+        {"_id": 0, "qr_code_data": 0}  # Exclude QR code data for public
+    )
+    
+    if not certificate:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    
+    # Check if expired
+    today = datetime.now().strftime("%Y-%m-%d")
+    if certificate.get('expiry_date') and certificate.get('expiry_date') < today:
+        certificate['status'] = 'expired'
+    
+    return {
+        "valid": certificate.get('status') == 'active',
+        "certificate_number": certificate.get('certificate_number'),
+        "organization_name": certificate.get('organization_name'),
+        "organization_name_ar": certificate.get('organization_name_ar'),
+        "standards": certificate.get('standards', []),
+        "scope": certificate.get('scope'),
+        "issue_date": certificate.get('issue_date'),
+        "expiry_date": certificate.get('expiry_date'),
+        "status": certificate.get('status'),
+        "lead_auditor": certificate.get('lead_auditor')
+    }
+
+# ================= EXPIRATION ALERTS ENDPOINTS =================
+
+@api_router.get("/alerts/expiring")
+async def get_expiring_items(
+    days: int = 90,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all items expiring within specified days (certificates, contracts)"""
+    verify_token(credentials.credentials)
+    
+    today = datetime.now()
+    expiry_date = (today + timedelta(days=days)).strftime("%Y-%m-%d")
+    today_str = today.strftime("%Y-%m-%d")
+    
+    # Get expiring certificates
+    expiring_certs = await db.certificates.find({
+        "status": "active",
+        "expiry_date": {"$gte": today_str, "$lte": expiry_date}
+    }, {"_id": 0}).to_list(100)
+    
+    # Categorize by urgency
+    alerts = {
+        "critical": [],  # Expiring within 30 days
+        "warning": [],   # Expiring within 60 days
+        "info": []       # Expiring within 90 days
+    }
+    
+    for cert in expiring_certs:
+        exp_date = datetime.strptime(cert['expiry_date'], "%Y-%m-%d")
+        days_until = (exp_date - today).days
+        
+        alert_item = {
+            "type": "certificate",
+            "id": cert['id'],
+            "reference": cert['certificate_number'],
+            "organization": cert['organization_name'],
+            "expiry_date": cert['expiry_date'],
+            "days_until_expiry": days_until,
+            "standards": cert.get('standards', [])
+        }
+        
+        if days_until <= 30:
+            alerts["critical"].append(alert_item)
+        elif days_until <= 60:
+            alerts["warning"].append(alert_item)
+        else:
+            alerts["info"].append(alert_item)
+    
+    # Get upcoming surveillance audits
+    upcoming_audits = await db.audit_schedules.find({
+        "status": {"$ne": "completed"},
+        "scheduled_date": {"$gte": today_str, "$lte": expiry_date}
+    }, {"_id": 0}).to_list(100)
+    
+    for audit in upcoming_audits:
+        audit_date = datetime.strptime(audit['scheduled_date'], "%Y-%m-%d")
+        days_until = (audit_date - today).days
+        
+        alert_item = {
+            "type": "audit",
+            "id": audit['id'],
+            "reference": audit.get('audit_type', 'Audit'),
+            "organization": audit.get('organization_name', ''),
+            "expiry_date": audit['scheduled_date'],
+            "days_until_expiry": days_until,
+            "audit_type": audit.get('audit_type', '')
+        }
+        
+        if days_until <= 7:
+            alerts["critical"].append(alert_item)
+        elif days_until <= 14:
+            alerts["warning"].append(alert_item)
+        else:
+            alerts["info"].append(alert_item)
+    
+    return {
+        "summary": {
+            "total_alerts": len(alerts["critical"]) + len(alerts["warning"]) + len(alerts["info"]),
+            "critical_count": len(alerts["critical"]),
+            "warning_count": len(alerts["warning"]),
+            "info_count": len(alerts["info"])
+        },
+        "alerts": alerts
+    }
+
+@api_router.get("/dashboard/analytics")
+async def get_dashboard_analytics(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get comprehensive analytics for the dashboard"""
+    verify_token(credentials.credentials)
+    
+    # Get all data
+    forms = await db.forms.find({}, {"_id": 0}).to_list(1000)
+    proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
+    agreements = await db.certification_agreements.find({}, {"_id": 0}).to_list(1000)
+    invoices = await db.invoices.find({}, {"_id": 0}).to_list(1000)
+    certificates = await db.certificates.find({}, {"_id": 0}).to_list(1000)
+    audits = await db.audit_schedules.find({}, {"_id": 0}).to_list(1000)
+    
+    # Calculate conversion rates
+    total_forms = len(forms)
+    submitted_forms = len([f for f in forms if f.get('status') in ['submitted', 'proposal_sent', 'proposal_accepted', 'agreement_signed']])
+    proposals_sent = len(proposals)
+    proposals_accepted = len([p for p in proposals if p.get('status') == 'agreement_signed'])
+    contracts_signed = len(agreements)
+    
+    form_to_proposal_rate = (proposals_sent / total_forms * 100) if total_forms > 0 else 0
+    proposal_to_contract_rate = (contracts_signed / proposals_sent * 100) if proposals_sent > 0 else 0
+    overall_conversion_rate = (contracts_signed / total_forms * 100) if total_forms > 0 else 0
+    
+    # Revenue analytics
+    total_quoted = sum(p.get('total_fees', 0) for p in proposals)
+    total_accepted = sum(p.get('total_fees', 0) for p in proposals if p.get('status') == 'agreement_signed')
+    total_invoiced = sum(i.get('total_amount', 0) for i in invoices)
+    total_paid = sum(i.get('paid_amount', 0) for i in invoices if i.get('status') == 'paid')
+    
+    # Monthly data (last 6 months)
+    monthly_data = []
+    for i in range(5, -1, -1):
+        month_date = datetime.now() - timedelta(days=30*i)
+        month_str = month_date.strftime("%Y-%m")
+        
+        month_forms = len([f for f in forms if f.get('created_at', '')[:7] == month_str])
+        month_proposals = len([p for p in proposals if p.get('created_at', '')[:7] == month_str])
+        month_contracts = len([a for a in agreements if a.get('created_at', '')[:7] == month_str])
+        month_revenue = sum(p.get('total_fees', 0) for p in proposals if p.get('created_at', '')[:7] == month_str and p.get('status') == 'agreement_signed')
+        
+        monthly_data.append({
+            "month": month_date.strftime("%b %Y"),
+            "forms": month_forms,
+            "proposals": month_proposals,
+            "contracts": month_contracts,
+            "revenue": month_revenue
+        })
+    
+    # Standards breakdown
+    standards_count = {}
+    for p in proposals:
+        for std in p.get('certification_standards', []):
+            standards_count[std] = standards_count.get(std, 0) + 1
+    
+    # Audit status
+    completed_audits = len([a for a in audits if a.get('status') == 'completed'])
+    scheduled_audits = len([a for a in audits if a.get('status') == 'scheduled'])
+    pending_audits = len([a for a in audits if a.get('status') == 'pending'])
+    
+    return {
+        "overview": {
+            "total_forms": total_forms,
+            "total_proposals": proposals_sent,
+            "total_contracts": contracts_signed,
+            "total_certificates": len(certificates),
+            "active_certificates": len([c for c in certificates if c.get('status') == 'active'])
+        },
+        "conversion_rates": {
+            "form_to_proposal": round(form_to_proposal_rate, 1),
+            "proposal_to_contract": round(proposal_to_contract_rate, 1),
+            "overall": round(overall_conversion_rate, 1)
+        },
+        "revenue": {
+            "total_quoted": total_quoted,
+            "total_accepted": total_accepted,
+            "total_invoiced": total_invoiced,
+            "total_collected": total_paid,
+            "collection_rate": round((total_paid / total_invoiced * 100) if total_invoiced > 0 else 0, 1)
+        },
+        "monthly_trends": monthly_data,
+        "standards_breakdown": standards_count,
+        "audits": {
+            "total": len(audits),
+            "completed": completed_audits,
+            "scheduled": scheduled_audits,
+            "pending": pending_audits
+        }
+    }
+
 @app.on_event("startup")
 async def startup_event():
     """Run startup tasks"""

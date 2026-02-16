@@ -2046,14 +2046,22 @@ async def request_proposal_modification(access_token: str, request: Modification
 
 @api_router.get("/public/track/{tracking_id}")
 async def track_order(tracking_id: str):
-    """Public endpoint to track order status by tracking ID (form ID or access token)"""
+    """Public endpoint to track order status by tracking ID (form ID, access token, or proposal access token)"""
     
     # Try to find by form ID first
     form = await db.application_forms.find_one({"id": tracking_id}, {"_id": 0})
     
-    # If not found, try by access token
+    # If not found, try by form access token
     if not form:
         form = await db.application_forms.find_one({"access_token": tracking_id}, {"_id": 0})
+    
+    # If still not found, try by proposal access token
+    proposal_by_token = None
+    if not form:
+        proposal_by_token = await db.proposals.find_one({"access_token": tracking_id}, {"_id": 0})
+        if proposal_by_token:
+            # Get the form linked to this proposal
+            form = await db.application_forms.find_one({"id": proposal_by_token['application_form_id']}, {"_id": 0})
     
     if not form:
         raise HTTPException(status_code=404, detail="Order not found")

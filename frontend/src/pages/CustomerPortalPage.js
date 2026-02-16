@@ -174,58 +174,73 @@ const CustomerPortalPage = () => {
         {/* Order Status Results */}
         {orderData && (
           <div className="space-y-6" data-testid="tracking-results">
-            {/* Order Summary Card */}
-            <Card className="border-slate-200 shadow-lg">
-              <CardHeader className={`bg-gradient-to-r from-bayan-navy to-bayan-navy-light text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Building2 className="w-6 h-6" />
-                  {orderData.company_name}
-                </CardTitle>
-                <CardDescription className="text-white/80">
-                  {t('trackingId')}: <span className="font-mono font-semibold">{orderData.tracking_id}</span>
-                </CardDescription>
+            {/* Order Summary Card - Improved Layout */}
+            <Card className="border-slate-200 shadow-lg overflow-hidden">
+              {/* Header with company name */}
+              <CardHeader className={`bg-gradient-to-r from-bayan-navy to-bayan-navy-light text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Building2 className="w-6 h-6" />
+                    {orderData.company_name}
+                  </CardTitle>
+                  <span className="text-sm text-white/70 font-mono" dir="ltr">
+                    {orderData.tracking_id}
+                  </span>
+                </div>
               </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Contact Info */}
-                  <div className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <h4 className="font-semibold text-slate-700 mb-2">{t('contactInfo')}</h4>
-                    <div className={`flex items-center gap-2 text-slate-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Mail className="w-4 h-4 text-slate-400" />
-                      <span>{orderData.contact_email || '-'}</span>
-                    </div>
-                    <div className={`flex items-center gap-2 text-slate-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Phone className="w-4 h-4 text-slate-400" />
-                      <span dir="ltr">{orderData.contact_phone || '-'}</span>
+              
+              {/* Info Grid - Clean 3 Column Layout */}
+              <CardContent className="p-0">
+                <div className={`grid grid-cols-3 divide-x ${isRTL ? 'divide-x-reverse' : ''}`}>
+                  {/* Contact Info Column */}
+                  <div className={`p-5 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                      {t('contactInfo')}
+                    </h4>
+                    <div className="space-y-2">
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Mail className="w-4 h-4 text-bayan-navy/60 flex-shrink-0" />
+                        <span className="text-slate-700 text-sm truncate">{orderData.contact_email || '-'}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Phone className="w-4 h-4 text-bayan-navy/60 flex-shrink-0" />
+                        <span className="text-slate-700 text-sm" dir="ltr">{orderData.contact_phone || '-'}</span>
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Application Date */}
-                  <div className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <h4 className="font-semibold text-slate-700 mb-2">{t('applicationDate')}</h4>
-                    <div className={`flex items-center gap-2 text-slate-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Calendar className="w-4 h-4 text-slate-400" />
-                      <span>{formatDate(orderData.created_at)}</span>
+                  {/* Application Date Column */}
+                  <div className={`p-5 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                      {t('applicationDate')}
+                    </h4>
+                    <div className="space-y-2">
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Calendar className="w-4 h-4 text-bayan-navy/60 flex-shrink-0" />
+                        <span className="text-slate-700 text-sm">{formatDate(orderData.created_at)}</span>
+                      </div>
+                      {orderData.submitted_at && (
+                        <p className="text-xs text-slate-500">
+                          {t('submittedOn')}: {formatDate(orderData.submitted_at)}
+                        </p>
+                      )}
                     </div>
-                    {orderData.submitted_at && (
-                      <p className="text-sm text-slate-500">
-                        {t('submittedOn')}: {formatDate(orderData.submitted_at)}
-                      </p>
-                    )}
                   </div>
                   
-                  {/* Standards */}
-                  <div className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <h4 className="font-semibold text-slate-700 mb-2">{t('certificationStandards')}</h4>
-                    <div className={`flex flex-wrap gap-2 ${isRTL ? 'justify-end' : ''}`}>
+                  {/* Standards Column */}
+                  <div className={`p-5 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                      {t('certificationStandards')}
+                    </h4>
+                    <div className={`flex flex-wrap gap-1.5 ${isRTL ? 'justify-end' : ''}`}>
                       {orderData.standards?.length > 0 ? (
                         orderData.standards.map((std) => (
-                          <span key={std} className="px-3 py-1 bg-bayan-navy/10 text-bayan-navy text-sm font-medium rounded-full">
+                          <span key={std} className="px-2.5 py-1 bg-bayan-navy/10 text-bayan-navy text-xs font-semibold rounded-md">
                             {std}
                           </span>
                         ))
                       ) : (
-                        <span className="text-slate-400">{t('notSpecified')}</span>
+                        <span className="text-slate-400 text-sm">{t('notSpecified')}</span>
                       )}
                     </div>
                   </div>

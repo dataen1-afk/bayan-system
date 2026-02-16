@@ -1166,8 +1166,8 @@ async def create_proposal(proposal_data: ProposalCreate, current_user: dict = De
         total_amount=total,
         notes=proposal_data.notes,
         validity_days=proposal_data.validity_days,
-        issuer_name=current_user.get('name', 'Admin'),
-        issuer_designation="Certification Manager",
+        issuer_name=proposal_data.issuer_name,  # Use value from form
+        issuer_designation=proposal_data.issuer_designation,  # Use value from form
         issued_date=datetime.now(timezone.utc)
     )
     

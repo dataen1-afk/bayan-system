@@ -3883,93 +3883,118 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = y - 22 - terms_box_height - 10
     
     # ============ SIGNATURE & SEAL SECTION (at the end of page 2) ============
-    sig_box_height = 120
-    sig_box_width = width/2 - 50
+    # Two parties: First Party (Bayan) and Second Party (Client)
+    sig_box_height = 130
+    sig_box_width = width/2 - 45
     
-    # Large signature box (left)
+    # ===== FIRST PARTY BOX (Left - Bayan) =====
     c.setFillColor(light_bg)
     c.rect(30, y - sig_box_height, sig_box_width, sig_box_height - 10, fill=True, stroke=False)
-    c.setStrokeColor(primary_color)
+    c.setStrokeColor(section_color)
     c.setLineWidth(1.5)
     c.rect(30, y - sig_box_height, sig_box_width, sig_box_height - 10, fill=False, stroke=True)
     
-    # Header - English left, Arabic right
-    c.setFillColor(primary_color)
-    c.setFont('Helvetica-Bold', 10)
-    c.drawString(45, y - 22, "AUTHORIZED SIGNATURE")
+    # Header - First Party
+    c.setFillColor(section_color)
+    c.setFont('Helvetica-Bold', 9)
+    c.drawString(40, y - 20, "FIRST PARTY /")
     if arabic_font_available:
         try:
-            ar_sig = get_display(arabic_reshaper.reshape("التوقيع المعتمد"))
-            c.setFont('Amiri-Bold', 10)
-            c.drawRightString(30 + sig_box_width - 15, y - 22, ar_sig)
+            ar_first = get_display(arabic_reshaper.reshape("الطرف الأول"))
+            c.setFont('Amiri-Bold', 9)
+            c.drawRightString(30 + sig_box_width - 10, y - 20, ar_first)
         except: pass
     
-    # Layout: English label (left) | Line (middle) | Arabic label (right)
     c.setFillColor(colors.black)
-    left_edge = 45
-    right_edge = 30 + sig_box_width - 15
-    line_start = 95
-    line_end = right_edge - 50
-    
-    # Name field: Name: _____________ :الاسم
-    c.setFont('Helvetica', 9)
-    c.drawString(left_edge, y - 48, "Name:")
-    c.line(line_start, y - 50, line_end, y - 50)
+    c.setFont('Helvetica-Bold', 8)
+    c.drawCentredString(30 + sig_box_width/2, y - 35, "BAYAN Auditing & Conformity")
     if arabic_font_available:
         try:
-            ar_name = get_display(arabic_reshaper.reshape("الاسم:"))
-            c.setFont('Amiri', 10)
-            c.drawRightString(right_edge, y - 48, ar_name)
+            ar_bayan = get_display(arabic_reshaper.reshape("بيان للتحقق والمطابقة"))
+            c.setFont('Amiri-Bold', 8)
+            c.drawCentredString(30 + sig_box_width/2, y - 48, ar_bayan)
         except: pass
     
-    # Date field: Date: _____________ :التاريخ
-    c.setFont('Helvetica', 9)
-    c.drawString(left_edge, y - 70, "Date:")
-    c.line(line_start, y - 72, line_end, y - 72)
-    if arabic_font_available:
-        try:
-            ar_date = get_display(arabic_reshaper.reshape("التاريخ:"))
-            c.setFont('Amiri', 10)
-            c.drawRightString(right_edge, y - 70, ar_date)
-        except: pass
-    
-    # Signature field: Signature: _____________ :التوقيع
-    c.setFont('Helvetica', 9)
-    c.drawString(left_edge, y - 92, "Signature:")
-    c.line(line_start + 15, y - 94, line_end, y - 94)
-    if arabic_font_available:
-        try:
-            ar_signature = get_display(arabic_reshaper.reshape("التوقيع:"))
-            c.setFont('Amiri', 10)
-            c.drawRightString(right_edge, y - 92, ar_signature)
-        except: pass
-    
-    # Company Seal Box (right)
-    seal_box_width = width/2 - 50
-    c.setFillColor(light_bg)
-    c.rect(width/2 + 10, y - sig_box_height, seal_box_width, sig_box_height - 10, fill=True, stroke=False)
-    c.setStrokeColor(primary_color)
-    c.rect(width/2 + 10, y - sig_box_height, seal_box_width, sig_box_height - 10, fill=False, stroke=True)
-    
-    c.setFillColor(primary_color)
-    c.setFont('Helvetica-Bold', 10)
-    c.drawString(width/2 + 25, y - 22, "COMPANY SEAL /")
-    if arabic_font_available:
-        try:
-            ar_seal = get_display(arabic_reshaper.reshape("ختم الشركة"))
-            c.setFont('Amiri-Bold', 10)
-            c.drawRightString(width - 45, y - 22, ar_seal)
-        except: pass
-    
-    # Draw company seal image - larger and centered
+    # First party stamp (Bayan seal)
     seal_path = ROOT_DIR / "assets" / "company-seal.png"
-    seal_size = 85  # Increased from 75
-    seal_x = width/2 + 10 + (seal_box_width - seal_size) / 2  # Center in box
-    seal_y = y - sig_box_height + 12  # Position from bottom of box
+    seal_size = 65
+    seal_x = 30 + (sig_box_width - seal_size) / 2
+    seal_y = y - sig_box_height + 15
     if seal_path.exists():
         try:
             c.drawImage(str(seal_path), seal_x, seal_y, width=seal_size, height=seal_size, preserveAspectRatio=True, mask='auto')
         except: pass
+    
+    # ===== SECOND PARTY BOX (Right - Client) =====
+    c.setFillColor(light_bg)
+    c.rect(width/2 + 15, y - sig_box_height, sig_box_width, sig_box_height - 10, fill=True, stroke=False)
+    c.setStrokeColor(section_color)
+    c.rect(width/2 + 15, y - sig_box_height, sig_box_width, sig_box_height - 10, fill=False, stroke=True)
+    
+    # Header - Second Party
+    c.setFillColor(section_color)
+    c.setFont('Helvetica-Bold', 9)
+    c.drawString(width/2 + 25, y - 20, "SECOND PARTY /")
+    if arabic_font_available:
+        try:
+            ar_second = get_display(arabic_reshaper.reshape("الطرف الثاني"))
+            c.setFont('Amiri-Bold', 9)
+            c.drawRightString(width - 40, y - 20, ar_second)
+        except: pass
+    
+    # Client signature fields
+    c.setFillColor(colors.black)
+    left_edge = width/2 + 25
+    right_edge = width - 40
+    line_start = width/2 + 70
+    line_end = right_edge - 45
+    
+    # Name field
+    c.setFont('Helvetica', 8)
+    c.drawString(left_edge, y - 42, "Name:")
+    c.line(line_start, y - 44, line_end, y - 44)
+    if arabic_font_available:
+        try:
+            ar_name = get_display(arabic_reshaper.reshape("الاسم:"))
+            c.setFont('Amiri', 9)
+            c.drawRightString(right_edge, y - 42, ar_name)
+        except: pass
+    
+    # Date field
+    c.setFont('Helvetica', 8)
+    c.drawString(left_edge, y - 58, "Date:")
+    c.line(line_start, y - 60, line_end, y - 60)
+    if arabic_font_available:
+        try:
+            ar_date = get_display(arabic_reshaper.reshape("التاريخ:"))
+            c.setFont('Amiri', 9)
+            c.drawRightString(right_edge, y - 58, ar_date)
+        except: pass
+    
+    # Signature field
+    c.setFont('Helvetica', 8)
+    c.drawString(left_edge, y - 74, "Signature:")
+    c.line(line_start + 10, y - 76, line_end, y - 76)
+    if arabic_font_available:
+        try:
+            ar_sig = get_display(arabic_reshaper.reshape("التوقيع:"))
+            c.setFont('Amiri', 9)
+            c.drawRightString(right_edge, y - 74, ar_sig)
+        except: pass
+    
+    # Stamp field
+    c.setFont('Helvetica', 8)
+    c.drawString(left_edge, y - 90, "Stamp:")
+    if arabic_font_available:
+        try:
+            ar_stamp = get_display(arabic_reshaper.reshape("الختم:"))
+            c.setFont('Amiri', 9)
+            c.drawRightString(right_edge, y - 90, ar_stamp)
+        except: pass
+    # Empty box for client stamp
+    c.setStrokeColor(colors.HexColor('#d1d5db'))
+    c.setLineWidth(0.5)
+    c.rect(line_start + 10, y - sig_box_height + 15, line_end - line_start - 10, 30, fill=False, stroke=True)
     
     # Footer for page 2
     c.setFillColor(primary_color)

@@ -719,6 +719,9 @@ class BilingualContractPDFGenerator:
         story.append(duration_table)
         story.append(Spacer(1, 12))
         
+        # Page break before Section 4 to keep it at top of its page
+        story.append(PageBreak())
+        
         # Section 4: Service Fees
         story.extend(self._bilingual_section_header('service_fees'))
         

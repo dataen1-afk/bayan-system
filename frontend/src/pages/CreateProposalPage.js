@@ -54,7 +54,9 @@ const CreateProposalPage = () => {
     validity_days: 30,
     // First Party (Bayan) authorized signatory
     issuer_name: 'Abdullah Al-Rashid',
-    issuer_designation: 'General Manager'
+    issuer_designation: 'General Manager',
+    issuer_signature: '',
+    issuer_stamp: ''
   });
 
   useEffect(() => {

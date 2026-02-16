@@ -416,7 +416,16 @@ class BilingualContractPDFGenerator:
         return name_translations.get(english_name, english_name)
     
     def _get_arabic_title(self, english_title):
-        """Get Arabic translation of job title"""
+        """Get Arabic translation of job title - returns as-is if already Arabic"""
+        if not english_title:
+            return english_title
+            
+        # Check if the title is already Arabic
+        has_arabic = any('\u0600' <= char <= '\u06FF' or '\u0750' <= char <= '\u077F' for char in str(english_title))
+        if has_arabic:
+            # Return as-is - don't double process Arabic text
+            return english_title
+        
         title_translations = {
             'General Manager': 'المدير العام',
             'CEO': 'الرئيس التنفيذي',

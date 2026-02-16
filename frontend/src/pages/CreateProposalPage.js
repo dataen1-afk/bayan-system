@@ -62,8 +62,25 @@ const CreateProposalPage = () => {
   useEffect(() => {
     if (formId) {
       loadApplicationForm();
+      loadDefaultSignatory();
     }
   }, [formId]);
+
+  const loadDefaultSignatory = async () => {
+    try {
+      const response = await axios.get(`${API}/defaults/signatory`);
+      const defaults = response.data;
+      setFormData(prev => ({
+        ...prev,
+        issuer_name: defaults.issuer_name || prev.issuer_name,
+        issuer_designation: defaults.issuer_designation || prev.issuer_designation,
+        issuer_signature: defaults.issuer_signature || prev.issuer_signature,
+        issuer_stamp: defaults.issuer_stamp || prev.issuer_stamp
+      }));
+    } catch (error) {
+      console.error('Error loading default signatory:', error);
+    }
+  };
 
   const loadApplicationForm = async () => {
     try {

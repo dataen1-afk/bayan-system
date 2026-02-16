@@ -3180,7 +3180,7 @@ async def generate_bilingual_proposal_pdf(proposal_id: str, credentials: HTTPAut
     )
 
 async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
-    """Generate a bilingual proposal PDF"""
+    """Generate a bilingual proposal PDF with company stamp (no signature - not yet approved)"""
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
     from reportlab.pdfbase import pdfmetrics
@@ -3189,6 +3189,8 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     from reportlab.lib import colors
     import arabic_reshaper
     from bidi.algorithm import get_display
+    import base64
+    import io
     
     # Register Arabic fonts
     font_path = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
@@ -3205,11 +3207,14 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
             print(f"Error registering Arabic font: {e}")
             arabic_font_available = False
     
+    # Logo path
+    logo_path = ROOT_DIR / "assets" / "bayan-logo.png"
+    
     pdf_path = CONTRACTS_DIR / f"proposal_{proposal['id']}_bilingual.pdf"
     c = canvas.Canvas(str(pdf_path), pagesize=A4)
     width, height = A4
     
-    def draw_arabic_text(text, x, y, font_size=12, bold=False):
+    def draw_arabic_text(text, x, y, font_size=11, bold=False):
         """Draw Arabic text with proper reshaping"""
         if arabic_font_available:
             try:
@@ -3221,97 +3226,178 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
                 return
             except Exception as e:
                 print(f"Error drawing Arabic text: {e}")
-        # Fallback - just draw the text as-is (won't look right but won't be black boxes)
-        c.setFont('Helvetica', font_size)
+        c.setFont('Helvetica-Bold' if bold else 'Helvetica', font_size)
         c.drawRightString(x, y, str(text))
     
-    # Header
+    def draw_section_header(en_text, ar_text, y_pos):
+        """Draw bilingual section header"""
+        c.setFillColor(colors.HexColor('#1e3a5f'))
+        c.setFont('Helvetica-Bold', 12)
+        c.drawString(50, y_pos, en_text)
+        draw_arabic_text(ar_text, width - 50, y_pos, 12, bold=True)
+        c.setStrokeColor(colors.HexColor('#1e3a5f'))
+        c.setLineWidth(1)
+        c.line(50, y_pos - 5, width - 50, y_pos - 5)
+        return y_pos - 25
+    
+    def draw_field(label_en, label_ar, value, y_pos):
+        """Draw bilingual field with value"""
+        c.setFillColor(colors.black)
+        c.setFont('Helvetica-Bold', 10)
+        c.drawString(50, y_pos, f"{label_en}:")
+        c.setFont('Helvetica', 10)
+        c.drawString(180, y_pos, str(value) if value else 'N/A')
+        draw_arabic_text(f":{label_ar}", width - 50, y_pos, 10, bold=True)
+        return y_pos - 18
+    
+    # Header with logo
     c.setFillColor(colors.HexColor('#1e3a5f'))
     c.rect(0, height - 100, width, 100, fill=True, stroke=False)
     
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 24)
-    c.drawCentredString(width/2, height - 50, "PRICE QUOTATION")
+    # Draw logo if exists
+    if logo_path.exists():
+        try:
+            c.drawImage(str(logo_path), 30, height - 90, width=70, height=70, preserveAspectRatio=True, mask='auto')
+        except:
+            pass
     
-    # Arabic title using the font
+    # Title
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 22)
+    c.drawCentredString(width/2, height - 45, "PRICE QUOTATION")
+    
+    # Arabic title
     if arabic_font_available:
         try:
             reshaped = arabic_reshaper.reshape("عرض السعر")
             bidi_text = get_display(reshaped)
-            c.setFont('Amiri', 20)
-            c.drawCentredString(width/2, height - 75, bidi_text)
+            c.setFont('Amiri-Bold' if font_bold_path.exists() else 'Amiri', 18)
+            c.drawCentredString(width/2, height - 70, bidi_text)
         except:
             pass
     
-    y = height - 140
+    # Reference info
+    c.setFont('Helvetica', 9)
+    c.drawRightString(width - 30, height - 30, f"Ref: {proposal.get('id', 'N/A')[:8].upper()}")
+    c.drawRightString(width - 30, height - 45, f"Date: {proposal.get('issued_date', 'N/A')[:10] if proposal.get('issued_date') else 'N/A'}")
     
-    # English Section
-    c.setFillColor(colors.black)
-    c.setFont('Helvetica-Bold', 14)
-    c.drawString(50, y, "ENGLISH")
-    y -= 30
+    y = height - 130
     
-    c.setFont('Helvetica', 11)
-    c.drawString(50, y, f"Organization: {proposal.get('organization_name', 'N/A')}")
-    y -= 20
-    c.drawString(50, y, f"Contact: {proposal.get('contact_person', proposal.get('contact_name', 'N/A'))} - {proposal.get('contact_email', 'N/A')}")
-    y -= 20
-    c.drawString(50, y, f"Standards: {', '.join(proposal.get('standards', []))}")
-    y -= 20
-    c.drawString(50, y, f"Total Amount: SAR {proposal.get('total_amount', 0):,.2f}")
-    y -= 20
-    c.drawString(50, y, f"Status: {proposal.get('status', 'N/A').replace('_', ' ').title()}")
-    y -= 20
-    c.drawString(50, y, f"Valid Until: {proposal.get('valid_until', 'N/A')}")
+    # Section 1: Client Information
+    y = draw_section_header("1. CLIENT INFORMATION", "١. معلومات العميل", y)
+    y = draw_field("Organization", "المنظمة", proposal.get('organization_name', 'N/A'), y)
+    y = draw_field("Contact Person", "جهة الاتصال", proposal.get('contact_person', proposal.get('contact_name', 'N/A')), y)
+    y = draw_field("Email", "البريد الإلكتروني", proposal.get('contact_email', 'N/A'), y)
+    y = draw_field("Phone", "الهاتف", proposal.get('contact_phone', 'N/A'), y)
+    y -= 10
     
-    y -= 50
+    # Section 2: Certification Scope
+    y = draw_section_header("2. CERTIFICATION SCOPE", "٢. نطاق الاعتماد", y)
+    standards = proposal.get('standards', [])
+    standards_text = ', '.join(standards) if standards else 'N/A'
+    y = draw_field("Standards", "المعايير", standards_text, y)
+    y = draw_field("Scope", "النطاق", proposal.get('scope', 'N/A'), y)
+    y -= 10
     
-    # Divider
+    # Section 3: Audit Duration
+    y = draw_section_header("3. AUDIT DURATION (Days)", "٣. مدة التدقيق (أيام)", y)
+    audit_duration = proposal.get('audit_duration', {})
+    y = draw_field("Stage 1", "المرحلة الأولى", audit_duration.get('stage_1', 'N/A'), y)
+    y = draw_field("Stage 2", "المرحلة الثانية", audit_duration.get('stage_2', 'N/A'), y)
+    y = draw_field("Surveillance 1", "تدقيق المراقبة 1", audit_duration.get('surveillance_1', 'N/A'), y)
+    y = draw_field("Surveillance 2", "تدقيق المراقبة 2", audit_duration.get('surveillance_2', 'N/A'), y)
+    y = draw_field("Recertification", "إعادة الاعتماد", audit_duration.get('recertification', 'N/A'), y)
+    y -= 10
+    
+    # Section 4: Service Fees
+    y = draw_section_header("4. SERVICE FEES", "٤. رسوم الخدمة", y)
+    service_fees = proposal.get('service_fees', {})
+    currency = service_fees.get('currency', 'SAR')
+    
+    def format_fee(amount):
+        return f"{currency} {amount:,.2f}" if amount else f"{currency} 0.00"
+    
+    y = draw_field("Initial Certification", "الاعتماد الأولي", format_fee(service_fees.get('initial_certification', 0)), y)
+    y = draw_field("Surveillance 1 Fee", "رسوم المراقبة 1", format_fee(service_fees.get('surveillance_1', 0)), y)
+    y = draw_field("Surveillance 2 Fee", "رسوم المراقبة 2", format_fee(service_fees.get('surveillance_2', 0)), y)
+    y = draw_field("Recertification Fee", "رسوم إعادة الاعتماد", format_fee(service_fees.get('recertification', 0)), y)
+    y -= 5
+    
+    # Total Amount (highlighted)
+    c.setFillColor(colors.HexColor('#e8f4e8'))
+    c.rect(50, y - 5, width - 100, 25, fill=True, stroke=False)
     c.setStrokeColor(colors.HexColor('#1e3a5f'))
-    c.setLineWidth(2)
-    c.line(50, y, width - 50, y)
-    y -= 30
+    c.rect(50, y - 5, width - 100, 25, fill=False, stroke=True)
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.setFont('Helvetica-Bold', 12)
+    c.drawString(60, y + 3, "TOTAL AMOUNT:")
+    c.drawString(200, y + 3, format_fee(proposal.get('total_amount', 0)))
+    draw_arabic_text(":المبلغ الإجمالي", width - 60, y + 3, 12, bold=True)
+    y -= 35
     
-    # Arabic Section
-    c.setFillColor(colors.black)
-    draw_arabic_text("العربية", width - 50, y, 14, bold=True)
-    y -= 30
+    # Section 5: Validity
+    y = draw_section_header("5. VALIDITY", "٥. الصلاحية", y)
+    y = draw_field("Valid Until", "صالح حتى", proposal.get('valid_until', 'N/A'), y)
+    y = draw_field("Validity Days", "أيام الصلاحية", f"{proposal.get('validity_days', 30)} days", y)
+    y -= 10
     
-    draw_arabic_text(f"المنظمة: {proposal.get('organization_name', 'غير متوفر')}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"جهة الاتصال: {proposal.get('contact_person', proposal.get('contact_name', 'غير متوفر'))}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"المعايير: {', '.join(proposal.get('standards', []))}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"المبلغ الإجمالي: {proposal.get('total_amount', 0):,.2f} ريال", width - 50, y)
-    y -= 20
+    # Section 6: Status
     status_ar = {
         'draft': 'مسودة',
         'sent': 'مرسل',
+        'pending': 'قيد الانتظار',
         'accepted': 'مقبول',
         'rejected': 'مرفوض',
         'agreement_signed': 'تم توقيع الاتفاقية',
         'modification_requested': 'طلب تعديل'
     }
-    draw_arabic_text(f"الحالة: {status_ar.get(proposal.get('status', ''), proposal.get('status', ''))}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"صالح حتى: {proposal.get('valid_until', 'غير متوفر')}", width - 50, y)
+    status = proposal.get('status', 'pending')
+    y = draw_section_header("6. STATUS", "٦. الحالة", y)
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica', 11)
+    c.drawString(50, y, f"Current Status: {status.replace('_', ' ').title()}")
+    draw_arabic_text(f"الحالة الحالية: {status_ar.get(status, status)}", width - 50, y, 11)
+    y -= 30
+    
+    # Company Stamp Section (No Signature - Not Yet Approved)
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.setFont('Helvetica-Bold', 11)
+    c.drawCentredString(width/2, y, "AUTHORIZED BY BAYAN AUDITING & CONFORMITY")
+    y -= 15
+    draw_arabic_text("معتمد من بيان للتدقيق والمطابقة", width/2 + 100, y, 11, bold=True)
+    y -= 25
+    
+    # Draw company stamp/seal placeholder
+    c.setStrokeColor(colors.HexColor('#1e3a5f'))
+    c.setLineWidth(2)
+    c.circle(width/2, y - 30, 40, stroke=True, fill=False)
+    c.setFont('Helvetica', 8)
+    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.drawCentredString(width/2, y - 25, "COMPANY")
+    c.drawCentredString(width/2, y - 35, "SEAL")
+    draw_arabic_text("ختم الشركة", width/2 + 30, y - 45, 8)
+    
+    # Note about pending approval
+    y -= 90
+    c.setFillColor(colors.gray)
+    c.setFont('Helvetica-Oblique', 9)
+    c.drawCentredString(width/2, y, "This quotation is pending client approval. Client signature will be added upon acceptance.")
+    y -= 12
+    if arabic_font_available:
+        try:
+            note_ar = arabic_reshaper.reshape("هذا العرض في انتظار موافقة العميل. سيتم إضافة توقيع العميل عند القبول.")
+            c.setFont('Amiri', 9)
+            c.drawCentredString(width/2, y, get_display(note_ar))
+        except:
+            pass
     
     # Footer
     c.setFillColor(colors.HexColor('#1e3a5f'))
-    c.rect(0, 0, width, 50, fill=True, stroke=False)
+    c.rect(0, 0, width, 40, fill=True, stroke=False)
     c.setFillColor(colors.white)
-    c.setFont('Helvetica', 10)
-    c.drawCentredString(width/2, 25, "BAYAN Auditing & Conformity")
-    
-    if arabic_font_available:
-        try:
-            reshaped = arabic_reshaper.reshape("بيان للتحقق والمطابقة")
-            bidi_text = get_display(reshaped)
-            c.setFont('Amiri', 10)
-            c.drawCentredString(width/2, 12, bidi_text)
-        except:
-            pass
+    c.setFont('Helvetica', 9)
+    c.drawCentredString(width/2, 25, "BAYAN Auditing & Conformity | بيان للتدقيق والمطابقة")
+    c.drawCentredString(width/2, 12, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
     
     c.save()
     return str(pdf_path)

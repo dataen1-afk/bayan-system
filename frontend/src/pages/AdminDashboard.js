@@ -873,31 +873,16 @@ const AdminDashboard = () => {
                       </Button>
                     )}
                     
-                    {proposal.status === 'agreement_signed' && (
-                      <Button
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            const response = await axios.get(`${API}/public/contracts/${proposal.access_token}/pdf`, {
-                              responseType: 'blob'
-                            });
-                            const url = window.URL.createObjectURL(new Blob([response.data]));
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.setAttribute('download', `contract_${proposal.id.substring(0, 8)}.pdf`);
-                            document.body.appendChild(link);
-                            link.click();
-                            link.remove();
-                          } catch (error) {
-                            console.error('Error downloading contract:', error);
-                          }
-                        }}
-                        className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span className="ms-1">{t('pdf')}</span>
-                      </Button>
-                    )}
+                    {/* Download Quotation PDF - available for all proposals */}
+                    <Button
+                      size="sm"
+                      onClick={() => handleDownloadProposalBilingual(proposal.id)}
+                      className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700"
+                      data-testid={`download-quotation-${proposal.id}`}
+                    >
+                      <Download className="w-4 h-4" />
+                      <span className="ms-1">{t('download')}</span>
+                    </Button>
                   </div>
                 </div>
               )}

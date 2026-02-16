@@ -3663,8 +3663,17 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     c.setFillColor(primary_color)
     c.rect(30, y - 22, width - 60, 22, fill=True, stroke=False)
     c.setFillColor(colors.white)
+    # Draw English part with Helvetica
     c.setFont('Helvetica-Bold', 10)
-    c.drawString(40, y - 16, "IMPORTANT NOTES / ملاحظات هامة")
+    c.drawString(40, y - 16, "IMPORTANT NOTES /")
+    # Draw Arabic part with Amiri font
+    if arabic_font_available:
+        try:
+            ar_header = get_display(arabic_reshaper.reshape("ملاحظات هامة"))
+            c.setFont('Amiri-Bold', 11)
+            c.drawRightString(width - 40, y - 16, ar_header)
+        except:
+            pass
     
     # Calculate remaining space from current y position down to footer
     notes_box_top = y - 22  # Top of notes content area
@@ -3679,22 +3688,30 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     c.setFillColor(colors.black)
     c.setFont('Helvetica', 9)
-    notes = [
+    # English notes (left side)
+    notes_english = [
         "• Please ensure all information provided is accurate and up-to-date.",
         "• Incomplete applications may delay the certification process.",
         "• Additional documentation may be requested during the review process.",
         "• For inquiries, contact us at: info@bayan.sa or +966 11 XXX XXXX",
-        "",
+    ]
+    # Arabic notes (right side) - matching English content
+    notes_arabic = [
         "• يرجى التأكد من صحة جميع المعلومات المقدمة وحداثتها",
         "• قد تؤدي الطلبات غير المكتملة إلى تأخير عملية الاعتماد",
         "• قد يتم طلب وثائق إضافية خلال عملية المراجعة",
+        "• للاستفسارات، تواصل معنا على: info@bayan.sa أو +966 11 XXX XXXX",
     ]
+    
     ny = y - 35
-    for note in notes:
-        if has_arabic(note):
-            draw_arabic(note, width - 40, ny, 9, right_align=True)
-        else:
-            c.drawString(40, ny, note)
+    # Draw English notes on left, Arabic notes on right (side by side)
+    for i in range(len(notes_english)):
+        # English on left
+        c.setFont('Helvetica', 9)
+        c.drawString(40, ny, notes_english[i])
+        # Arabic on right
+        if i < len(notes_arabic):
+            draw_arabic(notes_arabic[i], width - 40, ny, 9, right_align=True)
         ny -= 16
     
     # Footer for page 1

@@ -3565,34 +3565,11 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     # ============ SECTION DRAWING FUNCTIONS ============
     def draw_section_box(title_en, title_ar, y_start, fields, box_height=None):
-        """Draw a section with background box and fields - bilingual layout
-        - Predefined values (dropdowns): English on left, Arabic translation on right
-        - Text fields: Same value on both sides with appropriate font
+        """Draw a section with background box and fields
+        Layout: English Label | VALUE (centered) | Arabic Label
         """
         if box_height is None:
             box_height = len(fields) * 18 + 30
-        
-        # Translation map for predefined dropdown values
-        translations = {
-            # Legal Status
-            'private': 'خاص',
-            'public': 'عام',
-            'government': 'حكومي',
-            'non-profit': 'غير ربحي',
-            # Certification Program
-            'initial': 'أولي',
-            'renewal': 'تجديد',
-            'transfer': 'نقل',
-            'surveillance': 'مراقبة',
-            # Yes/No
-            'yes': 'نعم',
-            'no': 'لا',
-            'Yes': 'نعم',
-            'No': 'لا',
-            # N/A
-            'N/A': 'غير متوفر',
-            'n/a': 'غير متوفر',
-        }
         
         # Section header bar
         c.setFillColor(primary_color)
@@ -3614,67 +3591,43 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         c.setLineWidth(0.5)
         c.rect(30, y_start - box_height, width - 60, box_height, fill=False, stroke=True)
         
-        # Draw fields
+        # Draw fields: English Label | Value (center) | Arabic Label
         y = y_start - 40
+        center_x = width / 2
         
         for label_en, label_ar, value in fields:
             c.setFillColor(colors.black)
             val_str = str(value) if value else 'N/A'
-            val_display = val_str[:30] + '...' if len(val_str) > 30 else val_str
+            val_display = val_str[:35] + '...' if len(val_str) > 35 else val_str
             
-            # Check if value has Arabic translation (predefined dropdown value)
-            val_lower = val_display.lower().strip()
-            has_translation = val_lower in [k.lower() for k in translations.keys()]
-            
-            # Get Arabic version of value
-            if has_translation:
-                # Use translation for dropdown values
-                arabic_value = translations.get(val_display, translations.get(val_display.lower(), val_display))
-            elif has_arabic(val_display):
-                # Value is already Arabic text
-                arabic_value = val_display
-            else:
-                # English text or numbers - use as-is
-                arabic_value = val_display
-            
-            # LEFT SIDE: English label + English value
+            # LEFT: English label
             c.setFont('Helvetica-Bold', 9)
             c.drawString(40, y, f"{label_en}:")
             
-            # Draw English value (or Arabic if that's all we have)
-            if has_arabic(val_display) and not has_translation:
-                # Value is Arabic text - show with Amiri font on English side too
+            # CENTER: Value (with appropriate font)
+            if has_arabic(val_display):
                 if arabic_font_available:
                     try:
                         reshaped = arabic_reshaper.reshape(val_display)
                         bidi_val = get_display(reshaped)
                         c.setFont('Amiri', 9)
-                        c.drawString(160, y, bidi_val)
+                        c.drawCentredString(center_x, y, bidi_val)
                     except:
                         c.setFont('Helvetica', 9)
-                        c.drawString(160, y, val_display)
+                        c.drawCentredString(center_x, y, val_display)
+                else:
+                    c.setFont('Helvetica', 9)
+                    c.drawCentredString(center_x, y, val_display)
             else:
-                # English value or predefined value
                 c.setFont('Helvetica', 9)
-                c.drawString(160, y, val_display)
+                c.drawCentredString(center_x, y, val_display)
             
-            # RIGHT SIDE: Arabic value + Arabic label
+            # RIGHT: Arabic label
             if arabic_font_available:
                 try:
-                    # Arabic label
                     ar_label = get_display(arabic_reshaper.reshape(f"{label_ar}:"))
                     c.setFont('Amiri-Bold', 9)
                     c.drawRightString(width - 40, y, ar_label)
-                    
-                    # Arabic value
-                    if has_arabic(arabic_value):
-                        reshaped = arabic_reshaper.reshape(arabic_value)
-                        bidi_val = get_display(reshaped)
-                        c.setFont('Amiri', 9)
-                        c.drawRightString(width - 120, y, bidi_val)
-                    else:
-                        c.setFont('Helvetica', 9)
-                        c.drawRightString(width - 120, y, arabic_value)
                 except: pass
             
             y -= 18

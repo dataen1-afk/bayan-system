@@ -15,67 +15,72 @@
 -   **UI/UX**: Professional UI matching the Bayan Auditing brand, multi-language support (English/Arabic), full RTL layout for Arabic, and a collapsible sidebar.
 -   **Additional Features**: Admin notifications, status tracking timeline, editable reusable templates, a reporting dashboard with filtering, and a customer portal.
 
-**User's preferred language**: The user communicates in English, but the application's primary language is **Arabic**. The next agent MUST ensure all features work correctly in both Arabic (with RTL) and English and continue to respond in English.
+**User's preferred language**: The user communicates in English. The application's primary language is **Arabic**. The next agent MUST ensure all features work correctly in both Arabic (with RTL) and English and continue to respond in English.
 
 **what currently exists?**
-A functional full-stack application. The agent successfully implemented the clickable notifications feature, allowing admins to click a notification, navigate to the relevant item page (e.g., a specific form or quote), and have that item highlighted. The notification is also automatically marked as read.
-
-Following this, the user reported a critical and recurring bug where dynamic Arabic text (like company names and signatory names) was rendering as black boxes in generated PDFs. The agent implemented a comprehensive fix by ensuring all dynamic data is processed with an Arabic text reshaper and that the Amiri font is consistently applied to all tables in both the standard and bilingual PDF generators. This fix is pending user verification.
-
-The user has just requested a new UI cleanup task to remove redundant download buttons from the admin dashboard.
+A full-stack application for managing service contracts. The agent has been working through a series of user requests to enhance and fix PDF generation for different stages of the workflow (Forms, Quotations, Contracts). This involved adding a company logo, using an official company seal, and ensuring the correct data is displayed on each document. However, the implementation introduced critical visual bugs in the generated PDFs. The user has just reported that text is overlapping and the company seal is cut off at the bottom of the page.
 
 **Last working item**:
--   **Last item agent was working**: The user requested to remove duplicate/redundant download buttons from the Forms, Quotations, and Contracts tabs on the admin dashboard. The agent had just begun investigating by listing the relevant frontend component files.
--   **Status**: NOT STARTED
+-   **Last item agent was working**: Fixing two critical visual bugs in the newly created PDF generation logic for both the Forms and Quotations documents:
+    1.  **Overlapping Text**: English and Arabic data values are overlapping in the center of the page.
+    2.  **Cut-off Seal**: The official company seal image is partially cut off at the bottom of the PDF.
+-   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: frontend testing agent. The agent should verify that only the correct buttons remain visible and functional on each of the three tabs (, , ).
+-   **Which testing method agent to use?**: backend testing agent. The agent must instruct the tester to generate PDFs from the Forms and Quotations tabs and visually inspect them to confirm the text no longer overlaps and the seal is fully visible.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**:  (P0) Remove duplicate download buttons from dashboard screens.
+-   **Issue 1**:  (P0) Fix PDF rendering issues (overlapping text and cut-off seal).
 -   **Issue 2**:  (P1) Arabic text renders as black boxes in generated PDFs.
 
 **Issues Detail**:
 -   **Issue 1**:
-    -   **Description**: The user reported redundant buttons on the dashboard.
-        -   **Quotes screen**: A bilingual button is redundant; the main green button should suffice.
-        -   **Contracts screen**: There are multiple buttons to download the same agreement. The user feels this is duplicative and that the download action initiated from the Forms screen is sufficient.
-    -   **Attempted fixes**: None yet. The agent was about to start.
+    -   **Description**: In the bilingual PDFs for Forms and Quotations, the English and Arabic values for data fields are drawn on top of each other, making them unreadable. Additionally, the company seal image at the bottom of the page is cut off by the footer.
+    -   **Attempted fixes**: The agent previously adjusted the seal's size and Y-position, but the fix was unsuccessful. No fix has been attempted for the overlapping text yet.
     -   **Next debug checklist**:
-        1.  Examine  and remove the unnecessary bilingual download button.
-        2.  Examine  and remove the redundant agreement download buttons.
-        3.  Examine  to ensure the primary download button remains.
-        4.  Verify that the intended download functionality is preserved.
-    -   **Why fix this issue and what will be achieved with the fix?**: To clean up the UI and improve user experience by removing confusion and redundancy.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: frontend
+        1.  **Overlapping Text**: Edit  and . In the  function, adjust the X-coordinates for drawing the English and Arabic values to ensure they are rendered on opposite sides of the page with sufficient spacing.
+        2.  **Cut-off Seal**: In the  function within the same files, increase the  coordinate of the  call for the seal to move it further up the page, away from the footer. Ensure there is enough margin at the bottom.
+    -   **Why fix this issue and what will be achieved with the fix?**: To produce professional and legible documents, which is a core business requirement.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: backend
     -   **Blocked on other issue**: None
 
 -   **Issue 2**:
-    -   **Description**: Dynamic Arabic text (client names, addresses, etc.) and text within tables in generated PDFs appear as black boxes. This is a highly recurring issue.
-    -   **Attempted fixes**: The agent implemented a comprehensive fix across  and . A new  helper function was created to reshape all dynamic string data. Additionally, the table styles in both files were corrected to explicitly use the Amiri font for all columns containing Arabic text. The agent performed a technical verification by confirming the Amiri font was properly embedded in newly generated PDFs.
-    -   **Next debug checklist**: Guide the user to go to the Contracts tab, download both the standard and the bilingual (AR/EN) PDF for a contract with Arabic data, and visually confirm that all text renders correctly, especially client names, signatory details, and table content.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical business function. Fixing it ensures that legally binding contracts are generated correctly in the primary business language.
+    -   **Description**: A highly recurrent issue where Arabic text appears as black boxes or mojibake. This was recently observed in the PDF footer text before a fix was applied. Given the recurring nature, a full regression check is needed.
+    -   **Attempted fixes**: The agent has repeatedly applied fixes using  and  and ensuring the Amiri font is used. The most recent fix targeted the footer text.
+    -   **Next debug checklist**: After fixing the layout issues (Issue 1), the agent must guide the user to download and visually inspect every type of PDF (Form, Quotation, standard Contract, bilingual Contract) to confirm that *all* Arabic text—dynamic data, labels, headers, and footers—renders correctly.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is critical for business function. Illegible contracts and documents are unacceptable.
     -   **Status**: USER VERIFICATION PENDING
     -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: backend
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   None.
+-   **Task 1**: (P0) Finalize PDF generation for Forms and Quotations.
+    -   **Where to resume**: Resume by implementing the fixes for overlapping text and the cut-off seal in  and .
+    -   **What will be achieved with this?**: The application will generate correct, professional, and legible PDF documents for the Forms and Quotations stages of the business workflow.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on something**: None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   **(P1) Finalize Google Calendar Integration**: Guide the user on obtaining  and . Once provided, add them to  and activate the sync functionality. The backend logic is in  and the frontend is in .
+    -   **(P1) Finalize Google Calendar Integration**: Guide the user on obtaining  and . Once provided, add them to  and activate the sync functionality.
     -   **(P1) Finalize Twilio SMS Integration**: Guide the user on obtaining Twilio credentials (, , ). Once provided, add them to  to enable live SMS notifications.
 -   **Future Tasks**:
     -   **(P2)** Test and enable the functionality of sending actual emails (e.g., via SendGrid/Resend integration).
     -   **(P2)** Refactor the scattered PDF generation logic into a single, robust service to prevent recurring font/rendering bugs.
 
 **Completed work in this session**
--   **Clickable Notifications**: Implemented a feature where clicking a notification navigates the user to the correct tab on the dashboard, highlights the corresponding item, and marks the notification as read. The feature was fully tested and verified by the testing agent.
--   **Comprehensive PDF Arabic Font Fix**: Addressed the recurring issue of dynamic Arabic text appearing as black boxes. This involved creating a new text processing helper and fixing font styles in tables across both  and .
+-   **UI & Logic Cleanup**:
+    -   Removed redundant download buttons from the admin dashboard's Forms, Quotations, and Contracts tabs.
+    -   Corrected the logic on the Forms and Quotations tabs to ensure their download buttons call the appropriate new endpoints to generate a Form PDF and a Quotation PDF, respectively, instead of incorrectly downloading the final contract.
+-   **PDF Enhancements**:
+    -   Added the company logo to the header of all generated PDFs, including a white background for visibility.
+    -   Updated the Quotation PDF to use the official company seal image provided by the user.
+    -   Corrected Arabic text rendering for colons (RTL placement) and a status label (Agreement Signed -> Sent to client).
+    -   Fixed an issue where data values were only showing on the English side of bilingual PDFs.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -83,7 +88,7 @@ The user has just requested a new UI cleanup task to remove redundant download b
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork**: Incorrect Arabic text rendering in PDFs.
 -   **Recurrence count**: 5+
--   **Status**: IN PROGRESS (A comprehensive fix has been implemented and is pending user verification).
+-   **Status**: IN PROGRESS (Multiple fixes applied, but new rendering issues continue to appear, indicating a systemic problem).
 
 **Code Architecture**
 
@@ -94,60 +99,69 @@ The user has just requested a new UI cleanup task to remove redundant download b
 -   **Database**: MongoDB
 
 **key DB schema**
--   : Contains fields like , , ,  (boolean), , and .
--   : Stores submitted agreement data, including dynamic Arabic text fields like , , etc.
+-   : Stores client-submitted form data.
+-   : Stores quotation data.
+-   : Stores final contract data.
+-   : Stores admin notifications.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--    (Modified for Arabic PDF fix)
--    (Modified for Arabic PDF fix)
--    (Modified for clickable notifications)
--    (Modified for navigation/highlighting)
--    (To be modified for button cleanup)
--    (To be modified for button cleanup)
--    (To be modified for button cleanup)
+-    (New file with the current bugs)
+-    (New file with the current bugs)
+-    (Modified for button logic)
+-    (Modified to add logo)
+-    (Modified to add logo)
+-    (New asset file)
 
 **Areas that need refactoring**:
--   The PDF generation logic is scattered across , , and . Consolidating this into a single, robust PDF generation service would prevent recurring font/rendering bugs and improve maintainability. This should be proposed to the user after the current tasks.
+-   **CRITICAL**: The PDF generation logic is fragmented across four different files (, , , ) with duplicated code for headers, footers, and text rendering. This is the root cause of the constant, recurring bugs. This logic MUST be consolidated into a single, robust service with shared utility functions to improve maintainability and prevent future issues.
 
 **key api endpoints**
 -   **USED**: 
 -   **USED**: 
 -   **USED**: 
+-   **USED**: 
 
 **Critical Info for New Agent**
--   Your immediate P0 task is to address the user's request to remove duplicate download buttons from the dashboard tabs, as described in Issue 1.
--   Your next P1 task is to guide the user to verify the comprehensive fix for the Arabic PDF rendering issue. This is a critical, long-standing bug, and confirming the fix is essential before moving on. Do not assume it is fixed until the user confirms it visually.
--   The previous P0 task (clickable notifications) has been completed and verified.
+-   Your immediate and highest priority task (P0) is to fix the visual layout bugs in the generated PDFs: **overlapping text** and the **cut-off company seal**. The user cannot proceed until the documents are legible and professional.
+-   The PDF generation feature has been extremely fragile and a major source of user frustration. Be methodical. Test every change visually.
+-   After fixing the layout, you must lead a full regression test with the user to confirm that ALL Arabic text on ALL PDF types renders correctly, to finally close the long-standing black box text issue.
 
 **documents and test reports created in this job**
 -    (Updated)
--    (Test report for the clickable notifications feature)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Reports Arabic text rendering as black boxes in PDFs with multiple screenshots. - **Status: IN PROGRESS** (Fix implemented, verification pending).
-2.  **User**: Requests to remove duplicate/redundant download buttons on the Quotes and Contracts screens. - **Status: PENDING** (This is the current P0 task).
+1.  **User**: OKs the fix for colon placement in Arabic text. Asks to fix the Quotation screen PDF.
+2.  **Agent**: Implements fix for Quotation screen PDF button logic.
+3.  **User**: Provides the official company seal. Asks to replace Agreement signed with Sent to client on the quotation PDF.
+4.  **Agent**: Implements the seal and label change.
+5.  **User**: Reports that data values are missing on the Arabic side of the PDF.
+6.  **Agent**: Implements a fix to show data on both English and Arabic sides.
+7.  **User**: Reports the seal is cut off and Arabic text in the footer/header has rendering issues.
+8.  **Agent**: Implements a fix for the footer/header text rendering and adjusts the seal position.
+9.  **User**: Reports that the text is now overlapping and the seal is still cut off.
+10. **Agent**: Acknowledges the two remaining issues and prepares to fix them.
 
 **Project Health Check:**
--   **Healthy**: The application is stable. However, it suffers from a **recurring** critical bug in PDF generation. The latest fix is the most comprehensive so far but requires careful user verification.
+-   **At Risk**: The core application is functional, but the critical PDF generation feature is unstable and producing unprofessional results. The high frequency of recurring bugs in this area is a major problem that requires a more robust, systemic fix rather than repeated small patches.
 
 **3rd Party Integrations**
 -   : Used for PDF generation.
--   : Used for recurring event logic.
 -   , : Used for rendering Arabic text in PDFs.
 -   **Google Calendar API**: Foundation laid, pending user credentials for activation.
 -   **Twilio SMS**: Foundation laid, pending user credentials for activation.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, the testing agent successfully verified the clickable notifications feature.
+-   **Testing agent used after significant changes**: NO, not for the recent PDF changes. The agent has relied on manual  commands and direct user feedback, which has resulted in a prolonged debugging cycle.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: The Arabic text rendering issue in PDFs is a persistent regression. The latest applied fix needs to be verified by the user.
+-   **Known regressions**: PDF rendering for Arabic text and layout is a persistent regression.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
 
 **What agent forgot to execute**
--   Nothing was forgotten. The agent completed the previous P0 task and was about to start the user's new request before the session ended.</analysis>
+-   The agent did not address the root cause of the recurring PDF issues by refactoring the duplicated code. Instead, new files with similar logic were created, perpetuating the problem.
+-   The agent failed to use the testing agent for these critical and recurring visual bugs, leading to an inefficient back-and-forth with the user to identify issues that an automated visual check could have caught.</analysis>

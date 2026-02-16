@@ -3488,7 +3488,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         c.drawString(50, y_pos, f"{label_en}:")
         c.setFont('Helvetica', 10)
         c.drawString(170, y_pos, str(value) if value else 'N/A')
-        draw_arabic_text(f":{label_ar}", width - 50, y_pos, 10, bold=True)
+        draw_arabic_text(f"{label_ar}:", width - 50, y_pos, 10, bold=True)
         if value_ar:
             draw_arabic_text(str(value_ar), width - 150, y_pos, 10)
         return y_pos - 18

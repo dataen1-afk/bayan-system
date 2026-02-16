@@ -3489,7 +3489,8 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     width, height = A4
     
     # Colors
-    primary_color = colors.HexColor('#1e3a5f')
+    primary_color = colors.HexColor('#1e3a5f')  # Dark blue for header/footer
+    section_color = colors.HexColor('#2563eb')  # Bright blue for section titles
     light_bg = colors.HexColor('#f0f4f8')
     accent_color = colors.HexColor('#2563eb')
     

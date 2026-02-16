@@ -3692,18 +3692,6 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     y = height - 70
     
-    # Section 4: Certification Standards
-    standards = company_data.get('certificationSchemes', [])
-    standards_text = ', '.join(standards) if standards else 'N/A'
-    cert_fields = [
-        ("Selected Standards", "المعايير المختارة", standards_text),
-        ("Certification Program", "برنامج الاعتماد", company_data.get('certificationProgram', 'N/A')),
-        ("Already Certified?", "معتمد حالياً؟", company_data.get('isAlreadyCertified', 'N/A')),
-    ]
-    if company_data.get('otherStandard'):
-        cert_fields.append(("Other Standard", "معيار آخر", company_data.get('otherStandard')))
-    y = draw_section_box("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y, cert_fields)
-    
     # Section 5: Sites Information
     site_fields = []
     site1 = company_data.get('site1Address', '')
@@ -3732,17 +3720,78 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     ]
     y = draw_section_box("7. DECLARATION", "٧. الإقرار", y, decl_fields)
     
-    # Signature Box
+    # ============ SIGNATURE & SEAL SECTION ============
+    # Large signature box
+    sig_box_height = 120
+    c.setFillColor(light_bg)
+    c.rect(30, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=True, stroke=False)
     c.setStrokeColor(primary_color)
-    c.setLineWidth(1)
-    c.rect(30, y - 80, width - 60, 70, fill=False, stroke=True)
+    c.setLineWidth(1.5)
+    c.rect(30, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=False, stroke=True)
+    
     c.setFillColor(primary_color)
-    c.setFont('Helvetica-Bold', 10)
-    c.drawString(40, y - 20, "Authorized Signature / التوقيع المعتمد")
+    c.setFont('Helvetica-Bold', 11)
+    c.drawString(40, y - 20, "AUTHORIZED SIGNATURE")
+    if arabic_font_available:
+        try:
+            ar_sig = get_display(arabic_reshaper.reshape("التوقيع المعتمد"))
+            c.setFont('Amiri-Bold', 11)
+            c.drawRightString(width/2 - 30, y - 20, ar_sig)
+        except: pass
+    
+    c.setFillColor(colors.black)
     c.setFont('Helvetica', 9)
-    c.drawString(40, y - 45, "Name / الاسم: _______________________________")
-    c.drawString(40, y - 65, "Date / التاريخ: _______________________________")
-    c.drawString(width/2 + 20, y - 45, "Signature / التوقيع: ___________________")
+    c.drawString(40, y - 50, "Name / الاسم:")
+    c.line(110, y - 52, width/2 - 40, y - 52)
+    c.drawString(40, y - 75, "Date / التاريخ:")
+    c.line(110, y - 77, width/2 - 40, y - 77)
+    c.drawString(40, y - 100, "Signature / التوقيع:")
+    c.line(130, y - 102, width/2 - 40, y - 102)
+    
+    # Company Seal Box
+    c.setFillColor(light_bg)
+    c.rect(width/2 + 10, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=True, stroke=False)
+    c.setStrokeColor(primary_color)
+    c.rect(width/2 + 10, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=False, stroke=True)
+    
+    c.setFillColor(primary_color)
+    c.setFont('Helvetica-Bold', 11)
+    c.drawCentredString(width*3/4 - 10, y - 20, "COMPANY SEAL / ختم الشركة")
+    
+    # Draw company seal image
+    seal_path = ROOT_DIR / "assets" / "company-seal.png"
+    if seal_path.exists():
+        try:
+            c.drawImage(str(seal_path), width*3/4 - 45, y - 105, width=70, height=70, preserveAspectRatio=True, mask='auto')
+        except: pass
+    
+    # ============ TERMS & CONDITIONS ============
+    y = y - sig_box_height - 20
+    c.setFillColor(primary_color)
+    c.rect(30, y - 120, width - 60, 22, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(40, y - 114, "TERMS & CONDITIONS / الشروط والأحكام")
+    
+    c.setFillColor(light_bg)
+    c.rect(30, y - 220, width - 60, 100, fill=True, stroke=False)
+    c.setStrokeColor(colors.HexColor('#d1d5db'))
+    c.setLineWidth(0.5)
+    c.rect(30, y - 220, width - 60, 122, fill=False, stroke=True)
+    
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica', 8)
+    terms = [
+        "1. This application is subject to review and approval by BAYAN Auditing & Conformity.",
+        "2. All information provided must be accurate and complete.",
+        "3. The applicant agrees to comply with all certification requirements.",
+        "4. Certification fees are non-refundable once the audit process has begun.",
+        "5. BAYAN reserves the right to conduct surveillance audits during the certification period.",
+    ]
+    ty = y - 135
+    for term in terms:
+        c.drawString(40, ty, term)
+        ty -= 14
     
     # Footer for page 2
     c.setFillColor(primary_color)

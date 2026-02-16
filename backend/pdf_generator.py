@@ -244,13 +244,9 @@ class ContractPDFGenerator:
         canvas.setFont('Helvetica-Bold', 16)
         canvas.drawString(105, A4[1] - 35, "BAYAN AUDITING & CONFORMITY")
         
-        # Subtitle
+        # Subtitle - Arabic name
         canvas.setFont('Helvetica', 10)
-        canvas.drawString(105, A4[1] - 50, "Arabia Limited Certification Body")
-        
-        # Contact info
-        canvas.setFont('Helvetica', 8)
-        canvas.drawString(105, A4[1] - 65, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
+        canvas.drawString(105, A4[1] - 50, "3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia")
         
         # Contract number on right
         canvas.setFont('Helvetica-Bold', 10)

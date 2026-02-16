@@ -376,12 +376,18 @@ const AuditSchedulingPage = () => {
                       <h3 className="font-semibold text-slate-900">{audit.organization_name}</h3>
                       <span className={`
                         px-2 py-0.5 text-xs font-medium rounded-full
-                        ${audit.audit_type === 'initial' ? 'bg-blue-100 text-blue-700' :
-                          audit.audit_type === 'surveillance' ? 'bg-amber-100 text-amber-700' :
+                        ${audit.audit_type === 'initial' || audit.audit_type === 'stage_1' || audit.audit_type === 'stage_2' ? 'bg-blue-100 text-blue-700' :
+                          audit.audit_type === 'surveillance' || audit.audit_type === 'surveillance_1' || audit.audit_type === 'surveillance_2' ? 'bg-amber-100 text-amber-700' :
                           'bg-emerald-100 text-emerald-700'}
                       `}>
                         {t(audit.audit_type)}
                       </span>
+                      {/* Auto-generated indicator */}
+                      {audit.auto_generated && (
+                        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                          {t('autoScheduled') || 'Auto'}
+                        </span>
+                      )}
                     </div>
                     
                     <div className={`flex flex-wrap gap-4 text-sm text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>

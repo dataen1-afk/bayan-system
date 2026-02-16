@@ -599,7 +599,7 @@ class BilingualContractPDFGenerator:
             [self.TRANSLATIONS['certification_body']['en'] + ':', 
              'BAYAN AUDITING & CONFORMITY (BAC)',
              ':' + process_arabic_text(self.TRANSLATIONS['certification_body']['ar'])],
-            ['', 'Arabia Limited Certification Body', ''],
+            ['', process_arabic_text('بيان للتحقق والمطابقة'), ''],
             ['', '3879 Al Khadar Street, Riyadh, Saudi Arabia', ''],
             ['', '', ''],
             [self.TRANSLATIONS['client_organization']['en'] + ':',

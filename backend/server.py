@@ -3336,100 +3336,212 @@ async def generate_bilingual_form_pdf(form_id: str, credentials: HTTPAuthorizati
     )
 
 async def generate_bilingual_form_pdf_file(form: dict) -> str:
-    """Generate a bilingual form submission PDF"""
+    """Generate a comprehensive bilingual form submission PDF with all client data"""
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.lib import colors
+    from reportlab.lib.units import cm
     import arabic_reshaper
     from bidi.algorithm import get_display
     
     # Register Arabic font
     font_path = ROOT_DIR / "fonts" / "Amiri-Regular.ttf"
+    font_bold_path = ROOT_DIR / "fonts" / "Amiri-Bold.ttf"
+    arabic_font_available = False
     if font_path.exists():
         try:
             pdfmetrics.registerFont(TTFont('Amiri', str(font_path)))
+            arabic_font_available = True
+            if font_bold_path.exists():
+                pdfmetrics.registerFont(TTFont('Amiri-Bold', str(font_bold_path)))
         except:
             pass
+    
+    # Logo path
+    logo_path = ROOT_DIR / "assets" / "bayan-logo.png"
     
     pdf_path = CONTRACTS_DIR / f"form_{form['id']}_bilingual.pdf"
     c = canvas.Canvas(str(pdf_path), pagesize=A4)
     width, height = A4
     
-    def draw_arabic_text(text, x, y, font_size=12):
-        try:
-            reshaped = arabic_reshaper.reshape(str(text))
-            bidi_text = get_display(reshaped)
-            c.setFont('Amiri', font_size)
-            c.drawRightString(x, y, bidi_text)
-        except:
-            c.setFont('Helvetica', font_size)
-            c.drawRightString(x, y, str(text))
+    def draw_arabic_text(text, x, y, font_size=11, bold=False):
+        if arabic_font_available:
+            try:
+                reshaped = arabic_reshaper.reshape(str(text))
+                bidi_text = get_display(reshaped)
+                font_name = 'Amiri-Bold' if bold and font_bold_path.exists() else 'Amiri'
+                c.setFont(font_name, font_size)
+                c.drawRightString(x, y, bidi_text)
+                return
+            except:
+                pass
+        c.setFont('Helvetica-Bold' if bold else 'Helvetica', font_size)
+        c.drawRightString(x, y, str(text))
     
-    # Header
+    def draw_section_header(en_text, ar_text, y_pos):
+        """Draw bilingual section header"""
+        c.setFillColor(colors.HexColor('#1e3a5f'))
+        c.setFont('Helvetica-Bold', 12)
+        c.drawString(50, y_pos, en_text)
+        draw_arabic_text(ar_text, width - 50, y_pos, 12, bold=True)
+        c.setStrokeColor(colors.HexColor('#1e3a5f'))
+        c.setLineWidth(1)
+        c.line(50, y_pos - 5, width - 50, y_pos - 5)
+        return y_pos - 25
+    
+    def draw_field(label_en, label_ar, value, y_pos, value_ar=None):
+        """Draw bilingual field with value"""
+        c.setFillColor(colors.black)
+        c.setFont('Helvetica-Bold', 10)
+        c.drawString(50, y_pos, f"{label_en}:")
+        c.setFont('Helvetica', 10)
+        c.drawString(170, y_pos, str(value) if value else 'N/A')
+        draw_arabic_text(f":{label_ar}", width - 50, y_pos, 10, bold=True)
+        if value_ar:
+            draw_arabic_text(str(value_ar), width - 150, y_pos, 10)
+        return y_pos - 18
+    
+    # ========== PAGE 1 ==========
+    # Header with logo
     c.setFillColor(colors.HexColor('#1e3a5f'))
     c.rect(0, height - 100, width, 100, fill=True, stroke=False)
     
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 24)
-    c.drawCentredString(width/2, height - 50, "APPLICATION FORM / طلب الاعتماد")
+    # Draw logo if exists
+    if logo_path.exists():
+        try:
+            c.drawImage(str(logo_path), 30, height - 90, width=70, height=70, preserveAspectRatio=True, mask='auto')
+        except:
+            pass
     
-    y = height - 140
+    # Title
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 20)
+    c.drawCentredString(width/2, height - 45, "APPLICATION FORM")
+    if arabic_font_available:
+        try:
+            reshaped = arabic_reshaper.reshape("طلب الاعتماد")
+            bidi_text = get_display(reshaped)
+            c.setFont('Amiri-Bold' if font_bold_path.exists() else 'Amiri', 18)
+            c.drawCentredString(width/2, height - 70, bidi_text)
+        except:
+            pass
+    
+    # Submission info
+    c.setFont('Helvetica', 9)
+    c.drawRightString(width - 30, height - 30, f"Ref: {form.get('id', 'N/A')[:8].upper()}")
+    c.drawRightString(width - 30, height - 45, f"Date: {form.get('submitted_at', form.get('created_at', 'N/A'))[:10] if form.get('submitted_at') or form.get('created_at') else 'N/A'}")
+    
+    y = height - 130
     company_data = form.get('company_data', {})
+    client_info = form.get('client_info', {})
     
-    # English Section
-    c.setFillColor(colors.black)
-    c.setFont('Helvetica-Bold', 14)
-    c.drawString(50, y, "ENGLISH")
-    y -= 30
+    # Section 1: Company Information
+    y = draw_section_header("1. COMPANY INFORMATION", "١. معلومات الشركة", y)
+    y = draw_field("Company Name", "اسم الشركة", company_data.get('companyName', client_info.get('company_name', 'N/A')), y)
+    y = draw_field("Legal Entity", "الكيان القانوني", company_data.get('legalEntity', 'N/A'), y)
+    y = draw_field("Commercial Reg. No", "رقم السجل التجاري", company_data.get('commercialRegNo', 'N/A'), y)
+    y = draw_field("Address", "العنوان", company_data.get('address', 'N/A'), y)
+    y = draw_field("City", "المدينة", company_data.get('city', 'N/A'), y)
+    y = draw_field("Country", "الدولة", company_data.get('country', 'N/A'), y)
+    y = draw_field("Postal Code", "الرمز البريدي", company_data.get('postalCode', 'N/A'), y)
+    y -= 10
     
-    c.setFont('Helvetica', 11)
-    c.drawString(50, y, f"Company: {company_data.get('companyName', 'N/A')}")
-    y -= 20
-    c.drawString(50, y, f"Contact: {company_data.get('contactPerson', 'N/A')}")
-    y -= 20
-    c.drawString(50, y, f"Email: {company_data.get('email', 'N/A')}")
-    y -= 20
-    c.drawString(50, y, f"Phone: {company_data.get('phone', 'N/A')}")
-    y -= 20
-    c.drawString(50, y, f"Employees: {company_data.get('totalEmployees', 'N/A')}")
-    y -= 20
-    c.drawString(50, y, f"Standards: {', '.join(company_data.get('certificationSchemes', []))}")
-    y -= 20
-    c.drawString(50, y, f"Status: {form.get('status', 'N/A').replace('_', ' ').title()}")
+    # Section 2: Contact Information
+    y = draw_section_header("2. CONTACT INFORMATION", "٢. معلومات الاتصال", y)
+    y = draw_field("Contact Person", "جهة الاتصال", company_data.get('contactPerson', client_info.get('name', 'N/A')), y)
+    y = draw_field("Position", "المنصب", company_data.get('contactPosition', 'N/A'), y)
+    y = draw_field("Email", "البريد الإلكتروني", company_data.get('email', client_info.get('email', 'N/A')), y)
+    y = draw_field("Phone", "الهاتف", company_data.get('phone', client_info.get('phone', 'N/A')), y)
+    y = draw_field("Fax", "الفاكس", company_data.get('fax', 'N/A'), y)
+    y = draw_field("Website", "الموقع الإلكتروني", company_data.get('website', 'N/A'), y)
+    y -= 10
     
-    y -= 50
+    # Section 3: Organization Details
+    y = draw_section_header("3. ORGANIZATION DETAILS", "٣. تفاصيل المنظمة", y)
+    y = draw_field("Total Employees", "إجمالي الموظفين", company_data.get('totalEmployees', 'N/A'), y)
+    y = draw_field("Shift Workers", "عمال الورديات", company_data.get('shiftWorkers', 'N/A'), y)
+    y = draw_field("Industry Sector", "قطاع الصناعة", company_data.get('industrySector', 'N/A'), y)
+    y = draw_field("Business Activity", "النشاط التجاري", company_data.get('businessActivity', 'N/A'), y)
+    y = draw_field("Scope of Services", "نطاق الخدمات", company_data.get('scopeOfServices', 'N/A'), y)
+    y -= 10
     
-    # Divider
-    c.setStrokeColor(colors.HexColor('#1e3a5f'))
-    c.setLineWidth(2)
-    c.line(50, y, width - 50, y)
-    y -= 30
+    # Section 4: Certification Standards
+    y = draw_section_header("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y)
+    standards = company_data.get('certificationSchemes', [])
+    standards_text = ', '.join(standards) if standards else 'N/A'
+    y = draw_field("Selected Standards", "المعايير المختارة", standards_text, y)
+    if company_data.get('otherStandard'):
+        y = draw_field("Other Standard", "معيار آخر", company_data.get('otherStandard'), y)
+    y -= 10
     
-    # Arabic Section
-    c.setFont('Helvetica-Bold', 14)
-    draw_arabic_text("العربية", width - 50, y, 14)
-    y -= 30
+    # Section 5: Sites Information
+    y = draw_section_header("5. SITES INFORMATION", "٥. معلومات المواقع", y)
+    sites = company_data.get('sites', [])
+    if sites:
+        for i, site in enumerate(sites, 1):
+            if isinstance(site, dict):
+                site_text = f"{site.get('name', '')} - {site.get('address', '')}"
+            else:
+                site_text = str(site)
+            y = draw_field(f"Site {i}", f"الموقع {i}", site_text, y)
+    else:
+        y = draw_field("Sites", "المواقع", "Main site only", y)
     
-    draw_arabic_text(f"الشركة: {company_data.get('companyName', 'غير متوفر')}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"جهة الاتصال: {company_data.get('contactPerson', 'غير متوفر')}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"البريد الإلكتروني: {company_data.get('email', 'غير متوفر')}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"الهاتف: {company_data.get('phone', 'غير متوفر')}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"عدد الموظفين: {company_data.get('totalEmployees', 'غير متوفر')}", width - 50, y)
-    y -= 20
-    draw_arabic_text(f"المعايير: {', '.join(company_data.get('certificationSchemes', []))}", width - 50, y)
-    
-    # Footer
+    # Footer for page 1
     c.setFillColor(colors.HexColor('#1e3a5f'))
-    c.rect(0, 0, width, 50, fill=True, stroke=False)
+    c.rect(0, 0, width, 40, fill=True, stroke=False)
     c.setFillColor(colors.white)
-    c.setFont('Helvetica', 10)
-    c.drawCentredString(width/2, 20, "BAYAN Auditing & Conformity | بيان للتحقق والمطابقة")
+    c.setFont('Helvetica', 9)
+    c.drawCentredString(width/2, 25, "BAYAN Auditing & Conformity | بيان للتدقيق والمطابقة")
+    c.drawCentredString(width/2, 12, "Page 1")
+    
+    # ========== PAGE 2 (if more data) ==========
+    audit_info = company_data.get('auditInfo', {})
+    if audit_info or company_data.get('previousCertification') or company_data.get('consultantUsed'):
+        c.showPage()
+        
+        # Header for page 2
+        c.setFillColor(colors.HexColor('#1e3a5f'))
+        c.rect(0, height - 60, width, 60, fill=True, stroke=False)
+        if logo_path.exists():
+            try:
+                c.drawImage(str(logo_path), 30, height - 55, width=50, height=50, preserveAspectRatio=True, mask='auto')
+            except:
+                pass
+        c.setFillColor(colors.white)
+        c.setFont('Helvetica-Bold', 14)
+        c.drawCentredString(width/2, height - 35, "APPLICATION FORM (Continued)")
+        
+        y = height - 90
+        
+        # Section 6: Audit Information
+        y = draw_section_header("6. AUDIT INFORMATION", "٦. معلومات التدقيق", y)
+        y = draw_field("Preferred Audit Date", "تاريخ التدقيق المفضل", audit_info.get('preferredDate', 'N/A'), y)
+        y = draw_field("Audit Language", "لغة التدقيق", audit_info.get('language', 'N/A'), y)
+        y -= 10
+        
+        # Section 7: Previous Certification
+        if company_data.get('previousCertification'):
+            y = draw_section_header("7. PREVIOUS CERTIFICATION", "٧. الشهادات السابقة", y)
+            y = draw_field("Previous Cert. Body", "جهة الاعتماد السابقة", company_data.get('previousCertBody', 'N/A'), y)
+            y = draw_field("Previous Cert. Expiry", "انتهاء الشهادة السابقة", company_data.get('previousCertExpiry', 'N/A'), y)
+            y -= 10
+        
+        # Section 8: Consultant
+        if company_data.get('consultantUsed'):
+            y = draw_section_header("8. CONSULTANT INFORMATION", "٨. معلومات المستشار", y)
+            y = draw_field("Consultant Name", "اسم المستشار", company_data.get('consultantName', 'N/A'), y)
+            y = draw_field("Consultant Contact", "اتصال المستشار", company_data.get('consultantContact', 'N/A'), y)
+        
+        # Footer for page 2
+        c.setFillColor(colors.HexColor('#1e3a5f'))
+        c.rect(0, 0, width, 40, fill=True, stroke=False)
+        c.setFillColor(colors.white)
+        c.setFont('Helvetica', 9)
+        c.drawCentredString(width/2, 25, "BAYAN Auditing & Conformity | بيان للتدقيق والمطابقة")
+        c.drawCentredString(width/2, 12, "Page 2")
     
     c.save()
     return str(pdf_path)

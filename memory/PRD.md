@@ -212,8 +212,17 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Note**: Requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in environment for real SMS
 
 ### Multilingual PDF Generation ✅ (NEW - Feb 2026)
-- **Forms PDF**: `/api/forms/{form_id}/bilingual_pdf` - Bilingual form submission PDF
-- **Proposals PDF**: `/api/proposals/{proposal_id}/bilingual_pdf` - Bilingual quotation PDF
+- **Forms PDF**: `/api/forms/{form_id}/bilingual_pdf` - Comprehensive bilingual form PDF with ALL client-filled data
+  - Includes: Company info, contact details, organization details, certification standards, sites info, audit info
+  - Company logo at top of PDF
+  - Multi-page support for extensive data
+- **Proposals PDF**: `/api/proposals/{proposal_id}/bilingual_pdf` - Professional bilingual quotation PDF
+  - Includes: Client info, certification scope, audit duration, service fees, validity
+  - Company stamp section (no signature - pending client approval)
+  - Company logo at top of PDF
+- **Contracts PDF**: Both standard and bilingual versions
+  - Full signature and company seal from client
+  - Company logo at top of PDF
 - **Reports PDF**: `/api/reports/bilingual_pdf` - Bilingual summary report PDF
 - **UI Buttons**: Added bilingual PDF download buttons in Forms and Quotations tabs
 - **Arabic + English**: All PDFs contain both languages side by side

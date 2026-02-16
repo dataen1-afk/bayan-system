@@ -397,7 +397,16 @@ class BilingualContractPDFGenerator:
         ))
 
     def _get_arabic_name(self, english_name):
-        """Get Arabic version of signatory name - returns the name as-is if no translation"""
+        """Get Arabic version of signatory name - returns the name as-is if it's already Arabic"""
+        if not english_name:
+            return english_name
+            
+        # Check if the name is already Arabic (contains Arabic characters)
+        has_arabic = any('\u0600' <= char <= '\u06FF' or '\u0750' <= char <= '\u077F' for char in str(english_name))
+        if has_arabic:
+            # Return as-is - don't double process Arabic text
+            return english_name
+        
         # Common name translations (can be extended)
         name_translations = {
             'Abdullah Al-Rashid': 'عبدالله الراشد',

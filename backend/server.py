@@ -348,6 +348,65 @@ class NotificationCreate(BaseModel):
     related_id: Optional[str] = None
     related_type: Optional[str] = None
 
+# ================= AUDITOR MODELS =================
+
+class AuditorAvailability(BaseModel):
+    date: str  # YYYY-MM-DD
+    is_available: bool = True
+    reason: str = ""  # Reason if unavailable (vacation, sick, training, etc.)
+
+class Auditor(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    employee_id: str = ""  # Employee ID/Badge number
+    name: str
+    name_ar: str = ""
+    email: str
+    phone: str = ""
+    mobile: str = ""
+    # Qualifications
+    specializations: List[str] = []  # ISO 9001, ISO 14001, ISO 45001, etc.
+    certification_level: str = "auditor"  # trainee, auditor, lead_auditor, technical_expert
+    years_experience: int = 0
+    certifications: List[str] = []  # List of certifications held
+    # Status
+    status: str = "active"  # active, inactive, on_leave
+    # Availability
+    availability: List[AuditorAvailability] = []
+    default_available: bool = True  # Default availability if no specific date set
+    max_audits_per_month: int = 10
+    # Assignments tracking
+    current_assignments: int = 0
+    total_audits_completed: int = 0
+    # Notes
+    notes: str = ""
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
+class AuditorCreate(BaseModel):
+    employee_id: str = ""
+    name: str
+    name_ar: str = ""
+    email: str
+    phone: str = ""
+    mobile: str = ""
+    specializations: List[str] = []
+    certification_level: str = "auditor"
+    years_experience: int = 0
+    certifications: List[str] = []
+    max_audits_per_month: int = 10
+    notes: str = ""
+
+class AuditAssignment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    audit_id: str
+    auditor_id: str
+    role: str = "auditor"  # lead_auditor, auditor, technical_expert, observer
+    status: str = "assigned"  # assigned, confirmed, completed, cancelled
+    assigned_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    confirmed_at: Optional[datetime] = None
+    notes: str = ""
+
 # ================= TEMPLATE MODELS =================
 
 class CertificationPackage(BaseModel):

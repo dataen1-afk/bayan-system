@@ -3566,12 +3566,33 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     # ============ SECTION DRAWING FUNCTIONS ============
     def draw_section_box(title_en, title_ar, y_start, fields, box_height=None):
         """Draw a section with background box and fields - bilingual layout
-        Left side: English labels + English values only
-        Right side: Arabic labels + Arabic values only
-        Neutral data (numbers, emails) shown on both sides
+        - Predefined values (dropdowns): English on left, Arabic translation on right
+        - Text fields: Same value on both sides with appropriate font
         """
         if box_height is None:
             box_height = len(fields) * 18 + 30
+        
+        # Translation map for predefined dropdown values
+        translations = {
+            # Legal Status
+            'private': 'خاص',
+            'public': 'عام',
+            'government': 'حكومي',
+            'non-profit': 'غير ربحي',
+            # Certification Program
+            'initial': 'أولي',
+            'renewal': 'تجديد',
+            'transfer': 'نقل',
+            'surveillance': 'مراقبة',
+            # Yes/No
+            'yes': 'نعم',
+            'no': 'لا',
+            'Yes': 'نعم',
+            'No': 'لا',
+            # N/A
+            'N/A': 'غير متوفر',
+            'n/a': 'غير متوفر',
+        }
         
         # Section header bar
         c.setFillColor(primary_color)
@@ -3601,42 +3622,59 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
             val_str = str(value) if value else 'N/A'
             val_display = val_str[:30] + '...' if len(val_str) > 30 else val_str
             
-            # Check if value contains Arabic text
-            value_is_arabic = has_arabic(val_display)
-            # Check if value is neutral (numbers, emails, domains, etc.)
-            value_is_neutral = not value_is_arabic and (
-                val_display.replace('.', '').replace('@', '').replace('-', '').replace(' ', '').isalnum() or
-                '@' in val_display or  # Email
-                val_display.replace('.', '').isdigit() or  # Phone/numbers
-                '.' in val_display and not ' ' in val_display  # Domain/website
-            )
+            # Check if value has Arabic translation (predefined dropdown value)
+            val_lower = val_display.lower().strip()
+            has_translation = val_lower in [k.lower() for k in translations.keys()]
             
-            # LEFT SIDE: English label
+            # Get Arabic version of value
+            if has_translation:
+                # Use translation for dropdown values
+                arabic_value = translations.get(val_display, translations.get(val_display.lower(), val_display))
+            elif has_arabic(val_display):
+                # Value is already Arabic text
+                arabic_value = val_display
+            else:
+                # English text or numbers - use as-is
+                arabic_value = val_display
+            
+            # LEFT SIDE: English label + English value
             c.setFont('Helvetica-Bold', 9)
             c.drawString(40, y, f"{label_en}:")
             
-            # LEFT SIDE: Value (only if English or neutral)
-            if not value_is_arabic or value_is_neutral:
+            # Draw English value (or Arabic if that's all we have)
+            if has_arabic(val_display) and not has_translation:
+                # Value is Arabic text - show with Amiri font on English side too
+                if arabic_font_available:
+                    try:
+                        reshaped = arabic_reshaper.reshape(val_display)
+                        bidi_val = get_display(reshaped)
+                        c.setFont('Amiri', 9)
+                        c.drawString(160, y, bidi_val)
+                    except:
+                        c.setFont('Helvetica', 9)
+                        c.drawString(160, y, val_display)
+            else:
+                # English value or predefined value
                 c.setFont('Helvetica', 9)
                 c.drawString(160, y, val_display)
             
-            # RIGHT SIDE: Arabic label
+            # RIGHT SIDE: Arabic value + Arabic label
             if arabic_font_available:
                 try:
+                    # Arabic label
                     ar_label = get_display(arabic_reshaper.reshape(f"{label_ar}:"))
                     c.setFont('Amiri-Bold', 9)
                     c.drawRightString(width - 40, y, ar_label)
                     
-                    # RIGHT SIDE: Value (only if Arabic or neutral)
-                    if value_is_arabic or value_is_neutral:
-                        if value_is_arabic:
-                            reshaped_val = arabic_reshaper.reshape(val_display)
-                            bidi_val = get_display(reshaped_val)
-                            c.setFont('Amiri', 9)
-                            c.drawRightString(width - 120, y, bidi_val)
-                        else:
-                            c.setFont('Helvetica', 9)
-                            c.drawRightString(width - 120, y, val_display)
+                    # Arabic value
+                    if has_arabic(arabic_value):
+                        reshaped = arabic_reshaper.reshape(arabic_value)
+                        bidi_val = get_display(reshaped)
+                        c.setFont('Amiri', 9)
+                        c.drawRightString(width - 120, y, bidi_val)
+                    else:
+                        c.setFont('Helvetica', 9)
+                        c.drawRightString(width - 120, y, arabic_value)
                 except: pass
             
             y -= 18

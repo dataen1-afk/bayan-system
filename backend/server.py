@@ -2107,7 +2107,7 @@ async def track_order(tracking_id: str):
         "current_status": current_status,
         "standards": standards,
         "timeline_dates": timeline_dates,
-        "contract_available": agreement is not None and agreement.get('status') == 'contract_generated'
+        "contract_available": agreement is not None and agreement.get('signature_image')
     }
     
     # Add proposal info if available

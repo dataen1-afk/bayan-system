@@ -964,6 +964,7 @@ const resources = {
       "specializations": "Specializations",
       "maxAuditsPerMonth": "Max Audits Per Month",
       "auditorNotes": "Notes about this auditor...",
+      "notes": "Notes",
       "fillRequiredFields": "Please fill all required fields",
       "errorSavingAuditor": "Error saving auditor",
       "confirmDeactivateAuditor": "Are you sure you want to deactivate this auditor?",

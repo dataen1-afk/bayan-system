@@ -3659,60 +3659,25 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
         cert_fields.append(("Other Standard", "معيار آخر", company_data.get('otherStandard')))
     y = draw_section_box("4. CERTIFICATION STANDARDS", "٤. معايير الاعتماد", y, cert_fields)
     
-    # Section 5: Important Notes (to fill page 1)
-    c.setFillColor(primary_color)
-    c.rect(30, y - 22, width - 60, 22, fill=True, stroke=False)
-    c.setFillColor(colors.white)
-    # Draw English part with Helvetica
-    c.setFont('Helvetica-Bold', 10)
-    c.drawString(40, y - 16, "IMPORTANT NOTES /")
-    # Draw Arabic part with Amiri font
-    if arabic_font_available:
-        try:
-            ar_header = get_display(arabic_reshaper.reshape("ملاحظات هامة"))
-            c.setFont('Amiri-Bold', 11)
-            c.drawRightString(width - 40, y - 16, ar_header)
-        except:
-            pass
+    # Section 5: Sites Information (on page 1)
+    site_fields = []
+    site1 = company_data.get('site1Address', '')
+    site2 = company_data.get('site2Address', '')
+    if site1:
+        site_fields.append(("Site 1 Address", "عنوان الموقع 1", site1))
+    if site2:
+        site_fields.append(("Site 2 Address", "عنوان الموقع 2", site2))
+    if not site_fields:
+        site_fields.append(("Primary Location", "الموقع الرئيسي", "Main office only"))
+    y = draw_section_box("5. SITES INFORMATION", "٥. معلومات المواقع", y, site_fields)
     
-    # Calculate remaining space from current y position down to footer
-    notes_box_top = y - 22  # Top of notes content area
-    notes_box_bottom = 50   # Just above footer
-    notes_content_height = notes_box_top - notes_box_bottom
-    
-    c.setFillColor(light_bg)
-    c.rect(30, notes_box_bottom, width - 60, notes_content_height, fill=True, stroke=False)
-    c.setStrokeColor(colors.HexColor('#d1d5db'))
-    c.setLineWidth(0.5)
-    c.rect(30, notes_box_bottom, width - 60, notes_content_height + 22, fill=False, stroke=True)
-    
-    c.setFillColor(colors.black)
-    c.setFont('Helvetica', 9)
-    # English notes (left side)
-    notes_english = [
-        "• Please ensure all information provided is accurate and up-to-date.",
-        "• Incomplete applications may delay the certification process.",
-        "• Additional documentation may be requested during the review process.",
-        "• For inquiries, contact us at: info@bayan.sa or +966 11 XXX XXXX",
+    # Section 6: Consultant Information (on page 1)
+    consultant_fields = [
+        ("Consultant Used?", "هل تم استخدام مستشار؟", company_data.get('isConsultantInvolved', 'N/A')),
     ]
-    # Arabic notes (right side) - matching English content
-    notes_arabic = [
-        "• يرجى التأكد من صحة جميع المعلومات المقدمة وحداثتها",
-        "• قد تؤدي الطلبات غير المكتملة إلى تأخير عملية الاعتماد",
-        "• قد يتم طلب وثائق إضافية خلال عملية المراجعة",
-        "• للاستفسارات، تواصل معنا على: info@bayan.sa أو +966 11 XXX XXXX",
-    ]
-    
-    ny = y - 35
-    # Draw English notes on left, Arabic notes on right (side by side)
-    for i in range(len(notes_english)):
-        # English on left
-        c.setFont('Helvetica', 9)
-        c.drawString(40, ny, notes_english[i])
-        # Arabic on right
-        if i < len(notes_arabic):
-            draw_arabic(notes_arabic[i], width - 40, ny, 9, right_align=True)
-        ny -= 16
+    if company_data.get('consultantName'):
+        consultant_fields.append(("Consultant Name", "اسم المستشار", company_data.get('consultantName')))
+    y = draw_section_box("6. CONSULTANT", "٦. المستشار", y, consultant_fields)
     
     # Footer for page 1
     c.setFillColor(primary_color)
@@ -3747,27 +3712,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     y = height - 70
     
-    # Section 5: Sites Information
-    site_fields = []
-    site1 = company_data.get('site1Address', '')
-    site2 = company_data.get('site2Address', '')
-    if site1:
-        site_fields.append(("Site 1 Address", "عنوان الموقع 1", site1))
-    if site2:
-        site_fields.append(("Site 2 Address", "عنوان الموقع 2", site2))
-    if not site_fields:
-        site_fields.append(("Primary Location", "الموقع الرئيسي", "Main office only"))
-    y = draw_section_box("5. SITES INFORMATION", "٥. معلومات المواقع", y, site_fields)
-    
-    # Section 6: Consultant Information
-    consultant_fields = [
-        ("Consultant Used?", "هل تم استخدام مستشار؟", company_data.get('isConsultantInvolved', 'N/A')),
-    ]
-    if company_data.get('consultantName'):
-        consultant_fields.append(("Consultant Name", "اسم المستشار", company_data.get('consultantName')))
-    y = draw_section_box("6. CONSULTANT", "٦. المستشار", y, consultant_fields)
-    
-    # Section 7: Declaration
+    # Section 7: Declaration (on page 2)
     decl_fields = [
         ("Declared By", "المُقِر", company_data.get('declarationName', 'N/A')),
         ("Designation", "المنصب", company_data.get('declarationDesignation', 'N/A')),
@@ -3775,9 +3720,116 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     ]
     y = draw_section_box("7. DECLARATION", "٧. الإقرار", y, decl_fields)
     
-    # ============ SIGNATURE & SEAL SECTION ============
-    # Large signature box
-    sig_box_height = 110
+    # ============ IMPORTANT NOTES SECTION (on page 2) ============
+    c.setFillColor(primary_color)
+    c.rect(30, y - 22, width - 60, 22, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    # Draw English part with Helvetica
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(40, y - 16, "IMPORTANT NOTES /")
+    # Draw Arabic part with Amiri font
+    if arabic_font_available:
+        try:
+            ar_header = get_display(arabic_reshaper.reshape("ملاحظات هامة"))
+            c.setFont('Amiri-Bold', 11)
+            c.drawRightString(width - 40, y - 16, ar_header)
+        except:
+            pass
+    
+    # Notes content box
+    notes_box_height = 85
+    c.setFillColor(light_bg)
+    c.rect(30, y - 22 - notes_box_height, width - 60, notes_box_height, fill=True, stroke=False)
+    c.setStrokeColor(colors.HexColor('#d1d5db'))
+    c.setLineWidth(0.5)
+    c.rect(30, y - 22 - notes_box_height, width - 60, notes_box_height + 22, fill=False, stroke=True)
+    
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica', 9)
+    # English notes (left side)
+    notes_english = [
+        "• Please ensure all information provided is accurate and up-to-date.",
+        "• Incomplete applications may delay the certification process.",
+        "• Additional documentation may be requested during the review process.",
+        "• For inquiries, contact us at: info@bayan.sa or +966 11 XXX XXXX",
+    ]
+    # Arabic notes (right side) - matching English content
+    notes_arabic = [
+        "• يرجى التأكد من صحة جميع المعلومات المقدمة وحداثتها",
+        "• قد تؤدي الطلبات غير المكتملة إلى تأخير عملية الاعتماد",
+        "• قد يتم طلب وثائق إضافية خلال عملية المراجعة",
+        "• للاستفسارات، تواصل معنا على: info@bayan.sa أو +966 11 XXX XXXX",
+    ]
+    
+    ny = y - 35
+    # Draw English notes on left, Arabic notes on right (side by side)
+    for i in range(len(notes_english)):
+        # English on left
+        c.setFont('Helvetica', 9)
+        c.drawString(40, ny, notes_english[i])
+        # Arabic on right
+        if i < len(notes_arabic):
+            draw_arabic(notes_arabic[i], width - 40, ny, 9, right_align=True)
+        ny -= 16
+    
+    y = y - 22 - notes_box_height - 10
+    
+    # ============ TERMS & CONDITIONS (on page 2) ============
+    c.setFillColor(primary_color)
+    c.rect(30, y - 22, width - 60, 22, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(40, y - 16, "TERMS & CONDITIONS /")
+    # Draw Arabic part with Amiri font
+    if arabic_font_available:
+        try:
+            ar_terms_header = get_display(arabic_reshaper.reshape("الشروط والأحكام"))
+            c.setFont('Amiri-Bold', 11)
+            c.drawRightString(width - 40, y - 16, ar_terms_header)
+        except:
+            pass
+    
+    # Terms content box - fixed height
+    terms_box_height = 115
+    c.setFillColor(light_bg)
+    c.rect(30, y - 22 - terms_box_height, width - 60, terms_box_height, fill=True, stroke=False)
+    c.setStrokeColor(colors.HexColor('#d1d5db'))
+    c.setLineWidth(0.5)
+    c.rect(30, y - 22 - terms_box_height, width - 60, terms_box_height + 22, fill=False, stroke=True)
+    
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica', 8)
+    # English terms (left side)
+    terms_english = [
+        "1. This application is subject to review and approval by BAYAN.",
+        "2. All information provided must be accurate and complete.",
+        "3. The applicant agrees to comply with all certification requirements.",
+        "4. Certification fees are non-refundable once the audit begins.",
+        "5. BAYAN reserves the right to conduct surveillance audits.",
+    ]
+    # Arabic terms (right side) - matching English content
+    terms_arabic = [
+        "١. هذا الطلب خاضع للمراجعة والموافقة من قبل بيان",
+        "٢. يجب أن تكون جميع المعلومات المقدمة دقيقة وكاملة",
+        "٣. يوافق المتقدم على الامتثال لجميع متطلبات الاعتماد",
+        "٤. رسوم الاعتماد غير قابلة للاسترداد بمجرد بدء التدقيق",
+        "٥. تحتفظ بيان بحق إجراء عمليات تدقيق المراقبة",
+    ]
+    
+    ty = y - 35
+    for i in range(len(terms_english)):
+        c.setFont('Helvetica', 8)
+        c.drawString(40, ty, terms_english[i])
+        if i < len(terms_arabic):
+            draw_arabic(terms_arabic[i], width - 40, ty, 8, right_align=True)
+        ty -= 14
+    
+    y = y - 22 - terms_box_height - 10
+    
+    # ============ SIGNATURE & SEAL SECTION (at the end of page 2) ============
+    sig_box_height = 100
+    
+    # Large signature box (left)
     c.setFillColor(light_bg)
     c.rect(30, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=True, stroke=False)
     c.setStrokeColor(primary_color)
@@ -3785,82 +3837,46 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     c.rect(30, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=False, stroke=True)
     
     c.setFillColor(primary_color)
-    c.setFont('Helvetica-Bold', 11)
-    c.drawString(40, y - 20, "AUTHORIZED SIGNATURE")
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(40, y - 18, "AUTHORIZED SIGNATURE")
     if arabic_font_available:
         try:
             ar_sig = get_display(arabic_reshaper.reshape("التوقيع المعتمد"))
-            c.setFont('Amiri-Bold', 11)
-            c.drawRightString(width/2 - 30, y - 20, ar_sig)
+            c.setFont('Amiri-Bold', 10)
+            c.drawRightString(width/2 - 30, y - 18, ar_sig)
         except: pass
     
     c.setFillColor(colors.black)
     c.setFont('Helvetica', 9)
-    c.drawString(40, y - 45, "Name / الاسم:")
-    c.line(110, y - 47, width/2 - 40, y - 47)
-    c.drawString(40, y - 65, "Date / التاريخ:")
-    c.line(110, y - 67, width/2 - 40, y - 67)
-    c.drawString(40, y - 85, "Signature / التوقيع:")
-    c.line(130, y - 87, width/2 - 40, y - 87)
+    c.drawString(40, y - 40, "Name / الاسم:")
+    c.line(110, y - 42, width/2 - 40, y - 42)
+    c.drawString(40, y - 58, "Date / التاريخ:")
+    c.line(110, y - 60, width/2 - 40, y - 60)
+    c.drawString(40, y - 76, "Signature / التوقيع:")
+    c.line(130, y - 78, width/2 - 40, y - 78)
     
-    # Company Seal Box
+    # Company Seal Box (right)
     c.setFillColor(light_bg)
     c.rect(width/2 + 10, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=True, stroke=False)
     c.setStrokeColor(primary_color)
     c.rect(width/2 + 10, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=False, stroke=True)
     
     c.setFillColor(primary_color)
-    c.setFont('Helvetica-Bold', 11)
-    c.drawCentredString(width*3/4 - 10, y - 20, "COMPANY SEAL / ختم الشركة")
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(width/2 + 20, y - 18, "COMPANY SEAL /")
+    if arabic_font_available:
+        try:
+            ar_seal = get_display(arabic_reshaper.reshape("ختم الشركة"))
+            c.setFont('Amiri-Bold', 10)
+            c.drawRightString(width - 40, y - 18, ar_seal)
+        except: pass
     
     # Draw company seal image
     seal_path = ROOT_DIR / "assets" / "company-seal.png"
     if seal_path.exists():
         try:
-            c.drawImage(str(seal_path), width*3/4 - 35, y - 95, width=60, height=60, preserveAspectRatio=True, mask='auto')
+            c.drawImage(str(seal_path), width*3/4 - 25, y - 85, width=55, height=55, preserveAspectRatio=True, mask='auto')
         except: pass
-    
-    y = y - sig_box_height - 10
-    
-    # ============ TERMS & CONDITIONS ============
-    c.setFillColor(primary_color)
-    c.rect(30, y - 22, width - 60, 22, fill=True, stroke=False)
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 10)
-    c.drawString(40, y - 16, "TERMS & CONDITIONS / الشروط والأحكام")
-    
-    # Fill remaining space with terms box
-    terms_box_height = y - 22 - 50  # from current y down to footer area (y=50)
-    c.setFillColor(light_bg)
-    c.rect(30, 50, width - 60, terms_box_height, fill=True, stroke=False)
-    c.setStrokeColor(colors.HexColor('#d1d5db'))
-    c.setLineWidth(0.5)
-    c.rect(30, 50, width - 60, terms_box_height + 22, fill=False, stroke=True)
-    
-    c.setFillColor(colors.black)
-    c.setFont('Helvetica', 8)
-    terms = [
-        "1. This application is subject to review and approval by BAYAN Auditing & Conformity.",
-        "2. All information provided must be accurate and complete. False information may result in rejection.",
-        "3. The applicant agrees to comply with all certification requirements and standards.",
-        "4. Certification fees are non-refundable once the audit process has begun.",
-        "5. BAYAN reserves the right to conduct surveillance audits during the certification period.",
-        "6. The applicant shall provide access to all relevant documents and facilities during audits.",
-        "7. Any changes to the organization's scope or structure must be reported to BAYAN immediately.",
-        "8. Certification validity is subject to successful completion of all scheduled audits.",
-        "",
-        "هذا الطلب خاضع للمراجعة والموافقة من قبل بيان للتحقق والمطابقة .1",
-        "يجب أن تكون جميع المعلومات المقدمة دقيقة وكاملة .2",
-        "يوافق المتقدم على الامتثال لجميع متطلبات ومعايير الاعتماد .3",
-        "رسوم الاعتماد غير قابلة للاسترداد بمجرد بدء عملية التدقيق .4",
-    ]
-    ty = y - 35
-    for term in terms:
-        if has_arabic(term):
-            draw_arabic(term, width - 40, ty, 8, right_align=True)
-        else:
-            c.drawString(40, ty, term)
-        ty -= 12
     
     # Footer for page 2
     c.setFillColor(primary_color)

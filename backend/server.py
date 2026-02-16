@@ -3831,7 +3831,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = y - 22 - notes_box_height - 10
     
     # ============ TERMS & CONDITIONS (on page 2) ============
-    c.setFillColor(primary_color)
+    c.setFillColor(section_color)
     c.rect(30, y - 22, width - 60, 22, fill=True, stroke=False)
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Bold', 10)

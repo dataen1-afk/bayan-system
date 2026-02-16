@@ -3386,12 +3386,14 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     # Draw bilingual header for seal section
     c.drawString(width/2 - 80, y, "Company Seal /")
     draw_arabic_text("ختم الشركة", width/2 + 80, y, 10, bold=True)
-    y -= 15
+    y -= 10
     
-    # Draw the official company seal image - positioned higher to avoid footer overlap
+    # Draw the official company seal image - positioned with sufficient margin above footer (footer is 0-45)
+    # Seal needs to be placed at minimum y=50 to avoid footer overlap
+    seal_y = max(y - 80, 55)  # Ensure seal stays above footer with 10px buffer
     if seal_path.exists():
         try:
-            c.drawImage(str(seal_path), width/2 - 45, y - 95, width=90, height=90, preserveAspectRatio=True, mask='auto')
+            c.drawImage(str(seal_path), width/2 - 40, seal_y, width=80, height=80, preserveAspectRatio=True, mask='auto')
         except Exception as e:
             print(f"Error drawing seal: {e}")
     

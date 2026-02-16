@@ -3835,7 +3835,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     y = y - 22 - terms_box_height - 10
     
     # ============ SIGNATURE & SEAL SECTION (at the end of page 2) ============
-    sig_box_height = 100
+    sig_box_height = 120
     
     # Large signature box (left)
     c.setFillColor(light_bg)
@@ -3846,22 +3846,52 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     c.setFillColor(primary_color)
     c.setFont('Helvetica-Bold', 10)
-    c.drawString(40, y - 18, "AUTHORIZED SIGNATURE")
+    c.drawString(45, y - 22, "AUTHORIZED SIGNATURE")
     if arabic_font_available:
         try:
             ar_sig = get_display(arabic_reshaper.reshape("التوقيع المعتمد"))
             c.setFont('Amiri-Bold', 10)
-            c.drawRightString(width/2 - 30, y - 18, ar_sig)
+            c.drawRightString(width/2 - 35, y - 22, ar_sig)
         except: pass
     
+    # Draw labels with proper fonts - English then Arabic separately
     c.setFillColor(colors.black)
+    
+    # Name field
     c.setFont('Helvetica', 9)
-    c.drawString(40, y - 40, "Name / الاسم:")
-    c.line(110, y - 42, width/2 - 40, y - 42)
-    c.drawString(40, y - 58, "Date / التاريخ:")
-    c.line(110, y - 60, width/2 - 40, y - 60)
-    c.drawString(40, y - 76, "Signature / التوقيع:")
-    c.line(130, y - 78, width/2 - 40, y - 78)
+    c.drawString(45, y - 48, "Name /")
+    if arabic_font_available:
+        try:
+            ar_name = get_display(arabic_reshaper.reshape("الاسم"))
+            c.setFont('Amiri', 10)
+            c.drawString(85, y - 48, ar_name)
+        except: pass
+    c.drawString(115, y - 48, ":")
+    c.line(125, y - 50, width/2 - 45, y - 50)
+    
+    # Date field
+    c.setFont('Helvetica', 9)
+    c.drawString(45, y - 70, "Date /")
+    if arabic_font_available:
+        try:
+            ar_date = get_display(arabic_reshaper.reshape("التاريخ"))
+            c.setFont('Amiri', 10)
+            c.drawString(80, y - 70, ar_date)
+        except: pass
+    c.drawString(125, y - 70, ":")
+    c.line(135, y - 72, width/2 - 45, y - 72)
+    
+    # Signature field
+    c.setFont('Helvetica', 9)
+    c.drawString(45, y - 92, "Signature /")
+    if arabic_font_available:
+        try:
+            ar_signature = get_display(arabic_reshaper.reshape("التوقيع"))
+            c.setFont('Amiri', 10)
+            c.drawString(105, y - 92, ar_signature)
+        except: pass
+    c.drawString(145, y - 92, ":")
+    c.line(155, y - 94, width/2 - 45, y - 94)
     
     # Company Seal Box (right)
     c.setFillColor(light_bg)
@@ -3871,19 +3901,22 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     c.setFillColor(primary_color)
     c.setFont('Helvetica-Bold', 10)
-    c.drawString(width/2 + 20, y - 18, "COMPANY SEAL /")
+    c.drawString(width/2 + 25, y - 22, "COMPANY SEAL /")
     if arabic_font_available:
         try:
             ar_seal = get_display(arabic_reshaper.reshape("ختم الشركة"))
             c.setFont('Amiri-Bold', 10)
-            c.drawRightString(width - 40, y - 18, ar_seal)
+            c.drawRightString(width - 45, y - 22, ar_seal)
         except: pass
     
-    # Draw company seal image
+    # Draw company seal image - larger and centered
     seal_path = ROOT_DIR / "assets" / "company-seal.png"
+    seal_size = 75
+    seal_x = width/2 + 10 + (width/2 - 50 - seal_size) / 2  # Center in box
+    seal_y = y - sig_box_height + 15  # Position from bottom of box
     if seal_path.exists():
         try:
-            c.drawImage(str(seal_path), width*3/4 - 25, y - 85, width=55, height=55, preserveAspectRatio=True, mask='auto')
+            c.drawImage(str(seal_path), seal_x, seal_y, width=seal_size, height=seal_size, preserveAspectRatio=True, mask='auto')
         except: pass
     
     # Footer for page 2

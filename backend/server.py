@@ -1172,6 +1172,8 @@ async def create_proposal(proposal_data: ProposalCreate, current_user: dict = De
         validity_days=proposal_data.validity_days,
         issuer_name=proposal_data.issuer_name,  # Use value from form
         issuer_designation=proposal_data.issuer_designation,  # Use value from form
+        issuer_signature=proposal_data.issuer_signature,  # First party signature
+        issuer_stamp=proposal_data.issuer_stamp,  # First party stamp
         issued_date=datetime.now(timezone.utc)
     )
     

@@ -3756,7 +3756,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     # ============ SIGNATURE & SEAL SECTION ============
     # Large signature box
-    sig_box_height = 120
+    sig_box_height = 110
     c.setFillColor(light_bg)
     c.rect(30, y - sig_box_height, width/2 - 50, sig_box_height - 10, fill=True, stroke=False)
     c.setStrokeColor(primary_color)
@@ -3775,12 +3775,12 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     c.setFillColor(colors.black)
     c.setFont('Helvetica', 9)
-    c.drawString(40, y - 50, "Name / الاسم:")
-    c.line(110, y - 52, width/2 - 40, y - 52)
-    c.drawString(40, y - 75, "Date / التاريخ:")
-    c.line(110, y - 77, width/2 - 40, y - 77)
-    c.drawString(40, y - 100, "Signature / التوقيع:")
-    c.line(130, y - 102, width/2 - 40, y - 102)
+    c.drawString(40, y - 45, "Name / الاسم:")
+    c.line(110, y - 47, width/2 - 40, y - 47)
+    c.drawString(40, y - 65, "Date / التاريخ:")
+    c.line(110, y - 67, width/2 - 40, y - 67)
+    c.drawString(40, y - 85, "Signature / التوقيع:")
+    c.line(130, y - 87, width/2 - 40, y - 87)
     
     # Company Seal Box
     c.setFillColor(light_bg)
@@ -3796,36 +3796,50 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     seal_path = ROOT_DIR / "assets" / "company-seal.png"
     if seal_path.exists():
         try:
-            c.drawImage(str(seal_path), width*3/4 - 45, y - 105, width=70, height=70, preserveAspectRatio=True, mask='auto')
+            c.drawImage(str(seal_path), width*3/4 - 35, y - 95, width=60, height=60, preserveAspectRatio=True, mask='auto')
         except: pass
     
+    y = y - sig_box_height - 10
+    
     # ============ TERMS & CONDITIONS ============
-    y = y - sig_box_height - 20
     c.setFillColor(primary_color)
-    c.rect(30, y - 120, width - 60, 22, fill=True, stroke=False)
+    c.rect(30, y - 22, width - 60, 22, fill=True, stroke=False)
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Bold', 10)
-    c.drawString(40, y - 114, "TERMS & CONDITIONS / الشروط والأحكام")
+    c.drawString(40, y - 16, "TERMS & CONDITIONS / الشروط والأحكام")
     
+    # Fill remaining space with terms box
+    terms_box_height = y - 22 - 50  # from current y down to footer area (y=50)
     c.setFillColor(light_bg)
-    c.rect(30, y - 220, width - 60, 100, fill=True, stroke=False)
+    c.rect(30, 50, width - 60, terms_box_height, fill=True, stroke=False)
     c.setStrokeColor(colors.HexColor('#d1d5db'))
     c.setLineWidth(0.5)
-    c.rect(30, y - 220, width - 60, 122, fill=False, stroke=True)
+    c.rect(30, 50, width - 60, terms_box_height + 22, fill=False, stroke=True)
     
     c.setFillColor(colors.black)
     c.setFont('Helvetica', 8)
     terms = [
         "1. This application is subject to review and approval by BAYAN Auditing & Conformity.",
-        "2. All information provided must be accurate and complete.",
-        "3. The applicant agrees to comply with all certification requirements.",
+        "2. All information provided must be accurate and complete. False information may result in rejection.",
+        "3. The applicant agrees to comply with all certification requirements and standards.",
         "4. Certification fees are non-refundable once the audit process has begun.",
         "5. BAYAN reserves the right to conduct surveillance audits during the certification period.",
+        "6. The applicant shall provide access to all relevant documents and facilities during audits.",
+        "7. Any changes to the organization's scope or structure must be reported to BAYAN immediately.",
+        "8. Certification validity is subject to successful completion of all scheduled audits.",
+        "",
+        "هذا الطلب خاضع للمراجعة والموافقة من قبل بيان للتحقق والمطابقة .1",
+        "يجب أن تكون جميع المعلومات المقدمة دقيقة وكاملة .2",
+        "يوافق المتقدم على الامتثال لجميع متطلبات ومعايير الاعتماد .3",
+        "رسوم الاعتماد غير قابلة للاسترداد بمجرد بدء عملية التدقيق .4",
     ]
-    ty = y - 135
+    ty = y - 35
     for term in terms:
-        c.drawString(40, ty, term)
-        ty -= 14
+        if has_arabic(term):
+            draw_arabic(term, width - 40, ty, 8, right_align=True)
+        else:
+            c.drawString(40, ty, term)
+        ty -= 12
     
     # Footer for page 2
     c.setFillColor(primary_color)

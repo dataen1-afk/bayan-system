@@ -470,6 +470,10 @@ const resources = {
       "firstPartySignatoryDetails": "Enter the details of Bayan's authorized signatory for this proposal",
       "signatoryName": "Signatory Name",
       "jobTitle": "Job Title",
+      "signature": "Signature",
+      "stamp": "Stamp / Seal",
+      "uploadSignature": "Click to upload signature image",
+      "uploadStamp": "Click to upload stamp/seal image",
       "signatoryDetailsNote": "These details will appear on the contract when the client approves the proposal.",
       
       // Public Proposal Page

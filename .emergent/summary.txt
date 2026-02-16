@@ -7,64 +7,48 @@
     2.  Client fills out a multi-step wizard form (no login required).
     3.  On submission, the system automatically calculates audit duration based on an Excel logic file.
     4.  Admin reviews the submission and calculation on their dashboard.
-    5.  Admin generates a price quote based on the submitted data.
+    5.  Admin generates a price quote based on the submitted data. This now includes adding the authorized signatory's name, title, signature, and stamp, which are editable.
     6.  Client receives a link to the quote and can **approve**, **reject**, or **request modifications**.
     7.  Upon approval, the client is redirected to fill out a Certification Agreement form.
-    8.  A submitted agreement becomes a contract, and a PDF can be generated, including a digital signature.
+    8.  A submitted agreement becomes a contract, and a PDF can be generated, including the digital signatures and stamps of both parties.
 -   **User Roles**: Admin (full access), Client (accesses forms/quotes/agreements via public links).
 -   **UI/UX**: Professional UI matching the Bayan Auditing brand, multi-language support (English/Arabic), full RTL layout for Arabic, and a collapsible sidebar.
 -   **Additional Features**: Admin notifications, status tracking timeline, editable reusable templates, a reporting dashboard with filtering, and a customer portal.
 
-**User's preferred language**: The user communicates in English. The application's primary language is **Arabic**. The next agent MUST ensure all features work correctly in both Arabic (with RTL) and English and continue to respond in English.
+**User's preferred language**: The user communicates in English. The application UI and PDF output must be bilingual (English/Arabic with RTL support). The next agent MUST respond in English.
 
 **what currently exists?**
-A full-stack application for managing service contracts. The previous agent worked on fixing several PDF rendering issues, including overlapping text and cut-off images. After multiple failed attempts to create a professional single-page layout for the Form PDF, the agent implemented a two-page design with structured boxes. However, the user identified two new bugs in the Important Notes section of the latest generated PDF. The PDF generation logic has been problematically moved into the main  file, making it very large and difficult to maintain.
+A full-stack application for managing service contracts. The previous agent implemented a significant number of user-requested fixes and enhancements to the PDF generation logic for Forms and Contracts, including layout reorganization, styling adjustments, and complex data display rules for bilingual content. A major feature was added to allow the admin to attach an authorized signatory (name, title, signature, stamp) when creating a price quote, which then appears on the final contract. However, this introduced a new bug where creating a quote with the signature/stamp images fails, likely due to the large size of the base64-encoded images in the request payload. The underlying PDF generation code remains in a fragile, monolithic state within .
 
 **Last working item**:
--   **Last item agent was working**: Fixing two bugs in the Important Notes section on the first page of the newly designed two-page Form PDF, as reported by the user.
-    1.  The Arabic header for the section (ملاحظات هامة) is rendering as square boxes.
-    2.  The Arabic list items in the notes section do not match the corresponding English list items.
+-   **Last item agent was working**: Debugging a critical error that occurs when an admin tries to create a price quote (proposal). The request fails, and the frontend displays a generic [object Object] error message, which happens when the signature and stamp images are included in the form data.
 -   **Status**: IN PROGRESS
--   **Agent Testing Done**: N (for the latest reported bugs)
--   **Which testing method agent to use?**: backend testing agent. The agent should instruct the tester to generate the Form PDF and visually verify that the Important Notes section header renders Arabic text correctly and that the English and Arabic notes correspond to each other.
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: backend testing agent. The primary goal is to fix the proposal creation endpoint.
+    1.  Use  to send a JSON payload (including large base64 strings for signature/stamp) to the  endpoint to reproduce and verify the fix.
+    2.  After the backend is fixed, use the frontend testing agent to confirm the end-to-end flow of creating a proposal with the default signature/stamp images is successful.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**:  (P0) Fix Important Notes section in the Form PDF.
--   **Issue 2**:  (P1) Arabic text renders as black boxes/mojibake in PDFs.
+-   **Issue 1**: (P0) Cannot create a price quote with signature and stamp images.
 
 **Issues Detail**:
 -   **Issue 1**:
-    -   **Description**: On page 1 of the Form PDF, the header for the Important Notes section displays square boxes instead of Arabic text. Additionally, the Arabic content in the notes does not align with the English content.
-    -   **Attempted fixes**: The agent identified the cause but has not implemented a fix yet. The likely cause for the squares is that the header text is being drawn without registering the Amiri font for that specific text object. The content mismatch is a simple data error.
+    -   **Description**: The  endpoint fails when the payload contains base64-encoded signature and stamp images. The frontend displays a non-descriptive  error. This blocks the entire proposal creation workflow.
+    -   **Attempted fixes**: The agent confirmed the API works with a payload that excludes the large base64 image strings. It was investigating if the issue is a server-side request size limit (e.g., Nginx's ) or a Pydantic model validation error.
     -   **Next debug checklist**:
-        1.  Locate the  function and the code for the Important Notes section within .
-        2.  Ensure that  is called before drawing the header text.
-        3.  Set the font to  for the Arabic header ملاحظات هامة.
-        4.  Correct the hardcoded Arabic strings in the  list to match the  list.
-    -   **Why fix this issue and what will be achieved with the fix?**: To make the generated form PDF professional, legible, and accurate, which is a core user requirement.
+        1.  Inspect the Nginx configuration for . If it's too small (e.g., the default 1MB), increase it to a larger value like  in  and restart the service ().
+        2.  If increasing the body size limit doesn't work, refactor the image handling. Instead of sending large base64 strings in the main proposal JSON, modify the frontend to upload the images to the existing  endpoint first. This endpoint returns a file path.
+        3.  Send the returned file paths (e.g., ) in the proposal creation payload instead of the base64 data.
+        4.  Update the backend  model and the proposal creation logic to handle these file paths.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical blocker. The user cannot create valid price quotes, which is a core function of the application.
     -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: Y (font rendering issues are highly recurrent).
-    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: both
     -   **Blocked on other issue**: None
 
--   **Issue 2**:
-    -   **Description**: A highly recurrent issue where Arabic text appears as black boxes or mojibake. The agent fixed one instance of this, but it reappeared in a different part of the PDF, indicating a systemic problem.
-    -   **Attempted fixes**: The agent has repeatedly applied fixes using , , and ensuring the Amiri font is used.
-    -   **Next debug checklist**: After fixing the current layout issues (Issue 1), a full regression check is needed. Guide the user to download and visually inspect every type of PDF (Form, Quotation, Contract) to confirm that *all* Arabic text renders correctly.
-    -   **Why fix this issue and what will be achieved with the fix?**: Illegible contracts and documents are unacceptable for the business.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: backend
-    -   **Blocked on other issue**: Issue 1
-
 **In progress Task List**:
--   **Task 1**: (P0) Finalize the professional two-page design for the Form PDF.
-    -   **Where to resume**: Resume by fixing the font and content issues in the Important Notes section in .
-    -   **What will be achieved with this?**: The application will generate a correct, professional, and legible PDF document for the Forms stage of the workflow, resolving a major point of user frustration.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: backend
-    -   **Blocked on something**: None.
+-   None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
@@ -72,22 +56,30 @@ A full-stack application for managing service contracts. The previous agent work
     -   **(P1) Finalize Twilio SMS Integration**: Guide the user on obtaining Twilio credentials (, , ). Once provided, add them to  to enable live SMS notifications.
 -   **Future Tasks**:
     -   **(P2)** Test and enable the functionality of sending actual emails (e.g., via SendGrid/Resend integration).
-    -   **(P2) CRITICAL REFACTOR**: Refactor the massive, scattered PDF generation logic from  into a single, robust service to prevent recurring font/rendering bugs.
+    -   **(P0) CRITICAL REFACTOR**: Extract the monolithic PDF generation logic from  into a dedicated, modular service (e.g., ). This is essential to stop the cycle of recurring font, layout, and data rendering bugs.
 
 **Completed work in this session**
--   Fixed overlapping text and a cut-off seal image in bilingual (Form/Quotation) PDFs.
--   Fixed an issue where Arabic text values rendered as black boxes on the English side of PDFs by implementing dynamic font selection.
--   Corrected the company's official Arabic name () across the codebase.
--   Fixed an issue where most fields in the Form PDF showed as N/A by correcting the data field mappings.
--   Implemented a new two-page professional design for the Form PDF with structured boxes and better content distribution, which is now pending final fixes.
+-   **PDF Layout & Content**:
+    -   Reorganized the Form PDF sections into a two-page layout as requested.
+    -   Fixed all bilingual data display issues in the Form PDF, ensuring values appear correctly centered or on the appropriate language side, with correct translations for dropdown fields.
+    -   Adjusted spacing, colors, and element sizes (e.g., company seal) across all PDFs for a more professional look.
+    -   Fixed signature box labels rendering as squares by applying the correct Arabic font.
+    -   Resolved multiple contract PDF issues: added a page break, fixed date formatting, and ensured signature boxes were sized equally.
+-   **Authorized Signatory Feature**:
+    -   Added a new section to the Create Proposal page for the admin to input an authorized signatory's name, title, signature, and stamp.
+    -   Implemented default loading of the signatory's details and images, while keeping them editable.
+    -   Updated the backend to save these details with the proposal and render them on the final contract PDF.
+-   **Bug Fixes**:
+    -   Fixed the Track Your Order feature to work with proposal access tokens, not just form IDs.
+    -   Removed incorrect hardcoded text (Arab Accreditation Authority Limited) from the UI and all PDF templates.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: Incorrect Arabic text rendering in PDFs.
+-   **Issue recurrence in previous fork**: Incorrect Arabic text rendering in PDFs (appearing as squares or mojibake).
 -   **Recurrence count**: 6+
--   **Status**: IN PROGRESS (The issue persists, appearing in new areas of the PDF after fixes are applied elsewhere, highlighting the need for a structural code change).
+-   **Status**: IN PROGRESS. This is a systemic issue caused by the monolithic code structure. While individual instances are fixed, the root cause remains, making it highly likely to reappear. The planned refactoring is the definitive solution.
 
 **Code Architecture**
 
@@ -99,48 +91,48 @@ A full-stack application for managing service contracts. The previous agent work
 
 **key DB schema**
 -   : Stores client-submitted form data.
--   : Stores quotation data.
+-   : Stores quotation data. Now includes , , , and .
 -   : Stores final contract data.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--    (Critically modified file containing the new, buggy PDF generation logic).
--    (Likely obsolete or unused now).
--    (Contains logic for quotation PDFs).
+-    (Main file to investigate for the proposal creation bug and for future refactoring).
+-    (Frontend file for the failing proposal creation form).
+-    (Contains logic for rendering signatory details).
 
 **Areas that need refactoring**:
--   **CRITICAL**: The previous agent moved all the complex PDF generation logic for the Form document directly into . This file is now thousands of lines long and mixes routing, business logic, and complex presentation code. This is a severe violation of separation of concerns and is the direct cause of the ongoing, difficult-to-debug rendering bugs. This logic MUST be extracted into a dedicated, reusable PDF service/module.
+-   **CRITICAL**: The PDF generation logic is scattered and duplicated, with the most complex parts consolidated into . This massive technical debt is the root cause of the constant stream of rendering bugs and must be refactored into a dedicated service with clear separation of concerns.
 
 **key api endpoints**
--   
--   
+-   : **(CURRENTLY BROKEN)** Endpoint for creating a price quote.
+-   : Fetches default signatory name, title, and images for the proposal form.
+-   : Existing endpoint for file uploads, which should be used for signatures/stamps to avoid large payloads.
+-   : Customer-facing endpoint to track order status.
 
 **Critical Info for New Agent**
--   Your immediate priority (P0) is to fix the two visual bugs in the Important Notes section of the Form PDF. The user is highly frustrated with the iterative process and expects a professional result.
--   The PDF generation code is now a monolith inside . Be extremely careful when editing it.
--   Do not attempt further major redesigns. Fix the specific issues reported by the user to get the current design to a working state.
--   Once the user approves the Form PDF, you must strongly recommend and prioritize the refactoring of the PDF generation code to prevent this cycle of bugs from continuing.
+-   Your immediate and highest priority (P0) is to fix the bug preventing the creation of proposals with signature/stamp images. This is a hard blocker for the user. Investigate the server's request body size limit first.
+-   After fixing the blocker, you MUST strongly advise the user to prioritize the refactoring of the PDF generation code. Explain that this is the only way to permanently solve the recurring layout and font issues.
+-   The user is highly engaged and provides specific, iterative feedback on the PDF appearance. Pay close attention to visual details.
 
 **documents and test reports created in this job**
 -    (Updated)
--   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Reports that the generated Form PDF shows N/A for all fields.
-2.  **Agent**: Fixes the data field mappings in the PDF generator.
-3.  **User**: Acknowledges the fix but notes the single-page layout has a lot of unprofessional empty space and asks for a better design.
-4.  **Agent**: Attempts a redesign by reducing spacing.
-5.  **User**: States the new design is worse than it was because the text is now too small and cramped.
-6.  **Agent**: Reverts font sizes and proposes different layout strategies.
-7.  **User**: Expresses frustration (From bad to worse) and requests a professional design, multi-page if necessary.
-8.  **Agent**: Implements a new two-page design with structured boxes.
-9.  **Agent**: After several self-corrections to the two-page layout, presents the final version.
-10. **User**: Points out the final bugs: the Important Notes section header renders as squares, and the Arabic content doesn't match the English.
+1.  **User**: Asks to add the signatory name, title, and seal to the contract, visible only after client approval.
+2.  **Agent**: Implements the feature by adding editable fields to the price quote creation page.
+3.  **User**: Points out the signature and stamp fields are missing.
+4.  **Agent**: Adds signature and stamp upload fields to the UI.
+5.  **User**: Provides the signature and stamp images and asks for them to be set as editable defaults.
+6.  **Agent**: Implements the default loading of signature/stamp images.
+7.  **User**: Confirms the client flow: after signing, the client should be able to download the contract.
+8.  **Agent**: Fixes the client portal to enable the download button immediately after signing.
+9.  **User**: Reports that Track Your Order shows Order not found for a specific ID.
+10. **User**: After the agent fixes the tracking, the user reports an error message whay with a screenshot showing  when trying to create a proposal, which is the current blocking issue.
 
 **Project Health Check:**
--   **At Risk**: The application's core PDF feature is highly unstable. Moving all the presentation logic into  has massively increased technical debt and made the system more fragile. User frustration is high due to the repeated failures in delivering a professional-looking document.
+-   **At Risk**: The application's core proposal-to-contract workflow is blocked by a critical bug. The underlying technical debt in the PDF generation code makes the system fragile and prone to regressions, leading to high user frustration.
 
 **3rd Party Integrations**
 -   : Used for PDF generation.
@@ -149,13 +141,14 @@ A full-stack application for managing service contracts. The previous agent work
 -   **Twilio SMS**: Foundation laid, pending user credentials for activation.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, once for the initial layout fixes, which passed.
+-   **Testing agent used after significant changes**: NO, recent changes were tested manually.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: PDF rendering for Arabic text is a persistent regression that keeps appearing in different forms.
+-   **Known regressions**: Arabic text rendering in PDFs is a persistent regression risk due to the fragile codebase.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
 
 **What agent forgot to execute**
--   The agent did not follow the original plan to refactor the fragmented PDF logic. Instead, it consolidated the logic into the worst possible place (), creating a massive monolith that is now the source of new, hard-to-debug issues. This significantly worsened the codebase's health.</analysis>
+-   The agent did not anticipate that adding large base64-encoded images to the proposal creation payload could exceed server request size limits, leading to the current blocker.
+-   The agent has consistently deferred the critical refactoring of , instead applying patches that increase the file's complexity and fragility.</analysis>

@@ -3599,31 +3599,29 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     # Section 1: Company Information
     y = draw_section_header("1. COMPANY INFORMATION", "١. معلومات الشركة", y)
     y = draw_field("Company Name", "اسم الشركة", company_data.get('companyName', client_info.get('company_name', 'N/A')), y)
-    y = draw_field("Legal Entity", "الكيان القانوني", company_data.get('legalEntity', 'N/A'), y)
-    y = draw_field("Commercial Reg. No", "رقم السجل التجاري", company_data.get('commercialRegNo', 'N/A'), y)
+    y = draw_field("Legal Status", "الحالة القانونية", company_data.get('legalStatus', 'N/A'), y)
     y = draw_field("Address", "العنوان", company_data.get('address', 'N/A'), y)
-    y = draw_field("City", "المدينة", company_data.get('city', 'N/A'), y)
-    y = draw_field("Country", "الدولة", company_data.get('country', 'N/A'), y)
-    y = draw_field("Postal Code", "الرمز البريدي", company_data.get('postalCode', 'N/A'), y)
+    y = draw_field("Phone", "الهاتف", company_data.get('phoneNumber', client_info.get('phone', 'N/A')), y)
+    y = draw_field("Email", "البريد الإلكتروني", company_data.get('email', client_info.get('email', 'N/A')), y)
+    y = draw_field("Website", "الموقع الإلكتروني", company_data.get('website', 'N/A'), y)
     y -= 10
     
     # Section 2: Contact Information
     y = draw_section_header("2. CONTACT INFORMATION", "٢. معلومات الاتصال", y)
     y = draw_field("Contact Person", "جهة الاتصال", company_data.get('contactPerson', client_info.get('name', 'N/A')), y)
-    y = draw_field("Position", "المنصب", company_data.get('contactPosition', 'N/A'), y)
-    y = draw_field("Email", "البريد الإلكتروني", company_data.get('email', client_info.get('email', 'N/A')), y)
-    y = draw_field("Phone", "الهاتف", company_data.get('phone', client_info.get('phone', 'N/A')), y)
-    y = draw_field("Fax", "الفاكس", company_data.get('fax', 'N/A'), y)
-    y = draw_field("Website", "الموقع الإلكتروني", company_data.get('website', 'N/A'), y)
+    y = draw_field("Designation", "المنصب", company_data.get('designation', 'N/A'), y)
+    y = draw_field("Mobile", "الجوال", company_data.get('mobileNumber', 'N/A'), y)
+    y = draw_field("Contact Email", "البريد الإلكتروني للتواصل", company_data.get('contactEmail', 'N/A'), y)
     y -= 10
     
     # Section 3: Organization Details
     y = draw_section_header("3. ORGANIZATION DETAILS", "٣. تفاصيل المنظمة", y)
     y = draw_field("Total Employees", "إجمالي الموظفين", company_data.get('totalEmployees', 'N/A'), y)
-    y = draw_field("Shift Workers", "عمال الورديات", company_data.get('shiftWorkers', 'N/A'), y)
-    y = draw_field("Industry Sector", "قطاع الصناعة", company_data.get('industrySector', 'N/A'), y)
-    y = draw_field("Business Activity", "النشاط التجاري", company_data.get('businessActivity', 'N/A'), y)
-    y = draw_field("Scope of Services", "نطاق الخدمات", company_data.get('scopeOfServices', 'N/A'), y)
+    y = draw_field("Full-Time Employees", "موظفين دوام كامل", company_data.get('fullTimeEmployees', 'N/A'), y)
+    y = draw_field("Part-Time Employees", "موظفين دوام جزئي", company_data.get('partTimeEmployees', 'N/A'), y)
+    y = draw_field("Number of Sites", "عدد المواقع", company_data.get('numberOfSites', 'N/A'), y)
+    y = draw_field("Location Shifts", "عدد الورديات", company_data.get('locationShifts', 'N/A'), y)
+    y = draw_field("Key Business Processes", "العمليات التجارية الرئيسية", company_data.get('keyBusinessProcesses', 'N/A'), y)
     y -= 10
     
     # Section 4: Certification Standards
@@ -3631,21 +3629,21 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     standards = company_data.get('certificationSchemes', [])
     standards_text = ', '.join(standards) if standards else 'N/A'
     y = draw_field("Selected Standards", "المعايير المختارة", standards_text, y)
+    y = draw_field("Certification Program", "برنامج الاعتماد", company_data.get('certificationProgram', 'N/A'), y)
     if company_data.get('otherStandard'):
         y = draw_field("Other Standard", "معيار آخر", company_data.get('otherStandard'), y)
     y -= 10
     
     # Section 5: Sites Information
     y = draw_section_header("5. SITES INFORMATION", "٥. معلومات المواقع", y)
-    sites = company_data.get('sites', [])
-    if sites:
-        for i, site in enumerate(sites, 1):
-            if isinstance(site, dict):
-                site_text = f"{site.get('name', '')} - {site.get('address', '')}"
-            else:
-                site_text = str(site)
-            y = draw_field(f"Site {i}", f"الموقع {i}", site_text, y)
-    else:
+    # Check for site addresses
+    site1 = company_data.get('site1Address', '')
+    site2 = company_data.get('site2Address', '')
+    if site1:
+        y = draw_field("Site 1", "الموقع 1", site1, y)
+    if site2:
+        y = draw_field("Site 2", "الموقع 2", site2, y)
+    if not site1 and not site2:
         y = draw_field("Sites", "المواقع", "Main site only", y)
     
     # Footer for page 1

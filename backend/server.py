@@ -2430,6 +2430,311 @@ class AuditScheduleCreate(BaseModel):
     recurrence_type: str = ""  # weekly, monthly, quarterly, yearly
     recurrence_end_date: str = ""
 
+# ================= AUDITOR MANAGEMENT ROUTES =================
+
+@api_router.get("/auditors")
+async def get_auditors(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    status: Optional[str] = None,
+    specialization: Optional[str] = None
+):
+    """Get all auditors with optional filtering"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if status:
+        query["status"] = status
+    if specialization:
+        query["specializations"] = specialization
+    
+    auditors = await db.auditors.find(query, {"_id": 0}).sort("name", 1).to_list(100)
+    
+    # Calculate current assignments for each auditor
+    for auditor in auditors:
+        assignments = await db.audit_assignments.count_documents({
+            "auditor_id": auditor['id'],
+            "status": {"$in": ["assigned", "confirmed"]}
+        })
+        auditor['current_assignments'] = assignments
+    
+    return auditors
+
+@api_router.get("/auditors/available")
+async def get_available_auditors(
+    date: str,
+    specialization: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get auditors available on a specific date"""
+    await get_current_user(credentials)
+    
+    query = {"status": "active"}
+    if specialization:
+        query["specializations"] = specialization
+    
+    auditors = await db.auditors.find(query, {"_id": 0}).to_list(100)
+    
+    available_auditors = []
+    for auditor in auditors:
+        # Check if auditor has specific unavailability for this date
+        is_available = auditor.get('default_available', True)
+        for avail in auditor.get('availability', []):
+            if avail.get('date') == date:
+                is_available = avail.get('is_available', True)
+                break
+        
+        if is_available:
+            # Check if auditor is already assigned to an audit on this date
+            existing = await db.audit_schedules.count_documents({
+                "scheduled_date": date,
+                "auditors": {"$regex": auditor['id']}
+            })
+            
+            # Check max audits per month
+            month_start = date[:7] + "-01"
+            month_end = date[:7] + "-31"
+            monthly_count = await db.audit_assignments.count_documents({
+                "auditor_id": auditor['id'],
+                "status": {"$in": ["assigned", "confirmed", "completed"]}
+            })
+            
+            auditor['is_available'] = existing == 0 and monthly_count < auditor.get('max_audits_per_month', 10)
+            auditor['existing_audits_today'] = existing
+            auditor['monthly_audits'] = monthly_count
+            available_auditors.append(auditor)
+    
+    return available_auditors
+
+@api_router.post("/auditors")
+async def create_auditor(auditor_data: AuditorCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new auditor"""
+    await get_current_user(credentials)
+    
+    # Check if email already exists
+    existing = await db.auditors.find_one({"email": auditor_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Auditor with this email already exists")
+    
+    auditor = Auditor(**auditor_data.model_dump())
+    auditor_doc = auditor.model_dump()
+    auditor_doc['created_at'] = auditor_doc['created_at'].isoformat()
+    
+    await db.auditors.insert_one(auditor_doc)
+    
+    return {"message": "Auditor created", "auditor_id": auditor.id}
+
+@api_router.get("/auditors/{auditor_id}")
+async def get_auditor(auditor_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get auditor details"""
+    await get_current_user(credentials)
+    
+    auditor = await db.auditors.find_one({"id": auditor_id}, {"_id": 0})
+    if not auditor:
+        raise HTTPException(status_code=404, detail="Auditor not found")
+    
+    # Get recent assignments
+    assignments = await db.audit_assignments.find(
+        {"auditor_id": auditor_id},
+        {"_id": 0}
+    ).sort("assigned_at", -1).to_list(20)
+    
+    auditor['recent_assignments'] = assignments
+    
+    return auditor
+
+@api_router.put("/auditors/{auditor_id}")
+async def update_auditor(auditor_id: str, updates: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update auditor details"""
+    await get_current_user(credentials)
+    
+    auditor = await db.auditors.find_one({"id": auditor_id})
+    if not auditor:
+        raise HTTPException(status_code=404, detail="Auditor not found")
+    
+    updates['updated_at'] = datetime.now(timezone.utc).isoformat()
+    await db.auditors.update_one({"id": auditor_id}, {"$set": updates})
+    
+    return {"message": "Auditor updated"}
+
+@api_router.delete("/auditors/{auditor_id}")
+async def delete_auditor(auditor_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete an auditor (soft delete - sets status to inactive)"""
+    await get_current_user(credentials)
+    
+    auditor = await db.auditors.find_one({"id": auditor_id})
+    if not auditor:
+        raise HTTPException(status_code=404, detail="Auditor not found")
+    
+    # Check for active assignments
+    active_assignments = await db.audit_assignments.count_documents({
+        "auditor_id": auditor_id,
+        "status": {"$in": ["assigned", "confirmed"]}
+    })
+    
+    if active_assignments > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete auditor with {active_assignments} active assignments")
+    
+    # Soft delete
+    await db.auditors.update_one(
+        {"id": auditor_id},
+        {"$set": {"status": "inactive", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Auditor deactivated"}
+
+@api_router.post("/auditors/{auditor_id}/availability")
+async def set_auditor_availability(
+    auditor_id: str,
+    availability_data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Set auditor availability for specific dates"""
+    await get_current_user(credentials)
+    
+    auditor = await db.auditors.find_one({"id": auditor_id})
+    if not auditor:
+        raise HTTPException(status_code=404, detail="Auditor not found")
+    
+    # Update availability array
+    current_availability = auditor.get('availability', [])
+    date = availability_data.get('date')
+    
+    # Remove existing entry for this date
+    current_availability = [a for a in current_availability if a.get('date') != date]
+    
+    # Add new entry
+    current_availability.append({
+        "date": date,
+        "is_available": availability_data.get('is_available', True),
+        "reason": availability_data.get('reason', '')
+    })
+    
+    await db.auditors.update_one(
+        {"id": auditor_id},
+        {"$set": {
+            "availability": current_availability,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Availability updated"}
+
+# ================= AUDIT ASSIGNMENT ROUTES =================
+
+@api_router.post("/audit-schedules/{audit_id}/assign")
+async def assign_auditor_to_audit(
+    audit_id: str,
+    assignment_data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Assign an auditor to an audit"""
+    await get_current_user(credentials)
+    
+    # Verify audit exists
+    audit = await db.audit_schedules.find_one({"id": audit_id})
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    # Verify auditor exists
+    auditor_id = assignment_data.get('auditor_id')
+    auditor = await db.auditors.find_one({"id": auditor_id})
+    if not auditor:
+        raise HTTPException(status_code=404, detail="Auditor not found")
+    
+    # Check if already assigned
+    existing = await db.audit_assignments.find_one({
+        "audit_id": audit_id,
+        "auditor_id": auditor_id,
+        "status": {"$ne": "cancelled"}
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Auditor already assigned to this audit")
+    
+    # Create assignment
+    assignment = AuditAssignment(
+        audit_id=audit_id,
+        auditor_id=auditor_id,
+        role=assignment_data.get('role', 'auditor'),
+        notes=assignment_data.get('notes', '')
+    )
+    
+    assignment_doc = assignment.model_dump()
+    assignment_doc['assigned_at'] = assignment_doc['assigned_at'].isoformat()
+    await db.audit_assignments.insert_one(assignment_doc)
+    
+    # Update audit with auditor name
+    current_auditors = audit.get('auditors', '')
+    auditor_name = auditor.get('name', '')
+    if current_auditors:
+        current_auditors += f", {auditor_name}"
+    else:
+        current_auditors = auditor_name
+    
+    await db.audit_schedules.update_one(
+        {"id": audit_id},
+        {"$set": {"auditors": current_auditors}}
+    )
+    
+    return {"message": "Auditor assigned", "assignment_id": assignment.id}
+
+@api_router.get("/audit-schedules/{audit_id}/assignments")
+async def get_audit_assignments(audit_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all auditor assignments for an audit"""
+    await get_current_user(credentials)
+    
+    assignments = await db.audit_assignments.find(
+        {"audit_id": audit_id, "status": {"$ne": "cancelled"}},
+        {"_id": 0}
+    ).to_list(20)
+    
+    # Enrich with auditor details
+    for assignment in assignments:
+        auditor = await db.auditors.find_one({"id": assignment['auditor_id']}, {"_id": 0})
+        if auditor:
+            assignment['auditor'] = {
+                "id": auditor['id'],
+                "name": auditor['name'],
+                "name_ar": auditor.get('name_ar', ''),
+                "email": auditor['email'],
+                "certification_level": auditor.get('certification_level', ''),
+                "specializations": auditor.get('specializations', [])
+            }
+    
+    return assignments
+
+@api_router.delete("/audit-assignments/{assignment_id}")
+async def remove_auditor_assignment(assignment_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Remove an auditor from an audit"""
+    await get_current_user(credentials)
+    
+    assignment = await db.audit_assignments.find_one({"id": assignment_id})
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    
+    # Cancel assignment
+    await db.audit_assignments.update_one(
+        {"id": assignment_id},
+        {"$set": {"status": "cancelled"}}
+    )
+    
+    # Update audit auditors list
+    audit = await db.audit_schedules.find_one({"id": assignment['audit_id']})
+    if audit:
+        auditor = await db.auditors.find_one({"id": assignment['auditor_id']})
+        if auditor:
+            current_auditors = audit.get('auditors', '')
+            auditor_name = auditor.get('name', '')
+            # Remove auditor name from list
+            auditor_list = [a.strip() for a in current_auditors.split(',') if a.strip() != auditor_name]
+            await db.audit_schedules.update_one(
+                {"id": assignment['audit_id']},
+                {"$set": {"auditors": ', '.join(auditor_list)}}
+            )
+    
+    return {"message": "Assignment removed"}
+
+# ================= AUDIT SCHEDULE ROUTES =================
+
 @api_router.get("/audit-schedules")
 async def get_audit_schedules(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get all audit schedules"""

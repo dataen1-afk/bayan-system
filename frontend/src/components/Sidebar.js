@@ -13,7 +13,8 @@ import {
   Menu,
   Calendar,
   ExternalLink,
-  Receipt
+  Receipt,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

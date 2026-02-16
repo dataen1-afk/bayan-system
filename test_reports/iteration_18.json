@@ -1,0 +1,95 @@
+{
+  "summary": "Iteration 18: Bilingual PDF Visual Verification Testing. Verified that both Form and Proposal bilingual PDFs have NO text overlap (English left, Arabic right columns properly separated), company seal is FULLY VISIBLE in Proposal PDF (not cut off), and Arabic text renders correctly (no black boxes) using Amiri font. All 11 tests passed (100%).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_bilingual_pdf_visual.py",
+    "/app/test_reports/pytest/iteration18_bilingual_pdf_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "draw_field() function in server.py correctly separates columns: English label at X=50, English value at X=145, Arabic value at X=width-160, Arabic label at X=width-50",
+    "Company seal positioning uses max(y - 80, 55) to ensure minimum 55px above footer - preventing cutoff",
+    "Amiri Arabic font (Regular and Bold) properly registered and embedded in PDFs",
+    "Footer displays bilingual company name correctly: 'BAYAN Auditing & Conformity | بيان للتدقيق والمطابقة'"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_bilingual_pdf_visual.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "N/A (PDF generation is backend only)"
+  },
+  "test_credentials": {
+    "admin": {
+      "email": "admin@test.com",
+      "password": "admin123"
+    }
+  },
+  "seed_data_creation": "Used existing test data - Form ID: c31d4310-267b-4e06-8ed5-f7abb8dc8272, Proposal ID: 0b5f8409-af5c-43fc-963b-bd9e58ee86a6",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bilingual PDF layout bugs have been fixed and verified. The draw_field function now uses separated X-coordinates to prevent text overlap, and the company seal positioning uses max() to ensure it stays above the footer. Both Form and Proposal PDFs render correctly with Amiri Arabic font.",
+  "feature_test_results": {
+    "form_bilingual_pdf_text_layout": {
+      "status": "PASS",
+      "findings": [
+        "English labels positioned at X=50 (left side)",
+        "English values positioned at X=145 (center-left)",
+        "Arabic values positioned at X=width-160 (center-right)",
+        "Arabic labels positioned at X=width-50 (right side)",
+        "NO TEXT OVERLAP observed in visual inspection",
+        "PDF size: 209,713 bytes (substantial content)"
+      ]
+    },
+    "proposal_bilingual_pdf_text_layout": {
+      "status": "PASS",
+      "findings": [
+        "Same column separation pattern as Form PDF",
+        "NO TEXT OVERLAP observed in visual inspection",
+        "PDF size: 454,086 bytes (includes company seal image)"
+      ]
+    },
+    "company_seal_visibility": {
+      "status": "PASS",
+      "findings": [
+        "Company seal (BAC logo) is FULLY VISIBLE in Proposal PDF",
+        "Seal positioned with adequate margin above footer",
+        "Code uses seal_y = max(y - 80, 55) to prevent footer overlap",
+        "Seal dimensions: 80x80 pixels, centered horizontally"
+      ]
+    },
+    "arabic_text_rendering": {
+      "status": "PASS",
+      "findings": [
+        "Arabic text renders correctly using Amiri font (no black boxes)",
+        "Arabic reshaper + BiDi algorithm properly applied",
+        "Sample rendered text: 'طلب الاعتماد', 'عرض السعر', 'معلومات الشركة'",
+        "Footer Arabic text: 'بيان للتدقيق والمطابقة'"
+      ]
+    },
+    "pdf_endpoints_functionality": {
+      "status": "PASS",
+      "endpoints_tested": [
+        "GET /api/forms/{form_id}/bilingual_pdf - Returns 200, application/pdf",
+        "GET /api/proposals/{proposal_id}/bilingual_pdf - Returns 200, application/pdf"
+      ]
+    }
+  },
+  "visual_verification_screenshots": {
+    "form_pdf_preview": "/app/.screenshots/form_page-1.png (converted from PDF)",
+    "proposal_pdf_preview": "/app/.screenshots/proposal_page-1.png (converted from PDF)",
+    "dashboard_forms_tab": "/app/.screenshots/05_forms_clean.png",
+    "dashboard_quotations_tab": "/app/.screenshots/07_quotations_tab.png"
+  },
+  "mocked_apis": {
+    "email_notifications": "MOCKED - Email sending via SMTP is mocked"
+  }
+}

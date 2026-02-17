@@ -41,6 +41,7 @@ import PublicFeedbackPage from '@/pages/PublicFeedbackPage';
 import PreTransferReviewPage from '@/pages/PreTransferReviewPage';
 import CertifiedClientsPage from '@/pages/CertifiedClientsPage';
 import SuspendedClientsPage from '@/pages/SuspendedClientsPage';
+import AdminLayout from '@/components/AdminLayout';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

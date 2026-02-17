@@ -8455,6 +8455,286 @@ async def get_nonconformity_report_pdf(
         logging.error(f"Error generating Nonconformity Report PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+# ================= CERTIFICATE DATA ENDPOINTS (BACF6-14) =================
+
+@api_router.post("/certificate-data")
+async def create_certificate_data(
+    data: CertificateDataCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create new Certificate Data - from NC report, Stage 2 report, or independently"""
+    await get_current_user(credentials)
+    
+    cert_data = CertificateData()
+    
+    # If creating from NC report, pull data from there
+    if data.nc_report_id:
+        nc_report = await db.nonconformity_reports.find_one({"id": data.nc_report_id}, {"_id": 0})
+        if not nc_report:
+            raise HTTPException(status_code=404, detail="NC Report not found")
+        
+        cert_data.nc_report_id = data.nc_report_id
+        cert_data.stage2_report_id = nc_report.get("stage2_report_id", "")
+        cert_data.client_name = nc_report.get("client_name", "")
+        cert_data.standards = nc_report.get("standards", [])
+        cert_data.lead_auditor = nc_report.get("lead_auditor", "")
+        cert_data.audit_type = nc_report.get("audit_type", "")
+        cert_data.audit_date = nc_report.get("audit_date", "")
+    
+    # If creating from Stage 2 report
+    elif data.stage2_report_id:
+        report = await db.stage2_audit_reports.find_one({"id": data.stage2_report_id}, {"_id": 0})
+        if not report:
+            raise HTTPException(status_code=404, detail="Stage 2 Report not found")
+        
+        cert_data.stage2_report_id = data.stage2_report_id
+        cert_data.client_name = report.get("organization_name", "")
+        cert_data.standards = report.get("standards", [])
+        team_leader = report.get("team_leader", {})
+        cert_data.lead_auditor = team_leader.get("name", "")
+        cert_data.audit_type = "CA - Certification Audit"
+        cert_data.audit_date = report.get("audit_date_to", "") or report.get("end_date", "")
+        
+        # Try to get scope from related agreement
+        if report.get("audit_program_id"):
+            program = await db.audit_programs.find_one({"id": report.get("audit_program_id")}, {"_id": 0})
+            if program:
+                cert_data.agreed_certification_scope = program.get("scope_of_services", "")
+    else:
+        # Use provided data
+        cert_data.client_name = data.client_name
+        cert_data.standards = data.standards
+        cert_data.lead_auditor = data.lead_auditor
+        cert_data.audit_type = data.audit_type
+        cert_data.audit_date = data.audit_date
+    
+    await db.certificate_data.insert_one(cert_data.model_dump())
+    
+    return cert_data.model_dump()
+
+@api_router.get("/certificate-data")
+async def get_certificate_data_list(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all certificate data records"""
+    await get_current_user(credentials)
+    
+    records = await db.certificate_data.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return records
+
+@api_router.get("/certificate-data/{record_id}")
+async def get_certificate_data(
+    record_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get specific certificate data by ID"""
+    await get_current_user(credentials)
+    
+    record = await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    
+    return record
+
+@api_router.put("/certificate-data/{record_id}")
+async def update_certificate_data(
+    record_id: str,
+    data: CertificateDataUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update certificate data"""
+    await get_current_user(credentials)
+    
+    existing = await db.certificate_data.find_one({"id": record_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc)}
+    
+    for field in ["client_name", "standards", "lead_auditor", "audit_type", "audit_date",
+                  "agreed_certification_scope", "agreed_certification_scope_ar", "ea_code",
+                  "technical_category", "company_data_local", "certification_scope_local",
+                  "company_data_english", "certification_scope_english"]:
+        value = getattr(data, field, None)
+        if value is not None:
+            update_data[field] = value
+    
+    await db.certificate_data.update_one(
+        {"id": record_id},
+        {"$set": update_data}
+    )
+    
+    return await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+
+@api_router.delete("/certificate-data/{record_id}")
+async def delete_certificate_data(
+    record_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Delete certificate data"""
+    await get_current_user(credentials)
+    
+    result = await db.certificate_data.delete_one({"id": record_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    
+    return {"message": "Certificate Data deleted"}
+
+@api_router.post("/certificate-data/{record_id}/send-to-client")
+async def send_certificate_data_to_client(
+    record_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Send certificate data form to client for confirmation"""
+    await get_current_user(credentials)
+    
+    existing = await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    
+    await db.certificate_data.update_one(
+        {"id": record_id},
+        {"$set": {
+            "status": "sent_to_client",
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Generate public link
+    base_url = os.environ.get("REACT_APP_BACKEND_URL", "")
+    public_url = f"{base_url}/public/certificate-data/{existing['access_token']}"
+    
+    return {"message": "Sent to client", "public_url": public_url}
+
+# Public endpoint for client confirmation
+@api_router.get("/public/certificate-data/{access_token}")
+async def get_public_certificate_data(access_token: str):
+    """Get certificate data via public access token"""
+    record = await db.certificate_data.find_one(
+        {"access_token": access_token},
+        {"_id": 0, "client_signature": 0, "client_stamp": 0}  # Exclude large data
+    )
+    
+    if not record:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    
+    if record.get("status") not in ["sent_to_client", "client_confirmed"]:
+        raise HTTPException(status_code=400, detail="Form not available for confirmation")
+    
+    return record
+
+@api_router.post("/public/certificate-data/{access_token}/confirm")
+async def confirm_certificate_data(
+    access_token: str,
+    data: CertificateDataClientConfirm
+):
+    """Client confirms certificate data"""
+    existing = await db.certificate_data.find_one({"access_token": access_token})
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    
+    if existing.get("status") != "sent_to_client":
+        raise HTTPException(status_code=400, detail="Form already confirmed or not available")
+    
+    await db.certificate_data.update_one(
+        {"access_token": access_token},
+        {"$set": {
+            "client_signature": data.client_signature,
+            "client_stamp": data.client_stamp,
+            "client_signature_date": data.signature_date,
+            "client_confirmed": True,
+            "client_confirmed_at": datetime.now(timezone.utc),
+            "status": "client_confirmed",
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": "Certificate data confirmed successfully"}
+
+@api_router.post("/certificate-data/{record_id}/issue-certificate")
+async def issue_certificate_from_data(
+    record_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Generate certificate from confirmed certificate data"""
+    await get_current_user(credentials)
+    
+    record = await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    
+    if not record.get("client_confirmed"):
+        raise HTTPException(status_code=400, detail="Certificate data not yet confirmed by client")
+    
+    # Generate certificate number
+    cert_number = await generate_certificate_number()
+    issue_date = datetime.now().strftime("%Y-%m-%d")
+    expiry_date = (datetime.now() + timedelta(days=3*365)).strftime("%Y-%m-%d")  # 3 year validity
+    
+    # Update certificate data record
+    await db.certificate_data.update_one(
+        {"id": record_id},
+        {"$set": {
+            "certificate_number": cert_number,
+            "issue_date": issue_date,
+            "expiry_date": expiry_date,
+            "certificate_generated": True,
+            "status": "certificate_issued",
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Create certificate record
+    certificate = {
+        "id": str(uuid.uuid4()),
+        "certificate_number": cert_number,
+        "certificate_data_id": record_id,
+        "organization_name": record.get("client_name", ""),
+        "organization_name_ar": record.get("client_name_ar", ""),
+        "standards": record.get("standards", []),
+        "scope": record.get("certification_scope_english", "") or record.get("agreed_certification_scope", ""),
+        "scope_ar": record.get("certification_scope_local", "") or record.get("agreed_certification_scope_ar", ""),
+        "issue_date": issue_date,
+        "expiry_date": expiry_date,
+        "status": "active",
+        "lead_auditor": record.get("lead_auditor", ""),
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    await db.certificates.insert_one(certificate)
+    
+    return {
+        "message": "Certificate issued successfully",
+        "certificate_number": cert_number,
+        "certificate_id": certificate["id"]
+    }
+
+@api_router.get("/certificate-data/{record_id}/pdf")
+async def get_certificate_data_pdf(
+    record_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Generate PDF for Certificate Data"""
+    await get_current_user(credentials)
+    
+    record = await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    
+    try:
+        pdf_bytes = generate_certificate_data_pdf(record)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=certificate_data_{record_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Certificate Data PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

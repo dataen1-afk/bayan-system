@@ -276,7 +276,7 @@ const CreateProposalPage = () => {
             </div>
           </div>
 
-          {/* Organization Details */}
+          {/* Facility Details */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

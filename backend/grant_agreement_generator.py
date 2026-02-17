@@ -161,7 +161,7 @@ def fill_grant_agreement_template(agreement_data: dict, output_docx_path: str) -
                 i += 1
         
         # === Para 13: Scope ===
-        if text.startswith('Scope:') and 'Providing senior management' in text:
+        if 'Scope:' in text and 'Providing senior management' in text:
             # Replace the entire scope content with actual scope
             if scope:
                 for run in paragraph.runs:

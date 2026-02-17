@@ -483,6 +483,54 @@ class ContractReview(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= AUDIT PROGRAM MODELS (BACF6-05) =================
+
+class AuditActivityEntry(BaseModel):
+    """Single audit activity row in the program"""
+    activity: str = ""  # Audit activity description
+    audit_type: str = ""  # Desktop, On-site, etc.
+    stage1: str = ""  # Stage 1 allocation (e.g., "1 day")
+    stage2: str = ""  # Stage 2 allocation
+    sur1: str = ""  # Surveillance 1 allocation
+    sur2: str = ""  # Surveillance 2 allocation
+    rc: str = ""  # Recertification allocation
+    planned_date: str = ""  # YYYY-MM-DD
+
+class AuditProgramCreate(BaseModel):
+    """Create a new Audit Program from a Contract Review"""
+    contract_review_id: str  # Reference to contract review
+
+class AuditProgramUpdate(BaseModel):
+    """Update audit program data"""
+    num_shifts: int = 1
+    activities: List[AuditActivityEntry] = []
+    certification_manager: str = ""
+    approval_date: str = ""
+    notes: str = ""
+
+class AuditProgram(BaseModel):
+    """Audit Program (BACF6-05) - schedules audit stages"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    access_token: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    contract_review_id: str  # Reference to contract review
+    agreement_id: str = ""  # Reference to certification agreement
+    # Auto-populated from contract review/agreement
+    organization_name: str = ""
+    standards: List[str] = []
+    scope_of_services: str = ""
+    total_employees: int = 0
+    # Program data
+    num_shifts: int = 1
+    activities: List[Dict[str, Any]] = []  # List of AuditActivityEntry dicts
+    # Approval
+    certification_manager: str = ""
+    approval_date: str = ""
+    notes: str = ""
+    # Status
+    status: str = "draft"  # draft, approved, in_progress, completed
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

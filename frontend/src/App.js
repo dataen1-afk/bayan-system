@@ -19,6 +19,8 @@ import AuditorsPage from '@/pages/AuditorsPage';
 import CertificatesPage from '@/pages/CertificatesPage';
 import ExpirationAlertsPage from '@/pages/ExpirationAlertsPage';
 import AnalyticsDashboardPage from '@/pages/AnalyticsDashboardPage';
+import ContractReviewsPage from '@/pages/ContractReviewsPage';
+import PublicContractReviewPage from '@/pages/PublicContractReviewPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

@@ -119,6 +119,7 @@ function App() {
             <Route path="/stage1-plan-review/:accessToken" element={<PublicStage1PlanReviewPage />} />
             <Route path="/stage2-plan-review/:accessToken" element={<PublicStage2PlanReviewPage />} />
             <Route path="/meeting-form/:accessToken" element={<PublicMeetingFormPage />} />
+            <Route path="/portal" element={<CustomerPortalPage />} />
             <Route path="/track" element={<CustomerPortalPage />} />
             <Route path="/track/:trackingId" element={<CustomerPortalPage />} />
             

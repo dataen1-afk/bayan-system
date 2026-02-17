@@ -921,6 +921,42 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Compliance checklist results
   - Decision and reviewer information
 
+### Certified Clients Registry (BAC-F6-19) ✅ (NEW - Feb 2026)
+- **Purpose**: Central registry to track all certified clients with their certificate information
+- **Data Structure** (from original Excel template):
+  - S.No. (auto-incremented serial number)
+  - Client Information: name (EN/AR), address, contact person, phone
+  - Certification Details: scope, accreditation standards, EA code/food category
+  - Certificate Details: certificate number, issue date, expiry date
+  - Audit Schedule: surveillance 1 date, surveillance 2 date, recertification date
+  - Status: active, suspended, withdrawn, expired
+- **Backend API Endpoints**:
+  - `GET /api/certified-clients` - List all clients (with status filter)
+  - `POST /api/certified-clients` - Add new client record
+  - `GET /api/certified-clients/{id}` - Get single client details
+  - `PUT /api/certified-clients/{id}` - Update client record
+  - `DELETE /api/certified-clients/{id}` - Delete client record
+  - `GET /api/certified-clients/stats/overview` - Dashboard statistics
+  - `POST /api/certified-clients/sync-from-certificates` - Auto-sync from system certificates
+  - `GET /api/certified-clients/export/excel` - Export to Excel (XLSX)
+  - `GET /api/certified-clients/{id}/pdf` - Generate PDF for single client
+- **Frontend Page**: `/certified-clients`
+  - Stats cards: Total, Active, Expiring Soon, Expired, Surv. 1 Due, Surv. 2 Due
+  - Filterable data table with all clients
+  - Create modal with all fields (client info, certification details, dates)
+  - View modal with grouped details display
+  - Edit modal with status change and notes
+  - Action buttons: View, Edit, Download PDF, Delete
+  - Export buttons: Excel (full registry), Sync from Certificates
+- **Auto-Expiry**: System automatically marks certificates as expired when expiry_date < today
+- **PDF Generator**: `/app/backend/certified_clients_generator.py` - Bilingual PDF with:
+  - Company header with logo area
+  - Certificate number and status badge
+  - Client information section
+  - Certification details (scope, standards, EA code)
+  - Important dates (issue, expiry, surveillance, recertification)
+- **Excel Export**: Professional XLSX with styled headers and full client data
+
 ## Backend Refactoring (February 2026) - IN PROGRESS
 
 ### Completed Modular Extraction

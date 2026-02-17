@@ -608,7 +608,8 @@ def generate_grant_agreement_pdf(agreement_data: dict, output_path: str = None) 
     
     c.setFillColor(section_color)
     c.setFont('Helvetica-Bold', 9)
-    c.drawString(width/2 + 25, y - 15, "FOR CLIENT / للعميل")
+    c.drawString(width/2 + 25, y - 15, "FOR CLIENT")
+    draw_arabic("للعميل", width - 40, y - 15, 9, bold=True, right_align=True)
     
     c.setFillColor(colors.black)
     c.setFont('Helvetica', 9)

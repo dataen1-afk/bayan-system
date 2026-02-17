@@ -31,7 +31,8 @@ import {
   FileOutput,
   ShieldCheck,
   MessageSquare,
-  ArrowRightLeft
+  ArrowRightLeft,
+  UserX
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

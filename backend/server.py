@@ -45,6 +45,7 @@ from nonconformity_report_generator import generate_nonconformity_report_pdf
 from certificate_data_generator import generate_certificate_data_pdf
 from technical_review_generator import generate_technical_review_pdf
 from customer_feedback_generator import generate_customer_feedback_pdf
+from pre_transfer_review_generator import generate_pre_transfer_review_pdf
 
 # Import modular routers
 from routes.auth import router as auth_router

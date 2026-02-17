@@ -36,6 +36,8 @@ import AuditorNotesPage from '@/pages/AuditorNotesPage';
 import NonconformityReportsPage from '@/pages/NonconformityReportsPage';
 import CertificateDataPage from '@/pages/CertificateDataPage';
 import TechnicalReviewPage from '@/pages/TechnicalReviewPage';
+import CustomerFeedbackPage from '@/pages/CustomerFeedbackPage';
+import PublicFeedbackPage from '@/pages/PublicFeedbackPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

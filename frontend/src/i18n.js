@@ -1524,8 +1524,8 @@ const resources = {
       // Proposal Page
       "createProposal": "إنشاء عرض سعر",
       "proposalFor": "عرض سعر لـ",
-      "organizationDetails": "بيانات المنظمة",
-      "organizationName": "اسم المنظمة",
+      "organizationDetails": "بيانات المنشأة",
+      "organizationName": "اسم المنشأة",
       "address": "العنوان",
       "position": "المنصب",
       "serviceDetails": "تفاصيل الخدمة",

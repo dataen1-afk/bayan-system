@@ -5507,6 +5507,160 @@ async def send_contract_review_link(review_id: str, credentials: HTTPAuthorizati
         "organization": review.get('organization_name', '')
     }
 
+# ================= AUDIT PROGRAM (BACF6-05) ROUTES =================
+
+@api_router.post("/audit-programs")
+async def create_audit_program(data: AuditProgramCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new Audit Program from a Contract Review (Admin only)"""
+    await get_current_user(credentials)
+    
+    # Get the contract review
+    review = await db.contract_reviews.find_one({"id": data.contract_review_id}, {"_id": 0})
+    if not review:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    # Check if audit program already exists for this contract review
+    existing = await db.audit_programs.find_one({"contract_review_id": data.contract_review_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Audit program already exists for this contract review")
+    
+    # Create audit program with auto-populated data
+    audit_program = AuditProgram(
+        contract_review_id=data.contract_review_id,
+        agreement_id=review.get('agreement_id', ''),
+        organization_name=review.get('organization_name', ''),
+        standards=review.get('standards', []),
+        scope_of_services=review.get('scope_of_services', ''),
+        total_employees=review.get('total_employees', 0),
+        # Default activities for common audit stages
+        activities=[
+            {"activity": "Document Review", "audit_type": "Desktop", "stage1": "", "stage2": "", "sur1": "", "sur2": "", "rc": "", "planned_date": ""},
+            {"activity": "Opening Meeting", "audit_type": "On-site", "stage1": "", "stage2": "", "sur1": "", "sur2": "", "rc": "", "planned_date": ""},
+            {"activity": "Management Review", "audit_type": "On-site", "stage1": "", "stage2": "", "sur1": "", "sur2": "", "rc": "", "planned_date": ""},
+            {"activity": "Process Audits", "audit_type": "On-site", "stage1": "", "stage2": "", "sur1": "", "sur2": "", "rc": "", "planned_date": ""},
+            {"activity": "Internal Audit Review", "audit_type": "On-site", "stage1": "", "stage2": "", "sur1": "", "sur2": "", "rc": "", "planned_date": ""},
+            {"activity": "Closing Meeting", "audit_type": "On-site", "stage1": "", "stage2": "", "sur1": "", "sur2": "", "rc": "", "planned_date": ""},
+        ]
+    )
+    
+    await db.audit_programs.insert_one(audit_program.dict())
+    
+    # Create notification
+    await create_notification(
+        "audit_program_created",
+        "Audit Program Created",
+        f"Audit program created for {audit_program.organization_name}",
+        audit_program.id,
+        "audit_program"
+    )
+    
+    return {"id": audit_program.id, "access_token": audit_program.access_token, "message": "Audit program created successfully"}
+
+@api_router.get("/audit-programs")
+async def get_audit_programs(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all audit programs (Admin only)"""
+    await get_current_user(credentials)
+    
+    programs = await db.audit_programs.find({}, {"_id": 0}).to_list(1000)
+    return programs
+
+@api_router.get("/audit-programs/{program_id}")
+async def get_audit_program(program_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get a specific audit program (Admin only)"""
+    await get_current_user(credentials)
+    
+    program = await db.audit_programs.find_one({"id": program_id}, {"_id": 0})
+    if not program:
+        raise HTTPException(status_code=404, detail="Audit program not found")
+    
+    return program
+
+@api_router.put("/audit-programs/{program_id}")
+async def update_audit_program(program_id: str, data: AuditProgramUpdate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update audit program (Admin only)"""
+    await get_current_user(credentials)
+    
+    program = await db.audit_programs.find_one({"id": program_id})
+    if not program:
+        raise HTTPException(status_code=404, detail="Audit program not found")
+    
+    update_data = data.dict()
+    update_data['updated_at'] = datetime.now(timezone.utc)
+    
+    # Update status based on approval
+    if data.certification_manager and data.approval_date:
+        update_data['status'] = 'approved'
+    
+    await db.audit_programs.update_one(
+        {"id": program_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Audit program updated successfully"}
+
+@api_router.delete("/audit-programs/{program_id}")
+async def delete_audit_program(program_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete an audit program (Admin only)"""
+    await get_current_user(credentials)
+    
+    result = await db.audit_programs.delete_one({"id": program_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Audit program not found")
+    
+    return {"message": "Audit program deleted successfully"}
+
+@api_router.get("/audit-programs/{program_id}/pdf")
+async def get_audit_program_pdf(program_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate PDF for audit program (Admin only)"""
+    await get_current_user(credentials)
+    
+    program = await db.audit_programs.find_one({"id": program_id}, {"_id": 0})
+    if not program:
+        raise HTTPException(status_code=404, detail="Audit program not found")
+    
+    try:
+        pdf_bytes = generate_audit_program_pdf(program)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=audit_program_{program_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Audit Program PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+@api_router.post("/audit-programs/{program_id}/approve")
+async def approve_audit_program(program_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Approve an audit program (Admin only)"""
+    current_user = await get_current_user(credentials)
+    
+    program = await db.audit_programs.find_one({"id": program_id})
+    if not program:
+        raise HTTPException(status_code=404, detail="Audit program not found")
+    
+    await db.audit_programs.update_one(
+        {"id": program_id},
+        {"$set": {
+            "status": "approved",
+            "certification_manager": current_user.get('name', ''),
+            "approval_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Create notification
+    await create_notification(
+        "audit_program_approved",
+        "Audit Program Approved",
+        f"Audit program approved for {program.get('organization_name', '')}",
+        program_id,
+        "audit_program"
+    )
+    
+    return {"message": "Audit program approved successfully"}
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

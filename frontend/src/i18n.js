@@ -1115,6 +1115,7 @@ const resources = {
       "contact": "جهة الاتصال",
       "actions": "الإجراءات",
       "organization": "المنشأة",
+      "facility": "المنشأة",
       "amount": "المبلغ",
       "signedDate": "تاريخ التوقيع",
       "quote": "عرض سعر",

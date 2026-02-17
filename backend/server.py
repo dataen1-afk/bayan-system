@@ -46,6 +46,7 @@ from certificate_data_generator import generate_certificate_data_pdf
 
 # Import modular routers
 from routes.auth import router as auth_router
+from routes.notifications import router as notifications_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

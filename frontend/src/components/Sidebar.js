@@ -30,7 +30,8 @@ import {
   AlertTriangle,
   FileOutput,
   ShieldCheck,
-  MessageSquare
+  MessageSquare,
+  ArrowRightLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -70,6 +71,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'cert-data', icon: FileOutput, label: t('certData'), color: 'text-teal-600', route: '/certificate-data' },
     { id: 'technical-reviews', icon: ShieldCheck, label: t('technicalReviews'), color: 'text-indigo-600', route: '/technical-reviews' },
     { id: 'customer-feedback', icon: MessageSquare, label: t('customerFeedback'), color: 'text-pink-600', route: '/customer-feedback' },
+    { id: 'pre-transfer-reviews', icon: ArrowRightLeft, label: t('preTransferReviews'), color: 'text-amber-600', route: '/pre-transfer-reviews' },
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
     { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },

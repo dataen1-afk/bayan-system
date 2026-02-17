@@ -37,7 +37,7 @@ const resources = {
       "welcome": "Welcome",
       
       // Tabs
-      "forms": "Forms",
+      "forms": "Grant Applications",
       "myForms": "My Forms",
       "quotations": "Quotations",
       "contracts": "Contracts",

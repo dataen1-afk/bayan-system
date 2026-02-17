@@ -7784,6 +7784,181 @@ async def get_stage2_audit_report_pdf(report_id: str, credentials: HTTPAuthoriza
         logging.error(f"Error generating Stage 2 Audit Report PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+# ================= AUDITOR NOTES ENDPOINTS (BACF6-12) =================
+
+@api_router.post("/auditor-notes")
+async def create_auditor_notes(
+    data: AuditorNotesCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create new Auditor Notes - can be from Stage 2 report or independently"""
+    await get_current_user(credentials)
+    
+    # Initialize auditor notes
+    notes = AuditorNotes()
+    
+    # If creating from Stage 2 report, pull data from there
+    if data.stage2_report_id:
+        report = await db.stage2_audit_reports.find_one({"id": data.stage2_report_id}, {"_id": 0})
+        if not report:
+            raise HTTPException(status_code=404, detail="Stage 2 Audit Report not found")
+        
+        notes.stage2_report_id = data.stage2_report_id
+        notes.stage1_report_id = report.get("stage1_report_id", "")
+        notes.job_order_id = report.get("job_order_id", "")
+        notes.audit_program_id = report.get("audit_program_id", "")
+        notes.client_name = report.get("organization_name", "")
+        notes.location = report.get("address", "") or report.get("site_address", "")
+        notes.standards = report.get("standards", [])
+        notes.audit_type = "Stage 2"
+        notes.audit_date = report.get("end_date", "") or report.get("start_date", "")
+        
+        # Get auditor info from audit team
+        audit_team = report.get("audit_team", {})
+        if audit_team:
+            notes.auditor_name = audit_team.get("lead_auditor", "")
+            notes.auditor_id = audit_team.get("lead_auditor_id", "")
+    else:
+        # Use provided data
+        notes.client_name = data.client_name
+        notes.location = data.location
+        notes.standards = data.standards
+        notes.auditor_name = data.auditor_name
+        notes.audit_type = data.audit_type
+        notes.audit_date = data.audit_date
+        notes.department = data.department
+    
+    # Save to database
+    await db.auditor_notes.insert_one(notes.model_dump())
+    
+    return notes.model_dump()
+
+@api_router.get("/auditor-notes")
+async def get_auditor_notes_list(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all auditor notes"""
+    await get_current_user(credentials)
+    
+    notes_list = await db.auditor_notes.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return notes_list
+
+@api_router.get("/auditor-notes/{notes_id}")
+async def get_auditor_notes(
+    notes_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get specific auditor notes by ID"""
+    await get_current_user(credentials)
+    
+    notes = await db.auditor_notes.find_one({"id": notes_id}, {"_id": 0})
+    if not notes:
+        raise HTTPException(status_code=404, detail="Auditor Notes not found")
+    
+    return notes
+
+@api_router.put("/auditor-notes/{notes_id}")
+async def update_auditor_notes(
+    notes_id: str,
+    data: AuditorNotesUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update auditor notes"""
+    await get_current_user(credentials)
+    
+    existing = await db.auditor_notes.find_one({"id": notes_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Auditor Notes not found")
+    
+    # Build update dict with only provided fields
+    update_data = {"updated_at": datetime.now(timezone.utc)}
+    
+    if data.client_name is not None:
+        update_data["client_name"] = data.client_name
+    if data.location is not None:
+        update_data["location"] = data.location
+    if data.standards is not None:
+        update_data["standards"] = data.standards
+    if data.auditor_name is not None:
+        update_data["auditor_name"] = data.auditor_name
+    if data.audit_type is not None:
+        update_data["audit_type"] = data.audit_type
+    if data.audit_date is not None:
+        update_data["audit_date"] = data.audit_date
+    if data.department is not None:
+        update_data["department"] = data.department
+    if data.notes is not None:
+        update_data["notes"] = data.notes
+    if data.notes_ar is not None:
+        update_data["notes_ar"] = data.notes_ar
+    
+    await db.auditor_notes.update_one(
+        {"id": notes_id},
+        {"$set": update_data}
+    )
+    
+    return await db.auditor_notes.find_one({"id": notes_id}, {"_id": 0})
+
+@api_router.delete("/auditor-notes/{notes_id}")
+async def delete_auditor_notes(
+    notes_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Delete auditor notes"""
+    await get_current_user(credentials)
+    
+    result = await db.auditor_notes.delete_one({"id": notes_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Auditor Notes not found")
+    
+    return {"message": "Auditor Notes deleted"}
+
+@api_router.post("/auditor-notes/{notes_id}/complete")
+async def complete_auditor_notes(
+    notes_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Mark auditor notes as completed"""
+    await get_current_user(credentials)
+    
+    existing = await db.auditor_notes.find_one({"id": notes_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Auditor Notes not found")
+    
+    await db.auditor_notes.update_one(
+        {"id": notes_id},
+        {"$set": {
+            "status": "completed",
+            "completed_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": "Auditor Notes marked as completed"}
+
+@api_router.get("/auditor-notes/{notes_id}/pdf")
+async def get_auditor_notes_pdf(
+    notes_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Generate PDF for Auditor Notes"""
+    await get_current_user(credentials)
+    
+    notes = await db.auditor_notes.find_one({"id": notes_id}, {"_id": 0})
+    if not notes:
+        raise HTTPException(status_code=404, detail="Auditor Notes not found")
+    
+    try:
+        pdf_path = generate_auditor_notes_pdf(notes)
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename=f"auditor_notes_{notes_id[:8]}.pdf"
+        )
+    except Exception as e:
+        logging.error(f"Error generating Auditor Notes PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

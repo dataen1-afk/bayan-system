@@ -457,6 +457,8 @@ const resources = {
       "quote": "Quote",
       "download": "Download",
       "pdf": "PDF",
+      "loading": "Loading...",
+      "create": "Create",
       
       // Language
       "language": "Language",

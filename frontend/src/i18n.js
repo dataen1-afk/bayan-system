@@ -1477,7 +1477,7 @@ const resources = {
       "contactPerson": "جهة الاتصال",
 
       // New form creation workflow
-      "createNewApplicationForm": "إنشاء طلب اعتماد جديد",
+      "createNewApplicationForm": "إنشاء طلب منح جديد",
       "enterClientInfoToCreateForm": "أدخل معلومات العميل لإنشاء نموذج طلب اعتماد جديد",
       "clientName": "اسم العميل",
       "enterClientName": "أدخل اسم العميل",

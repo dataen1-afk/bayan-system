@@ -3682,6 +3682,146 @@ async def track_order(tracking_id: str):
     
     return response
 
+# ================= RFQ & CONTACT FORM ENDPOINTS =================
+
+class RFQRequest(BaseModel):
+    """Request for Quotation submission"""
+    company_name: str
+    contact_name: str
+    email: str
+    phone: str
+    employees: str = ""
+    sites: str = "1"
+    standards: List[str] = []
+    message: str = ""
+
+class ContactRequest(BaseModel):
+    """Contact form submission"""
+    name: str
+    email: str
+    subject: str
+    message: str
+
+@api_router.post("/public/rfq")
+async def submit_rfq(data: RFQRequest):
+    """Submit a Request for Quotation from the customer portal"""
+    
+    # Create RFQ record
+    rfq_record = {
+        "id": str(uuid.uuid4()),
+        "company_name": data.company_name,
+        "contact_name": data.contact_name,
+        "email": data.email,
+        "phone": data.phone,
+        "employees": data.employees,
+        "sites": data.sites,
+        "standards": data.standards,
+        "message": data.message,
+        "status": "new",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.rfq_requests.insert_one(rfq_record)
+    
+    # Create notification for admin
+    await create_notification(
+        notification_type="rfq_received",
+        title="New Quote Request",
+        message=f"New RFQ from {data.company_name} - Standards: {', '.join(data.standards)}",
+        related_id=rfq_record['id'],
+        related_type="rfq"
+    )
+    
+    return {"message": "RFQ submitted successfully", "id": rfq_record['id']}
+
+@api_router.post("/public/contact")
+async def submit_contact_form(data: ContactRequest):
+    """Submit a contact form message from the customer portal"""
+    
+    # Create contact record
+    contact_record = {
+        "id": str(uuid.uuid4()),
+        "name": data.name,
+        "email": data.email,
+        "subject": data.subject,
+        "message": data.message,
+        "status": "unread",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.contact_messages.insert_one(contact_record)
+    
+    # Create notification for admin
+    await create_notification(
+        notification_type="contact_received",
+        title="New Contact Message",
+        message=f"Message from {data.name}: {data.subject}",
+        related_id=contact_record['id'],
+        related_type="contact"
+    )
+    
+    return {"message": "Message sent successfully"}
+
+@api_router.get("/rfq-requests")
+async def get_rfq_requests(
+    status: str = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all RFQ requests (Admin only)"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if status and status != 'all':
+        query['status'] = status
+    
+    requests = await db.rfq_requests.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return requests
+
+@api_router.put("/rfq-requests/{rfq_id}")
+async def update_rfq_request(
+    rfq_id: str,
+    status: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update RFQ request status (Admin only)"""
+    await get_current_user(credentials)
+    
+    await db.rfq_requests.update_one(
+        {"id": rfq_id},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "RFQ updated successfully"}
+
+@api_router.get("/contact-messages")
+async def get_contact_messages(
+    status: str = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all contact messages (Admin only)"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if status and status != 'all':
+        query['status'] = status
+    
+    messages = await db.contact_messages.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return messages
+
+@api_router.put("/contact-messages/{message_id}")
+async def update_contact_message(
+    message_id: str,
+    status: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update contact message status (Admin only)"""
+    await get_current_user(credentials)
+    
+    await db.contact_messages.update_one(
+        {"id": message_id},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Contact message updated successfully"}
+
 # ================= SITE MANAGEMENT =================
 # Note: Site routes are now in routes/sites.py
 

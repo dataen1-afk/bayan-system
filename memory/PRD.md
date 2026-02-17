@@ -570,6 +570,33 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Test File**: `/app/backend/tests/test_job_orders.py`
 - **Test Report**: `/app/test_reports/iteration_24.json` - 100% pass rate
 
+### Stage 1 Audit Plan (BACF6-07) Feature ✅ (NEW - Feb 2026)
+- **Purpose**: Initial certification audit planning (Phase 1)
+- **Workflow**:
+  1. Admin creates Stage 1 Plan from confirmed Job Order
+  2. Team Leader auto-populated from Job Order's auditor
+  3. Admin can add additional team members from system auditors
+  4. Admin fills schedule table (Date/Time, Process, Owner, Clauses, Auditor)
+  5. Manager internal approval
+  6. Send to client for review via public link
+  7. Client accepts plan OR requests changes with reason
+- **Backend API Endpoints**:
+  - `POST /api/stage1-audit-plans` - Create from confirmed job order
+  - `GET /api/stage1-audit-plans` - List all plans
+  - `PUT /api/stage1-audit-plans/{id}` - Update plan details
+  - `DELETE /api/stage1-audit-plans/{id}` - Delete plan
+  - `POST /api/stage1-audit-plans/{id}/manager-approve` - Manager approval
+  - `POST /api/stage1-audit-plans/{id}/send-to-client` - Send for client review
+  - `GET /api/stage1-audit-plans/{id}/pdf` - Generate bilingual PDF
+  - `GET /api/public/stage1-audit-plans/{token}` - Public client access
+  - `POST /api/public/stage1-audit-plans/{token}/respond` - Client accept/request changes
+- **Frontend Pages**:
+  - `/stage1-audit-plans` - Admin page with stats, table, create/edit modals
+  - `/stage1-plan-review/:accessToken` - Public client review page
+- **Status Flow**: draft → pending_manager → manager_approved → pending_client → client_accepted/changes_requested
+- **PDF Generator**: `/app/backend/stage1_audit_plan_generator.py` - Bilingual PDF with objectives, team, schedule
+- **Test Report**: `/app/test_reports/iteration_25.json` - 100% pass rate (17/17 backend tests)
+
 ## Upcoming Tasks
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts
 - **PayTabs Payment Integration** - Ready for activation when API keys are provided

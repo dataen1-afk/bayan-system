@@ -280,7 +280,7 @@ export default function AuditorNotesPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>
+            <div className="text-center py-8 text-gray-500">{t('loading')}</div>
           ) : notesList.length === 0 ? (
             <div className="text-center py-8 text-gray-500">{t('auditorNotes.empty')}</div>
           ) : (
@@ -313,7 +313,7 @@ export default function AuditorNotesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openViewModal(notes)}
-                            title={t('common.view')}
+                            title={t('view')}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -321,7 +321,7 @@ export default function AuditorNotesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditModal(notes)}
-                            title={t('common.edit')}
+                            title={t('edit')}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -340,7 +340,7 @@ export default function AuditorNotesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDownloadPDF(notes.id)}
-                            title={t('common.downloadPDF')}
+                            title={t('downloadPDF')}
                             className="text-blue-600"
                           >
                             <Download className="w-4 h-4" />
@@ -349,7 +349,7 @@ export default function AuditorNotesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(notes.id)}
-                            title={t('common.delete')}
+                            title={t('delete')}
                             className="text-red-600"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -469,13 +469,13 @@ export default function AuditorNotesPage() {
 
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowCreateModal(false)}>
-                {t('common.cancel')}
+                {t('cancel')}
               </Button>
               <Button 
                 onClick={handleCreate}
                 disabled={createMode === 'report' && !selectedReportId}
               >
-                {t('common.create')}
+                {t('create')}
               </Button>
             </div>
           </div>
@@ -636,10 +636,10 @@ export default function AuditorNotesPage() {
 
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowEditModal(false)}>
-                {t('common.cancel')}
+                {t('cancel')}
               </Button>
               <Button onClick={handleUpdate}>
-                {t('common.save')}
+                {t('save')}
               </Button>
             </div>
           </div>

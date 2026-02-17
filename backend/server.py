@@ -4849,115 +4849,85 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     
     y = y - 22 - terms_box_height - 10
     
-    # ============ SIGNATURE & SEAL SECTION (at the end of page 2) ============
-    # Two parties: First Party (Bayan) and Second Party (Client)
+    # ============ CLIENT DECLARATION SECTION (at the end of page 2) ============
+    # Single centered declaration box for client
     sig_box_height = 130
-    sig_box_width = width/2 - 45
+    sig_box_width = width - 60  # Full width box, centered
     
-    # ===== FIRST PARTY BOX (Left - Bayan) =====
+    # ===== CLIENT DECLARATION BOX (Centered) =====
     c.setFillColor(light_bg)
     c.rect(30, y - sig_box_height, sig_box_width, sig_box_height - 10, fill=True, stroke=False)
     c.setStrokeColor(section_color)
     c.setLineWidth(1.5)
     c.rect(30, y - sig_box_height, sig_box_width, sig_box_height - 10, fill=False, stroke=True)
     
-    # Header - First Party
+    # Header - Client's Declaration
     c.setFillColor(section_color)
     c.setFont('Helvetica-Bold', 9)
-    c.drawString(40, y - 20, "FIRST PARTY /")
+    c.drawString(40, y - 20, "CLIENT'S DECLARATION OF THE ACCURACY OF DATA /")
     if arabic_font_available:
         try:
-            ar_first = get_display(arabic_reshaper.reshape("الطرف الأول"))
+            ar_declaration = get_display(arabic_reshaper.reshape("إقرار العميل بصحة البيانات"))
             c.setFont('Amiri-Bold', 9)
-            c.drawRightString(30 + sig_box_width - 10, y - 20, ar_first)
+            c.drawRightString(width - 40, y - 20, ar_declaration)
         except: pass
     
+    # Client signature fields - arranged in two columns
     c.setFillColor(colors.black)
-    c.setFont('Helvetica-Bold', 8)
-    c.drawCentredString(30 + sig_box_width/2, y - 35, "BAYAN Auditing & Conformity")
-    if arabic_font_available:
-        try:
-            ar_bayan = get_display(arabic_reshaper.reshape("بيان للتحقق والمطابقة"))
-            c.setFont('Amiri-Bold', 8)
-            c.drawCentredString(30 + sig_box_width/2, y - 48, ar_bayan)
-        except: pass
+    col1_x = 50  # Left column
+    col2_x = width/2 + 20  # Right column
+    line_length = 140
     
-    # First party stamp (Bayan seal)
-    seal_path = ROOT_DIR / "assets" / "company-seal.png"
-    seal_size = 65
-    seal_x = 30 + (sig_box_width - seal_size) / 2
-    seal_y = y - sig_box_height + 15
-    if seal_path.exists():
-        try:
-            c.drawImage(str(seal_path), seal_x, seal_y, width=seal_size, height=seal_size, preserveAspectRatio=True, mask='auto')
-        except: pass
-    
-    # ===== SECOND PARTY BOX (Right - Client) =====
-    c.setFillColor(light_bg)
-    c.rect(width/2 + 15, y - sig_box_height, sig_box_width, sig_box_height - 10, fill=True, stroke=False)
-    c.setStrokeColor(section_color)
-    c.rect(width/2 + 15, y - sig_box_height, sig_box_width, sig_box_height - 10, fill=False, stroke=True)
-    
-    # Header - Second Party
-    c.setFillColor(section_color)
-    c.setFont('Helvetica-Bold', 9)
-    c.drawString(width/2 + 25, y - 20, "SECOND PARTY /")
-    if arabic_font_available:
-        try:
-            ar_second = get_display(arabic_reshaper.reshape("الطرف الثاني"))
-            c.setFont('Amiri-Bold', 9)
-            c.drawRightString(width - 40, y - 20, ar_second)
-        except: pass
-    
-    # Client signature fields
-    c.setFillColor(colors.black)
-    left_edge = width/2 + 25
-    right_edge = width - 40
-    line_start = width/2 + 70
-    line_end = right_edge - 45
-    
-    # Name field
+    # Name field (left column)
     c.setFont('Helvetica', 8)
-    c.drawString(left_edge, y - 42, "Name:")
-    c.line(line_start, y - 44, line_end, y - 44)
+    c.drawString(col1_x, y - 45, "Name:")
+    c.line(col1_x + 45, y - 47, col1_x + 45 + line_length, y - 47)
     if arabic_font_available:
         try:
             ar_name = get_display(arabic_reshaper.reshape("الاسم:"))
             c.setFont('Amiri', 9)
-            c.drawRightString(right_edge, y - 42, ar_name)
+            c.drawRightString(col1_x + 45 + line_length + 40, y - 45, ar_name)
         except: pass
     
-    # Date field
+    # Date field (right column)
     c.setFont('Helvetica', 8)
-    c.drawString(left_edge, y - 58, "Date:")
-    c.line(line_start, y - 60, line_end, y - 60)
+    c.drawString(col2_x, y - 45, "Date:")
+    c.line(col2_x + 45, y - 47, col2_x + 45 + line_length, y - 47)
     if arabic_font_available:
         try:
             ar_date = get_display(arabic_reshaper.reshape("التاريخ:"))
             c.setFont('Amiri', 9)
-            c.drawRightString(right_edge, y - 58, ar_date)
+            c.drawRightString(col2_x + 45 + line_length + 40, y - 45, ar_date)
         except: pass
     
-    # Signature field
+    # Signature field (left column)
     c.setFont('Helvetica', 8)
-    c.drawString(left_edge, y - 74, "Signature:")
-    c.line(line_start + 10, y - 76, line_end, y - 76)
+    c.drawString(col1_x, y - 70, "Signature:")
+    c.line(col1_x + 55, y - 72, col1_x + 55 + line_length - 10, y - 72)
     if arabic_font_available:
         try:
             ar_sig = get_display(arabic_reshaper.reshape("التوقيع:"))
             c.setFont('Amiri', 9)
-            c.drawRightString(right_edge, y - 74, ar_sig)
+            c.drawRightString(col1_x + 45 + line_length + 40, y - 70, ar_sig)
         except: pass
     
-    # Stamp field
+    # Stamp field (right column)
     c.setFont('Helvetica', 8)
-    c.drawString(left_edge, y - 90, "Stamp:")
+    c.drawString(col2_x, y - 70, "Stamp:")
     if arabic_font_available:
         try:
             ar_stamp = get_display(arabic_reshaper.reshape("الختم:"))
             c.setFont('Amiri', 9)
-            c.drawRightString(right_edge, y - 90, ar_stamp)
+            c.drawRightString(col2_x + 45 + line_length + 40, y - 70, ar_stamp)
         except: pass
+    
+    # Draw stamp placeholder box
+    stamp_box_size = 50
+    stamp_x = col2_x + 50
+    stamp_y = y - sig_box_height + 25
+    c.setStrokeColor(colors.grey)
+    c.setLineWidth(0.5)
+    c.rect(stamp_x, stamp_y, stamp_box_size, stamp_box_size, fill=False, stroke=True)
     # Empty box for client stamp
     c.setStrokeColor(colors.HexColor('#d1d5db'))
     c.setLineWidth(0.5)

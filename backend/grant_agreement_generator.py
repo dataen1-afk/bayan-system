@@ -15,6 +15,7 @@ import tempfile
 import base64
 from io import BytesIO
 from datetime import datetime
+import re
 
 ROOT_DIR = Path(__file__).parent
 ASSETS_DIR = ROOT_DIR / "assets"
@@ -25,52 +26,19 @@ CONTRACTS_DIR = ROOT_DIR / "contracts"
 CONTRACTS_DIR.mkdir(exist_ok=True)
 
 
-def add_image_to_paragraph(paragraph, image_data: str, width_inches: float = 1.5):
-    """Add an image from base64 data to a paragraph"""
-    try:
-        # Remove data URL prefix if present
-        if 'base64,' in image_data:
-            image_data = image_data.split('base64,')[1]
-        
-        # Decode base64
-        image_bytes = base64.b64decode(image_data)
-        image_stream = BytesIO(image_bytes)
-        
-        # Add image to paragraph
-        run = paragraph.add_run()
-        run.add_picture(image_stream, width=Inches(width_inches))
-        return True
-    except Exception as e:
-        logging.error(f"Failed to add image: {e}")
-        return False
+def normalize_standard(std):
+    """Normalize standard name for comparison"""
+    # Remove spaces and convert to uppercase
+    normalized = std.upper().replace(' ', '').replace('-', '')
+    return normalized
 
 
-def replace_text_in_paragraph(paragraph, old_text: str, new_text: str):
-    """Replace text in a paragraph while preserving formatting"""
-    if old_text not in paragraph.text:
-        return False
-    
-    # Simple replacement for plain text
-    for run in paragraph.runs:
-        if old_text in run.text:
-            run.text = run.text.replace(old_text, new_text)
+def standards_match(template_std, selected_standards):
+    """Check if a template standard matches any selected standard"""
+    normalized_template = normalize_standard(template_std)
+    for selected in selected_standards:
+        if normalize_standard(selected) == normalized_template:
             return True
-    
-    # If runs don't contain the text directly, try full paragraph replacement
-    if old_text in paragraph.text:
-        # Get the full text and replace
-        full_text = paragraph.text
-        new_full_text = full_text.replace(old_text, new_text)
-        
-        # Clear existing runs and add new text
-        for run in paragraph.runs:
-            run.text = ""
-        if paragraph.runs:
-            paragraph.runs[0].text = new_full_text
-        else:
-            paragraph.add_run(new_full_text)
-        return True
-    
     return False
 
 
@@ -82,14 +50,12 @@ def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
         agreement_data: Dictionary containing:
             - organization_name: Client organization name
             - organization_address: Client address
-            - standards: List of selected standards
-            - scope: Scope of services
-            - sites: Site locations
+            - standards/selected_standards: List of selected standards
+            - scope/scope_of_services: Scope of services
+            - sites: Site locations (list or string)
             - signatory_name: Client signatory name
             - signatory_position: Client signatory position
             - signatory_date: Date of signing
-            - signature_image: Base64 encoded signature image
-            - stamp_image: Base64 encoded stamp image
             - issuer_name: BAC signatory name
             - issuer_designation: BAC signatory position
         output_docx_path: Path to save the filled document
@@ -107,70 +73,116 @@ def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
     # Extract data with fallbacks
     org_name = agreement_data.get('organization_name', '') or agreement_data.get('organizationName', '') or ''
     org_address = agreement_data.get('organization_address', '') or agreement_data.get('organizationAddress', '') or ''
+    
+    # Handle standards - could be 'standards' or 'selected_standards'
     standards = agreement_data.get('standards', []) or agreement_data.get('selected_standards', []) or []
+    if isinstance(standards, str):
+        standards = [s.strip() for s in standards.split(',')]
+    
+    # Handle scope
     scope = agreement_data.get('scope', '') or agreement_data.get('scope_of_services', '') or ''
+    
+    # Handle sites
     sites = agreement_data.get('sites', []) or []
+    if isinstance(sites, list):
+        sites_str = ', '.join([str(s) for s in sites]) if sites else 'As per application'
+    else:
+        sites_str = str(sites) if sites else 'As per application'
+    
     signatory_name = agreement_data.get('signatory_name', '') or agreement_data.get('contact_name', '') or ''
     signatory_position = agreement_data.get('signatory_position', '') or ''
     signatory_date = agreement_data.get('signatory_date', '') or datetime.now().strftime('%Y-%m-%d')
     issuer_name = agreement_data.get('issuer_name', 'Abdullah Al-Rashid')
     issuer_designation = agreement_data.get('issuer_designation', 'General Manager')
     
-    # Format sites as string
-    sites_str = ', '.join(sites) if isinstance(sites, list) else str(sites)
-    
-    # Format standards as string  
-    standards_str = ', '.join(standards) if isinstance(standards, list) else str(standards)
+    logging.info(f"Filling template for: {org_name}")
+    logging.info(f"Standards: {standards}")
+    logging.info(f"Scope: {scope[:50]}..." if scope else "No scope")
     
     # Process all paragraphs
-    for paragraph in doc.paragraphs:
+    for i, paragraph in enumerate(doc.paragraphs):
         text = paragraph.text
         
-        # Replace Client Organization name placeholder
-        if 'Client Organization:' in text and text.strip().endswith('.'):
-            # This is the organization name line
-            replace_text_in_paragraph(paragraph, 'Client Organization:', f'Client Organization: {org_name}')
-        elif 'Client Organization Name:' in text:
-            replace_text_in_paragraph(paragraph, 'Client Organization Name:', f'Client Organization Name: {org_name}')
-        
-        # Replace address placeholder
-        if 'XXXXXXXXXXXXXXXXXXX' in text:
-            replace_text_in_paragraph(paragraph, 'XXXXXXXXXXXXXXXXXXX', org_address)
-        
-        # Replace sites placeholder
-        if 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx' in text:
-            replace_text_in_paragraph(paragraph, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx', sites_str if sites_str else 'As per application')
-        
-        # Replace scope - look for the example scope text
-        if 'Scope: Providing senior management' in text:
-            # Replace the entire scope line with actual scope
-            new_scope_text = f"Scope: {scope}" if scope else "Scope: As per certification application"
+        # === Replace Client Organization name ===
+        if 'Client Organization:' in text:
+            # Find and update the client organization line
             for run in paragraph.runs:
-                run.text = ""
-            if paragraph.runs:
-                paragraph.runs[0].text = new_scope_text
-            else:
-                paragraph.add_run(new_scope_text)
+                if 'Client Organization:' in run.text:
+                    run.text = run.text.replace('Client Organization:', f'Client Organization: {org_name}')
+                    # Remove trailing placeholder dots if any
+                    run.text = run.text.replace('  .', '')
         
-        # Replace in signature section - organization name placeholder
+        # === Replace address placeholder ===
+        if 'XXXXXXXXXXXXXXXXXXX' in text:
+            for run in paragraph.runs:
+                if 'XXXXXXXXXXXXXXXXXXX' in run.text:
+                    run.text = run.text.replace('XXXXXXXXXXXXXXXXXXX', org_address)
+        
+        # === Handle Standards checkboxes (Para 12) ===
+        # The checkboxes are in separate runs - we need to replace ☐ with ☑ for selected standards
+        if '☐' in text and 'ISO' in text:
+            runs = paragraph.runs
+            for r_idx in range(len(runs)):
+                run_text = runs[r_idx].text
+                
+                # If this run is a checkbox, check if the NEXT run contains a selected standard
+                if '☐' in run_text:
+                    # Look ahead to find which standard this checkbox is for
+                    for next_idx in range(r_idx + 1, min(r_idx + 3, len(runs))):
+                        next_text = runs[next_idx].text.strip()
+                        if next_text:
+                            # Check if any part of the next text matches a standard
+                            for std in ['ISO 9001', 'ISO9001', 'ISO 14001', 'ISO14001', 
+                                       'ISO 45001', 'ISO45001', 'ISO 22000', 'ISO22000', 
+                                       'ISO 22301', 'ISO22301', 'ISO 27001', 'ISO27001']:
+                                if std.replace(' ', '') in next_text.replace(' ', ''):
+                                    # Check if this standard is selected
+                                    if standards_match(std, standards):
+                                        runs[r_idx].text = runs[r_idx].text.replace('☐', '☑')
+                                    break
+                            break
+        
+        # === Replace Scope ===
+        if text.startswith('Scope:') and 'Providing senior management' in text:
+            # Clear all runs and set new scope
+            for run in paragraph.runs:
+                run.text = ''
+            if paragraph.runs:
+                paragraph.runs[0].text = f'Scope: {scope}' if scope else 'Scope: As per certification application'
+        
+        # === Replace Sites ===
+        if 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx' in text:
+            for run in paragraph.runs:
+                if 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx' in run.text:
+                    run.text = run.text.replace('xxxxxxxxxxxxxxxxxxxxxxxxxxxxx', sites_str)
+        
+        # === Replace in signature section ===
+        # Replace "xxxxx" with organization name
         if 'xxxxx' in text.lower():
-            replace_text_in_paragraph(paragraph, 'xxxxx', org_name)
-            replace_text_in_paragraph(paragraph, 'XXXXX', org_name)
+            for run in paragraph.runs:
+                if 'xxxxx' in run.text.lower():
+                    run.text = run.text.replace('xxxxx', org_name)
+                    run.text = run.text.replace('XXXXX', org_name)
         
         # Replace BAC signatory name
         if 'Islam Abd El-Aal' in text:
-            replace_text_in_paragraph(paragraph, 'Islam Abd El-Aal', issuer_name)
+            for run in paragraph.runs:
+                if 'Islam Abd El-Aal' in run.text:
+                    run.text = run.text.replace('Islam Abd El-Aal', issuer_name)
         
         # Replace "Company  ." with actual company name
         if 'Company  .' in text:
-            replace_text_in_paragraph(paragraph, 'Company  .', f'{org_name}')
+            for run in paragraph.runs:
+                if 'Company  .' in run.text:
+                    run.text = run.text.replace('Company  .', org_name)
         
-        # Handle signatory name fields
-        if 'Name of Signatory:' in text and 'Eng.' in text:
-            # This is the client signatory line
-            replace_text_in_paragraph(paragraph, 'Name of Signatory: Eng.', f'Name of Signatory: {signatory_name}')
+        # Handle client signatory name in signature section
+        if 'Name of Signatory' in text and ('Eng.' in text or 'Designation:' in text):
+            for run in paragraph.runs:
+                if 'Eng.' in run.text:
+                    run.text = run.text.replace('Eng.', signatory_name or '________________')
     
-    # Process tables if any
+    # Process tables if any exist
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
@@ -178,10 +190,14 @@ def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
                     text = paragraph.text
                     
                     if 'XXXXXXXXXXXXXXXXXXX' in text:
-                        replace_text_in_paragraph(paragraph, 'XXXXXXXXXXXXXXXXXXX', org_address)
+                        for run in paragraph.runs:
+                            if 'XXXXXXXXXXXXXXXXXXX' in run.text:
+                                run.text = run.text.replace('XXXXXXXXXXXXXXXXXXX', org_address)
+                    
                     if 'xxxxx' in text.lower():
-                        replace_text_in_paragraph(paragraph, 'xxxxx', org_name)
-                        replace_text_in_paragraph(paragraph, 'XXXXX', org_name)
+                        for run in paragraph.runs:
+                            run.text = run.text.replace('xxxxx', org_name)
+                            run.text = run.text.replace('XXXXX', org_name)
     
     # Save filled document
     doc.save(output_docx_path)
@@ -306,12 +322,15 @@ def generate_grant_agreement_docx(agreement_data: dict, output_path: str) -> str
 
 # For testing
 if __name__ == "__main__":
-    # Test data
+    import sys
+    logging.basicConfig(level=logging.INFO)
+    
+    # Test data matching actual database structure
     test_data = {
         "organization_name": "Test Company Ltd",
         "organization_address": "123 Test Street, Riyadh, Saudi Arabia",
-        "standards": ["ISO 9001", "ISO 14001"],
-        "scope": "Manufacturing and distribution of electronic components",
+        "selected_standards": ["ISO9001", "ISO14001"],  # Without spaces to test matching
+        "scope_of_services": "Manufacturing and distribution of electronic components",
         "sites": ["Main Office - Riyadh", "Factory - Jeddah"],
         "signatory_name": "Mohammed Al-Test",
         "signatory_position": "CEO",
@@ -321,5 +340,13 @@ if __name__ == "__main__":
     }
     
     output_pdf = CONTRACTS_DIR / "test_grant_agreement.pdf"
-    result = generate_grant_agreement_pdf(test_data, str(output_pdf))
-    print(f"Generated: {result}")
+    
+    try:
+        result = generate_grant_agreement_pdf(test_data, str(output_pdf))
+        print(f"SUCCESS: Generated PDF at {result}")
+        print(f"File size: {output_pdf.stat().st_size} bytes")
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)

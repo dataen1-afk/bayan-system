@@ -42,6 +42,7 @@ from stage1_audit_report_generator import generate_stage1_audit_report_pdf
 from stage2_audit_report_generator import generate_stage2_audit_report_pdf
 from auditor_notes_generator import generate_auditor_notes_pdf
 from nonconformity_report_generator import generate_nonconformity_report_pdf
+from certificate_data_generator import generate_certificate_data_pdf
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

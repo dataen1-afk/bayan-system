@@ -1471,6 +1471,118 @@ def calculate_feedback_score(questions: List[dict]) -> tuple:
     
     return round(percentage, 1), evaluation
 
+# ================= PRE-TRANSFER REVIEW MODELS (BACF6-17) =================
+
+class PreTransferChecklist(BaseModel):
+    """Compliance checklist for pre-transfer review"""
+    suspension_status: Optional[bool] = None  # True=Yes suspended, False=No, None=N/A
+    threat_of_suspension: Optional[bool] = None
+    minor_nc_outstanding: Optional[bool] = None
+    major_nc_outstanding: Optional[bool] = None
+    legal_representation: Optional[bool] = None
+    complaints_handled: Optional[bool] = None
+    within_bac_scope: Optional[bool] = None
+    previous_reports_available: Optional[bool] = None
+
+class PreTransferReviewCreate(BaseModel):
+    """Create Pre-Transfer Review request"""
+    # Client info
+    client_name: str
+    client_name_ar: str = ""
+    client_address: str = ""
+    client_phone: str = ""
+    enquiry_reference: str = ""
+    # Transfer details
+    transfer_reason: str = ""
+    existing_cb: str = ""  # Existing Certification Body
+    certificate_number: str = ""
+    validity: str = ""
+    scope: str = ""
+    sites: str = ""
+    eac_code: str = ""
+    standards: List[str] = []
+
+class PreTransferReviewUpdate(BaseModel):
+    """Update Pre-Transfer Review"""
+    client_name: Optional[str] = None
+    client_name_ar: Optional[str] = None
+    client_address: Optional[str] = None
+    client_phone: Optional[str] = None
+    enquiry_reference: Optional[str] = None
+    transfer_reason: Optional[str] = None
+    existing_cb: Optional[str] = None
+    certificate_number: Optional[str] = None
+    validity: Optional[str] = None
+    scope: Optional[str] = None
+    sites: Optional[str] = None
+    eac_code: Optional[str] = None
+    standards: Optional[List[str]] = None
+    # Checklist
+    checklist: Optional[dict] = None
+    certification_cycle_stage: Optional[str] = None
+    # Attachments
+    has_previous_audit_report: Optional[bool] = None
+    has_previous_certificates: Optional[bool] = None
+    # Decision
+    transfer_decision: Optional[str] = None  # approved, rejected, pending
+    decision_reason: Optional[str] = None
+    # Review/Approval
+    reviewed_by: Optional[str] = None
+    review_date: Optional[str] = None
+    approved_by: Optional[str] = None
+    approval_date: Optional[str] = None
+
+class PreTransferReview(BaseModel):
+    """Pre-Transfer Review (BACF6-17)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    # Client info
+    client_name: str = ""
+    client_name_ar: str = ""
+    client_address: str = ""
+    client_phone: str = ""
+    enquiry_reference: str = ""
+    # Transfer details
+    transfer_reason: str = ""
+    existing_cb: str = ""
+    certificate_number: str = ""
+    validity: str = ""
+    scope: str = ""
+    sites: str = ""
+    eac_code: str = ""
+    standards: List[str] = []
+    # Compliance checklist
+    checklist: dict = {}
+    certification_cycle_stage: str = ""
+    # Attachments
+    has_previous_audit_report: bool = False
+    has_previous_certificates: bool = False
+    attachments: List[str] = []  # Document IDs
+    # Decision
+    transfer_decision: str = "pending"  # pending, approved, rejected
+    decision_reason: str = ""
+    # Review and Approval
+    reviewed_by: str = ""
+    review_date: str = ""
+    approved_by: str = ""
+    approval_date: str = ""
+    # Status
+    status: str = "draft"  # draft, under_review, decision_made
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
+# Default checklist items for Pre-Transfer Review
+DEFAULT_PRETRANSFER_CHECKLIST = {
+    "suspension_status": None,
+    "threat_of_suspension": None,
+    "minor_nc_outstanding": None,
+    "major_nc_outstanding": None,
+    "legal_representation": None,
+    "complaints_handled": None,
+    "within_bac_scope": None,
+    "previous_reports_available": None
+}
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

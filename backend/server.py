@@ -9399,6 +9399,187 @@ async def submit_public_feedback(access_token: str, data: CustomerFeedbackSubmit
         "evaluation_result": evaluation
     }
 
+# ================= PRE-TRANSFER REVIEW ENDPOINTS (BACF6-17) =================
+
+@api_router.get("/pre-transfer-reviews")
+async def get_pre_transfer_reviews(
+    status: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all pre-transfer reviews"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if status and status != 'all':
+        query['status'] = status
+    
+    reviews = await db.pre_transfer_reviews.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return reviews
+
+@api_router.post("/pre-transfer-reviews")
+async def create_pre_transfer_review(
+    data: PreTransferReviewCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create a new pre-transfer review"""
+    await get_current_user(credentials)
+    
+    # Initialize with default checklist
+    checklist = DEFAULT_PRETRANSFER_CHECKLIST.copy()
+    
+    review = PreTransferReview(
+        client_name=data.client_name,
+        client_name_ar=data.client_name_ar,
+        client_address=data.client_address,
+        client_phone=data.client_phone,
+        enquiry_reference=data.enquiry_reference,
+        transfer_reason=data.transfer_reason,
+        existing_cb=data.existing_cb,
+        certificate_number=data.certificate_number,
+        validity=data.validity,
+        scope=data.scope,
+        sites=data.sites,
+        eac_code=data.eac_code,
+        standards=data.standards,
+        checklist=checklist,
+        status="draft"
+    )
+    
+    review_doc = review.model_dump()
+    review_doc['created_at'] = review_doc['created_at'].isoformat()
+    
+    await db.pre_transfer_reviews.insert_one(review_doc)
+    
+    await create_notification(
+        notification_type="pre_transfer_created",
+        title="Pre-Transfer Review Created",
+        message=f"Pre-transfer review created for {review.client_name}",
+        related_id=review.id,
+        related_type="pre_transfer_review"
+    )
+    
+    return {"message": "Pre-transfer review created", "id": review.id}
+
+@api_router.get("/pre-transfer-reviews/{review_id}")
+async def get_pre_transfer_review(
+    review_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get a specific pre-transfer review"""
+    await get_current_user(credentials)
+    
+    review = await db.pre_transfer_reviews.find_one({"id": review_id}, {"_id": 0})
+    if not review:
+        raise HTTPException(status_code=404, detail="Pre-transfer review not found")
+    
+    return review
+
+@api_router.put("/pre-transfer-reviews/{review_id}")
+async def update_pre_transfer_review(
+    review_id: str,
+    data: PreTransferReviewUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update a pre-transfer review"""
+    await get_current_user(credentials)
+    
+    existing = await db.pre_transfer_reviews.find_one({"id": review_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Pre-transfer review not found")
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.pre_transfer_reviews.update_one(
+        {"id": review_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Pre-transfer review updated"}
+
+@api_router.delete("/pre-transfer-reviews/{review_id}")
+async def delete_pre_transfer_review(
+    review_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Delete a pre-transfer review"""
+    await get_current_user(credentials)
+    
+    existing = await db.pre_transfer_reviews.find_one({"id": review_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Pre-transfer review not found")
+    
+    await db.pre_transfer_reviews.delete_one({"id": review_id})
+    return {"message": "Pre-transfer review deleted"}
+
+@api_router.post("/pre-transfer-reviews/{review_id}/make-decision")
+async def make_transfer_decision(
+    review_id: str,
+    data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Make transfer decision (approve/reject)"""
+    await get_current_user(credentials)
+    
+    existing = await db.pre_transfer_reviews.find_one({"id": review_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Pre-transfer review not found")
+    
+    decision = data.get('transfer_decision', '')
+    if decision not in ['approved', 'rejected']:
+        raise HTTPException(status_code=400, detail="Invalid decision. Use 'approved' or 'rejected'")
+    
+    update_data = {
+        "transfer_decision": decision,
+        "decision_reason": data.get('decision_reason', ''),
+        "reviewed_by": data.get('reviewed_by', ''),
+        "review_date": data.get('review_date', datetime.now().strftime("%Y-%m-%d")),
+        "approved_by": data.get('approved_by', ''),
+        "approval_date": data.get('approval_date', datetime.now().strftime("%Y-%m-%d")),
+        "status": "decision_made",
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.pre_transfer_reviews.update_one({"id": review_id}, {"$set": update_data})
+    
+    await create_notification(
+        notification_type="transfer_decision",
+        title="Transfer Decision Made",
+        message=f"Transfer for {existing.get('client_name', '')} has been {decision}",
+        related_id=review_id,
+        related_type="pre_transfer_review"
+    )
+    
+    return {"message": f"Transfer decision recorded: {decision}"}
+
+@api_router.get("/pre-transfer-reviews/{review_id}/pdf")
+async def get_pre_transfer_review_pdf(
+    review_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Generate PDF for Pre-Transfer Review"""
+    await get_current_user(credentials)
+    
+    review = await db.pre_transfer_reviews.find_one({"id": review_id}, {"_id": 0})
+    if not review:
+        raise HTTPException(status_code=404, detail="Pre-transfer review not found")
+    
+    try:
+        contracts_dir = Path(__file__).parent / "contracts"
+        contracts_dir.mkdir(exist_ok=True)
+        pdf_path = str(contracts_dir / f"pre_transfer_review_{review_id[:8]}.pdf")
+        
+        generate_pre_transfer_review_pdf(review, pdf_path)
+        
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename=f"pre_transfer_review_{review_id[:8]}.pdf"
+        )
+    except Exception as e:
+        logging.error(f"Error generating Pre-Transfer Review PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

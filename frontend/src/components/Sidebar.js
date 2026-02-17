@@ -20,7 +20,8 @@ import {
   TrendingUp,
   ClipboardList,
   ClipboardCheck,
-  FileSignature
+  FileSignature,
+  FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

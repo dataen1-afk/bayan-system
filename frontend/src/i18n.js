@@ -1595,9 +1595,9 @@ const resources = {
       "proposalRejected": "تم رفض العرض",
       "proposalWasRejected": "تم رفض عرض السعر هذا.",
       
-      // Certification Agreement Page
-      "certificationAgreement": "اتفاقية الاعتماد",
-      "agreementSubtitle": "يرجى إكمال هذه الاتفاقية لإتمام عملية الاعتماد",
+      // Grant Agreement Page
+      "certificationAgreement": "اتفاقية المنح",
+      "agreementSubtitle": "يرجى إكمال هذه الاتفاقية لإتمام عملية المنح",
       "loadingAgreement": "جاري تحميل الاتفاقية...",
       "agreementNotAvailable": "الاتفاقية غير متاحة",
       "agreementLinkInvalid": "رابط الاتفاقية غير صالح أو لم يتم قبول العرض بعد.",

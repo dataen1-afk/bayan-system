@@ -1583,6 +1583,82 @@ DEFAULT_PRETRANSFER_CHECKLIST = {
     "previous_reports_available": None
 }
 
+# ================= CERTIFIED CLIENTS REGISTRY MODELS (BAC-F6-19) =================
+
+class CertifiedClientCreate(BaseModel):
+    """Create Certified Client Record"""
+    client_name: str
+    client_name_ar: str = ""
+    address: str = ""
+    address_ar: str = ""
+    contact_person: str = ""
+    contact_number: str = ""
+    scope: str = ""
+    scope_ar: str = ""
+    accreditation: List[str] = []  # ISO 9001:2015, ISO 14001:2015, etc.
+    ea_code: str = ""  # EA Code or Food category
+    certificate_number: str = ""
+    issue_date: str = ""  # YYYY-MM-DD
+    expiry_date: str = ""  # YYYY-MM-DD
+    surveillance_1_date: str = ""  # YYYY-MM-DD
+    surveillance_2_date: str = ""  # YYYY-MM-DD
+    recertification_date: str = ""  # YYYY-MM-DD
+    # Optional link to existing certificate
+    linked_certificate_id: str = ""
+
+class CertifiedClientUpdate(BaseModel):
+    """Update Certified Client Record"""
+    client_name: Optional[str] = None
+    client_name_ar: Optional[str] = None
+    address: Optional[str] = None
+    address_ar: Optional[str] = None
+    contact_person: Optional[str] = None
+    contact_number: Optional[str] = None
+    scope: Optional[str] = None
+    scope_ar: Optional[str] = None
+    accreditation: Optional[List[str]] = None
+    ea_code: Optional[str] = None
+    certificate_number: Optional[str] = None
+    issue_date: Optional[str] = None
+    expiry_date: Optional[str] = None
+    surveillance_1_date: Optional[str] = None
+    surveillance_2_date: Optional[str] = None
+    recertification_date: Optional[str] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+class CertifiedClient(BaseModel):
+    """Certified Client Registry Record (BAC-F6-19)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    serial_number: int = 0  # Auto-incremented S.No.
+    # Client Information
+    client_name: str = ""
+    client_name_ar: str = ""
+    address: str = ""
+    address_ar: str = ""
+    contact_person: str = ""
+    contact_number: str = ""
+    # Certification Details
+    scope: str = ""
+    scope_ar: str = ""
+    accreditation: List[str] = []  # Standards: ISO 9001:2015, etc.
+    ea_code: str = ""  # EA Code/Food category
+    certificate_number: str = ""
+    # Important Dates
+    issue_date: str = ""  # YYYY-MM-DD
+    expiry_date: str = ""  # YYYY-MM-DD
+    surveillance_1_date: str = ""  # YYYY-MM-DD
+    surveillance_2_date: str = ""  # YYYY-MM-DD
+    recertification_date: str = ""  # YYYY-MM-DD
+    # Status
+    status: str = "active"  # active, suspended, withdrawn, expired
+    notes: str = ""
+    # Link to system certificate (optional)
+    linked_certificate_id: str = ""
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

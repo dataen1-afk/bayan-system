@@ -32,6 +32,7 @@ import OpeningClosingMeetingsPage from '@/pages/OpeningClosingMeetingsPage';
 import PublicMeetingFormPage from '@/pages/PublicMeetingFormPage';
 import Stage1AuditReportsPage from '@/pages/Stage1AuditReportsPage';
 import Stage2AuditReportsPage from '@/pages/Stage2AuditReportsPage';
+import AuditorNotesPage from '@/pages/AuditorNotesPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

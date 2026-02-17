@@ -1687,70 +1687,7 @@ def generate_legacy_contract_pdf(quotation: Quotation, user: dict) -> str:
 async def root():
     return {"message": "Service Contract Management API"}
 
-# Authentication routes
-@api_router.post("/auth/register", response_model=User)
-async def register(user_data: UserRegister):
-    # Check if user exists
-    existing_user = await db.users.find_one({"email": user_data.email})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    # Validate role
-    if user_data.role not in [UserRole.ADMIN, UserRole.CLIENT]:
-        raise HTTPException(status_code=400, detail="Invalid role")
-    
-    # Create user
-    user = User(
-        name=user_data.name,
-        email=user_data.email,
-        role=user_data.role
-    )
-    
-    user_doc = user.model_dump()
-    user_doc['password'] = hash_password(user_data.password)
-    user_doc['created_at'] = user_doc['created_at'].isoformat()
-    
-    await db.users.insert_one(user_doc)
-    return user
-
-@api_router.post("/auth/login", response_model=TokenResponse)
-async def login(credentials: UserLogin):
-    # Find user
-    user_doc = await db.users.find_one({"email": credentials.email})
-    if not user_doc:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    # Verify password
-    if not verify_password(credentials.password, user_doc['password']):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    # Create token
-    token = create_jwt_token(user_doc['id'], user_doc['role'])
-    
-    # Return user info (without password)
-    user = User(
-        id=user_doc['id'],
-        name=user_doc['name'],
-        email=user_doc['email'],
-        role=user_doc['role'],
-        created_at=datetime.fromisoformat(user_doc['created_at']) if isinstance(user_doc['created_at'], str) else user_doc['created_at']
-    )
-    
-    return TokenResponse(token=token, user=user)
-
-@api_router.get("/auth/me", response_model=User)
-async def get_me(current_user: dict = Depends(get_current_user)):
-    user_doc = await db.users.find_one({"id": current_user['user_id']})
-    if not user_doc:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return User(
-        id=user_doc['id'],
-        name=user_doc['name'],
-        email=user_doc['email'],
-        role=user_doc['role'],
-        created_at=datetime.fromisoformat(user_doc['created_at']) if isinstance(user_doc['created_at'], str) else user_doc['created_at']
-    )
+# Authentication routes are now in routes/auth.py
 
 # Form routes
 @api_router.get("/defaults/signature")

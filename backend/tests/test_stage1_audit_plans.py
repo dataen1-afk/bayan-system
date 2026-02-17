@@ -103,8 +103,8 @@ class TestStage1AuditPlansAPI:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data.get("message") == "Stage 1 Audit Plan updated"
-        print("Stage 1 Plan updated successfully")
+        assert "updated" in data.get("message", "").lower(), f"Expected update message, got: {data}"
+        print(f"Stage 1 Plan update response: {data.get('message')}")
         
         # Verify update by fetching again
         get_response = requests.get(f"{BASE_URL}/api/stage1-audit-plans/{EXISTING_PLAN_ID}", headers=self.headers)

@@ -21,7 +21,8 @@ import {
   ClipboardList,
   ClipboardCheck,
   FileSignature,
-  FileSpreadsheet
+  FileSpreadsheet,
+  FileStack
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

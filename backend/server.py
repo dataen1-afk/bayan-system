@@ -995,6 +995,63 @@ class Stage2AuditReport(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= AUDITOR NOTES MODELS (BACF6-12) =================
+
+class AuditorNotesCreate(BaseModel):
+    """Create Auditor Notes - can be from Stage 2 report or independently"""
+    stage2_report_id: Optional[str] = None  # Optional link to Stage 2 report
+    # If not from report, these fields can be provided
+    client_name: str = ""
+    location: str = ""
+    standards: List[str] = []
+    auditor_name: str = ""
+    audit_type: str = ""  # Stage 1, Stage 2, Surveillance, Recertification
+    audit_date: str = ""
+    department: str = ""
+
+class AuditorNotesUpdate(BaseModel):
+    """Update Auditor Notes"""
+    client_name: Optional[str] = None
+    location: Optional[str] = None
+    standards: Optional[List[str]] = None
+    auditor_name: Optional[str] = None
+    audit_type: Optional[str] = None
+    audit_date: Optional[str] = None
+    department: Optional[str] = None
+    notes: Optional[str] = None
+    notes_ar: Optional[str] = None
+
+class AuditorNotes(BaseModel):
+    """Auditor Notes (BACF6-12) - Created by auditor after audit"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    stage2_report_id: str = ""
+    stage1_report_id: str = ""
+    job_order_id: str = ""
+    audit_program_id: str = ""
+    contract_review_id: str = ""
+    # Form fields
+    client_name: str = ""
+    client_name_ar: str = ""
+    location: str = ""
+    location_ar: str = ""
+    standards: List[str] = []
+    auditor_id: str = ""
+    auditor_name: str = ""
+    auditor_name_ar: str = ""
+    audit_type: str = ""
+    audit_date: str = ""
+    department: str = ""
+    department_ar: str = ""
+    # Notes content
+    notes: str = ""
+    notes_ar: str = ""
+    # Status
+    status: str = "draft"  # draft, completed
+    completed_at: Optional[datetime] = None
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://contract-mgmt-9.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://stage2-audit-plan.preview.emergentagent.com')
 
 class TestJobOrdersAPI:
     """Test Job Order CRUD operations and workflow"""

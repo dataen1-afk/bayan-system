@@ -7149,6 +7149,245 @@ async def submit_meeting_form(access_token: str, data: OpeningClosingMeetingSubm
     
     return {"message": "Meeting form submitted successfully"}
 
+# ================= STAGE 1 AUDIT REPORT ENDPOINTS (BACF6-10) =================
+
+@api_router.post("/stage1-audit-reports")
+async def create_stage1_audit_report(data: Stage1AuditReportCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create Stage 1 Audit Report - generated after Stage 1 audit (Admin only)"""
+    await get_current_user(credentials)
+    
+    source_data = None
+    stage1_plan = None
+    meeting = None
+    job_order_id = ""
+    
+    # Get source data
+    if data.stage1_plan_id:
+        stage1_plan = await db.stage1_audit_plans.find_one({"id": data.stage1_plan_id}, {"_id": 0})
+        if not stage1_plan:
+            raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+        source_data = stage1_plan
+        job_order_id = stage1_plan.get('job_order_id', '')
+    
+    if data.meeting_id:
+        meeting = await db.opening_closing_meetings.find_one({"id": data.meeting_id}, {"_id": 0})
+    
+    if not source_data:
+        raise HTTPException(status_code=400, detail="stage1_plan_id is required")
+    
+    # Check if report already exists
+    existing = await db.stage1_audit_reports.find_one({"stage1_plan_id": data.stage1_plan_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Audit report already exists for this Stage 1 plan")
+    
+    # Get contract review for additional details
+    contract_review = None
+    contract_review_id = source_data.get('contract_review_id', '')
+    if contract_review_id:
+        contract_review = await db.contract_reviews.find_one({"id": contract_review_id}, {"_id": 0})
+    
+    # Default checklist items
+    default_checklist = [
+        {"requirement": "Has client identified Legal and Statutory Requirements?", "status": "C", "comments": ""},
+        {"requirement": "Is the Information documented as required as per the standard?", "status": "C", "comments": ""},
+        {"requirement": "Is the scope having boundaries and specific to the organization?", "status": "C", "comments": ""},
+        {"requirement": "Has the client understanding with all applicable requirements?", "status": "C", "comments": ""},
+        {"requirement": "Has the company identified key performance, Process Indicators?", "status": "C", "comments": ""},
+        {"requirement": "Has the Client site specific conditions evaluated?", "status": "C", "comments": ""},
+        {"requirement": "Is process and Equipment used adequate?", "status": "C", "comments": ""},
+        {"requirement": "Is client having Multisite? Level of control identified?", "status": "C", "comments": ""},
+        {"requirement": "Is Internal Audit planned, performed and effective?", "status": "C", "comments": ""},
+        {"requirement": "Is MRM planned, performed and Effective?", "status": "C", "comments": ""},
+        {"requirement": "Has the client identified hazards and risk assessment?", "status": "C", "comments": ""},
+        {"requirement": "Has the client identified Environmental aspects/impacts?", "status": "C", "comments": ""},
+        {"requirement": "Has the client done emergency preparedness planning?", "status": "C", "comments": ""},
+        {"requirement": "Is the resource adequate for Stage 2 audit?", "status": "C", "comments": ""},
+    ]
+    
+    # Create report
+    report = Stage1AuditReport(
+        stage1_plan_id=data.stage1_plan_id,
+        meeting_id=data.meeting_id or "",
+        job_order_id=job_order_id,
+        audit_program_id=source_data.get('audit_program_id', ''),
+        # Organization details
+        organization_name=source_data.get('organization_name', ''),
+        address=source_data.get('address', '') or (contract_review.get('address', '') if contract_review else ''),
+        site_address=contract_review.get('site_address', '') if contract_review else '',
+        standards=source_data.get('standards', []),
+        num_employees=contract_review.get('num_employees', '') if contract_review else '',
+        num_shifts=contract_review.get('num_shifts', '1') if contract_review else '1',
+        email=source_data.get('contact_email', '') or (contract_review.get('contact_email', '') if contract_review else ''),
+        contact_person=source_data.get('contact_person', '') or (contract_review.get('contact_person', '') if contract_review else ''),
+        phone=source_data.get('contact_phone', '') or (contract_review.get('phone', '') if contract_review else ''),
+        scope=source_data.get('scope', ''),
+        ea_code=contract_review.get('ea_code', '') if contract_review else '',
+        exclusions=contract_review.get('exclusions', '') if contract_review else '',
+        # Audit team
+        audit_team={
+            "lead_auditor": source_data.get('team_leader', {}).get('name', ''),
+            "auditors": [m.get('name', '') for m in source_data.get('team_members', [])],
+            "technical_experts": []
+        },
+        audit_duration=source_data.get('audit_duration', '1'),
+        start_date=source_data.get('audit_date_from', ''),
+        end_date=source_data.get('audit_date_to', '') or source_data.get('audit_date_from', ''),
+        # Attendees from meeting if available
+        attendees=meeting.get('attendees', []) if meeting else [],
+        # Default checklist
+        checklist_items=default_checklist,
+        # Default declarations (all false initially)
+        declarations={
+            "sampling": False,
+            "combined": False,
+            "corrective_actions": False,
+            "outcomes_effective": False,
+            "internal_audit": False,
+            "scope_appropriate": False,
+            "capability": False,
+            "objectives_fulfilled": False
+        }
+    )
+    
+    await db.stage1_audit_reports.insert_one(report.dict())
+    
+    # Create notification
+    await create_notification(
+        "audit_report_created",
+        "Stage 1 Audit Report Created",
+        f"Stage 1 Audit Report created for {report.organization_name}",
+        report.id,
+        "stage1_audit_report"
+    )
+    
+    return {
+        "id": report.id,
+        "message": "Stage 1 Audit Report created successfully"
+    }
+
+@api_router.get("/stage1-audit-reports")
+async def get_stage1_audit_reports(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all Stage 1 Audit Reports (Admin only)"""
+    await get_current_user(credentials)
+    
+    reports = await db.stage1_audit_reports.find({}, {"_id": 0}).to_list(1000)
+    return reports
+
+@api_router.get("/stage1-audit-reports/{report_id}")
+async def get_stage1_audit_report(report_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get a specific Stage 1 Audit Report (Admin only)"""
+    await get_current_user(credentials)
+    
+    report = await db.stage1_audit_reports.find_one({"id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Audit report not found")
+    
+    return report
+
+@api_router.put("/stage1-audit-reports/{report_id}")
+async def update_stage1_audit_report(report_id: str, data: Stage1AuditReportUpdate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update Stage 1 Audit Report (Admin only)"""
+    await get_current_user(credentials)
+    
+    report = await db.stage1_audit_reports.find_one({"id": report_id})
+    if not report:
+        raise HTTPException(status_code=404, detail="Audit report not found")
+    
+    update_data = {}
+    for field, value in data.dict().items():
+        if value is not None:
+            update_data[field] = value
+    
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.stage1_audit_reports.update_one(
+        {"id": report_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Audit report updated successfully"}
+
+@api_router.delete("/stage1-audit-reports/{report_id}")
+async def delete_stage1_audit_report(report_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete Stage 1 Audit Report (Admin only)"""
+    await get_current_user(credentials)
+    
+    result = await db.stage1_audit_reports.delete_one({"id": report_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Audit report not found")
+    
+    return {"message": "Audit report deleted successfully"}
+
+@api_router.post("/stage1-audit-reports/{report_id}/complete")
+async def complete_stage1_audit_report(report_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Mark Stage 1 Audit Report as completed (Admin only)"""
+    await get_current_user(credentials)
+    
+    report = await db.stage1_audit_reports.find_one({"id": report_id})
+    if not report:
+        raise HTTPException(status_code=404, detail="Audit report not found")
+    
+    # Validate report has required fields
+    if not report.get('recommendation'):
+        raise HTTPException(status_code=400, detail="Recommendation is required to complete the report")
+    
+    await db.stage1_audit_reports.update_one(
+        {"id": report_id},
+        {"$set": {
+            "status": "completed",
+            "completed_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": "Audit report marked as completed"}
+
+@api_router.post("/stage1-audit-reports/{report_id}/approve")
+async def approve_stage1_audit_report(report_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Approve Stage 1 Audit Report (Admin only)"""
+    user = await get_current_user(credentials)
+    
+    report = await db.stage1_audit_reports.find_one({"id": report_id})
+    if not report:
+        raise HTTPException(status_code=404, detail="Audit report not found")
+    
+    if report.get('status') != 'completed':
+        raise HTTPException(status_code=400, detail="Report must be completed before approval")
+    
+    await db.stage1_audit_reports.update_one(
+        {"id": report_id},
+        {"$set": {
+            "status": "approved",
+            "approved_by": user.get('email', 'Admin'),
+            "approved_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": "Audit report approved"}
+
+@api_router.get("/stage1-audit-reports/{report_id}/pdf")
+async def get_stage1_audit_report_pdf(report_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate PDF for Stage 1 Audit Report (Admin only)"""
+    await get_current_user(credentials)
+    
+    report = await db.stage1_audit_reports.find_one({"id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Audit report not found")
+    
+    try:
+        pdf_bytes = generate_stage1_audit_report_pdf(report)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=stage1_audit_report_{report_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Stage 1 Audit Report PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

@@ -561,7 +561,7 @@ const resources = {
       "thankYouForAgreement": "Thank you for completing the certification agreement.",
       "contractWillBePrepared": "Your certification contract will be prepared and sent to you shortly.",
       "errorSubmittingAgreement": "Error submitting agreement:",
-      "fillOrganizationDetails": "Please fill in organization name and address",
+      "fillOrganizationDetails": "Please fill in facility name and address",
       "selectAtLeastOneStandard": "Please select at least one certification standard",
       "fillScopeOfServices": "Please describe the scope of services",
       "fillSignatoryDetails": "Please fill in signatory name and position",

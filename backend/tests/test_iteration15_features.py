@@ -6,7 +6,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cert-workflow-3.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://facility-grants.preview.emergentagent.com')
 
 # Admin credentials
 ADMIN_EMAIL = "admin@test.com"

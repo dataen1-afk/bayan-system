@@ -1,154 +1,310 @@
 <analysis>**original_problem_statement**: The user provided a Node.js/Express backend for a Service Contract Management System and requested a migration to a FastAPI backend with a new React frontend.
 
 **PRODUCT REQUIREMENTS**:
--   **Core Functionality**: A full-stack application to manage service contracts.
+-   **Core Functionality**: A full-stack application to manage service contracts. The terminology has been updated: Accreditation is now Grant, and Organization is Facility.
 -   **Workflow**:
-    1.  Admin creates a form and sends a public link to a client.
-    2.  Client fills out a multi-step wizard form (no login required).
-    3.  On submission, the system automatically calculates audit duration based on an Excel logic file.
-    4.  Admin reviews the submission and calculation on their dashboard.
-    5.  Admin generates a price quote based on the submitted data. This now includes adding the authorized signatory's name, title, signature, and stamp, which are editable.
-    6.  Client receives a link to the quote and can **approve**, **reject**, or **request modifications**.
-    7.  Upon approval, the client is redirected to fill out a Certification Agreement form.
-    8.  A submitted agreement becomes a contract, and a PDF can be generated, including the digital signatures and stamps of both parties.
--   **User Roles**: Admin (full access), Client (accesses forms/quotes/agreements via public links).
--   **UI/UX**: Professional UI matching the Bayan Auditing brand, multi-language support (English/Arabic), full RTL layout for Arabic, and a collapsible sidebar.
--   **Additional Features**: Admin notifications, status tracking timeline, editable reusable templates, a reporting dashboard with filtering, and a customer portal.
+    1.  Admin creates a Grant Request form (including a mobile number) and sends a link.
+    2.  Client fills a multi-step wizard.
+    3.  System calculates audit duration.
+    4.  Admin reviews and generates a price quote, adding an editable authorized signatory.
+    5.  Client receives a link to approve, reject, or request modifications.
+    6.  Upon approval, the client fills out a Grant Agreement.
+    7.  Upon signing the agreement, the system **automatically schedules all required audits**.
+    8.  A contract PDF (Grant Agreement) is generated with digital signatures, matching a user-provided template.
+-   **User Roles**: Admin (full access), Client (link-based access).
+-   **UI/UX**: Professional bilingual (English/Arabic) UI with full RTL support. Includes dedicated pages for managing auditors, invoices, certificates, expiration alerts, and analytics.
+-   **Phased Future Enhancements**: A multi-phase plan including Payment Integration (PayTabs), Multi-Level Approval, and a PWA for auditors.
 
 **User's preferred language**: The user communicates in English. The application UI and PDF output must be bilingual (English/Arabic with RTL support). The next agent MUST respond in English.
 
 **what currently exists?**
-A full-stack application for managing service contracts. The previous agent implemented a significant number of user-requested fixes and enhancements to the PDF generation logic for Forms and Contracts, including layout reorganization, styling adjustments, and complex data display rules for bilingual content. A major feature was added to allow the admin to attach an authorized signatory (name, title, signature, stamp) when creating a price quote, which then appears on the final contract. However, this introduced a new bug where creating a quote with the signature/stamp images fails, likely due to the large size of the base64-encoded images in the request payload. The underlying PDF generation code remains in a fragile, monolithic state within .
+A comprehensive full-stack application for managing service contracts. The system now includes complete modules for Auditor Management, Certificate Generation (with QR codes), an Expiration Alerts dashboard, and an Advanced Analytics dashboard. A major system-wide terminology update (e.g., Accreditation to Grant) has been completed across the UI and backend. The agent was in the process of replacing the programmatic PDF generation for the Grant Agreement with a new method that uses a user-provided  template to ensure high-quality output.
 
 **Last working item**:
--   **Last item agent was working**: Debugging a critical error that occurs when an admin tries to create a price quote (proposal). The request fails, and the frontend displays a generic [object Object] error message, which happens when the signature and stamp images are included in the form data.
+-   **Last item agent was working**: Replacing the Grant Agreement PDF generation logic. The user was dissatisfied with the quality of the system-generated PDF and provided a  file to be used as a template. The agent created a new utility  using  and usage: docx2pdf [-h] [--keep-active] [--version] input [output]
+
+Example Usage:
+
+Convert single docx file in-place from myfile.docx to myfile.pdf:
+    docx2pdf myfile.docx
+
+Batch convert docx folder in-place. Output PDFs will go in the same folder:
+    docx2pdf myfolder/
+
+Convert single docx file with explicit output filepath:
+    docx2pdf input.docx output.docx
+
+Convert single docx file and output to a different explicit folder:
+    docx2pdf input.docx output_dir/
+
+Batch convert docx folder. Output PDFs will go to a different explicit folder:
+    docx2pdf input_dir/ output_dir/
+
+positional arguments:
+  input          input file or folder. batch converts entire folder or convert
+                 single file
+  output         output file or folder
+
+options:
+  -h, --help     show this help message and exit
+  --keep-active  prevent closing word after conversion
+  --version      display version and exit and was in the middle of updating  to use this new generator.
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: backend testing agent. The primary goal is to fix the proposal creation endpoint.
-    1.  Use  to send a JSON payload (including large base64 strings for signature/stamp) to the  endpoint to reproduce and verify the fix.
-    2.  After the backend is fixed, use the frontend testing agent to confirm the end-to-end flow of creating a proposal with the default signature/stamp images is successful.
+-   **Which testing method agent to use?**: backend testing agent. The agent should first use  to trigger the contract download endpoint. Then, it must manually download and visually inspect the generated PDF to confirm it correctly populates dynamic data (e.g., client name, dates) and strictly matches the formatting and quality of the user's  template.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**: (P0) Cannot create a price quote with signature and stamp images.
+-   **Issue 1**: (P0) Finalize the new Grant Agreement PDF generation.
+-   **Issue 2**: (P1) Systemic PDF Rendering Flaws & Monolithic Backend.
 
 **Issues Detail**:
 -   **Issue 1**:
-    -   **Description**: The  endpoint fails when the payload contains base64-encoded signature and stamp images. The frontend displays a non-descriptive  error. This blocks the entire proposal creation workflow.
-    -   **Attempted fixes**: The agent confirmed the API works with a payload that excludes the large base64 image strings. It was investigating if the issue is a server-side request size limit (e.g., Nginx's ) or a Pydantic model validation error.
+    -   **Attempted fixes**: A new file  was created to handle the  template. The  file was being modified to use this new utility.
     -   **Next debug checklist**:
-        1.  Inspect the Nginx configuration for . If it's too small (e.g., the default 1MB), increase it to a larger value like  in  and restart the service ().
-        2.  If increasing the body size limit doesn't work, refactor the image handling. Instead of sending large base64 strings in the main proposal JSON, modify the frontend to upload the images to the existing  endpoint first. This endpoint returns a file path.
-        3.  Send the returned file paths (e.g., ) in the proposal creation payload instead of the base64 data.
-        4.  Update the backend  model and the proposal creation logic to handle these file paths.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical blocker. The user cannot create valid price quotes, which is a core function of the application.
+        1.  Verify and complete the modifications in  to correctly call  from  for the contract download endpoints.
+        2.  Ensure all placeholders in  are identified and correctly populated with data from the database.
+        3.  Test the endpoint () to confirm it generates a PDF that is visually identical to the user's template.
+        4.  Once confirmed, remove the old, now-obsolete contract PDF generation code from .
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a direct user request to improve the quality of a critical document. Completing this will resolve the user's immediate concern and deliver a more professional output.
     -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on other issue**: None
+    -   **Is recurring issue?**: Y (part of the larger PDF issue)
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: None.
+
+-   **Issue 2**:
+    -   **Description**: The application has a history of PDF rendering bugs. The current task is a symptom of a larger problem: all business logic, including multiple types of PDF generation, resides in a monolithic  file.
+    -   **Why fix this issue and what will be achieved with the fix?**: Refactoring  into smaller, domain-specific routers (e.g., , , ) will dramatically improve maintainability, reduce the risk of regressions, and make future development faster and safer.
+    -   **Status**: NOT STARTED (The larger refactor)
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: None. This should be the next major task after the current PDF fix.
 
 **In progress Task List**:
--   None.
+-   **Task 1**: (P0) Complete the replacement of the Grant Agreement PDF generation logic.
+    -   **Where to resume**: Finalize the integration of  within  and test thoroughly.
+    -   **What will be achieved with this?**: The system will generate high-quality contract PDFs based on the user's approved template.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   **(P1) Finalize Google Calendar Integration**: Guide the user on obtaining  and . Once provided, add them to  and activate the sync functionality.
-    -   **(P1) Finalize Twilio SMS Integration**: Guide the user on obtaining Twilio credentials (, , ). Once provided, add them to  to enable live SMS notifications.
+    -   **(P1) Phase 2: Payment Tracking**: Implement PayTabs integration for electronic payments in Saudi Arabia. The integration playbook has been retrieved. The UI should also retain the manual payment tracking feature.
+    -   **(P0) CRITICAL REFACTOR**: Break down the  monolith into modular  files. This is essential for long-term project health.
 -   **Future Tasks**:
-    -   **(P2)** Test and enable the functionality of sending actual emails (e.g., via SendGrid/Resend integration).
-    -   **(P0) CRITICAL REFACTOR**: Extract the monolithic PDF generation logic from  into a dedicated, modular service (e.g., ). This is essential to stop the cycle of recurring font, layout, and data rendering bugs.
+    -   **(P1) Phase 7: Multi-Level Approval**: Implement a workflow for multi-step approvals.
+    -   **(P2) Finalize Integrations**: Complete Google Calendar and Twilio SMS integrations once the user provides credentials.
+    -   **(P2) Progressive Web App (PWA)**: Create a PWA for auditors in the field.
+    -   **(P2) Customer Portal**: Implement a login system for customers to view their history.
 
 **Completed work in this session**
--   **PDF Layout & Content**:
-    -   Reorganized the Form PDF sections into a two-page layout as requested.
-    -   Fixed all bilingual data display issues in the Form PDF, ensuring values appear correctly centered or on the appropriate language side, with correct translations for dropdown fields.
-    -   Adjusted spacing, colors, and element sizes (e.g., company seal) across all PDFs for a more professional look.
-    -   Fixed signature box labels rendering as squares by applying the correct Arabic font.
-    -   Resolved multiple contract PDF issues: added a page break, fixed date formatting, and ensured signature boxes were sized equally.
--   **Authorized Signatory Feature**:
-    -   Added a new section to the Create Proposal page for the admin to input an authorized signatory's name, title, signature, and stamp.
-    -   Implemented default loading of the signatory's details and images, while keeping them editable.
-    -   Updated the backend to save these details with the proposal and render them on the final contract PDF.
--   **Bug Fixes**:
-    -   Fixed the Track Your Order feature to work with proposal access tokens, not just form IDs.
-    -   Removed incorrect hardcoded text (Arab Accreditation Authority Limited) from the UI and all PDF templates.
+-   **Phase 3: Auditor Management**: Fully implemented. Includes CRUD APIs and a dedicated frontend page with stats, search/filter, and modals, matching the application's UI/UX.
+-   **Phase 4: Certificate Generation**: Fully implemented. Includes backend logic for creating certificates with QR codes and a frontend page to manage them.
+-   **Phase 5: Expiration Alerts Dashboard**: A new dashboard was created to track and display upcoming certificate and audit expirations.
+-   **Phase 6: Advanced Analytics Dashboard**: A new dashboard was created to provide business intelligence, including a conversion funnel and revenue overview.
+-   **System-wide Terminology Overhaul**: Replaced key business terms (Accreditation -> Grant, Organization -> Facility, etc.) across all frontend components, translation files, and backend PDF generation logic as per user request.
+-   **UI/UX Consistency**: Fixed the layout of the Auditor and Invoice pages to match the main dashboard, providing a consistent user experience.
 
 **Earlier issues found/mentioned but not fixed**
--   None.
+-   The fundamental technical debt of the monolithic  file remains the most significant unfixed issue. It is captured as a P0 future task.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: Incorrect Arabic text rendering in PDFs (appearing as squares or mojibake).
--   **Recurrence count**: 6+
--   **Status**: IN PROGRESS. This is a systemic issue caused by the monolithic code structure. While individual instances are fixed, the root cause remains, making it highly likely to reappear. The planned refactoring is the definitive solution.
+-   **Issue recurrence in previous fork**: Poor quality and incorrect rendering of PDF documents.
+-   **Recurrence count**: 7+
+-   **Status**: IN PROGRESS. The current task of using a DOCX template is a direct attempt to solve this for the Grant Agreement. The root cause (complex, centralized code) still needs to be addressed by refactoring .
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Motor, Pydantic, ReportLab, , 
--   **Frontend**: React, , Tailwind CSS, shadcn/ui
+-   **Backend**: FastAPI, Motor, Pydantic, ReportLab, , , , usage: docx2pdf [-h] [--keep-active] [--version] input [output]
+
+Example Usage:
+
+Convert single docx file in-place from myfile.docx to myfile.pdf:
+    docx2pdf myfile.docx
+
+Batch convert docx folder in-place. Output PDFs will go in the same folder:
+    docx2pdf myfolder/
+
+Convert single docx file with explicit output filepath:
+    docx2pdf input.docx output.docx
+
+Convert single docx file and output to a different explicit folder:
+    docx2pdf input.docx output_dir/
+
+Batch convert docx folder. Output PDFs will go to a different explicit folder:
+    docx2pdf input_dir/ output_dir/
+
+positional arguments:
+  input          input file or folder. batch converts entire folder or convert
+                 single file
+  output         output file or folder
+
+options:
+  -h, --help     show this help message and exit
+  --keep-active  prevent closing word after conversion
+  --version      display version and exit
+-   **Frontend**: React, , Tailwind CSS, shadcn/ui, 
 -   **Database**: MongoDB
 
 **key DB schema**
--   : Stores client-submitted form data.
--   : Stores quotation data. Now includes , , , and .
+-   : Stores client-submitted grant request data.
+-   : Stores quotation data.
 -   : Stores final contract data.
+-   : Stores all scheduled audits.
+-   , : For financial tracking.
+-   , : For auditor management.
+-   : (New) Stores data for issued certificates.
 
 **changes in tech stack**
--   None.
+-   Added  and usage: docx2pdf [-h] [--keep-active] [--version] input [output]
+
+Example Usage:
+
+Convert single docx file in-place from myfile.docx to myfile.pdf:
+    docx2pdf myfile.docx
+
+Batch convert docx folder in-place. Output PDFs will go in the same folder:
+    docx2pdf myfolder/
+
+Convert single docx file with explicit output filepath:
+    docx2pdf input.docx output.docx
+
+Convert single docx file and output to a different explicit folder:
+    docx2pdf input.docx output_dir/
+
+Batch convert docx folder. Output PDFs will go to a different explicit folder:
+    docx2pdf input_dir/ output_dir/
+
+positional arguments:
+  input          input file or folder. batch converts entire folder or convert
+                 single file
+  output         output file or folder
+
+options:
+  -h, --help     show this help message and exit
+  --keep-active  prevent closing word after conversion
+  --version      display version and exit for PDF generation from a DOCX template.
+-   Added  for generating QR codes in certificates.
 
 **All files of reference**
--    (Main file to investigate for the proposal creation bug and for future refactoring).
--    (Frontend file for the failing proposal creation form).
--    (Contains logic for rendering signatory details).
+-   : The monolith. Contains the endpoints that need to be updated for the new PDF generator.
+-   : The new utility for generating PDFs from the user's template.
+-   : The user-provided template file.
+-   : The central file for all UI text, contains the recent terminology changes.
+-   : The new page for managing certificates.
+-   : The new page for analytics.
+-   : The new page for alerts.
 
 **Areas that need refactoring**:
--   **CRITICAL**: The PDF generation logic is scattered and duplicated, with the most complex parts consolidated into . This massive technical debt is the root cause of the constant stream of rendering bugs and must be refactored into a dedicated service with clear separation of concerns.
+-   **CRITICAL**:  is now over 5000 lines long. It is unmaintainable and poses a severe risk to the project's stability. It MUST be broken down into separate routers for each resource (, , , , etc.). The pattern used for  (moving logic to a util file) should be a model for this refactor.
 
 **key api endpoints**
--   : **(CURRENTLY BROKEN)** Endpoint for creating a price quote.
--   : Fetches default signatory name, title, and images for the proposal form.
--   : Existing endpoint for file uploads, which should be used for signatures/stamps to avoid large payloads.
--   : Customer-facing endpoint to track order status.
+-   : (New) Creates a certificate for a signed contract.
+-   : (New) Lists all issued certificates.
+-   : **(BEING REFACTORED)** Downloads the contract PDF. Needs to use the new DOCX template generator.
 
 **Critical Info for New Agent**
--   Your immediate and highest priority (P0) is to fix the bug preventing the creation of proposals with signature/stamp images. This is a hard blocker for the user. Investigate the server's request body size limit first.
--   After fixing the blocker, you MUST strongly advise the user to prioritize the refactoring of the PDF generation code. Explain that this is the only way to permanently solve the recurring layout and font issues.
--   The user is highly engaged and provides specific, iterative feedback on the PDF appearance. Pay close attention to visual details.
+-   Your immediate and highest priority is to complete the Grant Agreement PDF generation using the user-provided  template. The user is very focused on the visual quality of this document.
+-   Once the PDF task is complete and verified by the user, you MUST propose and begin the refactoring of . Do not add any new features before addressing this technical debt.
+-   The next feature on the roadmap is integrating PayTabs for payments. The playbook for this has already been fetched.
+-   A massive terminology change was just completed. Be mindful of using the new terms (Grant, Facility) in all communication and code.
 
 **documents and test reports created in this job**
 -    (Updated)
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Asks to add the signatory name, title, and seal to the contract, visible only after client approval.
-2.  **Agent**: Implements the feature by adding editable fields to the price quote creation page.
-3.  **User**: Points out the signature and stamp fields are missing.
-4.  **Agent**: Adds signature and stamp upload fields to the UI.
-5.  **User**: Provides the signature and stamp images and asks for them to be set as editable defaults.
-6.  **Agent**: Implements the default loading of signature/stamp images.
-7.  **User**: Confirms the client flow: after signing, the client should be able to download the contract.
-8.  **Agent**: Fixes the client portal to enable the download button immediately after signing.
-9.  **User**: Reports that Track Your Order shows Order not found for a specific ID.
-10. **User**: After the agent fixes the tracking, the user reports an error message whay with a screenshot showing  when trying to create a proposal, which is the current blocking issue.
+10. **User**: Requests major terminology changes (e.g., Accreditation to Grant).
+9.  **Agent**: Implements all terminology changes across the entire codebase (UI and backend).
+8.  **User**: Confirms the UI changes are correct but points out the downloaded contract PDF needs to be updated. Provides an image of the desired Grant Agreement file and attaches the  template.
+7.  **Agent**: Acknowledges and starts working on replacing the PDF generation logic to use the new template.
+6.  **User**: Corrects the agent, stating that the downloaded PDF's format and quality are still wrong and must match the attached  file exactly.
+5.  **Agent**: Understands the requirement is to use the  file as a mail-merge template and convert it to PDF.
+4.  **Agent**: Installs  and usage: docx2pdf [-h] [--keep-active] [--version] input [output]
+
+Example Usage:
+
+Convert single docx file in-place from myfile.docx to myfile.pdf:
+    docx2pdf myfile.docx
+
+Batch convert docx folder in-place. Output PDFs will go in the same folder:
+    docx2pdf myfolder/
+
+Convert single docx file with explicit output filepath:
+    docx2pdf input.docx output.docx
+
+Convert single docx file and output to a different explicit folder:
+    docx2pdf input.docx output_dir/
+
+Batch convert docx folder. Output PDFs will go to a different explicit folder:
+    docx2pdf input_dir/ output_dir/
+
+positional arguments:
+  input          input file or folder. batch converts entire folder or convert
+                 single file
+  output         output file or folder
+
+options:
+  -h, --help     show this help message and exit
+  --keep-active  prevent closing word after conversion
+  --version      display version and exit.
+3.  **Agent**: Creates a new utility  to handle the new process.
+2.  **Agent**: Starts modifying  to integrate the new generator.
+1.  **Agent**: Was in the middle of updating the  endpoints when the session ended.
 
 **Project Health Check:**
--   **At Risk**: The application's core proposal-to-contract workflow is blocked by a critical bug. The underlying technical debt in the PDF generation code makes the system fragile and prone to regressions, leading to high user frustration.
+-   **Broken**: The core architecture is fragile. The  monolith has grown to an unmanageable size, increasing the risk of bugs and slowing down development. While new features are being added, the technical debt is accumulating to a critical level.
 
 **3rd Party Integrations**
--   : Used for PDF generation.
--   , : Used for rendering Arabic text in PDFs.
--   **Google Calendar API**: Foundation laid, pending user credentials for activation.
--   **Twilio SMS**: Foundation laid, pending user credentials for activation.
+-   , , : Used for programmatic PDF generation (partially being replaced).
+-   , usage: docx2pdf [-h] [--keep-active] [--version] input [output]
+
+Example Usage:
+
+Convert single docx file in-place from myfile.docx to myfile.pdf:
+    docx2pdf myfile.docx
+
+Batch convert docx folder in-place. Output PDFs will go in the same folder:
+    docx2pdf myfolder/
+
+Convert single docx file with explicit output filepath:
+    docx2pdf input.docx output.docx
+
+Convert single docx file and output to a different explicit folder:
+    docx2pdf input.docx output_dir/
+
+Batch convert docx folder. Output PDFs will go to a different explicit folder:
+    docx2pdf input_dir/ output_dir/
+
+positional arguments:
+  input          input file or folder. batch converts entire folder or convert
+                 single file
+  output         output file or folder
+
+options:
+  -h, --help     show this help message and exit
+  --keep-active  prevent closing word after conversion
+  --version      display version and exit: New dependencies for generating PDFs from a  template.
+-   : Used for generating QR codes in certificates.
+-   **PayTabs**: Planned for next integration (playbook received).
+-   **Google Calendar API**: Pending user credentials.
+-   **Twilio SMS**: Pending user credentials.
+-   **Stripe**: **REJECTED** by the user.
 
 **Testing status**
--   **Testing agent used after significant changes**: NO, recent changes were tested manually.
--   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Testing agent used after significant changes**: YES, for Auditor Management and Certificate Generation.
 -   **Test files created**: None.
--   **Known regressions**: Arabic text rendering in PDFs is a persistent regression risk due to the fragile codebase.
+-   **Known regressions**: The PDF generation system is a known point of failure and is currently undergoing a user-requested overhaul.
 
 **Credentials to test flow:**
 -   **Admin**:  / 
 
 **What agent forgot to execute**
--   The agent did not anticipate that adding large base64-encoded images to the proposal creation payload could exceed server request size limits, leading to the current blocker.
--   The agent has consistently deferred the critical refactoring of , instead applying patches that increase the file's complexity and fragility.</analysis>
+-   The agent did not complete the integration of the new  into . The work is half-done and the contract download endpoint is likely broken in its current state.
+-   The agent has not yet tested the new  to PDF workflow to see if it correctly populates data and produces a high-quality output.
+-   The old contract PDF generation code in  has not been marked for deprecation or removed, which could cause confusion.</analysis>

@@ -461,7 +461,8 @@ def generate_grant_agreement_pdf(agreement_data: dict, output_path: str = None) 
     # Scope
     c.setFillColor(section_color)
     c.setFont('Helvetica-Bold', 9)
-    c.drawString(30, y, "Scope of Services / نطاق الخدمات:")
+    c.drawString(30, y, "Scope of Services:")
+    draw_arabic("نطاق الخدمات", width - 30, y, 9, bold=True, right_align=True)
     y -= 12
     c.setFillColor(colors.black)
     c.setFont('Helvetica', 9)

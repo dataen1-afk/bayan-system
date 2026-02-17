@@ -26,7 +26,8 @@ import {
   UsersRound,
   FileWarning,
   FileBadge,
-  NotebookPen
+  NotebookPen,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

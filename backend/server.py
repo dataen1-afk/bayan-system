@@ -4928,10 +4928,6 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     c.setStrokeColor(colors.grey)
     c.setLineWidth(0.5)
     c.rect(stamp_x, stamp_y, stamp_box_size, stamp_box_size, fill=False, stroke=True)
-    # Empty box for client stamp
-    c.setStrokeColor(colors.HexColor('#d1d5db'))
-    c.setLineWidth(0.5)
-    c.rect(line_start + 10, y - sig_box_height + 15, line_end - line_start - 10, 30, fill=False, stroke=True)
     
     # Footer for page 2
     c.setFillColor(primary_color)

@@ -731,6 +731,40 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Certification recommendation checkboxes (issue, use logo, refuse, etc.)
   - Overall recommendation for certification decision
 
+### Auditor Notes (BACF6-12) Feature ✅ (NEW - Feb 2026)
+- **Purpose**: Notes recorded by auditors after conducting audits
+- **Workflow**:
+  1. Auditor creates notes after completing Stage 2 audit report
+  2. Notes can be created from an approved Stage 2 report (auto-fills client info) OR manually
+  3. Can be used for any audit type (Stage 1, Stage 2, Surveillance, Recertification)
+  4. Auditor records observations, findings, and comments
+  5. Notes can be marked as "draft" or "completed"
+- **Form Fields**:
+  - Client Name (اسم العميل)
+  - Location (الموقع)
+  - Standard(s) (المعايير)
+  - Auditor (المدقق)
+  - Type of Audit (نوع التدقيق)
+  - Audit Date (تاريخ التدقيق)
+  - Department (القسم)
+  - Notes (ملاحظات المدقق) - main content area
+- **Backend API Endpoints**:
+  - `POST /api/auditor-notes` - Create notes (from Stage 2 report or manually)
+  - `GET /api/auditor-notes` - List all notes
+  - `GET /api/auditor-notes/{id}` - Get specific notes
+  - `PUT /api/auditor-notes/{id}` - Update notes
+  - `DELETE /api/auditor-notes/{id}` - Delete notes
+  - `POST /api/auditor-notes/{id}/complete` - Mark as completed
+  - `GET /api/auditor-notes/{id}/pdf` - Generate bilingual PDF
+- **Frontend Pages**:
+  - `/auditor-notes` - Admin page with stats, table, create/edit modals
+- **Status Flow**: draft → completed
+- **PDF Generator**: `/app/backend/auditor_notes_generator.py` - Bilingual PDF with:
+  - Client information header
+  - Audit details (type, date, department)
+  - Main notes content section
+  - Arabic text support
+
 ## Backend Refactoring (February 2026) - IN PROGRESS
 
 ### Completed Modular Extraction

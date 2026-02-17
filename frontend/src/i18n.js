@@ -449,8 +449,8 @@ const resources = {
       // Proposal Page
       "createProposal": "Create Proposal",
       "proposalFor": "Proposal for",
-      "organizationDetails": "Organization Details",
-      "organizationName": "Organization Name",
+      "organizationDetails": "Facility Details",
+      "organizationName": "Facility Name",
       "address": "Address",
       "position": "Position",
       "serviceDetails": "Service Details",

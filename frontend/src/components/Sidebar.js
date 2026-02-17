@@ -51,6 +51,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'contract-reviews', icon: ClipboardList, label: t('contractReviews'), color: 'text-pink-600', route: '/contract-reviews' },
     { id: 'audit-programs', icon: ClipboardCheck, label: t('auditPrograms'), color: 'text-cyan-600', route: '/audit-programs' },
     { id: 'job-orders', icon: FileSignature, label: t('jobOrders'), color: 'text-violet-600', route: '/job-orders' },
+    { id: 'stage1-audit-plans', icon: FileSpreadsheet, label: t('stage1AuditPlans'), color: 'text-rose-600', route: '/stage1-audit-plans' },
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
     { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },

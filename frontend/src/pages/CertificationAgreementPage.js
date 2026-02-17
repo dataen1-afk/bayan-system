@@ -28,7 +28,7 @@ const CertificationAgreementPage = () => {
   
   // Agreement form data
   const [formData, setFormData] = useState({
-    // Organization Details (pre-filled from proposal, editable)
+    // Facility Details (pre-filled from proposal, editable)
     organizationName: '',
     organizationAddress: '',
     

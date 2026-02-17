@@ -46,6 +46,7 @@ from certificate_data_generator import generate_certificate_data_pdf
 from technical_review_generator import generate_technical_review_pdf
 from customer_feedback_generator import generate_customer_feedback_pdf
 from pre_transfer_review_generator import generate_pre_transfer_review_pdf
+from certified_clients_generator import generate_certified_client_pdf, generate_certified_clients_list_pdf
 
 # Import modular routers
 from routes.auth import router as auth_router

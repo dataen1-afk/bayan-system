@@ -633,6 +633,30 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Treatment of complaints and continual improvement demonstration
 - **Test Report**: `/app/test_reports/iteration_26.json` - 100% pass rate (21/21 backend tests, 100% frontend)
 
+### Opening & Closing Meeting (BACF6-09) Feature ✅ (NEW - Feb 2026)
+- **Purpose**: Audit meeting attendance records - sent to client after Stage 1 audit
+- **Workflow**:
+  1. Admin creates meeting form from a client-accepted Stage 1 plan
+  2. Admin sends the form to the client via public link
+  3. Client fills in the attendee list (name, designation, opening meeting date, closing meeting date)
+  4. Client adds opening and closing meeting notes
+  5. Client submits the form
+- **Backend API Endpoints**:
+  - `POST /api/opening-closing-meetings` - Create from Stage 1 plan
+  - `GET /api/opening-closing-meetings` - List all meetings
+  - `GET /api/opening-closing-meetings/{id}` - Get specific meeting
+  - `DELETE /api/opening-closing-meetings/{id}` - Delete meeting
+  - `POST /api/opening-closing-meetings/{id}/send-to-client` - Send for client filling
+  - `GET /api/opening-closing-meetings/{id}/pdf` - Generate bilingual PDF
+  - `GET /api/public/opening-closing-meetings/{token}` - Public client access
+  - `POST /api/public/opening-closing-meetings/{token}/submit` - Client submits form
+- **Frontend Pages**:
+  - `/opening-closing-meetings` - Admin page with stats, table, create/view modals
+  - `/meeting-form/:accessToken` - Public client form page with attendees table
+- **Status Flow**: pending → sent_to_client → submitted
+- **PDF Generator**: `/app/backend/opening_closing_meeting_generator.py` - Bilingual PDF with attendees table
+- **Test Report**: `/app/test_reports/iteration_27.json` - 100% pass rate (16/16 backend tests, 100% frontend)
+
 ## Upcoming Tasks
 - **CRITICAL REFACTOR**: Break down `server.py` monolith (7000+ lines) into modular routers - HIGH PRIORITY
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts

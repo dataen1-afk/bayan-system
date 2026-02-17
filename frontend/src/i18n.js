@@ -542,6 +542,11 @@ const resources = {
       "preTransferReviews": "Pre-Transfer Reviews",
       "preTransfer.title": "Pre-Transfer Review",
       "preTransfer.subtitle": "BAC-F6-17 - Certificate transfer assessment from other CB",
+
+      // Certified Clients Registry (BACF6-19)
+      "certifiedClients": "Certified Clients",
+      "certifiedClients.title": "Certified Clients Registry",
+      "certifiedClients.subtitle": "BAC-F6-19 - List of clients with active certifications",
       
       // Forms
       "createNewForm": "Create New Form",
@@ -2135,6 +2140,11 @@ const resources = {
       "preTransferReviews": "مراجعات ما قبل النقل",
       "preTransfer.title": "مراجعة ما قبل النقل",
       "preTransfer.subtitle": "BAC-F6-17 - تقييم نقل الشهادة من جهة اعتماد أخرى",
+
+      // Certified Clients Registry (BACF6-19)
+      "certifiedClients": "العملاء المعتمدون",
+      "certifiedClients.title": "سجل العملاء المعتمدين",
+      "certifiedClients.subtitle": "BAC-F6-19 - قائمة العملاء الحاصلين على الشهادات",
       
       // Forms
       "createNewForm": "إنشاء نموذج جديد",

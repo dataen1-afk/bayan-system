@@ -5724,6 +5724,289 @@ async def approve_audit_program(program_id: str, credentials: HTTPAuthorizationC
     
     return {"message": "Audit program approved successfully"}
 
+# ================= JOB ORDER (BACF6-06) ROUTES =================
+
+@api_router.post("/job-orders")
+async def create_job_order(data: JobOrderCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new Job Order from an Audit Program (Admin only)"""
+    await get_current_user(credentials)
+    
+    # Get the audit program
+    program = await db.audit_programs.find_one({"id": data.audit_program_id}, {"_id": 0})
+    if not program:
+        raise HTTPException(status_code=404, detail="Audit program not found")
+    
+    # Get the auditor
+    auditor = await db.auditors.find_one({"id": data.auditor_id}, {"_id": 0})
+    if not auditor:
+        raise HTTPException(status_code=404, detail="Auditor not found")
+    
+    # Get contract review for additional details
+    contract_review = None
+    if program.get('contract_review_id'):
+        contract_review = await db.contract_reviews.find_one(
+            {"id": program['contract_review_id']}, {"_id": 0}
+        )
+    
+    # Create job order with auto-populated data
+    job_order = JobOrder(
+        audit_program_id=data.audit_program_id,
+        contract_review_id=program.get('contract_review_id', ''),
+        agreement_id=program.get('agreement_id', ''),
+        # Auditor info
+        auditor_id=data.auditor_id,
+        auditor_name=auditor.get('name', ''),
+        auditor_name_ar=auditor.get('name_ar', ''),
+        auditor_email=auditor.get('email', ''),
+        position=data.position,
+        # Client/Audit details
+        organization_name=program.get('organization_name', ''),
+        organization_address=contract_review.get('organization_address', '') if contract_review else '',
+        total_employees=program.get('total_employees', 0),
+        phone=contract_review.get('phone', '') if contract_review else '',
+        scope_of_services=program.get('scope_of_services', ''),
+        standards=program.get('standards', []),
+        audit_type=data.audit_type,
+        audit_date=data.audit_date,
+        client_ref=contract_review.get('client_ref', '') if contract_review else program.get('id', '')[:8],
+    )
+    
+    await db.job_orders.insert_one(job_order.dict())
+    
+    # Update auditor's current assignments
+    await db.auditors.update_one(
+        {"id": data.auditor_id},
+        {"$inc": {"current_assignments": 1}}
+    )
+    
+    # Create notification
+    await create_notification(
+        "job_order_created",
+        "Job Order Created",
+        f"Job order created for {auditor.get('name', '')} - {program.get('organization_name', '')}",
+        job_order.id,
+        "job_order"
+    )
+    
+    return {
+        "id": job_order.id, 
+        "access_token": job_order.access_token, 
+        "message": "Job order created successfully"
+    }
+
+@api_router.get("/job-orders")
+async def get_job_orders(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all job orders (Admin only)"""
+    await get_current_user(credentials)
+    
+    orders = await db.job_orders.find({}, {"_id": 0}).to_list(1000)
+    return orders
+
+@api_router.get("/job-orders/{order_id}")
+async def get_job_order(order_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get a specific job order (Admin only)"""
+    await get_current_user(credentials)
+    
+    order = await db.job_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    return order
+
+@api_router.put("/job-orders/{order_id}")
+async def update_job_order(order_id: str, data: JobOrderUpdate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update job order (Admin only)"""
+    await get_current_user(credentials)
+    
+    order = await db.job_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    update_data = data.dict()
+    update_data['updated_at'] = datetime.now(timezone.utc)
+    
+    await db.job_orders.update_one(
+        {"id": order_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Job order updated successfully"}
+
+@api_router.delete("/job-orders/{order_id}")
+async def delete_job_order(order_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a job order (Admin only)"""
+    await get_current_user(credentials)
+    
+    order = await db.job_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    # Decrease auditor's current assignments
+    if order.get('auditor_id'):
+        await db.auditors.update_one(
+            {"id": order['auditor_id']},
+            {"$inc": {"current_assignments": -1}}
+        )
+    
+    await db.job_orders.delete_one({"id": order_id})
+    
+    return {"message": "Job order deleted successfully"}
+
+@api_router.post("/job-orders/{order_id}/approve")
+async def approve_job_order(order_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Certification Manager approves job order (Admin only)"""
+    current_user = await get_current_user(credentials)
+    
+    order = await db.job_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    await db.job_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "manager_approved": True,
+            "certification_manager": current_user.get('name', 'Admin'),
+            "manager_approval_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+            "status": "pending_auditor",
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Create notification
+    await create_notification(
+        "job_order_approved",
+        "Job Order Approved",
+        f"Job order approved - {order.get('organization_name', '')}",
+        order_id,
+        "job_order"
+    )
+    
+    return {"message": "Job order approved successfully"}
+
+@api_router.get("/job-orders/{order_id}/pdf")
+async def get_job_order_pdf(order_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate PDF for job order (Admin only)"""
+    await get_current_user(credentials)
+    
+    order = await db.job_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    try:
+        pdf_bytes = generate_job_order_pdf(order)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=job_order_{order_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Job Order PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+@api_router.post("/job-orders/{order_id}/send-to-auditor")
+async def send_job_order_to_auditor(order_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Send job order confirmation link to auditor (Admin only)"""
+    await get_current_user(credentials)
+    
+    order = await db.job_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    if not order.get('manager_approved'):
+        raise HTTPException(status_code=400, detail="Job order must be approved by manager first")
+    
+    # Generate confirmation link
+    frontend_url = os.environ.get('REACT_APP_FRONTEND_URL', 'https://contract-mgmt-9.preview.emergentagent.com')
+    link = f"{frontend_url}/job-order-confirm/{order['access_token']}"
+    
+    # TODO: Send actual email when SMTP is configured
+    return {
+        "message": "Job order confirmation link ready to send",
+        "link": link,
+        "auditor_email": order.get('auditor_email', ''),
+        "auditor_name": order.get('auditor_name', ''),
+        "organization": order.get('organization_name', '')
+    }
+
+# ================= PUBLIC JOB ORDER CONFIRMATION (for Auditors) =================
+
+@api_router.get("/public/job-orders/{access_token}")
+async def get_public_job_order(access_token: str):
+    """Get job order for auditor confirmation (public access with token)"""
+    order = await db.job_orders.find_one({"access_token": access_token}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    if not order.get('manager_approved'):
+        raise HTTPException(status_code=400, detail="Job order is not yet approved by manager")
+    
+    # Return limited info for auditor
+    return {
+        "id": order.get('id'),
+        "auditor_name": order.get('auditor_name'),
+        "auditor_name_ar": order.get('auditor_name_ar'),
+        "position": order.get('position'),
+        "organization_name": order.get('organization_name'),
+        "standards": order.get('standards', []),
+        "audit_type": order.get('audit_type'),
+        "audit_date": order.get('audit_date'),
+        "scope_of_services": order.get('scope_of_services'),
+        "certification_manager": order.get('certification_manager'),
+        "manager_approval_date": order.get('manager_approval_date'),
+        "auditor_confirmed": order.get('auditor_confirmed', False),
+        "status": order.get('status')
+    }
+
+@api_router.post("/public/job-orders/{access_token}/confirm")
+async def confirm_job_order(access_token: str, data: JobOrderAuditorConfirmation):
+    """Auditor confirms or rejects job order (public access with token)"""
+    order = await db.job_orders.find_one({"access_token": access_token})
+    if not order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    if not order.get('manager_approved'):
+        raise HTTPException(status_code=400, detail="Job order is not yet approved by manager")
+    
+    if order.get('auditor_confirmed'):
+        raise HTTPException(status_code=400, detail="Job order already confirmed")
+    
+    update_data = {
+        "auditor_confirmed": data.confirmed,
+        "auditor_confirmation_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    if data.confirmed:
+        update_data["status"] = "confirmed"
+    else:
+        update_data["status"] = "rejected"
+        update_data["unable_reason"] = data.unable_reason
+        # Decrease auditor's current assignments if rejected
+        if order.get('auditor_id'):
+            await db.auditors.update_one(
+                {"id": order['auditor_id']},
+                {"$inc": {"current_assignments": -1}}
+            )
+    
+    await db.job_orders.update_one(
+        {"access_token": access_token},
+        {"$set": update_data}
+    )
+    
+    # Create notification
+    status_text = "confirmed" if data.confirmed else "rejected"
+    await create_notification(
+        f"job_order_{status_text}",
+        f"Job Order {status_text.title()}",
+        f"Auditor {order.get('auditor_name', '')} has {status_text} the job order for {order.get('organization_name', '')}",
+        order.get('id'),
+        "job_order"
+    )
+    
+    return {"message": f"Job order {status_text} successfully"}
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

@@ -1660,6 +1660,68 @@ class CertifiedClient(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= SUSPENDED CLIENTS REGISTRY MODELS (BAC-F6-20) =================
+
+class SuspendedClientCreate(BaseModel):
+    """Create Suspended Client Record"""
+    client_id: str = ""  # Reference ID from certified clients
+    client_name: str
+    client_name_ar: str = ""
+    address: str = ""
+    address_ar: str = ""
+    registration_date: str = ""  # Original certification date YYYY-MM-DD
+    suspended_on: str = ""  # Suspension date YYYY-MM-DD
+    reason_for_suspension: str = ""
+    reason_for_suspension_ar: str = ""
+    future_action: str = ""  # Planned action (reinstate, withdraw, etc.)
+    remarks: str = ""
+    # Link to certified client record
+    linked_certified_client_id: str = ""
+
+class SuspendedClientUpdate(BaseModel):
+    """Update Suspended Client Record"""
+    client_id: Optional[str] = None
+    client_name: Optional[str] = None
+    client_name_ar: Optional[str] = None
+    address: Optional[str] = None
+    address_ar: Optional[str] = None
+    registration_date: Optional[str] = None
+    suspended_on: Optional[str] = None
+    reason_for_suspension: Optional[str] = None
+    reason_for_suspension_ar: Optional[str] = None
+    future_action: Optional[str] = None
+    remarks: Optional[str] = None
+    status: Optional[str] = None
+    lifted_on: Optional[str] = None
+    lifted_reason: Optional[str] = None
+
+class SuspendedClient(BaseModel):
+    """Suspended Client Registry Record (BAC-F6-20)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    serial_number: int = 0  # Auto-incremented Sr. No.
+    # Client Information
+    client_id: str = ""  # Client reference ID
+    client_name: str = ""
+    client_name_ar: str = ""
+    address: str = ""
+    address_ar: str = ""
+    # Suspension Details
+    registration_date: str = ""  # Original certification date YYYY-MM-DD
+    suspended_on: str = ""  # Suspension date YYYY-MM-DD
+    reason_for_suspension: str = ""
+    reason_for_suspension_ar: str = ""
+    future_action: str = ""  # reinstate, withdraw, extend_suspension, under_review
+    remarks: str = ""
+    # Status tracking
+    status: str = "suspended"  # suspended, reinstated, withdrawn
+    lifted_on: str = ""  # Date suspension was lifted YYYY-MM-DD
+    lifted_reason: str = ""  # Reason for lifting suspension
+    # Link to certified client record
+    linked_certified_client_id: str = ""
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

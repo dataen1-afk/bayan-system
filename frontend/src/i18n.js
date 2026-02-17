@@ -1641,7 +1641,7 @@ const resources = {
       "fillScopeOfServices": "يرجى وصف نطاق الخدمات",
       "fillSignatoryDetails": "يرجى ملء اسم ومنصب الموقّع",
       "acceptAllAcknowledgements": "يرجى قبول جميع الإقرارات للمتابعة",
-      "pleaseCompleteAgreementForm": "يرجى إكمال نموذج اتفاقية الاعتماد لإتمام عملية الاعتماد.",
+      "pleaseCompleteAgreementForm": "يرجى إكمال نموذج اتفاقية المنح لإتمام عملية المنح.",
       "continueToAgreement": "المتابعة إلى نموذج الاتفاقية",
       "agreementAlreadySigned": "تم توقيع اتفاقية الاعتماد بالفعل.",
       "viewAgreement": "عرض الاتفاقية",

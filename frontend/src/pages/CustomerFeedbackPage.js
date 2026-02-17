@@ -191,6 +191,13 @@ export default function CustomerFeedbackPage() {
   };
 
   const handleCertificateSelect = (certId) => {
+    if (certId === "none") {
+      setFormData({
+        ...formData,
+        certificate_id: ''
+      });
+      return;
+    }
     const cert = certificates.find(c => c.id === certId);
     if (cert) {
       setFormData({

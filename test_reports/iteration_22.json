@@ -1,0 +1,73 @@
+{
+  "summary": "Iteration 22: Grant Agreement PDF Generation Testing. Backend: 9/9 tests passed (100%). Frontend: PDF download working correctly from Contracts page. The DOCX template is properly filled and converted to PDF using LibreOffice.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/contracts/{agreement_id}/pdf",
+        "issue": "BAC signatory name replacement fails for text split across runs - 'Islam Abd El-Aal' is split as ['I', 'slam Abd El-Aal'] in DOCX runs, preventing proper replacement with custom issuer_name. Uses default 'Islam Abd El-Aal' instead of configured issuer.",
+        "priority": "LOW",
+        "location": "grant_agreement_generator.py line 168-171"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "DataTable component",
+        "issues": ["React hydration warning: <span> cannot be a child of <select> - minor console warning from Emergent framework, doesn't affect functionality"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_grant_agreement_pdf.py",
+    "/app/test_reports/pytest/grant_agreement_pdf_results.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Fix BAC signatory name replacement in grant_agreement_generator.py - text 'Islam Abd El-Aal' is split across DOCX runs and needs special handling"
+  ],
+  "critical_code_review_comments": [
+    "Grant Agreement PDF generation works correctly - uses user's DOCX template",
+    "Standards checkboxes are properly marked: ☑ for selected, ☐ for unselected",
+    "Organization name, address, scope, and sites are correctly filled",
+    "LibreOffice conversion to PDF works (66-579 KB output depending on content)",
+    "GET /api/certification-agreements endpoint properly returns list of signed agreements"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_grant_agreement_pdf.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "100% - PDF downloads working from Contracts page"
+  },
+  "test_credentials": {
+    "admin": {
+      "email": "admin@test.com",
+      "password": "admin123"
+    }
+  },
+  "seed_data_creation": "No new seed data - tested with existing 7 certification agreements",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Grant Agreement PDF generation fully functional. Uses DOCX template at /app/backend/assets/grant_agreement_template.docx. Standards checkboxes work correctly (ISO9001, ISO14001 tested). PDF downloads from Contracts page (/admin?tab=contracts) work via /api/public/contracts/{access_token}/pdf/bilingual endpoint. Minor issue: BAC signatory name replacement in template signature section doesn't work due to text split across runs.",
+  "features_verified": {
+    "grant_agreement_pdf": {
+      "endpoint": "/api/contracts/{agreement_id}/pdf",
+      "template": "/app/backend/assets/grant_agreement_template.docx",
+      "template_filling": "WORKING - organization name, address, standards, scope, sites",
+      "standards_checkboxes": "WORKING - ☑ for selected, ☐ for unselected",
+      "pdf_conversion": "WORKING - LibreOffice headless conversion",
+      "output_size": "66-579 KB (varies by content)"
+    },
+    "frontend_download": {
+      "page": "/admin?tab=contracts",
+      "button": "Download (تحميل) button next to each contract",
+      "endpoint_used": "/api/public/contracts/{access_token}/pdf/bilingual"
+    }
+  },
+  "mocked_apis": {
+    "email_notifications": "MOCKED - No actual emails sent (SMTP not configured)"
+  }
+}

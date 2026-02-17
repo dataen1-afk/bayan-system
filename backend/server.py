@@ -9035,6 +9035,257 @@ async def get_technical_review_pdf(
         logging.error(f"Error generating Technical Review PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+# ================= CUSTOMER FEEDBACK ENDPOINTS (BACF6-16) =================
+
+@api_router.get("/customer-feedback")
+async def get_customer_feedback_list(
+    status: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all customer feedback forms"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if status and status != 'all':
+        query['status'] = status
+    
+    feedbacks = await db.customer_feedback.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return feedbacks
+
+@api_router.post("/customer-feedback")
+async def create_customer_feedback(
+    data: CustomerFeedbackCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create a new customer feedback form"""
+    await get_current_user(credentials)
+    
+    # Initialize with default questions
+    questions = [q.copy() for q in DEFAULT_FEEDBACK_QUESTIONS]
+    
+    feedback = CustomerFeedback(
+        certificate_id=data.certificate_id,
+        audit_id=data.audit_id,
+        organization_name=data.organization_name,
+        organization_name_ar=data.organization_name_ar,
+        audit_type=data.audit_type,
+        standards=data.standards,
+        audit_date=data.audit_date,
+        lead_auditor=data.lead_auditor,
+        auditor=data.auditor,
+        questions=questions,
+        status="pending"
+    )
+    
+    feedback_doc = feedback.model_dump()
+    feedback_doc['created_at'] = feedback_doc['created_at'].isoformat()
+    
+    await db.customer_feedback.insert_one(feedback_doc)
+    
+    await create_notification(
+        notification_type="feedback_created",
+        title="Customer Feedback Created",
+        message=f"Feedback form created for {feedback.organization_name}",
+        related_id=feedback.id,
+        related_type="customer_feedback"
+    )
+    
+    return {
+        "message": "Customer feedback form created",
+        "id": feedback.id,
+        "access_token": feedback.access_token,
+        "public_url": f"/feedback/{feedback.access_token}"
+    }
+
+@api_router.get("/customer-feedback/{feedback_id}")
+async def get_customer_feedback(
+    feedback_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get a specific customer feedback"""
+    await get_current_user(credentials)
+    
+    feedback = await db.customer_feedback.find_one({"id": feedback_id}, {"_id": 0})
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Customer feedback not found")
+    
+    return feedback
+
+@api_router.put("/customer-feedback/{feedback_id}")
+async def update_customer_feedback(
+    feedback_id: str,
+    data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update a customer feedback (admin only)"""
+    await get_current_user(credentials)
+    
+    existing = await db.customer_feedback.find_one({"id": feedback_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Customer feedback not found")
+    
+    # Recalculate score if questions are updated
+    if 'questions' in data:
+        score, evaluation = calculate_feedback_score(data['questions'])
+        data['overall_score'] = score
+        data['evaluation_result'] = evaluation
+    
+    await db.customer_feedback.update_one(
+        {"id": feedback_id},
+        {"$set": data}
+    )
+    
+    return {"message": "Customer feedback updated"}
+
+@api_router.delete("/customer-feedback/{feedback_id}")
+async def delete_customer_feedback(
+    feedback_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Delete a customer feedback"""
+    await get_current_user(credentials)
+    
+    existing = await db.customer_feedback.find_one({"id": feedback_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Customer feedback not found")
+    
+    await db.customer_feedback.delete_one({"id": feedback_id})
+    return {"message": "Customer feedback deleted"}
+
+@api_router.post("/customer-feedback/{feedback_id}/review")
+async def review_customer_feedback(
+    feedback_id: str,
+    data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Mark feedback as reviewed by admin"""
+    await get_current_user(credentials)
+    
+    existing = await db.customer_feedback.find_one({"id": feedback_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Customer feedback not found")
+    
+    await db.customer_feedback.update_one(
+        {"id": feedback_id},
+        {"$set": {
+            "reviewed_by": data.get('reviewed_by', ''),
+            "review_date": data.get('review_date', datetime.now().strftime("%Y-%m-%d")),
+            "review_comments": data.get('review_comments', ''),
+            "status": "reviewed"
+        }}
+    )
+    
+    return {"message": "Feedback marked as reviewed"}
+
+@api_router.get("/customer-feedback/{feedback_id}/pdf")
+async def get_customer_feedback_pdf(
+    feedback_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Generate PDF for Customer Feedback"""
+    await get_current_user(credentials)
+    
+    feedback = await db.customer_feedback.find_one({"id": feedback_id}, {"_id": 0})
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Customer feedback not found")
+    
+    try:
+        contracts_dir = Path(__file__).parent / "contracts"
+        contracts_dir.mkdir(exist_ok=True)
+        pdf_path = str(contracts_dir / f"customer_feedback_{feedback_id[:8]}.pdf")
+        
+        generate_customer_feedback_pdf(feedback, pdf_path)
+        
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename=f"customer_feedback_{feedback_id[:8]}.pdf"
+        )
+    except Exception as e:
+        logging.error(f"Error generating Customer Feedback PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+# Public endpoint for client to submit feedback
+@api_router.get("/public/feedback/{access_token}")
+async def get_public_feedback_form(access_token: str):
+    """Get feedback form for client to fill (public, no auth required)"""
+    feedback = await db.customer_feedback.find_one(
+        {"access_token": access_token},
+        {"_id": 0}
+    )
+    
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Feedback form not found")
+    
+    if feedback.get('status') == 'submitted':
+        raise HTTPException(status_code=400, detail="This feedback has already been submitted")
+    
+    # Return only necessary fields for public view
+    return {
+        "id": feedback['id'],
+        "organization_name": feedback.get('organization_name', ''),
+        "organization_name_ar": feedback.get('organization_name_ar', ''),
+        "audit_type": feedback.get('audit_type', ''),
+        "standards": feedback.get('standards', []),
+        "audit_date": feedback.get('audit_date', ''),
+        "lead_auditor": feedback.get('lead_auditor', ''),
+        "auditor": feedback.get('auditor', ''),
+        "questions": feedback.get('questions', []),
+        "status": feedback.get('status', 'pending')
+    }
+
+@api_router.post("/public/feedback/{access_token}/submit")
+async def submit_public_feedback(access_token: str, data: CustomerFeedbackSubmit):
+    """Submit feedback from client (public, no auth required)"""
+    feedback = await db.customer_feedback.find_one({"access_token": access_token})
+    
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Feedback form not found")
+    
+    if feedback.get('status') == 'submitted':
+        raise HTTPException(status_code=400, detail="This feedback has already been submitted")
+    
+    # Update questions with ratings
+    questions = feedback.get('questions', [])
+    for submitted_q in data.questions:
+        q_idx = submitted_q.get('index', -1)
+        if 0 <= q_idx < len(questions):
+            questions[q_idx]['rating'] = submitted_q.get('rating')
+    
+    # Calculate score
+    score, evaluation = calculate_feedback_score(questions)
+    
+    # Update feedback
+    await db.customer_feedback.update_one(
+        {"access_token": access_token},
+        {"$set": {
+            "questions": questions,
+            "want_same_team": data.want_same_team,
+            "suggestions": data.suggestions,
+            "respondent_name": data.respondent_name,
+            "respondent_designation": data.respondent_designation,
+            "submission_date": datetime.now().strftime("%Y-%m-%d"),
+            "overall_score": score,
+            "evaluation_result": evaluation,
+            "status": "submitted",
+            "submitted_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    await create_notification(
+        notification_type="feedback_submitted",
+        title="Customer Feedback Submitted",
+        message=f"Feedback received from {feedback.get('organization_name', '')} - Score: {score}%",
+        related_id=feedback['id'],
+        related_type="customer_feedback"
+    )
+    
+    return {
+        "message": "Feedback submitted successfully",
+        "overall_score": score,
+        "evaluation_result": evaluation
+    }
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

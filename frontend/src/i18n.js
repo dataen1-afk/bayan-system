@@ -1506,7 +1506,7 @@ const resources = {
       "formNotFound": "النموذج غير موجود",
       "errorLoadingForm": "خطأ في تحميل النموذج",
       "formLinkInvalidOrExpired": "رابط النموذج غير صالح أو منتهي الصلاحية. يرجى التواصل مع المسؤول.",
-      "welcomeToApplicationForm": "نموذج طلب الاعتماد",
+      "welcomeToApplicationForm": "نموذج طلب المنح",
       "formForCompany": "نموذج لشركة",
       "thankYouForSubmitting": "شكراً لتقديم طلبك!",
       "applicationSubmittedMessage": "تم استلام طلبك وسيتم مراجعته من قبل فريقنا. سنتواصل معك قريباً بالخطوات التالية.",

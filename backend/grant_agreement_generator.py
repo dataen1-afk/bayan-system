@@ -164,11 +164,17 @@ def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
                     run.text = run.text.replace('xxxxx', org_name)
                     run.text = run.text.replace('XXXXX', org_name)
         
-        # Replace BAC signatory name
-        if 'Islam Abd El-Aal' in text:
-            for run in paragraph.runs:
-                if 'Islam Abd El-Aal' in run.text:
-                    run.text = run.text.replace('Islam Abd El-Aal', issuer_name)
+        # Replace BAC signatory name (may be split across runs like "I" + "slam Abd El-Aal")
+        if 'Islam' in text or 'slam Abd El-Aal' in text:
+            # Join all run text, replace, then redistribute
+            full_text = ''.join([r.text for r in paragraph.runs])
+            if 'Islam Abd El-Aal' in full_text:
+                new_text = full_text.replace('Islam Abd El-Aal', issuer_name)
+                # Clear all runs and set new text in first run
+                for run in paragraph.runs:
+                    run.text = ''
+                if paragraph.runs:
+                    paragraph.runs[0].text = new_text
         
         # Replace "Company  ." with actual company name
         if 'Company  .' in text:

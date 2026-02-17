@@ -39,6 +39,7 @@ import TechnicalReviewPage from '@/pages/TechnicalReviewPage';
 import CustomerFeedbackPage from '@/pages/CustomerFeedbackPage';
 import PublicFeedbackPage from '@/pages/PublicFeedbackPage';
 import PreTransferReviewPage from '@/pages/PreTransferReviewPage';
+import CertifiedClientsPage from '@/pages/CertifiedClientsPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -186,6 +187,10 @@ function App() {
             <Route 
               path="/pre-transfer-reviews" 
               element={user?.role === 'admin' ? <PreTransferReviewPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/certified-clients" 
+              element={user?.role === 'admin' ? <CertifiedClientsPage /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/create-proposal/:formId" 

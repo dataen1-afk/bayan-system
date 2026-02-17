@@ -1781,27 +1781,32 @@ async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAut
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
-    # Get proposal
+    # Get proposal for issuer details
     proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
-    # Get form data for additional details
-    form = await db.forms.find_one({"id": proposal.get('form_id')}, {"_id": 0})
-    
-    # Prepare agreement data
+    # Prepare agreement data with correct field mappings
     agreement_data = {
-        'organization_name': agreement.get('organization_name') or proposal.get('client_name') or (form.get('responses', {}).get('organizationName') if form else ''),
-        'organization_address': agreement.get('organization_address') or proposal.get('client_address') or (form.get('responses', {}).get('organizationAddress') if form else ''),
-        'standards': proposal.get('certification_standards', []),
-        'scope': proposal.get('scope', ''),
-        'contact_name': agreement.get('authorized_signatory', {}).get('name', '') or (form.get('responses', {}).get('contactPerson') if form else '')
+        'organization_name': agreement.get('organization_name', ''),
+        'organization_address': agreement.get('organization_address', ''),
+        'selected_standards': agreement.get('selected_standards', []),
+        'standards': agreement.get('selected_standards', []),  # alias
+        'scope': agreement.get('scope_of_services', ''),
+        'scope_of_services': agreement.get('scope_of_services', ''),  # alias
+        'sites': agreement.get('sites', []),
+        'signatory_name': agreement.get('signatory_name', ''),
+        'signatory_position': agreement.get('signatory_position', ''),
+        'signatory_date': agreement.get('signatory_date', ''),
+        'signature_image': agreement.get('signature_image', ''),
+        'stamp_image': agreement.get('stamp_image', ''),
+        # BAC signatory from proposal
+        'issuer_name': proposal.get('issuer_name', 'Abdullah Al-Rashid'),
+        'issuer_designation': proposal.get('issuer_designation', 'General Manager'),
     }
     
     # Generate PDF
     try:
-        CONTRACTS_DIR = ROOT_DIR / "contracts"
-        CONTRACTS_DIR.mkdir(exist_ok=True)
         pdf_path = CONTRACTS_DIR / f"grant_agreement_{agreement_id[:8]}.pdf"
         
         generate_grant_agreement_pdf(agreement_data, str(pdf_path))

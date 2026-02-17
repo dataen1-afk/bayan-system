@@ -1413,7 +1413,7 @@ const resources = {
 
       // ISMS
       "informationSecurityManagement": "إدارة أمن المعلومات",
-      "businessComplexity": "تعقيد الأعمال والمنظمة",
+      "businessComplexity": "تعقيد الأعمال والمنشأة",
       "itEnvironmentComplexity": "تعقيد بيئة تقنية المعلومات",
       "outsourcingDependency": "الاعتماد على الاستعانة بمصادر خارجية",
       "isms_nonCritical": "المنظمة تعمل في قطاع أعمال غير حرج وغير منظم",

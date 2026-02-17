@@ -14,7 +14,7 @@ import os
 # Use the public URL for testing - same URL users see
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://grant-cert-manager.preview.emergentagent.com"
+    BASE_URL = "https://audit-workflow-pro-1.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_EMAIL = "admin@test.com"

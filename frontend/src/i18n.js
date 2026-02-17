@@ -1464,7 +1464,7 @@ const resources = {
       // Client Dashboard Application Forms
       "certificationApplication": "طلب الاعتماد",
       "fillAssignedForms": "أكمل طلبات الاعتماد المعينة لك",
-      "applicationFormsWillAppearHere": "ستظهر طلبات الاعتماد المعينة لك هنا",
+      "applicationFormsWillAppearHere": "ستظهر طلبات المنح المعينة لك هنا",
       "clientApplicationFormsEmptyStateHelp": "عندما يعين لك المسؤول طلب اعتماد، يمكنك ملؤه خطوة بخطوة هنا.",
       "notStarted": "لم يبدأ بعد",
       "continueForm": "متابعة النموذج",

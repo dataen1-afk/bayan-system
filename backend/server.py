@@ -1973,12 +1973,6 @@ async def get_public_bilingual_contract_pdf(access_token: str):
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
 # ================= NOTIFICATION ROUTES =================
-        )
-    except Exception as e:
-        logging.error(f"Error generating Grant Agreement PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
-
-# ================= NOTIFICATION ROUTES =================
 
 async def create_notification(notification_type: str, title: str, message: str, related_id: str = None, related_type: str = None):
     """Helper function to create a notification"""

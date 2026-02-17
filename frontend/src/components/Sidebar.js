@@ -24,7 +24,8 @@ import {
   FileSpreadsheet,
   FileStack,
   UsersRound,
-  FileWarning
+  FileWarning,
+  FileBadge
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

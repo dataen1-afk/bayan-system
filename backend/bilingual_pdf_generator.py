@@ -101,8 +101,8 @@ class BilingualContractPDFGenerator:
     # Translations dictionary
     TRANSLATIONS = {
         'title': {
-            'en': 'CERTIFICATION AGREEMENT',
-            'ar': 'اتفاقية الاعتماد'
+            'en': 'GRANT AGREEMENT',
+            'ar': 'اتفاقية المنح'
         },
         'agreement_ref': {
             'en': 'Agreement Reference',

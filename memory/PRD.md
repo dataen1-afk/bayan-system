@@ -822,19 +822,27 @@ The following components have been extracted from the monolithic `server.py`:
 - `notification.py`, `template.py`, `document.py`, `site.py`
 - `audit_schedule.py`, `contact.py`
 
-**Route Modules (`/app/backend/routes/`):**
-- `auth.py` - Authentication endpoints
-- `notifications.py` - Notification endpoints
-- `auditors.py` - Auditor management endpoints
-- `certificates.py` - Certificate endpoints
-- `public_verify.py` - Public certificate verification
-- `templates.py` - Template management endpoints
-- `documents.py` - Document management endpoints
-- `sites.py` - Site management endpoints
-- `contacts.py` - Contact history endpoints
+**Route Modules - ACTIVE (`/app/backend/routes/`):**
+The following routes are now being used by the application (imported in server.py):
+- `auth.py` - Authentication endpoints (/api/auth/login, /api/auth/register, /api/auth/me)
+- `notifications.py` - Notification endpoints (/api/notifications)
+- `sites.py` - Site management endpoints (/api/sites)
+- `contacts.py` - Contact history endpoints (/api/contacts)
+- `documents.py` - Document management endpoints (/api/documents)
+
+**Route Modules - INACTIVE (exist but not wired up):**
+- `auditors.py` - Auditor management endpoints (using monolith version for now - has more complex business logic)
+- `certificates.py` - Certificate endpoints (using monolith version - depends on helper functions)
+- `templates.py` - Template management endpoints (using monolith version)
+- `public_verify.py` - Public certificate verification (using monolith version)
 
 **Architecture Documentation:**
 - `/app/backend/ARCHITECTURE.md` - Complete refactoring guide and migration plan
+
+### Refactoring Progress
+- **Server.py Line Count**: Reduced from 9,161 to 8,915 lines (~246 lines extracted)
+- **Modules Migrated**: 5 (auth, notifications, sites, contacts, documents)
+- **Status**: ACTIVE - Routes are being used by the application
 
 ### Remaining Migration Tasks
 - Application Forms routes
@@ -846,12 +854,17 @@ The following components have been extracted from the monolithic `server.py`:
 - Audit Plans (BACF6-07, BACF6-08) routes
 - Meetings (BACF6-09) routes
 - Audit Reports (BACF6-10, BACF6-11) routes
+- Auditor Notes (BACF6-12) routes
+- Non-Conformity Reports (BACF6-13) routes
+- Certificate Data (BACF6-14) routes
 - Reports & Analytics routes
 - Integration routes (Calendar, SMS, Invoices)
+- Auditors routes (complex, needs helper function migration)
+- Certificates routes (complex, needs helper function migration)
+- Templates routes
 
 ## Upcoming Tasks
-- **Complete Modular Migration**: Gradually replace monolithic routes with modular routers
-- **Non-Conformity Reporting Feature**: Next major feature after audit reports
+- **Continue Modular Migration**: Migrate more routes incrementally from monolith
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts
 - **Google Calendar Integration**: Pending user credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 - **Twilio SMS Integration**: Pending user credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)

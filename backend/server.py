@@ -1971,23 +1971,8 @@ async def get_public_bilingual_contract_pdf(access_token: str):
     except Exception as e:
         logging.error(f"Error generating Grant Agreement PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
-    }
-    
-    # Generate PDF using DOCX template
-    try:
-        pdf_path = CONTRACTS_DIR / f"grant_agreement_{agreement['id'][:8]}.pdf"
-        generate_grant_agreement_pdf(agreement_data, str(pdf_path))
-        
-        # Read PDF bytes
-        with open(pdf_path, 'rb') as f:
-            pdf_bytes = f.read()
-        
-        return Response(
-            content=pdf_bytes,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": f"attachment; filename=grant_agreement_{agreement['id'][:8]}.pdf"
-            }
+
+# ================= NOTIFICATION ROUTES =================
         )
     except Exception as e:
         logging.error(f"Error generating Grant Agreement PDF: {str(e)}")

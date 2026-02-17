@@ -732,9 +732,8 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Overall recommendation for certification decision
 
 ## Upcoming Tasks
-- **CRITICAL REFACTOR**: Break down `server.py` monolith (7000+ lines) into modular routers - HIGH PRIORITY
+- **CRITICAL REFACTOR**: Break down `server.py` monolith (8000+ lines) into modular routers - HIGH PRIORITY
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts
-- **PayTabs Payment Integration** - Ready for activation when API keys are provided
 - **Google Calendar Integration**: Pending user credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 - **Twilio SMS Integration**: Pending user credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
 
@@ -743,3 +742,5 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - Advanced audit scheduling with recurring events
 - Integration with external calendar systems
 - Dashboard analytics with charts
+- Customer Portal with login system
+- Progressive Web App (PWA) for auditors

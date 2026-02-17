@@ -1141,6 +1141,86 @@ class NonconformityReport(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= CERTIFICATE DATA MODELS (BACF6-14) =================
+
+class CertificateDataCreate(BaseModel):
+    """Create Certificate Data"""
+    nc_report_id: Optional[str] = None
+    stage2_report_id: Optional[str] = None
+    client_name: str = ""
+    standards: List[str] = []
+    lead_auditor: str = ""
+    audit_type: str = ""
+    audit_date: str = ""
+
+class CertificateDataUpdate(BaseModel):
+    """Update Certificate Data"""
+    client_name: Optional[str] = None
+    standards: Optional[List[str]] = None
+    lead_auditor: Optional[str] = None
+    audit_type: Optional[str] = None
+    audit_date: Optional[str] = None
+    agreed_certification_scope: Optional[str] = None
+    agreed_certification_scope_ar: Optional[str] = None
+    ea_code: Optional[str] = None
+    technical_category: Optional[str] = None
+    company_data_local: Optional[str] = None
+    certification_scope_local: Optional[str] = None
+    company_data_english: Optional[str] = None
+    certification_scope_english: Optional[str] = None
+
+class CertificateDataClientConfirm(BaseModel):
+    """Client confirmation"""
+    client_signature: str = ""
+    client_stamp: str = ""
+    signature_date: str = ""
+
+class CertificateData(BaseModel):
+    """Certificate Data (BACF6-14)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    access_token: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    nc_report_id: str = ""
+    stage2_report_id: str = ""
+    job_order_id: str = ""
+    audit_program_id: str = ""
+    contract_review_id: str = ""
+    agreement_id: str = ""
+    # Header fields
+    client_name: str = ""
+    client_name_ar: str = ""
+    standards: List[str] = []
+    lead_auditor: str = ""
+    lead_auditor_ar: str = ""
+    audit_type: str = ""
+    audit_date: str = ""
+    # Certification scope
+    agreed_certification_scope: str = ""
+    agreed_certification_scope_ar: str = ""
+    ea_code: str = ""
+    technical_category: str = ""
+    # Company data - Local Language
+    company_data_local: str = ""
+    certification_scope_local: str = ""
+    # Company data - English
+    company_data_english: str = ""
+    certification_scope_english: str = ""
+    # Client confirmation
+    client_signature: str = ""
+    client_stamp: str = ""
+    client_signature_date: str = ""
+    client_confirmed: bool = False
+    client_confirmed_at: Optional[datetime] = None
+    # Certificate details
+    certificate_number: str = ""
+    issue_date: str = ""
+    expiry_date: str = ""
+    certificate_generated: bool = False
+    # Status
+    status: str = "draft"  # draft, sent_to_client, client_confirmed, certificate_issued
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

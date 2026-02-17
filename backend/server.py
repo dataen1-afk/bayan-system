@@ -10041,6 +10041,356 @@ async def get_certified_client_pdf(
         logging.error(f"Error generating Certified Client PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+# ================= SUSPENDED CLIENTS REGISTRY ENDPOINTS (BAC-F6-20) =================
+
+async def get_next_suspended_serial_number():
+    """Get next serial number for suspended client registry"""
+    last_record = await db.suspended_clients.find_one(
+        {},
+        sort=[("serial_number", -1)]
+    )
+    if last_record:
+        return last_record.get('serial_number', 0) + 1
+    return 1
+
+@api_router.get("/suspended-clients")
+async def get_suspended_clients(
+    status: str = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all suspended client records"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if status and status != 'all':
+        query['status'] = status
+    
+    clients = await db.suspended_clients.find(query, {"_id": 0}).sort("serial_number", 1).to_list(1000)
+    return clients
+
+@api_router.post("/suspended-clients")
+async def create_suspended_client(
+    data: SuspendedClientCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create a new suspended client record"""
+    await get_current_user(credentials)
+    
+    serial_number = await get_next_suspended_serial_number()
+    
+    client = SuspendedClient(
+        serial_number=serial_number,
+        client_id=data.client_id,
+        client_name=data.client_name,
+        client_name_ar=data.client_name_ar,
+        address=data.address,
+        address_ar=data.address_ar,
+        registration_date=data.registration_date,
+        suspended_on=data.suspended_on,
+        reason_for_suspension=data.reason_for_suspension,
+        reason_for_suspension_ar=data.reason_for_suspension_ar,
+        future_action=data.future_action,
+        remarks=data.remarks,
+        linked_certified_client_id=data.linked_certified_client_id
+    )
+    
+    client_doc = client.model_dump()
+    client_doc['created_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.suspended_clients.insert_one(client_doc)
+    
+    # Update linked certified client status if linked
+    if data.linked_certified_client_id:
+        await db.certified_clients.update_one(
+            {"id": data.linked_certified_client_id},
+            {"$set": {"status": "suspended", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    await create_notification(
+        notification_type="client_suspended",
+        title="Client Suspended",
+        message=f"Client '{data.client_name}' has been suspended. Reason: {data.reason_for_suspension[:50]}...",
+        related_id=client.id,
+        related_type="suspended_client"
+    )
+    
+    return {k: v for k, v in client_doc.items() if k != '_id'}
+
+@api_router.get("/suspended-clients/{client_id}")
+async def get_suspended_client(
+    client_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get a specific suspended client record"""
+    await get_current_user(credentials)
+    
+    client = await db.suspended_clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Suspended client record not found")
+    
+    return client
+
+@api_router.put("/suspended-clients/{client_id}")
+async def update_suspended_client(
+    client_id: str,
+    data: SuspendedClientUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update a suspended client record"""
+    await get_current_user(credentials)
+    
+    existing = await db.suspended_clients.find_one({"id": client_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Suspended client record not found")
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.suspended_clients.update_one(
+        {"id": client_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Suspended client record updated successfully"}
+
+@api_router.delete("/suspended-clients/{client_id}")
+async def delete_suspended_client(
+    client_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Delete a suspended client record"""
+    await get_current_user(credentials)
+    
+    existing = await db.suspended_clients.find_one({"id": client_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Suspended client record not found")
+    
+    await db.suspended_clients.delete_one({"id": client_id})
+    return {"message": "Suspended client record deleted successfully"}
+
+@api_router.get("/suspended-clients/stats/overview")
+async def get_suspended_clients_stats(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get statistics for suspended clients registry"""
+    await get_current_user(credentials)
+    
+    clients = await db.suspended_clients.find({}, {"_id": 0}).to_list(1000)
+    
+    suspended = len([c for c in clients if c.get('status') == 'suspended'])
+    reinstated = len([c for c in clients if c.get('status') == 'reinstated'])
+    withdrawn = len([c for c in clients if c.get('status') == 'withdrawn'])
+    
+    # Group by future action
+    pending_reinstatement = len([c for c in clients if c.get('future_action') == 'reinstate' and c.get('status') == 'suspended'])
+    pending_withdrawal = len([c for c in clients if c.get('future_action') == 'withdraw' and c.get('status') == 'suspended'])
+    under_review = len([c for c in clients if c.get('future_action') == 'under_review' and c.get('status') == 'suspended'])
+    
+    return {
+        "total": len(clients),
+        "suspended": suspended,
+        "reinstated": reinstated,
+        "withdrawn": withdrawn,
+        "pending_reinstatement": pending_reinstatement,
+        "pending_withdrawal": pending_withdrawal,
+        "under_review": under_review
+    }
+
+@api_router.post("/suspended-clients/{client_id}/lift-suspension")
+async def lift_suspension(
+    client_id: str,
+    action: str = "reinstate",  # reinstate or withdraw
+    reason: str = "",
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Lift suspension - either reinstate or withdraw certification"""
+    await get_current_user(credentials)
+    
+    existing = await db.suspended_clients.find_one({"id": client_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Suspended client record not found")
+    
+    if existing.get('status') != 'suspended':
+        raise HTTPException(status_code=400, detail="Client is not currently suspended")
+    
+    new_status = "reinstated" if action == "reinstate" else "withdrawn"
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    await db.suspended_clients.update_one(
+        {"id": client_id},
+        {"$set": {
+            "status": new_status,
+            "lifted_on": today,
+            "lifted_reason": reason,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Update linked certified client if exists
+    if existing.get('linked_certified_client_id'):
+        cert_status = "active" if action == "reinstate" else "withdrawn"
+        await db.certified_clients.update_one(
+            {"id": existing['linked_certified_client_id']},
+            {"$set": {"status": cert_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    await create_notification(
+        notification_type="suspension_lifted",
+        title=f"Suspension {new_status.title()}",
+        message=f"Client '{existing.get('client_name', '')}' suspension has been lifted. Action: {new_status}",
+        related_id=client_id,
+        related_type="suspended_client"
+    )
+    
+    return {"message": f"Suspension lifted. Client status changed to: {new_status}"}
+
+@api_router.post("/suspended-clients/sync-from-certified")
+async def sync_suspended_from_certified(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Sync suspended clients from certified clients registry"""
+    await get_current_user(credentials)
+    
+    # Get all certified clients with suspended status
+    certified = await db.certified_clients.find({"status": "suspended"}, {"_id": 0}).to_list(1000)
+    existing_links = await db.suspended_clients.distinct("linked_certified_client_id")
+    
+    added_count = 0
+    for cert in certified:
+        if cert.get('id') and cert.get('id') not in existing_links:
+            serial_number = await get_next_suspended_serial_number()
+            
+            client = SuspendedClient(
+                serial_number=serial_number,
+                client_id=cert.get('certificate_number', ''),
+                client_name=cert.get('client_name', ''),
+                client_name_ar=cert.get('client_name_ar', ''),
+                address=cert.get('address', ''),
+                registration_date=cert.get('issue_date', ''),
+                suspended_on=datetime.now().strftime("%Y-%m-%d"),
+                reason_for_suspension="Synced from certified clients registry",
+                future_action="under_review",
+                linked_certified_client_id=cert.get('id', '')
+            )
+            
+            client_doc = client.model_dump()
+            client_doc['created_at'] = datetime.now(timezone.utc).isoformat()
+            
+            await db.suspended_clients.insert_one(client_doc)
+            added_count += 1
+    
+    return {"message": f"Synced {added_count} suspended clients from certified clients registry"}
+
+@api_router.get("/suspended-clients/export/excel")
+async def export_suspended_clients_excel(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Export suspended clients registry to Excel"""
+    await get_current_user(credentials)
+    
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+    
+    clients = await db.suspended_clients.find({}, {"_id": 0}).sort("serial_number", 1).to_list(1000)
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Suspended Clients"
+    
+    # Header styling
+    header_font = Font(bold=True, size=12, color="FFFFFF")
+    header_fill = PatternFill(start_color="c0392b", end_color="c0392b", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Title row
+    ws.merge_cells('A1:J1')
+    ws['A1'] = "BAYAN AUDITING & CONFORMITY - List of Suspended Clients (BAC-F6-20)"
+    ws['A1'].font = Font(bold=True, size=14)
+    ws['A1'].alignment = Alignment(horizontal="center")
+    
+    # Headers (Row 3)
+    headers = [
+        "Sr. No.", "Client ID", "Client Name", "Address", "Registration Date",
+        "Suspended On", "Reason for Suspension", "Future Action", "Status", "Remarks"
+    ]
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Data rows
+    for row_idx, client in enumerate(clients, 4):
+        ws.cell(row=row_idx, column=1).value = client.get('serial_number', row_idx - 3)
+        ws.cell(row=row_idx, column=2).value = client.get('client_id', '')
+        ws.cell(row=row_idx, column=3).value = client.get('client_name', '')
+        ws.cell(row=row_idx, column=4).value = client.get('address', '')
+        ws.cell(row=row_idx, column=5).value = client.get('registration_date', '')
+        ws.cell(row=row_idx, column=6).value = client.get('suspended_on', '')
+        ws.cell(row=row_idx, column=7).value = client.get('reason_for_suspension', '')
+        ws.cell(row=row_idx, column=8).value = client.get('future_action', '').replace('_', ' ').title()
+        ws.cell(row=row_idx, column=9).value = client.get('status', 'suspended').upper()
+        ws.cell(row=row_idx, column=10).value = client.get('remarks', '')
+        
+        for col in range(1, 11):
+            ws.cell(row=row_idx, column=col).border = thin_border
+    
+    # Adjust column widths
+    column_widths = [8, 15, 25, 30, 15, 15, 30, 15, 12, 25]
+    for i, width in enumerate(column_widths, 1):
+        ws.column_dimensions[chr(64 + i)].width = width
+    
+    # Save to bytes
+    from io import BytesIO
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=suspended_clients_registry.xlsx"}
+    )
+
+@api_router.get("/suspended-clients/{client_id}/pdf")
+async def get_suspended_client_pdf(
+    client_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Generate PDF for a suspended client record"""
+    await get_current_user(credentials)
+    
+    client = await db.suspended_clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Suspended client record not found")
+    
+    try:
+        from suspended_clients_generator import generate_suspended_client_pdf
+        
+        contracts_dir = Path(__file__).parent / "contracts"
+        contracts_dir.mkdir(exist_ok=True)
+        pdf_path = str(contracts_dir / f"suspended_client_{client_id[:8]}.pdf")
+        
+        generate_suspended_client_pdf(client, pdf_path)
+        
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename=f"suspended_client_{client.get('client_id', client_id[:8])}.pdf"
+        )
+    except Exception as e:
+        logging.error(f"Error generating Suspended Client PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

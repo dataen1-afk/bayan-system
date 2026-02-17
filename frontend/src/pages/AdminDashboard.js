@@ -803,7 +803,7 @@ const AdminDashboard = () => {
                   }`}
                   data-testid={`proposal-${proposal.id}`}
                 >
-                  {/* Organization */}
+                  {/* Facility */}
                   <div className="lg:min-w-[220px] lg:w-[22%] min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
@@ -1019,7 +1019,7 @@ const AdminDashboard = () => {
                   }`}
                   data-testid={`contract-${contract.id}`}
                 >
-                  {/* Organization */}
+                  {/* Facility */}
                   <div className="lg:min-w-[220px] lg:w-[22%] min-w-0 text-start">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />

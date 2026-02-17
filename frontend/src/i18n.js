@@ -1633,7 +1633,7 @@ const resources = {
       "submitAgreement": "تقديم الاتفاقية",
       "submitting": "جاري التقديم...",
       "agreementSubmitted": "تم تقديم الاتفاقية بنجاح!",
-      "thankYouForAgreement": "شكراً لإكمال اتفاقية الاعتماد.",
+      "thankYouForAgreement": "شكراً لإكمال اتفاقية المنح.",
       "contractWillBePrepared": "سيتم إعداد عقد الاعتماد وإرساله إليك قريباً.",
       "errorSubmittingAgreement": "خطأ في تقديم الاتفاقية:",
       "fillOrganizationDetails": "يرجى ملء اسم وعنوان المنشأة",

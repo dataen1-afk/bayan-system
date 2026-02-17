@@ -3188,7 +3188,8 @@ async def track_order(tracking_id: str):
     
     return response
 
-# ================= SITE MANAGEMENT ROUTES =================
+# ================= SITE MANAGEMENT =================
+# Note: Site routes are now in routes/sites.py
 
 class Site(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -3213,43 +3214,6 @@ class SiteCreate(BaseModel):
     contact_email: str = ""
     contact_phone: str = ""
     is_main_site: bool = False
-
-@api_router.get("/sites")
-async def get_sites(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get all sites"""
-    await get_current_user(credentials)
-    sites = await db.sites.find({}, {"_id": 0}).to_list(1000)
-    return sites
-
-@api_router.post("/sites")
-async def create_site(site_data: SiteCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Create a new site"""
-    await get_current_user(credentials)
-    
-    site = Site(
-        contract_id=site_data.contract_id,
-        name=site_data.name,
-        address=site_data.address,
-        city=site_data.city,
-        country=site_data.country,
-        contact_name=site_data.contact_name,
-        contact_email=site_data.contact_email,
-        contact_phone=site_data.contact_phone,
-        is_main_site=site_data.is_main_site
-    )
-    
-    site_doc = site.model_dump()
-    site_doc['created_at'] = site_doc['created_at'].isoformat()
-    
-    await db.sites.insert_one(site_doc)
-    return {"message": "Site created", "id": site.id}
-
-@api_router.delete("/sites/{site_id}")
-async def delete_site(site_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Delete a site"""
-    await get_current_user(credentials)
-    await db.sites.delete_one({"id": site_id})
-    return {"message": "Site deleted"}
 
 # ================= AUDIT SCHEDULING ROUTES =================
 

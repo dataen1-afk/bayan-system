@@ -1836,7 +1836,7 @@ async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAut
 @api_router.get("/public/contracts/{access_token}/pdf")
 async def get_public_contract_pdf(access_token: str):
     """Get PDF Grant Agreement for a signed agreement (Public - client access)
-    Uses the official DOCX template for professional output"""
+    Generates a professional bilingual PDF with all terms and conditions"""
     # Get agreement by access token
     agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token}, {"_id": 0})
     if not agreement:
@@ -1847,32 +1847,23 @@ async def get_public_contract_pdf(access_token: str):
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
-    # Prepare agreement data with correct field mappings
+    # Prepare agreement data
     agreement_data = {
         'organization_name': agreement.get('organization_name', ''),
         'organization_address': agreement.get('organization_address', ''),
         'selected_standards': agreement.get('selected_standards', []),
-        'standards': agreement.get('selected_standards', []),
         'scope': agreement.get('scope_of_services', ''),
-        'scope_of_services': agreement.get('scope_of_services', ''),
         'sites': agreement.get('sites', []),
         'signatory_name': agreement.get('signatory_name', ''),
         'signatory_position': agreement.get('signatory_position', ''),
         'signatory_date': agreement.get('signatory_date', ''),
-        'signature_image': agreement.get('signature_image', ''),
-        'stamp_image': agreement.get('stamp_image', ''),
         'issuer_name': proposal.get('issuer_name', 'Abdullah Al-Rashid'),
         'issuer_designation': proposal.get('issuer_designation', 'General Manager'),
     }
     
-    # Generate PDF using DOCX template
+    # Generate PDF
     try:
-        pdf_path = CONTRACTS_DIR / f"grant_agreement_{agreement['id'][:8]}.pdf"
-        generate_grant_agreement_pdf(agreement_data, str(pdf_path))
-        
-        # Read PDF bytes
-        with open(pdf_path, 'rb') as f:
-            pdf_bytes = f.read()
+        pdf_bytes = generate_grant_agreement_pdf(agreement_data)
         
         return Response(
             content=pdf_bytes,

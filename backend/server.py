@@ -1773,7 +1773,7 @@ async def get_certification_agreement(access_token: str):
 
 @api_router.get("/contracts/{agreement_id}/pdf")
 async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Generate PDF contract for a signed agreement (Admin only)"""
+    """Generate PDF Grant Agreement for a signed agreement (Admin only)"""
     await get_current_user(credentials)
     
     # Get agreement
@@ -1786,9 +1786,29 @@ async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAut
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
+    # Get form data for additional details
+    form = await db.forms.find_one({"id": proposal.get('form_id')}, {"_id": 0})
+    
+    # Prepare agreement data
+    agreement_data = {
+        'organization_name': agreement.get('organization_name') or proposal.get('client_name') or (form.get('responses', {}).get('organizationName') if form else ''),
+        'organization_address': agreement.get('organization_address') or proposal.get('client_address') or (form.get('responses', {}).get('organizationAddress') if form else ''),
+        'standards': proposal.get('certification_standards', []),
+        'scope': proposal.get('scope', ''),
+        'contact_name': agreement.get('authorized_signatory', {}).get('name', '') or (form.get('responses', {}).get('contactPerson') if form else '')
+    }
+    
     # Generate PDF
     try:
-        pdf_bytes = generate_contract_pdf(agreement, proposal)
+        CONTRACTS_DIR = ROOT_DIR / "contracts"
+        CONTRACTS_DIR.mkdir(exist_ok=True)
+        pdf_path = CONTRACTS_DIR / f"grant_agreement_{agreement_id[:8]}.pdf"
+        
+        generate_grant_agreement_pdf(agreement_data, str(pdf_path))
+        
+        # Read PDF bytes
+        with open(pdf_path, 'rb') as f:
+            pdf_bytes = f.read()
         
         # Update agreement status
         await db.certification_agreements.update_one(
@@ -1801,10 +1821,11 @@ async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAut
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=contract_{agreement_id[:8]}.pdf"
+                "Content-Disposition": f"attachment; filename=grant_agreement_{agreement_id[:8]}.pdf"
             }
         )
     except Exception as e:
+        logging.error(f"Error generating Grant Agreement PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
 @api_router.get("/public/contracts/{access_token}/pdf")

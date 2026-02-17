@@ -731,16 +731,58 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Certification recommendation checkboxes (issue, use logo, refuse, etc.)
   - Overall recommendation for certification decision
 
+## Backend Refactoring (February 2026) - IN PROGRESS
+
+### Completed Modular Extraction
+The following components have been extracted from the monolithic `server.py`:
+
+**Shared Modules:**
+- `/app/backend/database.py` - MongoDB connection configuration
+- `/app/backend/auth.py` - JWT authentication utilities
+- `/app/backend/utils/email.py` - Email sending functions
+
+**Pydantic Models (`/app/backend/models/`):**
+- `user.py`, `application_form.py`, `proposal.py`, `agreement.py`
+- `contract_review.py`, `job_order.py`, `audit_plan.py`, `meeting.py`
+- `audit_report.py`, `certificate.py`, `auditor.py`, `invoice.py`
+- `notification.py`, `template.py`, `document.py`, `site.py`
+- `audit_schedule.py`, `contact.py`
+
+**Route Modules (`/app/backend/routes/`):**
+- `auth.py` - Authentication endpoints
+- `notifications.py` - Notification endpoints
+- `auditors.py` - Auditor management endpoints
+- `certificates.py` - Certificate endpoints
+- `public_verify.py` - Public certificate verification
+- `templates.py` - Template management endpoints
+- `documents.py` - Document management endpoints
+- `sites.py` - Site management endpoints
+- `contacts.py` - Contact history endpoints
+
+**Architecture Documentation:**
+- `/app/backend/ARCHITECTURE.md` - Complete refactoring guide and migration plan
+
+### Remaining Migration Tasks
+- Application Forms routes
+- Proposals routes
+- Agreements routes
+- Contract Reviews (BACF6-04) routes
+- Audit Programs (BACF6-05) routes
+- Job Orders (BACF6-06) routes
+- Audit Plans (BACF6-07, BACF6-08) routes
+- Meetings (BACF6-09) routes
+- Audit Reports (BACF6-10, BACF6-11) routes
+- Reports & Analytics routes
+- Integration routes (Calendar, SMS, Invoices)
+
 ## Upcoming Tasks
-- **CRITICAL REFACTOR**: Break down `server.py` monolith (8000+ lines) into modular routers - HIGH PRIORITY
+- **Complete Modular Migration**: Gradually replace monolithic routes with modular routers
+- **Non-Conformity Reporting Feature**: Next major feature after audit reports
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts
 - **Google Calendar Integration**: Pending user credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 - **Twilio SMS Integration**: Pending user credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
 
 ## Future Enhancements
 - Enable real email sending (SendGrid integration)
-- Advanced audit scheduling with recurring events
-- Integration with external calendar systems
-- Dashboard analytics with charts
 - Customer Portal with login system
 - Progressive Web App (PWA) for auditors

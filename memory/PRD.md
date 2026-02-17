@@ -765,6 +765,46 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Main notes content section
   - Arabic text support
 
+### Nonconformity Report (BACF6-13) Feature ✅ (NEW - Feb 2026)
+- **Purpose**: Track and manage audit nonconformities, corrections, and corrective actions
+- **Workflow**:
+  1. Admin/Auditor creates NC report from Stage 2 report (imports NCs) OR manually
+  2. Each NC item includes: Standard clause, Description, NC type (Major/Minor), Root cause
+  3. Client provides: Corrections (immediate fixes), Corrective actions (long-term)
+  4. Auditor verifies and records decision for each NC
+  5. Verification options include: Appropriate, Verified, Next audit, Re-audit
+  6. Report can be closed when all NCs are addressed
+- **Form Fields**:
+  - Client Name, Certificate No., Standard(s)
+  - Type of Audit, Date of Audit, Lead Auditor
+  - Management Representative
+  - Nonconformities table with: Clause, Description, Type (MJ/MN), Root Cause, Corrections, Corrective Actions, Verification
+  - Submission Deadline
+  - Verification Options (checkboxes)
+  - Signature sections
+- **Backend API Endpoints**:
+  - `POST /api/nonconformity-reports` - Create NC report
+  - `GET /api/nonconformity-reports` - List all reports
+  - `GET /api/nonconformity-reports/{id}` - Get specific report
+  - `PUT /api/nonconformity-reports/{id}` - Update report
+  - `DELETE /api/nonconformity-reports/{id}` - Delete report
+  - `POST /api/nonconformity-reports/{id}/add-nc` - Add nonconformity
+  - `PUT /api/nonconformity-reports/{id}/nc/{nc_id}` - Update NC
+  - `DELETE /api/nonconformity-reports/{id}/nc/{nc_id}` - Delete NC
+  - `POST /api/nonconformity-reports/{id}/close` - Close report
+  - `GET /api/nonconformity-reports/{id}/pdf` - Generate PDF
+- **Frontend Pages**:
+  - `/nonconformity-reports` - Admin page with stats (Total, Open, Closed, Major NCs, Minor NCs)
+  - Create/Edit modals for reports and individual NCs
+  - View modal with full NC details
+- **Status Flow**: draft → sent_to_client → pending_verification → closed
+- **PDF Generator**: `/app/backend/nonconformity_report_generator.py` - Bilingual PDF with:
+  - Header with client info and audit details
+  - NC summary (Major/Minor counts)
+  - Detailed NC table with color-coded types
+  - Verification options checkboxes
+  - Signature section
+
 ## Backend Refactoring (February 2026) - IN PROGRESS
 
 ### Completed Modular Extraction

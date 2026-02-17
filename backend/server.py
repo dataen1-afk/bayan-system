@@ -6095,6 +6095,304 @@ async def confirm_job_order(access_token: str, data: JobOrderAuditorConfirmation
     
     return {"message": f"Job order {status_text} successfully"}
 
+# ================= STAGE 1 AUDIT PLAN (BACF6-07) ROUTES =================
+
+@api_router.post("/stage1-audit-plans")
+async def create_stage1_audit_plan(data: Stage1AuditPlanCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new Stage 1 Audit Plan from a confirmed Job Order (Admin only)"""
+    await get_current_user(credentials)
+    
+    # Get the job order
+    job_order = await db.job_orders.find_one({"id": data.job_order_id}, {"_id": 0})
+    if not job_order:
+        raise HTTPException(status_code=404, detail="Job order not found")
+    
+    if job_order.get('status') != 'confirmed':
+        raise HTTPException(status_code=400, detail="Job order must be confirmed by auditor first")
+    
+    # Check if plan already exists for this job order
+    existing = await db.stage1_audit_plans.find_one({"job_order_id": data.job_order_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Stage 1 Audit Plan already exists for this job order")
+    
+    # Get contract review for additional client details
+    contract_review = None
+    if job_order.get('contract_review_id'):
+        contract_review = await db.contract_reviews.find_one(
+            {"id": job_order['contract_review_id']}, {"_id": 0}
+        )
+    
+    # Create plan with auto-populated data
+    plan = Stage1AuditPlan(
+        job_order_id=data.job_order_id,
+        audit_program_id=job_order.get('audit_program_id', ''),
+        contract_review_id=job_order.get('contract_review_id', ''),
+        # Client info
+        organization_name=job_order.get('organization_name', ''),
+        file_no=job_order.get('client_ref', '') or data.job_order_id[:8],
+        address=job_order.get('organization_address', ''),
+        plan_date=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+        contact_person=contract_review.get('contact_person', '') if contract_review else '',
+        contact_phone=contract_review.get('phone', '') if contract_review else '',
+        contact_email=contract_review.get('contact_email', '') if contract_review else '',
+        # Audit details
+        standards=job_order.get('standards', []),
+        audit_type="Stage 1",
+        audit_date_from=job_order.get('audit_date', ''),
+        scope=job_order.get('scope_of_services', ''),
+        # Team leader from job order
+        team_leader={
+            "auditor_id": job_order.get('auditor_id', ''),
+            "name": job_order.get('auditor_name', ''),
+            "name_ar": job_order.get('auditor_name_ar', ''),
+            "role": job_order.get('position', 'Lead Auditor')
+        },
+        # Default schedule entries
+        schedule_entries=[
+            {"date_time": "", "process": "Opening Meeting", "process_owner": "Top Management", "clauses": "4.1, 4.2", "auditor": "Team"},
+            {"date_time": "", "process": "Document Review", "process_owner": "", "clauses": "7.5", "auditor": ""},
+            {"date_time": "", "process": "Management System Review", "process_owner": "", "clauses": "4.4, 5.0", "auditor": ""},
+            {"date_time": "", "process": "Internal Audit Review", "process_owner": "", "clauses": "9.2", "auditor": ""},
+            {"date_time": "", "process": "Management Review", "process_owner": "", "clauses": "9.3", "auditor": ""},
+            {"date_time": "", "process": "Closing Meeting", "process_owner": "Top Management", "clauses": "N/A", "auditor": "Team"},
+        ]
+    )
+    
+    await db.stage1_audit_plans.insert_one(plan.dict())
+    
+    # Create notification
+    await create_notification(
+        "stage1_plan_created",
+        "Stage 1 Audit Plan Created",
+        f"Stage 1 audit plan created for {plan.organization_name}",
+        plan.id,
+        "stage1_audit_plan"
+    )
+    
+    return {
+        "id": plan.id,
+        "access_token": plan.access_token,
+        "message": "Stage 1 audit plan created successfully"
+    }
+
+@api_router.get("/stage1-audit-plans")
+async def get_stage1_audit_plans(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all Stage 1 Audit Plans (Admin only)"""
+    await get_current_user(credentials)
+    
+    plans = await db.stage1_audit_plans.find({}, {"_id": 0}).to_list(1000)
+    return plans
+
+@api_router.get("/stage1-audit-plans/{plan_id}")
+async def get_stage1_audit_plan(plan_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get a specific Stage 1 Audit Plan (Admin only)"""
+    await get_current_user(credentials)
+    
+    plan = await db.stage1_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+    
+    return plan
+
+@api_router.put("/stage1-audit-plans/{plan_id}")
+async def update_stage1_audit_plan(plan_id: str, data: Stage1AuditPlanUpdate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update Stage 1 Audit Plan (Admin only)"""
+    await get_current_user(credentials)
+    
+    plan = await db.stage1_audit_plans.find_one({"id": plan_id})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+    
+    update_data = {}
+    for field, value in data.dict().items():
+        if value is not None:
+            if field == 'team_members':
+                update_data[field] = [m.dict() if hasattr(m, 'dict') else m for m in value]
+            elif field == 'schedule_entries':
+                update_data[field] = [e.dict() if hasattr(e, 'dict') else e for e in value]
+            else:
+                update_data[field] = value
+    
+    update_data['updated_at'] = datetime.now(timezone.utc)
+    
+    await db.stage1_audit_plans.update_one(
+        {"id": plan_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Stage 1 Audit Plan updated successfully"}
+
+@api_router.delete("/stage1-audit-plans/{plan_id}")
+async def delete_stage1_audit_plan(plan_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a Stage 1 Audit Plan (Admin only)"""
+    await get_current_user(credentials)
+    
+    result = await db.stage1_audit_plans.delete_one({"id": plan_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+    
+    return {"message": "Stage 1 Audit Plan deleted successfully"}
+
+@api_router.post("/stage1-audit-plans/{plan_id}/manager-approve")
+async def manager_approve_stage1_plan(plan_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Manager internal approval of Stage 1 Audit Plan (Admin only)"""
+    current_user = await get_current_user(credentials)
+    
+    plan = await db.stage1_audit_plans.find_one({"id": plan_id})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+    
+    await db.stage1_audit_plans.update_one(
+        {"id": plan_id},
+        {"$set": {
+            "manager_approved": True,
+            "manager_name": current_user.get('name', 'Admin'),
+            "manager_approval_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+            "status": "manager_approved",
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Create notification
+    await create_notification(
+        "stage1_plan_manager_approved",
+        "Stage 1 Plan Manager Approved",
+        f"Stage 1 audit plan approved internally for {plan.get('organization_name', '')}",
+        plan_id,
+        "stage1_audit_plan"
+    )
+    
+    return {"message": "Stage 1 Audit Plan approved by manager"}
+
+@api_router.post("/stage1-audit-plans/{plan_id}/send-to-client")
+async def send_stage1_plan_to_client(plan_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Send Stage 1 Audit Plan to client for acceptance (Admin only)"""
+    await get_current_user(credentials)
+    
+    plan = await db.stage1_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+    
+    if not plan.get('manager_approved'):
+        raise HTTPException(status_code=400, detail="Plan must be approved by manager first")
+    
+    # Update status
+    await db.stage1_audit_plans.update_one(
+        {"id": plan_id},
+        {"$set": {
+            "sent_to_client": True,
+            "status": "pending_client",
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Generate client review link
+    frontend_url = os.environ.get('REACT_APP_FRONTEND_URL', 'https://contract-mgmt-9.preview.emergentagent.com')
+    link = f"{frontend_url}/stage1-plan-review/{plan['access_token']}"
+    
+    return {
+        "message": "Stage 1 Audit Plan ready to send to client",
+        "link": link,
+        "client_email": plan.get('contact_email', ''),
+        "organization": plan.get('organization_name', '')
+    }
+
+@api_router.get("/stage1-audit-plans/{plan_id}/pdf")
+async def get_stage1_audit_plan_pdf(plan_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate PDF for Stage 1 Audit Plan (Admin only)"""
+    await get_current_user(credentials)
+    
+    plan = await db.stage1_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+    
+    try:
+        pdf_bytes = generate_stage1_audit_plan_pdf(plan)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=stage1_audit_plan_{plan_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Stage 1 Audit Plan PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+# ================= PUBLIC STAGE 1 AUDIT PLAN REVIEW (for Clients) =================
+
+@api_router.get("/public/stage1-audit-plans/{access_token}")
+async def get_public_stage1_audit_plan(access_token: str):
+    """Get Stage 1 Audit Plan for client review (public access with token)"""
+    plan = await db.stage1_audit_plans.find_one({"access_token": access_token}, {"_id": 0})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+    
+    if not plan.get('sent_to_client'):
+        raise HTTPException(status_code=400, detail="Plan has not been sent for client review yet")
+    
+    # Return plan data for client review
+    return {
+        "id": plan.get('id'),
+        "organization_name": plan.get('organization_name'),
+        "plan_date": plan.get('plan_date'),
+        "standards": plan.get('standards', []),
+        "audit_type": plan.get('audit_type'),
+        "audit_date_from": plan.get('audit_date_from'),
+        "audit_date_to": plan.get('audit_date_to'),
+        "scope": plan.get('scope'),
+        "team_leader": plan.get('team_leader', {}),
+        "team_members": plan.get('team_members', []),
+        "schedule_entries": plan.get('schedule_entries', []),
+        "manager_name": plan.get('manager_name'),
+        "manager_approval_date": plan.get('manager_approval_date'),
+        "client_accepted": plan.get('client_accepted', False),
+        "status": plan.get('status')
+    }
+
+@api_router.post("/public/stage1-audit-plans/{access_token}/respond")
+async def client_respond_to_stage1_plan(access_token: str, data: Stage1AuditPlanClientResponse):
+    """Client accepts or requests changes to Stage 1 Audit Plan (public access with token)"""
+    plan = await db.stage1_audit_plans.find_one({"access_token": access_token})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+    
+    if not plan.get('sent_to_client'):
+        raise HTTPException(status_code=400, detail="Plan has not been sent for client review yet")
+    
+    if plan.get('client_accepted'):
+        raise HTTPException(status_code=400, detail="Client has already accepted this plan")
+    
+    update_data = {
+        "client_acceptance_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    if data.accepted:
+        update_data["client_accepted"] = True
+        update_data["status"] = "client_accepted"
+        status_text = "accepted"
+    else:
+        update_data["client_change_requests"] = data.change_requests
+        update_data["status"] = "changes_requested"
+        status_text = "requested changes"
+    
+    await db.stage1_audit_plans.update_one(
+        {"access_token": access_token},
+        {"$set": update_data}
+    )
+    
+    # Create notification
+    await create_notification(
+        f"stage1_plan_{status_text.replace(' ', '_')}",
+        f"Stage 1 Plan Client {status_text.title()}",
+        f"Client has {status_text} the Stage 1 audit plan for {plan.get('organization_name', '')}",
+        plan.get('id'),
+        "stage1_audit_plan"
+    )
+    
+    return {"message": f"Response recorded: {status_text}"}
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

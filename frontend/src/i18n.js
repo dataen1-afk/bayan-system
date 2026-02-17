@@ -1489,6 +1489,25 @@ const resources = {
       "pleaseProvideDetails": "يرجى تقديم تفاصيل التغييرات المطلوبة",
       "stage1Footer": "خطة تدقيق المرحلة الأولى - BACF6-07",
       
+      // Stage 2 Audit Plan (BACF6-08)
+      "stage2AuditPlans": "خطط تدقيق المرحلة الثانية",
+      "createStage2Plan": "إنشاء خطة تدقيق المرحلة الثانية",
+      "stage2Description": "تدقيق الاعتماد - تخطيط المرحلة الثانية",
+      "stage2PlanDetails": "تفاصيل خطة تدقيق المرحلة الثانية",
+      "noStage2Plans": "لا توجد خطط تدقيق للمرحلة الثانية بعد",
+      "createFromStage1": "إنشاء خطة من خطة المرحلة الأولى أو أمر العمل",
+      "selectCreateSource": "اختر مصدر الإنشاء",
+      "createFrom": "إنشاء من",
+      "fromStage1": "من خطة المرحلة الأولى",
+      "fromJobOrder": "من أمر العمل",
+      "stage1Plan": "خطة المرحلة الأولى",
+      "selectStage1": "اختر خطة المرحلة الأولى...",
+      "noAcceptedStage1": "لا توجد خطط مرحلة أولى مقبولة من العميل",
+      "selectSource": "يرجى اختيار مصدر",
+      "stage2AuditPlanReview": "مراجعة خطة تدقيق المرحلة الثانية",
+      "stage2Objectives": "أهداف تدقيق المرحلة الثانية",
+      "stage2Footer": "خطة تدقيق المرحلة الثانية - BACF6-08",
+      
       // Forms
       "createNewForm": "إنشاء نموذج جديد",
       "createCustomForm": "إنشاء نموذج مخصص للعميل",

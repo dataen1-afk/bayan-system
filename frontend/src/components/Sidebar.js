@@ -17,7 +17,8 @@ import {
   Users,
   Award,
   Bell,
-  TrendingUp
+  TrendingUp,
+  ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -44,6 +45,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'forms', icon: FileText, label: t('forms'), color: 'text-blue-600' },
     { id: 'quotations', icon: DollarSign, label: t('quotations'), color: 'text-green-600' },
     { id: 'contracts', icon: FileCheck, label: t('contracts'), color: 'text-purple-600' },
+    { id: 'contract-reviews', icon: ClipboardList, label: t('contractReviews'), color: 'text-pink-600', route: '/contract-reviews' },
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
     { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },

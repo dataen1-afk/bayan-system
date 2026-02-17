@@ -34,6 +34,7 @@ from certificate_generator import generate_certificate_pdf, get_qr_code_base64
 from grant_agreement_generator import generate_grant_agreement_pdf
 from contract_review_generator import generate_contract_review_pdf
 from audit_program_generator import generate_audit_program_pdf
+from job_order_generator import generate_job_order_pdf
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

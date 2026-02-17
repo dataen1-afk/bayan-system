@@ -805,6 +805,40 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Verification options checkboxes
   - Signature section
 
+### Technical Review and Certification Decision (BAC-F6-15) ✅ (NEW - Feb 2026)
+- **Purpose**: Comprehensive technical review checklist before making certification decision
+- **Workflow**:
+  1. Create technical review (from Stage 2 Audit Report or manually)
+  2. Admin fills 22-item assessment checklist with Y/N and remarks
+  3. Technical reviewer reviews and adds comments
+  4. Make certification decision (Issue Certificate / Reject / Needs Further Review)
+  5. Approval with signature
+  6. **AUTO-CERTIFICATE GENERATION**: If decision is "issue_certificate" and approved, certificate is automatically created
+- **Checklist Categories**: General, Application, Quotation, Man Days, Audit Team, Stage 1, Stage 2, Other
+- **Backend API Endpoints**:
+  - `POST /api/technical-reviews` - Create technical review (supports both Stage 2 link and manual)
+  - `GET /api/technical-reviews` - List all reviews
+  - `GET /api/technical-reviews/{id}` - Get specific review with checklist
+  - `PUT /api/technical-reviews/{id}` - Update review and checklist items
+  - `DELETE /api/technical-reviews/{id}` - Delete review
+  - `POST /api/technical-reviews/{id}/make-decision` - Make certification decision
+  - `POST /api/technical-reviews/{id}/approve` - Approve (auto-generates certificate if issue_certificate)
+  - `GET /api/technical-reviews/{id}/pdf` - Generate bilingual PDF
+- **Frontend Pages**:
+  - `/technical-reviews` - Admin page with stats (Total, Draft, Under Review, Decision Made, Certificate Issued)
+  - Create modal with "From Stage 2 Report" or "Manual Entry" modes
+  - Edit modal with checklist table (Y/N dropdowns)
+  - Decision modal with 3 radio options
+  - Approve modal (shows auto-certificate message when applicable)
+- **Status Flow**: draft → under_review → decision_made → approved → certificate_issued
+- **PDF Generator**: `/app/backend/technical_review_generator.py` - Bilingual PDF with:
+  - Client information header
+  - Audit team details
+  - Assessment checklist table
+  - Technical review section
+  - Certification decision with checkboxes
+  - Approval signature section
+
 ## Backend Refactoring (February 2026) - IN PROGRESS
 
 ### Completed Modular Extraction

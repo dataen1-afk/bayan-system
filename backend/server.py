@@ -595,6 +595,93 @@ class JobOrder(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= STAGE 1 AUDIT PLAN MODELS (BACF6-07) =================
+
+class ScheduleEntry(BaseModel):
+    """Single schedule entry in the audit plan"""
+    date_time: str = ""  # Date and time range
+    process: str = ""  # Process being audited
+    process_owner: str = ""  # Process owner/auditee
+    clauses: str = ""  # Applicable ISO clauses
+    auditor: str = ""  # Assigned auditor name
+
+class TeamMember(BaseModel):
+    """Team member in the audit"""
+    auditor_id: str = ""
+    name: str = ""
+    name_ar: str = ""
+    role: str = "Auditor"  # Team Leader, Auditor, Technical Expert, Evaluator
+
+class Stage1AuditPlanCreate(BaseModel):
+    """Create a new Stage 1 Audit Plan from a confirmed Job Order"""
+    job_order_id: str  # Reference to confirmed job order
+
+class Stage1AuditPlanUpdate(BaseModel):
+    """Update Stage 1 Audit Plan data"""
+    # Client contact
+    contact_person: str = ""
+    contact_phone: str = ""
+    contact_designation: str = ""
+    contact_email: str = ""
+    # Audit details
+    audit_language: str = "English"
+    audit_date_from: str = ""
+    audit_date_to: str = ""
+    # Team members (additional to team leader)
+    team_members: List[TeamMember] = []
+    # Schedule
+    schedule_entries: List[ScheduleEntry] = []
+    notes: str = ""
+
+class Stage1AuditPlanClientResponse(BaseModel):
+    """Client response to the audit plan"""
+    accepted: bool = True
+    change_requests: str = ""  # If not accepted, requested changes
+
+class Stage1AuditPlan(BaseModel):
+    """Stage 1 Audit Plan (BACF6-07) - Phase 1 audit planning"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    access_token: str = Field(default_factory=lambda: str(uuid.uuid4()))  # For client review link
+    job_order_id: str  # Reference to job order
+    audit_program_id: str = ""
+    contract_review_id: str = ""
+    # Client information (from job order)
+    organization_name: str = ""
+    file_no: str = ""
+    address: str = ""
+    plan_date: str = ""
+    contact_person: str = ""
+    contact_phone: str = ""
+    contact_designation: str = ""
+    contact_email: str = ""
+    # Audit details (from job order)
+    standards: List[str] = []
+    audit_language: str = "English"
+    audit_type: str = "Stage 1"
+    audit_date_from: str = ""
+    audit_date_to: str = ""
+    scope: str = ""
+    # Team (Team Leader from Job Order)
+    team_leader: Dict[str, Any] = {}  # {auditor_id, name, name_ar, role}
+    team_members: List[Dict[str, Any]] = []  # Additional team members
+    # Schedule
+    schedule_entries: List[Dict[str, Any]] = []  # List of ScheduleEntry dicts
+    # Manager approval (internal)
+    manager_approved: bool = False
+    manager_name: str = ""
+    manager_approval_date: str = ""
+    # Client acceptance
+    sent_to_client: bool = False
+    client_accepted: bool = False
+    client_acceptance_date: str = ""
+    client_change_requests: str = ""
+    # Status
+    status: str = "draft"  # draft, pending_manager, manager_approved, pending_client, client_accepted, changes_requested, completed
+    notes: str = ""
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

@@ -25,7 +25,8 @@ import {
   FileStack,
   UsersRound,
   FileWarning,
-  FileBadge
+  FileBadge,
+  NotebookPen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

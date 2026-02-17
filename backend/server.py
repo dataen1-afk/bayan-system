@@ -4510,7 +4510,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     c.drawCentredString(width/2, height - 40, "APPLICATION FORM")
     if arabic_font_available:
         try:
-            ar_title = get_display(arabic_reshaper.reshape("طلب الاعتماد"))
+            ar_title = get_display(arabic_reshaper.reshape("طلب المنح"))
             c.setFont('Amiri-Bold', 16)
             c.drawCentredString(width/2, height - 60, ar_title)
         except: pass

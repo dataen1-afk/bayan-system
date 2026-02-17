@@ -1835,35 +1835,62 @@ async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAut
 
 @api_router.get("/public/contracts/{access_token}/pdf")
 async def get_public_contract_pdf(access_token: str):
-    """Get PDF contract for a signed agreement (Public - client access)"""
+    """Get PDF Grant Agreement for a signed agreement (Public - client access)
+    Uses the official DOCX template for professional output"""
     # Get agreement by access token
     agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token}, {"_id": 0})
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
-    # Get proposal
+    # Get proposal for issuer details
     proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
-    # Generate PDF
+    # Prepare agreement data with correct field mappings
+    agreement_data = {
+        'organization_name': agreement.get('organization_name', ''),
+        'organization_address': agreement.get('organization_address', ''),
+        'selected_standards': agreement.get('selected_standards', []),
+        'standards': agreement.get('selected_standards', []),
+        'scope': agreement.get('scope_of_services', ''),
+        'scope_of_services': agreement.get('scope_of_services', ''),
+        'sites': agreement.get('sites', []),
+        'signatory_name': agreement.get('signatory_name', ''),
+        'signatory_position': agreement.get('signatory_position', ''),
+        'signatory_date': agreement.get('signatory_date', ''),
+        'signature_image': agreement.get('signature_image', ''),
+        'stamp_image': agreement.get('stamp_image', ''),
+        'issuer_name': proposal.get('issuer_name', 'Abdullah Al-Rashid'),
+        'issuer_designation': proposal.get('issuer_designation', 'General Manager'),
+    }
+    
+    # Generate PDF using DOCX template
     try:
-        pdf_bytes = generate_contract_pdf(agreement, proposal)
+        pdf_path = CONTRACTS_DIR / f"grant_agreement_{agreement['id'][:8]}.pdf"
+        generate_grant_agreement_pdf(agreement_data, str(pdf_path))
+        
+        # Read PDF bytes
+        with open(pdf_path, 'rb') as f:
+            pdf_bytes = f.read()
+        
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=contract_{agreement['id'][:8]}.pdf"
+                "Content-Disposition": f"attachment; filename=grant_agreement_{agreement['id'][:8]}.pdf"
             }
         )
     except Exception as e:
+        logging.error(f"Error generating Grant Agreement PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
 # ================= BILINGUAL PDF CONTRACT GENERATION =================
 
 @api_router.get("/contracts/{agreement_id}/pdf/bilingual")
 async def generate_bilingual_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Generate bilingual PDF contract (Arabic + English) for a signed agreement (Admin only)"""
+    """Generate PDF Grant Agreement for a signed agreement (Admin only)
+    Uses the official DOCX template for professional output"""
     await get_current_user(credentials)
     
     # Get agreement
@@ -1871,14 +1898,37 @@ async def generate_bilingual_contract_pdf_endpoint(agreement_id: str, credential
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
-    # Get proposal
+    # Get proposal for issuer details
     proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
-    # Generate bilingual PDF
+    # Prepare agreement data
+    agreement_data = {
+        'organization_name': agreement.get('organization_name', ''),
+        'organization_address': agreement.get('organization_address', ''),
+        'selected_standards': agreement.get('selected_standards', []),
+        'standards': agreement.get('selected_standards', []),
+        'scope': agreement.get('scope_of_services', ''),
+        'scope_of_services': agreement.get('scope_of_services', ''),
+        'sites': agreement.get('sites', []),
+        'signatory_name': agreement.get('signatory_name', ''),
+        'signatory_position': agreement.get('signatory_position', ''),
+        'signatory_date': agreement.get('signatory_date', ''),
+        'signature_image': agreement.get('signature_image', ''),
+        'stamp_image': agreement.get('stamp_image', ''),
+        'issuer_name': proposal.get('issuer_name', 'Abdullah Al-Rashid'),
+        'issuer_designation': proposal.get('issuer_designation', 'General Manager'),
+    }
+    
+    # Generate PDF using DOCX template
     try:
-        pdf_bytes = generate_bilingual_contract_pdf(agreement, proposal)
+        pdf_path = CONTRACTS_DIR / f"grant_agreement_{agreement_id[:8]}.pdf"
+        generate_grant_agreement_pdf(agreement_data, str(pdf_path))
+        
+        # Read PDF bytes
+        with open(pdf_path, 'rb') as f:
+            pdf_bytes = f.read()
         
         # Update agreement status
         await db.certification_agreements.update_one(
@@ -1886,16 +1936,16 @@ async def generate_bilingual_contract_pdf_endpoint(agreement_id: str, credential
             {"$set": {"status": "contract_generated"}}
         )
         
-        # Return PDF
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=contract_bilingual_{agreement_id[:8]}.pdf"
+                "Content-Disposition": f"attachment; filename=grant_agreement_{agreement_id[:8]}.pdf"
             }
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating bilingual PDF: {str(e)}")
+        logging.error(f"Error generating Grant Agreement PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
 @api_router.get("/public/contracts/{access_token}/pdf/bilingual")
 async def get_public_bilingual_contract_pdf(access_token: str):

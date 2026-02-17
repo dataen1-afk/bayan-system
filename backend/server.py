@@ -6833,6 +6833,221 @@ async def client_respond_to_stage2_plan(access_token: str, data: Stage2AuditPlan
     
     return {"message": f"Response recorded: {status_text}"}
 
+# ================= OPENING & CLOSING MEETING ENDPOINTS (BACF6-09) =================
+
+@api_router.post("/opening-closing-meetings")
+async def create_opening_closing_meeting(data: OpeningClosingMeetingCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create Opening & Closing Meeting form - sent after Stage 1 audit (Admin only)"""
+    await get_current_user(credentials)
+    
+    source_data = None
+    job_order_id = ""
+    
+    # Get source data from Stage 1 plan or Job Order
+    if data.stage1_plan_id:
+        stage1_plan = await db.stage1_audit_plans.find_one({"id": data.stage1_plan_id}, {"_id": 0})
+        if not stage1_plan:
+            raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
+        source_data = stage1_plan
+        job_order_id = stage1_plan.get('job_order_id', '')
+    elif data.job_order_id:
+        job_order = await db.job_orders.find_one({"id": data.job_order_id}, {"_id": 0})
+        if not job_order:
+            raise HTTPException(status_code=404, detail="Job order not found")
+        source_data = job_order
+        job_order_id = data.job_order_id
+    else:
+        raise HTTPException(status_code=400, detail="Either stage1_plan_id or job_order_id is required")
+    
+    # Check if meeting form already exists
+    existing = await db.opening_closing_meetings.find_one({
+        "$or": [
+            {"stage1_plan_id": data.stage1_plan_id} if data.stage1_plan_id else {"_id": None},
+            {"job_order_id": job_order_id}
+        ]
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Meeting form already exists for this audit")
+    
+    # Create meeting form
+    meeting = OpeningClosingMeeting(
+        stage1_plan_id=data.stage1_plan_id,
+        job_order_id=job_order_id,
+        audit_program_id=source_data.get('audit_program_id', ''),
+        organization_name=source_data.get('organization_name', ''),
+        file_no=source_data.get('file_no', '') or source_data.get('client_ref', '') or job_order_id[:8],
+        address=source_data.get('address', '') or source_data.get('organization_address', ''),
+        audit_type=source_data.get('audit_type', 'Stage 1'),
+        audit_date=source_data.get('audit_date_from', '') or source_data.get('audit_date', ''),
+        standards=source_data.get('standards', []),
+        # Default 5 empty attendees
+        attendees=[
+            {"name": "", "designation": "", "opening_meeting_date": "", "closing_meeting_date": ""}
+            for _ in range(5)
+        ]
+    )
+    
+    await db.opening_closing_meetings.insert_one(meeting.dict())
+    
+    # Create notification
+    await create_notification(
+        "meeting_form_created",
+        "Meeting Form Created",
+        f"Opening & Closing Meeting form created for {meeting.organization_name}",
+        meeting.id,
+        "opening_closing_meeting"
+    )
+    
+    return {
+        "id": meeting.id,
+        "access_token": meeting.access_token,
+        "message": "Opening & Closing Meeting form created successfully"
+    }
+
+@api_router.get("/opening-closing-meetings")
+async def get_opening_closing_meetings(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all Opening & Closing Meeting forms (Admin only)"""
+    await get_current_user(credentials)
+    
+    meetings = await db.opening_closing_meetings.find({}, {"_id": 0}).to_list(1000)
+    return meetings
+
+@api_router.get("/opening-closing-meetings/{meeting_id}")
+async def get_opening_closing_meeting(meeting_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get a specific Opening & Closing Meeting form (Admin only)"""
+    await get_current_user(credentials)
+    
+    meeting = await db.opening_closing_meetings.find_one({"id": meeting_id}, {"_id": 0})
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting form not found")
+    
+    return meeting
+
+@api_router.delete("/opening-closing-meetings/{meeting_id}")
+async def delete_opening_closing_meeting(meeting_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete Opening & Closing Meeting form (Admin only)"""
+    await get_current_user(credentials)
+    
+    result = await db.opening_closing_meetings.delete_one({"id": meeting_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Meeting form not found")
+    
+    return {"message": "Meeting form deleted successfully"}
+
+@api_router.post("/opening-closing-meetings/{meeting_id}/send-to-client")
+async def send_meeting_to_client(meeting_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Send Meeting form to client for filling (Admin only)"""
+    await get_current_user(credentials)
+    
+    meeting = await db.opening_closing_meetings.find_one({"id": meeting_id}, {"_id": 0})
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting form not found")
+    
+    # Update status
+    await db.opening_closing_meetings.update_one(
+        {"id": meeting_id},
+        {"$set": {
+            "sent_to_client": True,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Generate client link
+    frontend_url = os.environ.get('REACT_APP_FRONTEND_URL', os.environ.get('FRONTEND_URL', 'http://localhost:3000'))
+    link = f"{frontend_url}/meeting-form/{meeting['access_token']}"
+    
+    return {
+        "message": "Meeting form ready to send to client",
+        "link": link,
+        "organization": meeting.get('organization_name', '')
+    }
+
+@api_router.get("/opening-closing-meetings/{meeting_id}/pdf")
+async def get_meeting_pdf(meeting_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate PDF for Opening & Closing Meeting form (Admin only)"""
+    await get_current_user(credentials)
+    
+    meeting = await db.opening_closing_meetings.find_one({"id": meeting_id}, {"_id": 0})
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting form not found")
+    
+    try:
+        pdf_bytes = generate_opening_closing_meeting_pdf(meeting)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=opening_closing_meeting_{meeting_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Meeting PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+# ================= PUBLIC OPENING & CLOSING MEETING (for Clients) =================
+
+@api_router.get("/public/opening-closing-meetings/{access_token}")
+async def get_public_meeting(access_token: str):
+    """Get Meeting form for client to fill (public access with token)"""
+    meeting = await db.opening_closing_meetings.find_one({"access_token": access_token}, {"_id": 0})
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting form not found")
+    
+    if not meeting.get('sent_to_client'):
+        raise HTTPException(status_code=400, detail="Form has not been sent for client completion yet")
+    
+    return {
+        "id": meeting.get('id'),
+        "organization_name": meeting.get('organization_name'),
+        "file_no": meeting.get('file_no'),
+        "audit_type": meeting.get('audit_type'),
+        "audit_date": meeting.get('audit_date'),
+        "standards": meeting.get('standards', []),
+        "attendees": meeting.get('attendees', []),
+        "opening_meeting_notes": meeting.get('opening_meeting_notes', ''),
+        "closing_meeting_notes": meeting.get('closing_meeting_notes', ''),
+        "status": meeting.get('status')
+    }
+
+@api_router.post("/public/opening-closing-meetings/{access_token}/submit")
+async def submit_meeting_form(access_token: str, data: OpeningClosingMeetingSubmit):
+    """Client submits the meeting attendance form (public access with token)"""
+    meeting = await db.opening_closing_meetings.find_one({"access_token": access_token})
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting form not found")
+    
+    if not meeting.get('sent_to_client'):
+        raise HTTPException(status_code=400, detail="Form has not been sent for client completion yet")
+    
+    if meeting.get('status') == 'submitted':
+        raise HTTPException(status_code=400, detail="Form has already been submitted")
+    
+    # Update with submitted data
+    update_data = {
+        "attendees": [att.dict() for att in data.attendees],
+        "opening_meeting_notes": data.opening_meeting_notes,
+        "closing_meeting_notes": data.closing_meeting_notes,
+        "status": "submitted",
+        "submitted_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    await db.opening_closing_meetings.update_one(
+        {"access_token": access_token},
+        {"$set": update_data}
+    )
+    
+    # Create notification
+    await create_notification(
+        "meeting_form_submitted",
+        "Meeting Form Submitted",
+        f"Opening & Closing Meeting form submitted for {meeting.get('organization_name', '')}",
+        meeting.get('id'),
+        "opening_closing_meeting"
+    )
+    
+    return {"message": "Meeting form submitted successfully"}
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

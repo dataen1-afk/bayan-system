@@ -1877,7 +1877,7 @@ const resources = {
       "formSubmittedDesc": "تم تقديم طلبك للمراجعة",
       "underReviewDesc": "طلبك قيد المراجعة ويتم إعداد العرض",
       "proposalAcceptedDesc": "لقد قبلت عرض الاعتماد",
-      "agreementSignedDesc": "لقد وقعت على اتفاقية الاعتماد",
+      "agreementSignedDesc": "لقد وقعت على اتفاقية المنح",
       "contractReadyDesc": "عقدك جاهز للتحميل",
       "current": "الحالي",
       "proposalDetails": "تفاصيل العرض",

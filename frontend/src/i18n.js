@@ -431,7 +431,7 @@ const resources = {
       "formNotFound": "Form Not Found",
       "errorLoadingForm": "Error Loading Form",
       "formLinkInvalidOrExpired": "This form link is invalid or has expired. Please contact the administrator.",
-      "welcomeToApplicationForm": "Certification Application Form",
+      "welcomeToApplicationForm": "Grant Request Form",
       "formForCompany": "Form for company",
       "thankYouForSubmitting": "Thank you for submitting your application!",
       "applicationSubmittedMessage": "Your application has been received and will be reviewed by our team. We will contact you soon with the next steps.",

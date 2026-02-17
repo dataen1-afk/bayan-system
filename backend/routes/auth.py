@@ -22,6 +22,10 @@ async def register_user(user_data: UserRegister):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Validate role
+    if user_data.role not in [UserRole.ADMIN, UserRole.CLIENT]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
     # Create user
     user = User(
         name=user_data.name,
@@ -29,9 +33,10 @@ async def register_user(user_data: UserRegister):
         role=user_data.role
     )
     
-    # Store with hashed password
+    # Store with hashed password (using 'password' field to match existing schema)
     user_dict = user.model_dump()
-    user_dict["password_hash"] = hash_password(user_data.password)
+    user_dict["password"] = hash_password(user_data.password)
+    user_dict["created_at"] = user_dict["created_at"].isoformat()
     
     await db.users.insert_one(user_dict)
     
@@ -44,21 +49,27 @@ async def login(credentials: UserLogin):
     user_doc = await db.users.find_one({"email": credentials.email})
     
     if not user_doc:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
     
-    if not verify_password(credentials.password, user_doc.get("password_hash", "")):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not verify_password(credentials.password, user_doc.get("password", "")):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Create token
     token = create_jwt_token(user_doc["id"], user_doc["role"])
     
     # Create user response (without password)
+    created_at = user_doc.get("created_at")
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at)
+    elif created_at is None:
+        created_at = datetime.now(timezone.utc)
+    
     user = User(
         id=user_doc["id"],
         name=user_doc["name"],
         email=user_doc["email"],
         role=user_doc["role"],
-        created_at=user_doc.get("created_at", datetime.now(timezone.utc))
+        created_at=created_at
     )
     
     return TokenResponse(token=token, user=user)
@@ -72,10 +83,16 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
     
+    created_at = user_doc.get("created_at")
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at)
+    elif created_at is None:
+        created_at = datetime.now(timezone.utc)
+    
     return User(
         id=user_doc["id"],
         name=user_doc["name"],
         email=user_doc["email"],
         role=user_doc["role"],
-        created_at=user_doc.get("created_at", datetime.now(timezone.utc))
+        created_at=created_at
     )

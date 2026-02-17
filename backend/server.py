@@ -43,6 +43,7 @@ from stage2_audit_report_generator import generate_stage2_audit_report_pdf
 from auditor_notes_generator import generate_auditor_notes_pdf
 from nonconformity_report_generator import generate_nonconformity_report_pdf
 from certificate_data_generator import generate_certificate_data_pdf
+from technical_review_generator import generate_technical_review_pdf
 
 # Import modular routers
 from routes.auth import router as auth_router

@@ -9143,8 +9143,13 @@ async def startup_event():
     """Run startup tasks"""
     await seed_default_templates()
 
-# Include the router in the main app
+# Include the main api_router in the app
 app.include_router(api_router)
+
+# Include modular routers (these will be at /api/auth, /api/auditors, /api/certificates)
+app.include_router(auth_router, prefix="/api")
+app.include_router(auditors_router, prefix="/api")
+app.include_router(certificates_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

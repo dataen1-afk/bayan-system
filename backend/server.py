@@ -5217,6 +5217,246 @@ async def generate_bilingual_report_pdf_file(data: dict, report_type: str) -> st
     c.save()
     return str(pdf_path)
 
+# ================= CONTRACT REVIEW / AUDIT PROGRAM ROUTES =================
+
+@api_router.post("/contract-reviews")
+async def create_contract_review(data: ContractReviewCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Create a new Contract Review from a signed agreement (Admin only)"""
+    await get_current_user(credentials)
+    
+    # Get the agreement
+    agreement = await db.certification_agreements.find_one({"id": data.agreement_id}, {"_id": 0})
+    if not agreement:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    
+    # Get the proposal for additional details
+    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    # Check if contract review already exists for this agreement
+    existing = await db.contract_reviews.find_one({"agreement_id": data.agreement_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Contract review already exists for this agreement")
+    
+    # Create contract review with auto-populated data
+    contract_review = ContractReview(
+        agreement_id=data.agreement_id,
+        organization_name=agreement.get('organization_name', ''),
+        standards=agreement.get('selected_standards', []),
+        scope_of_services=agreement.get('scope_of_services', ''),
+        total_employees=proposal.get('total_employees', 0),
+        application_date=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+        client_id=proposal.get('id', '')[:8]
+    )
+    
+    await db.contract_reviews.insert_one(contract_review.dict())
+    
+    # Create notification
+    await create_notification(
+        "contract_review_created",
+        "Contract Review Created",
+        f"Contract review created for {contract_review.organization_name}",
+        contract_review.id,
+        "contract_review"
+    )
+    
+    return {"id": contract_review.id, "access_token": contract_review.access_token, "message": "Contract review created successfully"}
+
+@api_router.get("/contract-reviews")
+async def get_contract_reviews(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all contract reviews (Admin only)"""
+    await get_current_user(credentials)
+    
+    reviews = await db.contract_reviews.find({}, {"_id": 0}).to_list(1000)
+    return reviews
+
+@api_router.get("/contract-reviews/{review_id}")
+async def get_contract_review(review_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get a specific contract review (Admin only)"""
+    await get_current_user(credentials)
+    
+    review = await db.contract_reviews.find_one({"id": review_id}, {"_id": 0})
+    if not review:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    return review
+
+@api_router.put("/contract-reviews/{review_id}/admin")
+async def update_contract_review_admin(review_id: str, data: ContractReviewAdminUpdate, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update contract review with admin/auditor data"""
+    await get_current_user(credentials)
+    
+    review = await db.contract_reviews.find_one({"id": review_id})
+    if not review:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    update_data = data.dict()
+    update_data['updated_at'] = datetime.now(timezone.utc)
+    
+    # Update status based on completion
+    if data.reviewed_by_name and data.reviewed_by_date:
+        update_data['status'] = 'completed'
+    elif data.prepared_by_name:
+        update_data['status'] = 'pending_review'
+    
+    await db.contract_reviews.update_one(
+        {"id": review_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Contract review updated successfully"}
+
+@api_router.delete("/contract-reviews/{review_id}")
+async def delete_contract_review(review_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Delete a contract review (Admin only)"""
+    await get_current_user(credentials)
+    
+    result = await db.contract_reviews.delete_one({"id": review_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    return {"message": "Contract review deleted successfully"}
+
+# Public Contract Review endpoints (for client access)
+
+@api_router.get("/public/contract-reviews/{access_token}")
+async def get_public_contract_review(access_token: str):
+    """Get contract review for client (Public access with token)"""
+    review = await db.contract_reviews.find_one({"access_token": access_token}, {"_id": 0})
+    if not review:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    # Return only data relevant for client
+    return {
+        "id": review['id'],
+        "organization_name": review.get('organization_name', ''),
+        "standards": review.get('standards', []),
+        "scope_of_services": review.get('scope_of_services', ''),
+        "total_employees": review.get('total_employees', 0),
+        "application_date": review.get('application_date', ''),
+        "client_id": review.get('client_id', ''),
+        # Client-filled data
+        "consultant_name": review.get('consultant_name', ''),
+        "consultant_affects_impartiality": review.get('consultant_affects_impartiality', False),
+        "consultant_impact_explanation": review.get('consultant_impact_explanation', ''),
+        "exclusions_justification": review.get('exclusions_justification', ''),
+        "client_submitted": review.get('client_submitted', False),
+        "status": review.get('status', 'pending_client')
+    }
+
+@api_router.put("/public/contract-reviews/{access_token}")
+async def submit_contract_review_client(access_token: str, data: ContractReviewClientSubmit):
+    """Submit client data for contract review (Public access with token)"""
+    review = await db.contract_reviews.find_one({"access_token": access_token})
+    if not review:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    if review.get('client_submitted'):
+        raise HTTPException(status_code=400, detail="Client data already submitted")
+    
+    update_data = data.dict()
+    update_data['client_submitted'] = True
+    update_data['client_submitted_at'] = datetime.now(timezone.utc)
+    update_data['status'] = 'pending_review'
+    update_data['updated_at'] = datetime.now(timezone.utc)
+    
+    await db.contract_reviews.update_one(
+        {"access_token": access_token},
+        {"$set": update_data}
+    )
+    
+    # Create notification
+    await create_notification(
+        "contract_review_submitted",
+        "Contract Review Data Submitted",
+        f"Client submitted data for contract review: {review.get('organization_name', '')}",
+        review['id'],
+        "contract_review"
+    )
+    
+    return {"message": "Contract review data submitted successfully"}
+
+@api_router.get("/public/contract-reviews/{access_token}/pdf")
+async def get_contract_review_pdf(access_token: str):
+    """Generate PDF for contract review (Public access)"""
+    review = await db.contract_reviews.find_one({"access_token": access_token}, {"_id": 0})
+    if not review:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    try:
+        pdf_bytes = generate_contract_review_pdf(review)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=contract_review_{review['id'][:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Contract Review PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+@api_router.get("/contract-reviews/{review_id}/pdf")
+async def get_contract_review_pdf_admin(review_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Generate PDF for contract review (Admin only)"""
+    await get_current_user(credentials)
+    
+    review = await db.contract_reviews.find_one({"id": review_id}, {"_id": 0})
+    if not review:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    try:
+        pdf_bytes = generate_contract_review_pdf(review)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=contract_review_{review_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Contract Review PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
+@api_router.post("/contract-reviews/{review_id}/send-link")
+async def send_contract_review_link(review_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Send contract review link to client (Admin only)"""
+    await get_current_user(credentials)
+    
+    review = await db.contract_reviews.find_one({"id": review_id}, {"_id": 0})
+    if not review:
+        raise HTTPException(status_code=404, detail="Contract review not found")
+    
+    # Get agreement and proposal for contact email
+    agreement = await db.certification_agreements.find_one({"id": review['agreement_id']}, {"_id": 0})
+    if not agreement:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+    
+    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    
+    # Create notification with the link
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://facility-grants.preview.emergentagent.com')
+    link = f"{frontend_url}/contract-review/{review['access_token']}"
+    
+    await create_notification(
+        "contract_review_link_sent",
+        "Contract Review Link Sent",
+        f"Contract review link sent to {proposal.get('contact_email', '')} for {review.get('organization_name', '')}",
+        review['id'],
+        "contract_review"
+    )
+    
+    # TODO: Send actual email when SMTP is configured
+    return {
+        "message": "Contract review link ready to send",
+        "link": link,
+        "email": proposal.get('contact_email', ''),
+        "organization": review.get('organization_name', '')
+    }
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

@@ -73,6 +73,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'customer-feedback', icon: MessageSquare, label: t('customerFeedback'), color: 'text-pink-600', route: '/customer-feedback' },
     { id: 'pre-transfer-reviews', icon: ArrowRightLeft, label: t('preTransferReviews'), color: 'text-amber-600', route: '/pre-transfer-reviews' },
     { id: 'certified-clients', icon: Award, label: t('certifiedClients'), color: 'text-emerald-600', route: '/certified-clients' },
+    { id: 'suspended-clients', icon: UserX, label: t('suspendedClients'), color: 'text-red-600', route: '/suspended-clients' },
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
     { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },

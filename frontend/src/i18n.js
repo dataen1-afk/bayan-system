@@ -363,13 +363,13 @@ const resources = {
       "applicationSummary": "Application Summary",
       "selectedStandards": "Selected Standards",
 
-      // Grant Request Management
-      "certificationApplicationForms": "Grant Requests",
-      "manageClientApplications": "Manage and review client grant requests",
+      // Grant Application Management
+      "certificationApplicationForms": "Grant Applications",
+      "manageClientApplications": "Manage and review client grant applications",
       "assignNewForm": "Assign New Form",
-      "noApplicationFormsYet": "No Grant Requests Yet",
-      "assignFirstApplicationForm": "Assign a grant request form to a client to get started",
-      "applicationFormsEmptyStateHelp": "Grant requests allow clients to apply for certifications. Click 'Assign New Form' to send a request to a client.",
+      "noApplicationFormsYet": "No Grant Applications Yet",
+      "assignFirstApplicationForm": "Assign a grant application form to a client to get started",
+      "applicationFormsEmptyStateHelp": "Grant applications allow clients to apply for certifications. Click 'Assign New Form' to send an application to a client.",
       "selectClientToAssignForm": "Select a client to assign the certification application form",
       "selectClient": "Select Client",
       "selectClientPlaceholder": "Choose a client...",

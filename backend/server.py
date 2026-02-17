@@ -8046,6 +8046,334 @@ async def get_auditor_notes_pdf(
         logging.error(f"Error generating Auditor Notes PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+# ================= NONCONFORMITY REPORT ENDPOINTS (BACF6-13) =================
+
+@api_router.post("/nonconformity-reports")
+async def create_nonconformity_report(
+    data: NonconformityReportCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create new Nonconformity Report - from Stage 2 report or independently"""
+    await get_current_user(credentials)
+    
+    report = NonconformityReport()
+    
+    # If creating from Stage 2 report, pull data from there
+    if data.stage2_report_id:
+        stage2_report = await db.stage2_audit_reports.find_one({"id": data.stage2_report_id}, {"_id": 0})
+        if not stage2_report:
+            raise HTTPException(status_code=404, detail="Stage 2 Audit Report not found")
+        
+        report.stage2_report_id = data.stage2_report_id
+        report.job_order_id = stage2_report.get("job_order_id", "")
+        report.audit_program_id = stage2_report.get("audit_program_id", "")
+        report.client_name = stage2_report.get("organization_name", "")
+        report.standards = stage2_report.get("standards", [])
+        report.audit_type = stage2_report.get("audit_type", "Stage 2")
+        report.audit_date = stage2_report.get("audit_date_to", "") or stage2_report.get("end_date", "")
+        
+        # Get lead auditor from audit team
+        team_leader = stage2_report.get("team_leader", {})
+        report.lead_auditor = team_leader.get("name", "")
+        
+        # Import nonconformities from Stage 2 report if any
+        ncs = stage2_report.get("nonconformities", [])
+        for nc in ncs:
+            nc_item = {
+                "id": str(uuid.uuid4()),
+                "standard_clause": nc.get("clause", ""),
+                "description": nc.get("description", ""),
+                "description_ar": nc.get("description_ar", ""),
+                "nc_type": "major" if nc.get("rating", 1) == 2 else "minor",
+                "status": "open"
+            }
+            report.nonconformities.append(nc_item)
+        
+        # Calculate counts
+        report.total_major = len([n for n in report.nonconformities if n.get("nc_type") == "major"])
+        report.total_minor = len([n for n in report.nonconformities if n.get("nc_type") == "minor"])
+    else:
+        # Use provided data
+        report.client_name = data.client_name
+        report.certificate_no = data.certificate_no
+        report.standards = data.standards
+        report.audit_type = data.audit_type
+        report.audit_date = data.audit_date
+        report.lead_auditor = data.lead_auditor
+        report.management_representative = data.management_representative
+    
+    # Initialize verification options
+    report.verification_options = {
+        "corrections_appropriate": False,
+        "corrections_verified": False,
+        "verify_next_audit": False,
+        "re_audit_performed": False
+    }
+    
+    await db.nonconformity_reports.insert_one(report.model_dump())
+    
+    return report.model_dump()
+
+@api_router.get("/nonconformity-reports")
+async def get_nonconformity_reports(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all nonconformity reports"""
+    await get_current_user(credentials)
+    
+    reports = await db.nonconformity_reports.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return reports
+
+@api_router.get("/nonconformity-reports/{report_id}")
+async def get_nonconformity_report(
+    report_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get specific nonconformity report by ID"""
+    await get_current_user(credentials)
+    
+    report = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    
+    return report
+
+@api_router.put("/nonconformity-reports/{report_id}")
+async def update_nonconformity_report(
+    report_id: str,
+    data: NonconformityReportUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update nonconformity report"""
+    await get_current_user(credentials)
+    
+    existing = await db.nonconformity_reports.find_one({"id": report_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc)}
+    
+    if data.client_name is not None:
+        update_data["client_name"] = data.client_name
+    if data.certificate_no is not None:
+        update_data["certificate_no"] = data.certificate_no
+    if data.standards is not None:
+        update_data["standards"] = data.standards
+    if data.audit_type is not None:
+        update_data["audit_type"] = data.audit_type
+    if data.audit_date is not None:
+        update_data["audit_date"] = data.audit_date
+    if data.lead_auditor is not None:
+        update_data["lead_auditor"] = data.lead_auditor
+    if data.management_representative is not None:
+        update_data["management_representative"] = data.management_representative
+    if data.nonconformities is not None:
+        update_data["nonconformities"] = data.nonconformities
+        # Recalculate counts
+        update_data["total_major"] = len([n for n in data.nonconformities if n.get("nc_type") == "major"])
+        update_data["total_minor"] = len([n for n in data.nonconformities if n.get("nc_type") == "minor"])
+        update_data["closed_count"] = len([n for n in data.nonconformities if n.get("status") == "closed"])
+    if data.submission_deadline is not None:
+        update_data["submission_deadline"] = data.submission_deadline
+    if data.verification_options is not None:
+        update_data["verification_options"] = data.verification_options
+    if data.management_rep_date is not None:
+        update_data["management_rep_date"] = data.management_rep_date
+    if data.audit_team_leader_date is not None:
+        update_data["audit_team_leader_date"] = data.audit_team_leader_date
+    if data.evidence_submission_date is not None:
+        update_data["evidence_submission_date"] = data.evidence_submission_date
+    if data.final_date is not None:
+        update_data["final_date"] = data.final_date
+    
+    await db.nonconformity_reports.update_one(
+        {"id": report_id},
+        {"$set": update_data}
+    )
+    
+    return await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+
+@api_router.delete("/nonconformity-reports/{report_id}")
+async def delete_nonconformity_report(
+    report_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Delete nonconformity report"""
+    await get_current_user(credentials)
+    
+    result = await db.nonconformity_reports.delete_one({"id": report_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    
+    return {"message": "Nonconformity Report deleted"}
+
+@api_router.post("/nonconformity-reports/{report_id}/add-nc")
+async def add_nonconformity(
+    report_id: str,
+    nc_data: NonconformityItem,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Add a new nonconformity to the report"""
+    await get_current_user(credentials)
+    
+    existing = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    
+    nc_dict = nc_data.model_dump()
+    ncs = existing.get("nonconformities", [])
+    ncs.append(nc_dict)
+    
+    # Recalculate counts
+    total_major = len([n for n in ncs if n.get("nc_type") == "major"])
+    total_minor = len([n for n in ncs if n.get("nc_type") == "minor"])
+    closed_count = len([n for n in ncs if n.get("status") == "closed"])
+    
+    await db.nonconformity_reports.update_one(
+        {"id": report_id},
+        {"$set": {
+            "nonconformities": ncs,
+            "total_major": total_major,
+            "total_minor": total_minor,
+            "closed_count": closed_count,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": "Nonconformity added", "nc_id": nc_dict["id"]}
+
+@api_router.put("/nonconformity-reports/{report_id}/nc/{nc_id}")
+async def update_nonconformity(
+    report_id: str,
+    nc_id: str,
+    nc_data: NonconformityItem,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update a specific nonconformity in the report"""
+    await get_current_user(credentials)
+    
+    existing = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    
+    ncs = existing.get("nonconformities", [])
+    updated = False
+    
+    for i, nc in enumerate(ncs):
+        if nc.get("id") == nc_id:
+            nc_dict = nc_data.model_dump()
+            nc_dict["id"] = nc_id  # Preserve original ID
+            ncs[i] = nc_dict
+            updated = True
+            break
+    
+    if not updated:
+        raise HTTPException(status_code=404, detail="Nonconformity not found")
+    
+    # Recalculate counts
+    total_major = len([n for n in ncs if n.get("nc_type") == "major"])
+    total_minor = len([n for n in ncs if n.get("nc_type") == "minor"])
+    closed_count = len([n for n in ncs if n.get("status") == "closed"])
+    
+    await db.nonconformity_reports.update_one(
+        {"id": report_id},
+        {"$set": {
+            "nonconformities": ncs,
+            "total_major": total_major,
+            "total_minor": total_minor,
+            "closed_count": closed_count,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": "Nonconformity updated"}
+
+@api_router.delete("/nonconformity-reports/{report_id}/nc/{nc_id}")
+async def delete_nonconformity(
+    report_id: str,
+    nc_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Delete a specific nonconformity from the report"""
+    await get_current_user(credentials)
+    
+    existing = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    
+    ncs = existing.get("nonconformities", [])
+    original_len = len(ncs)
+    ncs = [nc for nc in ncs if nc.get("id") != nc_id]
+    
+    if len(ncs) == original_len:
+        raise HTTPException(status_code=404, detail="Nonconformity not found")
+    
+    # Recalculate counts
+    total_major = len([n for n in ncs if n.get("nc_type") == "major"])
+    total_minor = len([n for n in ncs if n.get("nc_type") == "minor"])
+    closed_count = len([n for n in ncs if n.get("status") == "closed"])
+    
+    await db.nonconformity_reports.update_one(
+        {"id": report_id},
+        {"$set": {
+            "nonconformities": ncs,
+            "total_major": total_major,
+            "total_minor": total_minor,
+            "closed_count": closed_count,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": "Nonconformity deleted"}
+
+@api_router.post("/nonconformity-reports/{report_id}/close")
+async def close_nonconformity_report(
+    report_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Close the nonconformity report"""
+    await get_current_user(credentials)
+    
+    existing = await db.nonconformity_reports.find_one({"id": report_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    
+    await db.nonconformity_reports.update_one(
+        {"id": report_id},
+        {"$set": {
+            "status": "closed",
+            "final_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": "Nonconformity Report closed"}
+
+@api_router.get("/nonconformity-reports/{report_id}/pdf")
+async def get_nonconformity_report_pdf(
+    report_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Generate PDF for Nonconformity Report"""
+    await get_current_user(credentials)
+    
+    report = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    
+    try:
+        pdf_bytes = generate_nonconformity_report_pdf(report)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=nonconformity_report_{report_id[:8]}.pdf"
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error generating Nonconformity Report PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

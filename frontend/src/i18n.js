@@ -537,6 +537,11 @@ const resources = {
       "feedback.respondent": "Respondent",
       "feedback.avgScore": "Average Score",
       "feedback.totalForms": "Total Forms",
+
+      // Pre-Transfer Review (BACF6-17)
+      "preTransferReviews": "Pre-Transfer Reviews",
+      "preTransfer.title": "Pre-Transfer Review",
+      "preTransfer.subtitle": "BAC-F6-17 - Certificate transfer assessment from other CB",
       
       // Forms
       "createNewForm": "Create New Form",
@@ -2125,6 +2130,11 @@ const resources = {
       "feedback.respondent": "المستجيب",
       "feedback.avgScore": "متوسط التقييم",
       "feedback.totalForms": "إجمالي النماذج",
+
+      // Pre-Transfer Review (BACF6-17)
+      "preTransferReviews": "مراجعات ما قبل النقل",
+      "preTransfer.title": "مراجعة ما قبل النقل",
+      "preTransfer.subtitle": "BAC-F6-17 - تقييم نقل الشهادة من جهة اعتماد أخرى",
       
       // Forms
       "createNewForm": "إنشاء نموذج جديد",

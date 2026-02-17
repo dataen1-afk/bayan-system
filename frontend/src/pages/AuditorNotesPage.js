@@ -293,7 +293,7 @@ export default function AuditorNotesPage() {
                     <th className="text-start p-3 font-medium">{t('auditorNotes.auditor')}</th>
                     <th className="text-start p-3 font-medium">{t('auditorNotes.date')}</th>
                     <th className="text-start p-3 font-medium">{t('auditorNotes.statusLabel')}</th>
-                    <th className="text-start p-3 font-medium">{t('common.actions')}</th>
+                    <th className="text-start p-3 font-medium">{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -9047,6 +9047,9 @@ app.include_router(api_router)
 # Include modular routers
 app.include_router(auth_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
+app.include_router(sites_router, prefix="/api")
+app.include_router(contacts_router, prefix="/api")
+app.include_router(documents_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

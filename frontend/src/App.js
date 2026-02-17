@@ -93,6 +93,7 @@ function App() {
             <Route path="/form/:accessToken" element={<PublicFormPage />} />
             <Route path="/proposal/:accessToken" element={<PublicProposalPage />} />
             <Route path="/agreement/:accessToken" element={<CertificationAgreementPage />} />
+            <Route path="/contract-review/:accessToken" element={<PublicContractReviewPage />} />
             <Route path="/track" element={<CustomerPortalPage />} />
             <Route path="/track/:trackingId" element={<CustomerPortalPage />} />
             
@@ -103,6 +104,10 @@ function App() {
               element={
                 user ? <AdminDashboard /> : <Navigate to="/login" />
               } 
+            />
+            <Route 
+              path="/contract-reviews" 
+              element={user?.role === 'admin' ? <ContractReviewsPage /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/create-proposal/:formId" 

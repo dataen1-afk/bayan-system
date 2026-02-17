@@ -117,15 +117,22 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 
 ## NEW FEATURES (December 2025)
 
-### Customer Portal ✅ (NEW)
-- **Public tracking page**: `/track` and `/track/:trackingId`
-- Clients can track their application status using form ID or access token
-- **Order Status Timeline**: 6-step visual progress (Form Created → Submitted → Under Review → Proposal Accepted → Agreement Signed → Contract Ready)
-- Displays: Company info, contact details, standards, dates
-- Download contract button when available
-- View proposal link
-- Help section with contact email
-- Full RTL support for Arabic
+### Customer Portal ✅ (REDESIGNED - Feb 2026)
+- **Professional public-facing portal**: `/portal`
+- **Hero Section**: Branded banner with SAC accreditation badge, call-to-action buttons, stats bar (500+ companies, 15+ years, 50+ auditors, 99% satisfaction)
+- **Services Showcase**: 5 ISO certification services with icons, descriptions:
+  - ISO 9001:2015 - Quality Management System
+  - ISO 14001:2015 - Environmental Management System
+  - ISO 45001:2018 - Occupational Health & Safety
+  - ISO 22000:2018 - Food Safety Management System
+  - ISO 27001:2022 - Information Security Management
+- **Order Tracking**: Enhanced tracking with visual timeline (6 steps: Form Created → Submitted → Under Review → Proposal Accepted → Agreement Signed → Contract Ready)
+- **Request for Quotation (RFQ) Form**: Company info, contact details, employee count, sites, standards checkboxes, message - submits to `/api/public/rfq`
+- **FAQ Section**: 6 accordion-style Q&A about certification process, costs, validity, preparation
+- **Contact Section**: Contact form + contact info (address, phone, email, hours) - submits to `/api/public/contact`
+- **Footer**: Quick links, certification list, copyright
+- **Login Page Update**: Added prominent Customer Portal link card for easy access
+- **Full bilingual support**: English/Arabic with RTL layout
 
 ### Audit Scheduling & Calendar ✅ (NEW)
 - **Dedicated page**: `/audit-scheduling`

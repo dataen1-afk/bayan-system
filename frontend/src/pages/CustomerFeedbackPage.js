@@ -477,12 +477,12 @@ export default function CustomerFeedbackPage() {
             {/* Link to Certificate (optional) */}
             <div className="space-y-2">
               <Label>{isRTL ? 'الشهادة (اختياري)' : 'Certificate (Optional)'}</Label>
-              <Select value={formData.certificate_id} onValueChange={handleCertificateSelect}>
+              <Select value={formData.certificate_id || "none"} onValueChange={handleCertificateSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder={isRTL ? 'اختر الشهادة' : 'Select certificate'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{isRTL ? 'بدون ربط' : 'No link'}</SelectItem>
+                  <SelectItem value="none">{isRTL ? 'بدون ربط' : 'No link'}</SelectItem>
                   {certificates.map(cert => (
                     <SelectItem key={cert.id} value={cert.id}>
                       {cert.certificate_number} - {cert.organization_name}

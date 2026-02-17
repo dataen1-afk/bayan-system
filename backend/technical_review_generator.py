@@ -364,7 +364,7 @@ def generate_technical_review_pdf(data: dict, output_path: str = None) -> str:
     
     c.setFont("Helvetica-Bold", 9)
     c.drawString(40, y - 35, "Signature:")
-    c.drawLine(130, y - 38, 250, y - 38)
+    c.line(130, y - 38, 250, y - 38)  # Signature line
     
     c.setFont("Helvetica-Bold", 9)
     c.drawString(300, y - 35, "Date:")

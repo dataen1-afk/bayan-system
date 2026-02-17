@@ -24,6 +24,8 @@ import PublicContractReviewPage from '@/pages/PublicContractReviewPage';
 import AuditProgramsPage from '@/pages/AuditProgramsPage';
 import JobOrdersPage from '@/pages/JobOrdersPage';
 import PublicJobOrderConfirmPage from '@/pages/PublicJobOrderConfirmPage';
+import Stage1AuditPlansPage from '@/pages/Stage1AuditPlansPage';
+import PublicStage1PlanReviewPage from '@/pages/PublicStage1PlanReviewPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

@@ -1478,7 +1478,7 @@ const resources = {
 
       // New form creation workflow
       "createNewApplicationForm": "إنشاء طلب منح جديد",
-      "enterClientInfoToCreateForm": "أدخل معلومات العميل لإنشاء نموذج طلب اعتماد جديد",
+      "enterClientInfoToCreateForm": "أدخل معلومات العميل لإنشاء نموذج طلب منح جديد",
       "clientName": "اسم العميل",
       "enterClientName": "أدخل اسم العميل",
       "enterCompanyName": "أدخل اسم الشركة",

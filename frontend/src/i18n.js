@@ -832,7 +832,7 @@ const resources = {
       "auditType": "Audit Type",
       "initialAudit": "Initial Audit",
       "surveillanceAudit": "Surveillance Audit",
-      "recertificationAudit": "Recertification Audit",
+      "recertificationAudit": "Re-grant Audit",
       "durationDays": "Duration (Days)",
       "auditors": "Auditors",
       "enterAuditorNames": "Enter auditor names",

@@ -597,12 +597,48 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **PDF Generator**: `/app/backend/stage1_audit_plan_generator.py` - Bilingual PDF with objectives, team, schedule
 - **Test Report**: `/app/test_reports/iteration_25.json` - 100% pass rate (17/17 backend tests)
 
+### Stage 2 Audit Plan (BACF6-08) Feature ✅ (NEW - Feb 2026)
+- **Purpose**: Certification audit - Phase 2 planning
+- **Workflow**:
+  1. Admin creates Stage 2 Plan from either an accepted Stage 1 plan OR a confirmed Job Order
+  2. Admin fills schedule table (Date/Time, Process, Owner, Clauses, Auditor)
+  3. Admin can add additional team members
+  4. Manager internal approval
+  5. Send to client for review via public link
+  6. Client accepts plan OR requests changes with reason
+- **Backend API Endpoints**:
+  - `POST /api/stage2-audit-plans` - Create from Stage 1 plan or job order
+  - `GET /api/stage2-audit-plans` - List all plans
+  - `GET /api/stage2-audit-plans/{id}` - Get specific plan
+  - `PUT /api/stage2-audit-plans/{id}` - Update plan details
+  - `DELETE /api/stage2-audit-plans/{id}` - Delete plan
+  - `POST /api/stage2-audit-plans/{id}/manager-approve` - Manager approval
+  - `POST /api/stage2-audit-plans/{id}/send-to-client` - Send for client review
+  - `GET /api/stage2-audit-plans/{id}/pdf` - Generate bilingual PDF
+  - `GET /api/public/stage2-audit-plans/{token}` - Public client access
+  - `POST /api/public/stage2-audit-plans/{token}/respond` - Client accept/request changes
+- **Frontend Pages**:
+  - `/stage2-audit-plans` - Admin page with stats, table, create/edit modals
+  - `/stage2-plan-review/:accessToken` - Public client review page
+- **Status Flow**: draft → pending_manager → manager_approved → pending_client → client_accepted/changes_requested
+- **PDF Generator**: `/app/backend/stage2_audit_plan_generator.py` - Bilingual PDF with Stage 2 objectives, team, schedule
+- **Stage 2 Audit Objectives Included**:
+  - Verify conformity to all requirements of the applicable management system standard
+  - Performance monitoring, measuring, reporting and reviewing against key performance objectives
+  - Organization's management system and performance as regards legal compliance
+  - Operational control of the Organization's processes
+  - Internal auditing and management review effectiveness
+  - Management responsibility for the Organization's policies
+  - Review of actions taken on nonconformities from previous audit
+  - Treatment of complaints and continual improvement demonstration
+- **Test Report**: `/app/test_reports/iteration_26.json` - 100% pass rate (21/21 backend tests, 100% frontend)
+
 ## Upcoming Tasks
+- **CRITICAL REFACTOR**: Break down `server.py` monolith (7000+ lines) into modular routers - HIGH PRIORITY
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts
 - **PayTabs Payment Integration** - Ready for activation when API keys are provided
 - **Google Calendar Integration**: Pending user credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 - **Twilio SMS Integration**: Pending user credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
-- **CRITICAL REFACTOR**: Break down `server.py` monolith into modular routers
 
 ## Future Enhancements
 - Enable real email sending (SendGrid integration)

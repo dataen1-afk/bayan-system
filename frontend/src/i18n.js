@@ -286,6 +286,22 @@ const resources = {
       "selectMeeting": "Select meeting...",
       "completed": "Completed",
       
+      // Stage 2 Audit Report (BACF6-11)
+      "stage2AuditReports": "Stage 2 Audit Reports",
+      "stage2AuditReport": "Stage 2 Audit Report",
+      "stage2ReportDescription": "Stage 2 audit findings and certification recommendation",
+      "selectStage2Plan": "Please select a Stage 2 plan",
+      "selectStage2Audit": "Select a completed Stage 2 audit",
+      "stage2Plan": "Stage 2 Plan",
+      "selectStage2": "Select Stage 2 plan...",
+      "stage1Report": "Stage 1 Report",
+      "selectStage1Report": "Select Stage 1 report...",
+      "createFromStage2": "Create a report from a completed Stage 2 audit",
+      "opportunitiesForImprovement": "Opportunities for Improvement",
+      "nonconformities": "Nonconformities",
+      "certificationRecommendation": "Certification Recommendation",
+      "overallRecommendation": "Overall Recommendation",
+      
       // Forms
       "createNewForm": "Create New Form",
       "createCustomForm": "Create a custom form for a client",

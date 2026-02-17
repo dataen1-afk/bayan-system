@@ -9656,6 +9656,328 @@ async def get_pre_transfer_review_pdf(
         logging.error(f"Error generating Pre-Transfer Review PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
 
+# ================= CERTIFIED CLIENTS REGISTRY ENDPOINTS (BAC-F6-19) =================
+
+async def get_next_serial_number():
+    """Get next serial number for certified client registry"""
+    last_record = await db.certified_clients.find_one(
+        {},
+        sort=[("serial_number", -1)]
+    )
+    if last_record:
+        return last_record.get('serial_number', 0) + 1
+    return 1
+
+@api_router.get("/certified-clients")
+async def get_certified_clients(
+    status: str = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all certified client records"""
+    await get_current_user(credentials)
+    
+    query = {}
+    if status and status != 'all':
+        query['status'] = status
+    
+    clients = await db.certified_clients.find(query, {"_id": 0}).sort("serial_number", 1).to_list(1000)
+    
+    # Check for expired certificates and update status
+    today = datetime.now().strftime("%Y-%m-%d")
+    for client in clients:
+        if client.get('status') == 'active' and client.get('expiry_date') and client.get('expiry_date') < today:
+            await db.certified_clients.update_one(
+                {"id": client['id']},
+                {"$set": {"status": "expired", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            client['status'] = 'expired'
+    
+    return clients
+
+@api_router.post("/certified-clients")
+async def create_certified_client(
+    data: CertifiedClientCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create a new certified client record"""
+    await get_current_user(credentials)
+    
+    serial_number = await get_next_serial_number()
+    
+    client = CertifiedClient(
+        serial_number=serial_number,
+        client_name=data.client_name,
+        client_name_ar=data.client_name_ar,
+        address=data.address,
+        address_ar=data.address_ar,
+        contact_person=data.contact_person,
+        contact_number=data.contact_number,
+        scope=data.scope,
+        scope_ar=data.scope_ar,
+        accreditation=data.accreditation,
+        ea_code=data.ea_code,
+        certificate_number=data.certificate_number,
+        issue_date=data.issue_date,
+        expiry_date=data.expiry_date,
+        surveillance_1_date=data.surveillance_1_date,
+        surveillance_2_date=data.surveillance_2_date,
+        recertification_date=data.recertification_date,
+        linked_certificate_id=data.linked_certificate_id
+    )
+    
+    client_doc = client.model_dump()
+    client_doc['created_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.certified_clients.insert_one(client_doc)
+    
+    await create_notification(
+        notification_type="certified_client_added",
+        title="New Certified Client Added",
+        message=f"New client '{data.client_name}' added to registry with certificate {data.certificate_number}",
+        related_id=client.id,
+        related_type="certified_client"
+    )
+    
+    return {k: v for k, v in client_doc.items() if k != '_id'}
+
+@api_router.get("/certified-clients/{client_id}")
+async def get_certified_client(
+    client_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get a specific certified client record"""
+    await get_current_user(credentials)
+    
+    client = await db.certified_clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Certified client not found")
+    
+    return client
+
+@api_router.put("/certified-clients/{client_id}")
+async def update_certified_client(
+    client_id: str,
+    data: CertifiedClientUpdate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update a certified client record"""
+    await get_current_user(credentials)
+    
+    existing = await db.certified_clients.find_one({"id": client_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Certified client not found")
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.certified_clients.update_one(
+        {"id": client_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Certified client updated successfully"}
+
+@api_router.delete("/certified-clients/{client_id}")
+async def delete_certified_client(
+    client_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Delete a certified client record"""
+    await get_current_user(credentials)
+    
+    existing = await db.certified_clients.find_one({"id": client_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Certified client not found")
+    
+    await db.certified_clients.delete_one({"id": client_id})
+    return {"message": "Certified client deleted successfully"}
+
+@api_router.get("/certified-clients/stats/overview")
+async def get_certified_clients_stats(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get statistics for certified clients registry"""
+    await get_current_user(credentials)
+    
+    clients = await db.certified_clients.find({}, {"_id": 0}).to_list(1000)
+    
+    today = datetime.now().strftime("%Y-%m-%d")
+    thirty_days_later = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+    
+    active = len([c for c in clients if c.get('status') == 'active'])
+    suspended = len([c for c in clients if c.get('status') == 'suspended'])
+    expired = len([c for c in clients if c.get('status') == 'expired'])
+    expiring_soon = len([c for c in clients if c.get('status') == 'active' and c.get('expiry_date') and today < c.get('expiry_date') <= thirty_days_later])
+    
+    # Upcoming surveillance audits
+    surveillance_1_upcoming = len([c for c in clients if c.get('surveillance_1_date') and today <= c.get('surveillance_1_date') <= thirty_days_later])
+    surveillance_2_upcoming = len([c for c in clients if c.get('surveillance_2_date') and today <= c.get('surveillance_2_date') <= thirty_days_later])
+    
+    return {
+        "total": len(clients),
+        "active": active,
+        "suspended": suspended,
+        "expired": expired,
+        "expiring_soon": expiring_soon,
+        "surveillance_1_upcoming": surveillance_1_upcoming,
+        "surveillance_2_upcoming": surveillance_2_upcoming
+    }
+
+@api_router.post("/certified-clients/sync-from-certificates")
+async def sync_from_certificates(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Sync certified clients registry from existing certificates in the system"""
+    await get_current_user(credentials)
+    
+    # Get all certificates not already in the registry
+    certificates = await db.certificates.find({}, {"_id": 0}).to_list(1000)
+    existing_links = await db.certified_clients.distinct("linked_certificate_id")
+    
+    added_count = 0
+    for cert in certificates:
+        if cert.get('id') not in existing_links and cert.get('certificate_number'):
+            serial_number = await get_next_serial_number()
+            
+            client = CertifiedClient(
+                serial_number=serial_number,
+                client_name=cert.get('organization_name', ''),
+                client_name_ar=cert.get('organization_name_ar', ''),
+                scope=cert.get('scope', ''),
+                scope_ar=cert.get('scope_ar', ''),
+                accreditation=cert.get('standards', []),
+                certificate_number=cert.get('certificate_number', ''),
+                issue_date=cert.get('issue_date', ''),
+                expiry_date=cert.get('expiry_date', ''),
+                status=cert.get('status', 'active'),
+                linked_certificate_id=cert.get('id', '')
+            )
+            
+            client_doc = client.model_dump()
+            client_doc['created_at'] = datetime.now(timezone.utc).isoformat()
+            
+            await db.certified_clients.insert_one(client_doc)
+            added_count += 1
+    
+    return {"message": f"Synced {added_count} certificates to registry"}
+
+@api_router.get("/certified-clients/export/excel")
+async def export_certified_clients_excel(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Export certified clients registry to Excel"""
+    await get_current_user(credentials)
+    
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+    
+    clients = await db.certified_clients.find({}, {"_id": 0}).sort("serial_number", 1).to_list(1000)
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Certified Clients"
+    
+    # Header styling
+    header_font = Font(bold=True, size=12, color="FFFFFF")
+    header_fill = PatternFill(start_color="1a4d7c", end_color="1a4d7c", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Title row
+    ws.merge_cells('A1:N1')
+    ws['A1'] = "BAYAN AUDITING & CONFORMITY - List of Certified Clients (BAC-F6-19)"
+    ws['A1'].font = Font(bold=True, size=14)
+    ws['A1'].alignment = Alignment(horizontal="center")
+    
+    # Headers (Row 3)
+    headers = [
+        "S.No.", "Client Name", "Client Name (AR)", "Address", "Contact Person",
+        "Contact No.", "Scope", "Accreditation", "EA Code", "Certificate No.",
+        "Issue Date", "Expiry Date", "Surveillance 1", "Surveillance 2", "Recertification", "Status"
+    ]
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Data rows
+    for row_idx, client in enumerate(clients, 4):
+        ws.cell(row=row_idx, column=1).value = client.get('serial_number', row_idx - 3)
+        ws.cell(row=row_idx, column=2).value = client.get('client_name', '')
+        ws.cell(row=row_idx, column=3).value = client.get('client_name_ar', '')
+        ws.cell(row=row_idx, column=4).value = client.get('address', '')
+        ws.cell(row=row_idx, column=5).value = client.get('contact_person', '')
+        ws.cell(row=row_idx, column=6).value = client.get('contact_number', '')
+        ws.cell(row=row_idx, column=7).value = client.get('scope', '')
+        ws.cell(row=row_idx, column=8).value = ', '.join(client.get('accreditation', []))
+        ws.cell(row=row_idx, column=9).value = client.get('ea_code', '')
+        ws.cell(row=row_idx, column=10).value = client.get('certificate_number', '')
+        ws.cell(row=row_idx, column=11).value = client.get('issue_date', '')
+        ws.cell(row=row_idx, column=12).value = client.get('expiry_date', '')
+        ws.cell(row=row_idx, column=13).value = client.get('surveillance_1_date', '')
+        ws.cell(row=row_idx, column=14).value = client.get('surveillance_2_date', '')
+        ws.cell(row=row_idx, column=15).value = client.get('recertification_date', '')
+        ws.cell(row=row_idx, column=16).value = client.get('status', 'active').upper()
+        
+        for col in range(1, 17):
+            ws.cell(row=row_idx, column=col).border = thin_border
+    
+    # Adjust column widths
+    column_widths = [8, 25, 25, 30, 20, 15, 30, 25, 12, 18, 12, 12, 12, 12, 12, 12]
+    for i, width in enumerate(column_widths, 1):
+        ws.column_dimensions[chr(64 + i) if i < 27 else chr(64 + (i-1)//26) + chr(65 + (i-1)%26)].width = width
+    
+    # Save to bytes
+    from io import BytesIO
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=certified_clients_registry.xlsx"}
+    )
+
+@api_router.get("/certified-clients/{client_id}/pdf")
+async def get_certified_client_pdf(
+    client_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Generate PDF for a single certified client record"""
+    await get_current_user(credentials)
+    
+    client = await db.certified_clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Certified client not found")
+    
+    try:
+        from certified_clients_generator import generate_certified_client_pdf
+        
+        contracts_dir = Path(__file__).parent / "contracts"
+        contracts_dir.mkdir(exist_ok=True)
+        pdf_path = str(contracts_dir / f"certified_client_{client_id[:8]}.pdf")
+        
+        generate_certified_client_pdf(client, pdf_path)
+        
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename=f"certified_client_{client.get('certificate_number', client_id[:8])}.pdf"
+        )
+    except Exception as e:
+        logging.error(f"Error generating Certified Client PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
 # ================= CERTIFICATE ENDPOINTS =================
 
 async def generate_certificate_number():

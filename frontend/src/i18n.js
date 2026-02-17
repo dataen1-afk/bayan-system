@@ -1636,7 +1636,7 @@ const resources = {
       "thankYouForAgreement": "شكراً لإكمال اتفاقية الاعتماد.",
       "contractWillBePrepared": "سيتم إعداد عقد الاعتماد وإرساله إليك قريباً.",
       "errorSubmittingAgreement": "خطأ في تقديم الاتفاقية:",
-      "fillOrganizationDetails": "يرجى ملء اسم وعنوان المنظمة",
+      "fillOrganizationDetails": "يرجى ملء اسم وعنوان المنشأة",
       "selectAtLeastOneStandard": "يرجى اختيار معيار اعتماد واحد على الأقل",
       "fillScopeOfServices": "يرجى وصف نطاق الخدمات",
       "fillSignatoryDetails": "يرجى ملء اسم ومنصب الموقّع",

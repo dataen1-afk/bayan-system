@@ -547,6 +547,11 @@ const resources = {
       "certifiedClients": "Certified Clients",
       "certifiedClients.title": "Certified Clients Registry",
       "certifiedClients.subtitle": "BAC-F6-19 - List of clients with active certifications",
+
+      // Suspended Clients Registry (BACF6-20)
+      "suspendedClients": "Suspended Clients",
+      "suspendedClients.title": "Suspended Clients Registry",
+      "suspendedClients.subtitle": "BAC-F6-20 - List of clients with suspended certifications",
       
       // Forms
       "createNewForm": "Create New Form",
@@ -2145,6 +2150,11 @@ const resources = {
       "certifiedClients": "العملاء المعتمدون",
       "certifiedClients.title": "سجل العملاء المعتمدين",
       "certifiedClients.subtitle": "BAC-F6-19 - قائمة العملاء الحاصلين على الشهادات",
+
+      // Suspended Clients Registry (BACF6-20)
+      "suspendedClients": "العملاء المعلقون",
+      "suspendedClients.title": "سجل العملاء المعلقين",
+      "suspendedClients.subtitle": "BAC-F6-20 - قائمة العملاء ذوي الشهادات المعلقة",
       
       // Forms
       "createNewForm": "إنشاء نموذج جديد",

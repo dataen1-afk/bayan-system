@@ -1,21 +1,20 @@
 """
 Grant Agreement Generator
-Uses the official BAYAN DOCX template to generate professional Grant Agreement PDFs
-Fills the template with client data and converts to PDF using LibreOffice
+Uses the official BAYAN DOCX template to generate professional Grant Agreement PDFs.
+Fills all yellow-highlighted placeholders with client data from the database.
+Preserves all terms, conditions, and formatting from the original template.
 """
 
 from docx import Document
 from docx.shared import Pt, Inches
+from docx.enum.text import WD_COLOR_INDEX
 from pathlib import Path
 import subprocess
 import shutil
 import os
 import logging
-import tempfile
-import base64
-from io import BytesIO
-from datetime import datetime
 import re
+from datetime import datetime
 
 ROOT_DIR = Path(__file__).parent
 ASSETS_DIR = ROOT_DIR / "assets"
@@ -25,39 +24,57 @@ CONTRACTS_DIR = ROOT_DIR / "contracts"
 # Ensure contracts directory exists
 CONTRACTS_DIR.mkdir(exist_ok=True)
 
+# Standard name mappings for checkbox matching
+STANDARD_MAPPINGS = {
+    'ISO9001': 'ISO 9001',
+    'ISO 9001': 'ISO 9001',
+    'ISO14001': 'ISO 14001',
+    'ISO 14001': 'ISO 14001',
+    'ISO45001': 'ISO 45001',
+    'ISO 45001': 'ISO 45001',
+    'ISO22000': 'ISO 22000',
+    'ISO 22000': 'ISO 22000',
+    'ISO22301': 'ISO 22301',
+    'ISO 22301': 'ISO 22301',
+    'ISO27001': 'ISO 27001',
+    'ISO 27001': 'ISO 27001',
+}
 
-def normalize_standard(std):
+
+def normalize_standard(std: str) -> str:
     """Normalize standard name for comparison"""
-    # Remove spaces and convert to uppercase
-    normalized = std.upper().replace(' ', '').replace('-', '')
-    return normalized
+    std_upper = std.upper().replace(' ', '').replace('-', '')
+    for key, value in STANDARD_MAPPINGS.items():
+        if key.upper().replace(' ', '').replace('-', '') == std_upper:
+            return value
+    return std
 
 
-def standards_match(template_std, selected_standards):
-    """Check if a template standard matches any selected standard"""
-    normalized_template = normalize_standard(template_std)
+def is_standard_selected(standard_in_template: str, selected_standards: list) -> bool:
+    """Check if a standard from template matches any selected standard"""
+    template_normalized = standard_in_template.upper().replace(' ', '').replace('-', '')
+    
     for selected in selected_standards:
-        if normalize_standard(selected) == normalized_template:
+        selected_normalized = selected.upper().replace(' ', '').replace('-', '')
+        if template_normalized in selected_normalized or selected_normalized in template_normalized:
             return True
     return False
 
 
-def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
+def fill_grant_agreement_template(agreement_data: dict, output_docx_path: str) -> str:
     """
-    Fill the DOCX template with agreement data
+    Fill the Grant Agreement DOCX template with client data.
+    
+    Replaces all yellow-highlighted placeholders:
+    - Client Organization Name
+    - Client Address (XXXXXXXXXXXXXXXXXXX)
+    - Standards checkboxes (☐ → ☑)
+    - Scope of services
+    - Sites (xxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
+    - Signatory information
     
     Args:
-        agreement_data: Dictionary containing:
-            - organization_name: Client organization name
-            - organization_address: Client address
-            - standards/selected_standards: List of selected standards
-            - scope/scope_of_services: Scope of services
-            - sites: Site locations (list or string)
-            - signatory_name: Client signatory name
-            - signatory_position: Client signatory position
-            - signatory_date: Date of signing
-            - issuer_name: BAC signatory name
-            - issuer_designation: BAC signatory position
+        agreement_data: Dictionary containing client data
         output_docx_path: Path to save the filled document
     
     Returns:
@@ -70,11 +87,11 @@ def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
     # Load template
     doc = Document(str(TEMPLATE_PATH))
     
-    # Extract data with fallbacks
-    org_name = agreement_data.get('organization_name', '') or agreement_data.get('organizationName', '') or ''
-    org_address = agreement_data.get('organization_address', '') or agreement_data.get('organizationAddress', '') or ''
+    # Extract client data with fallbacks
+    org_name = agreement_data.get('organization_name', '') or ''
+    org_address = agreement_data.get('organization_address', '') or ''
     
-    # Handle standards - could be 'standards' or 'selected_standards'
+    # Handle standards
     standards = agreement_data.get('standards', []) or agreement_data.get('selected_standards', []) or []
     if isinstance(standards, str):
         standards = [s.strip() for s in standards.split(',')]
@@ -85,125 +102,122 @@ def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
     # Handle sites
     sites = agreement_data.get('sites', []) or []
     if isinstance(sites, list):
-        sites_str = ', '.join([str(s) for s in sites]) if sites else 'As per application'
+        sites_str = ', '.join([str(s) for s in sites]) if sites else ''
     else:
-        sites_str = str(sites) if sites else 'As per application'
+        sites_str = str(sites) if sites else ''
     
-    signatory_name = agreement_data.get('signatory_name', '') or agreement_data.get('contact_name', '') or ''
-    signatory_position = agreement_data.get('signatory_position', '') or ''
+    # Signatory info
+    client_signatory_name = agreement_data.get('signatory_name', '') or agreement_data.get('contact_name', '') or ''
+    client_signatory_position = agreement_data.get('signatory_position', '') or ''
     signatory_date = agreement_data.get('signatory_date', '') or datetime.now().strftime('%Y-%m-%d')
-    issuer_name = agreement_data.get('issuer_name', 'Abdullah Al-Rashid')
-    issuer_designation = agreement_data.get('issuer_designation', 'General Manager')
     
-    logging.info(f"Filling template for: {org_name}")
+    # BAC signatory
+    bac_signatory_name = agreement_data.get('issuer_name', '') or 'Abdullah Al-Rashid'
+    bac_signatory_position = agreement_data.get('issuer_designation', '') or 'General Manager'
+    
+    logging.info(f"Filling Grant Agreement for: {org_name}")
     logging.info(f"Standards: {standards}")
-    logging.info(f"Scope: {scope[:50]}..." if scope else "No scope")
     
     # Process all paragraphs
     for i, paragraph in enumerate(doc.paragraphs):
         text = paragraph.text
         
-        # === Replace Client Organization name ===
-        if 'Client Organization:' in text:
-            # Find and update the client organization line
+        # === Para 7: Client Organization Name ===
+        if 'Client Organization:' in text and text.strip().endswith('.'):
             for run in paragraph.runs:
                 if 'Client Organization:' in run.text:
-                    run.text = run.text.replace('Client Organization:', f'Client Organization: {org_name}')
-                    # Remove trailing placeholder dots if any
-                    run.text = run.text.replace('  .', '')
+                    run.text = f' Client Organization: {org_name}'
+                elif run.text.strip() == '.':
+                    run.text = ''
         
-        # === Replace address placeholder ===
+        # === Para 8: Client Address (XXXXXXXXXXXXXXXXXXX) ===
         if 'XXXXXXXXXXXXXXXXXXX' in text:
             for run in paragraph.runs:
                 if 'XXXXXXXXXXXXXXXXXXX' in run.text:
                     run.text = run.text.replace('XXXXXXXXXXXXXXXXXXX', org_address)
         
-        # === Handle Standards checkboxes (Para 12) ===
-        # The checkboxes are in separate runs - we need to replace ☐ with ☑ for selected standards
+        # === Para 12: Standards Checkboxes ===
         if '☐' in text and 'ISO' in text:
             runs = paragraph.runs
-            for r_idx in range(len(runs)):
-                run_text = runs[r_idx].text
-                
-                # If this run is a checkbox, check if the NEXT run contains a selected standard
-                if '☐' in run_text:
-                    # Look ahead to find which standard this checkbox is for
-                    for next_idx in range(r_idx + 1, min(r_idx + 3, len(runs))):
-                        next_text = runs[next_idx].text.strip()
-                        if next_text:
-                            # Check if any part of the next text matches a standard
-                            for std in ['ISO 9001', 'ISO9001', 'ISO 14001', 'ISO14001', 
-                                       'ISO 45001', 'ISO45001', 'ISO 22000', 'ISO22000', 
-                                       'ISO 22301', 'ISO22301', 'ISO 27001', 'ISO27001']:
-                                if std.replace(' ', '') in next_text.replace(' ', ''):
-                                    # Check if this standard is selected
-                                    if standards_match(std, standards):
-                                        runs[r_idx].text = runs[r_idx].text.replace('☐', '☑')
-                                    break
+            i = 0
+            while i < len(runs):
+                run = runs[i]
+                # If this run contains a checkbox
+                if '☐' in run.text:
+                    # Look at next runs to find which standard this checkbox is for
+                    standard_found = None
+                    for j in range(i + 1, min(i + 4, len(runs))):
+                        next_text = runs[j].text
+                        for std in ['ISO 9001', 'ISO 14001', 'ISO 45001', 'ISO 22000', 'ISO 22301', 'ISO 27001']:
+                            if std in next_text:
+                                standard_found = std
+                                break
+                        if standard_found:
                             break
+                    
+                    # Check if this standard is selected
+                    if standard_found and is_standard_selected(standard_found, standards):
+                        run.text = run.text.replace('☐', '☑')
+                i += 1
         
-        # === Replace Scope ===
+        # === Para 13: Scope ===
         if text.startswith('Scope:') and 'Providing senior management' in text:
-            # Clear all runs and set new scope
-            for run in paragraph.runs:
-                run.text = ''
-            if paragraph.runs:
-                paragraph.runs[0].text = f'Scope: {scope}' if scope else 'Scope: As per certification application'
+            # Replace the entire scope content with actual scope
+            if scope:
+                for run in paragraph.runs:
+                    run.text = ''
+                if paragraph.runs:
+                    paragraph.runs[0].text = f'Scope: {scope}'
         
-        # === Replace Sites ===
+        # === Para 14: Sites ===
         if 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx' in text:
             for run in paragraph.runs:
                 if 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx' in run.text:
-                    run.text = run.text.replace('xxxxxxxxxxxxxxxxxxxxxxxxxxxxx', sites_str)
+                    run.text = run.text.replace('xxxxxxxxxxxxxxxxxxxxxxxxxxxxx', sites_str if sites_str else 'As per certification application')
         
-        # === Replace in signature section ===
-        # Replace "xxxxx" with organization name
-        if 'xxxxx' in text.lower():
-            for run in paragraph.runs:
-                if 'xxxxx' in run.text.lower():
-                    run.text = run.text.replace('xxxxx', org_name)
-                    run.text = run.text.replace('XXXXX', org_name)
-        
-        # Replace BAC signatory name (may be split across runs like "I" + "slam Abd El-Aal")
-        if 'Islam' in text or 'slam Abd El-Aal' in text:
-            # Join all run text, replace, then redistribute
+        # === Para 95: Client Organization Name + BAC signatory ===
+        if 'For Client Organization Name:' in text:
+            # This line has both organization name and BAC signatory name
             full_text = ''.join([r.text for r in paragraph.runs])
+            
+            # Replace "Islam Abd El-Aal" with BAC signatory
             if 'Islam Abd El-Aal' in full_text:
-                new_text = full_text.replace('Islam Abd El-Aal', issuer_name)
-                # Clear all runs and set new text in first run
+                new_text = full_text.replace('Islam Abd El-Aal', bac_signatory_name)
+                # Also update "For Client Organization Name:" to include org name
+                new_text = new_text.replace('For Client Organization Name:', f'For Client Organization Name: {org_name}')
+                
+                # Clear and set new text
                 for run in paragraph.runs:
                     run.text = ''
                 if paragraph.runs:
                     paragraph.runs[0].text = new_text
         
-        # Replace "Company  ." with actual company name
-        if 'Company  .' in text:
+        # === Para 96: BAC Position ===
+        if text.strip() == 'Position: Director':
             for run in paragraph.runs:
-                if 'Company  .' in run.text:
-                    run.text = run.text.replace('Company  .', org_name)
+                if 'Director' in run.text:
+                    run.text = run.text.replace('Director', bac_signatory_position)
         
-        # Handle client signatory name in signature section
-        if 'Name of Signatory' in text and ('Eng.' in text or 'Designation:' in text):
+        # === Para 97: Client Position ===
+        if text.strip().startswith('Position:') and text.strip() != 'Position: Director':
+            for run in paragraph.runs:
+                if 'Position:' in run.text and run.text.strip() == 'Position:':
+                    run.text = f'Position: {client_signatory_position}'
+        
+        # === Para 105: FOR & ON BEHALF OF sections ===
+        if 'FOR & ON BEHALF OF' in text and 'xxxxx' in text:
+            for run in paragraph.runs:
+                if 'xxxxx' in run.text:
+                    run.text = run.text.replace('xxxxx', org_name)
+                # Also handle "Company" placeholder
+                if run.text.strip() == 'Company':
+                    run.text = org_name
+        
+        # === Para 108: Client Signatory Name ===
+        if 'Name of Signatory: Eng.' in text:
             for run in paragraph.runs:
                 if 'Eng.' in run.text:
-                    run.text = run.text.replace('Eng.', signatory_name or '________________')
-    
-    # Process tables if any exist
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for paragraph in cell.paragraphs:
-                    text = paragraph.text
-                    
-                    if 'XXXXXXXXXXXXXXXXXXX' in text:
-                        for run in paragraph.runs:
-                            if 'XXXXXXXXXXXXXXXXXXX' in run.text:
-                                run.text = run.text.replace('XXXXXXXXXXXXXXXXXXX', org_address)
-                    
-                    if 'xxxxx' in text.lower():
-                        for run in paragraph.runs:
-                            run.text = run.text.replace('xxxxx', org_name)
-                            run.text = run.text.replace('XXXXX', org_name)
+                    run.text = run.text.replace('Eng.', client_signatory_name if client_signatory_name else '________________')
     
     # Save filled document
     doc.save(output_docx_path)
@@ -214,7 +228,8 @@ def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
 
 def convert_docx_to_pdf(docx_path: str, output_pdf_path: str) -> str:
     """
-    Convert DOCX to PDF using LibreOffice
+    Convert DOCX to PDF using LibreOffice.
+    Preserves all formatting, fonts, and layout from the original document.
     
     Args:
         docx_path: Path to input DOCX file
@@ -230,19 +245,18 @@ def convert_docx_to_pdf(docx_path: str, output_pdf_path: str) -> str:
     if not docx_path.exists():
         raise FileNotFoundError(f"DOCX file not found: {docx_path}")
     
-    # Use LibreOffice to convert
     output_dir = output_pdf_path.parent
     output_dir.mkdir(parents=True, exist_ok=True)
     
     try:
-        # Run LibreOffice in headless mode
+        # Run LibreOffice in headless mode for high-quality conversion
         result = subprocess.run([
             'libreoffice',
             '--headless',
             '--convert-to', 'pdf',
             '--outdir', str(output_dir),
             str(docx_path)
-        ], capture_output=True, text=True, timeout=60)
+        ], capture_output=True, text=True, timeout=120)
         
         if result.returncode != 0:
             logging.error(f"LibreOffice conversion failed: {result.stderr}")
@@ -256,7 +270,6 @@ def convert_docx_to_pdf(docx_path: str, output_pdf_path: str) -> str:
             if generated_pdf.exists():
                 shutil.move(str(generated_pdf), str(output_pdf_path))
             else:
-                # Check if file was created with expected name
                 raise FileNotFoundError(f"Expected PDF not created: {generated_pdf}")
         
         logging.info(f"PDF generated: {output_pdf_path}")
@@ -271,14 +284,24 @@ def convert_docx_to_pdf(docx_path: str, output_pdf_path: str) -> str:
 
 def generate_grant_agreement_pdf(agreement_data: dict, output_path: str) -> str:
     """
-    Generate a Grant Agreement PDF using the official BAYAN template
+    Generate a professional Grant Agreement PDF using the official BAYAN template.
     
     This function:
-    1. Fills the DOCX template with client data
-    2. Converts the filled DOCX to PDF using LibreOffice
+    1. Loads the official DOCX template with all terms and conditions
+    2. Fills yellow-highlighted placeholders with client data
+    3. Converts to PDF while preserving all formatting
     
     Args:
-        agreement_data: Dictionary containing agreement information
+        agreement_data: Dictionary containing:
+            - organization_name: Client organization name
+            - organization_address: Client address
+            - standards/selected_standards: List of certification standards
+            - scope/scope_of_services: Scope of certification
+            - sites: List of site locations
+            - signatory_name: Client signatory name
+            - signatory_position: Client signatory position
+            - issuer_name: BAC signatory name
+            - issuer_designation: BAC signatory position
         output_path: Path to save the PDF
     
     Returns:
@@ -291,11 +314,11 @@ def generate_grant_agreement_pdf(agreement_data: dict, output_path: str) -> str:
     temp_docx = output_path.parent / f"temp_{output_path.stem}.docx"
     
     try:
-        # Step 1: Fill the template
-        logging.info("Filling DOCX template...")
-        fill_docx_template(agreement_data, str(temp_docx))
+        # Step 1: Fill the template with client data
+        logging.info("Filling Grant Agreement template with client data...")
+        fill_grant_agreement_template(agreement_data, str(temp_docx))
         
-        # Step 2: Convert to PDF
+        # Step 2: Convert to professional PDF
         logging.info("Converting to PDF...")
         convert_docx_to_pdf(str(temp_docx), str(output_path))
         
@@ -310,36 +333,20 @@ def generate_grant_agreement_pdf(agreement_data: dict, output_path: str) -> str:
                 pass
 
 
-def generate_grant_agreement_docx(agreement_data: dict, output_path: str) -> str:
-    """
-    Generate only the filled DOCX (without PDF conversion)
-    Useful for debugging or when PDF is not needed
-    
-    Args:
-        agreement_data: Dictionary containing agreement information
-        output_path: Path to save the DOCX
-    
-    Returns:
-        Path to generated DOCX
-    """
-    
-    return fill_docx_template(agreement_data, output_path)
-
-
 # For testing
 if __name__ == "__main__":
     import sys
     logging.basicConfig(level=logging.INFO)
     
-    # Test data matching actual database structure
+    # Test data matching database structure
     test_data = {
-        "organization_name": "Test Company Ltd",
-        "organization_address": "123 Test Street, Riyadh, Saudi Arabia",
-        "selected_standards": ["ISO9001", "ISO14001"],  # Without spaces to test matching
-        "scope_of_services": "Manufacturing and distribution of electronic components",
-        "sites": ["Main Office - Riyadh", "Factory - Jeddah"],
-        "signatory_name": "Mohammed Al-Test",
-        "signatory_position": "CEO",
+        "organization_name": "ABC International Company Ltd.",
+        "organization_address": "456 King Fahd Road, Al Olaya District, Riyadh 12211, Saudi Arabia",
+        "selected_standards": ["ISO9001", "ISO14001"],
+        "scope_of_services": "Design, development, and manufacturing of industrial automation systems and equipment. Provision of technical consulting services for industrial process optimization.",
+        "sites": ["Head Office - Riyadh", "Manufacturing Plant - Dammam", "Service Center - Jeddah"],
+        "signatory_name": "Mohammed Al-Rashid",
+        "signatory_position": "Chief Executive Officer",
         "signatory_date": "2025-02-17",
         "issuer_name": "Abdullah Al-Rashid",
         "issuer_designation": "General Manager"

@@ -39,6 +39,7 @@ from stage1_audit_plan_generator import generate_stage1_audit_plan_pdf
 from stage2_audit_plan_generator import generate_stage2_audit_plan_pdf
 from opening_closing_meeting_generator import generate_opening_closing_meeting_pdf
 from stage1_audit_report_generator import generate_stage1_audit_report_pdf
+from stage2_audit_report_generator import generate_stage2_audit_report_pdf
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

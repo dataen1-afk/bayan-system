@@ -881,6 +881,46 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Suggestions and respondent info
   - Internal review section
 
+### Pre-Transfer Review (BAC-F6-17) ✅ (NEW - Feb 2026)
+- **Purpose**: Evaluate certificate transfer requests from clients moving from another certification body
+- **Workflow**:
+  1. Admin creates transfer review for a client requesting to transfer their certification
+  2. Fills in client information (name EN/AR, address, phone, enquiry reference)
+  3. Records transfer details (reason, existing CB, certificate number, validity, scope, sites, EAC code)
+  4. Completes compliance checklist (8 items)
+  5. Makes transfer decision (approve/reject)
+  6. Generates bilingual PDF report
+- **Compliance Checklist Items**:
+  - Certificate under suspension?
+  - Under threat of suspension?
+  - Any minor non-conformity outstanding?
+  - Any major non-conformity outstanding?
+  - Engaged in legal representation?
+  - Complaints appropriately handled?
+  - Activities within BAC accreditation scope?
+  - Previous assessment reports available?
+- **Backend API Endpoints**:
+  - `POST /api/pre-transfer-reviews` - Create transfer review
+  - `GET /api/pre-transfer-reviews` - List all reviews (optional status filter)
+  - `GET /api/pre-transfer-reviews/{id}` - Get specific review
+  - `PUT /api/pre-transfer-reviews/{id}` - Update review (including checklist)
+  - `DELETE /api/pre-transfer-reviews/{id}` - Delete review
+  - `POST /api/pre-transfer-reviews/{id}/make-decision` - Set decision (approved/rejected)
+  - `GET /api/pre-transfer-reviews/{id}/pdf` - Generate bilingual PDF
+- **Frontend Page**: `/pre-transfer-reviews`
+  - Stats cards (Total, Draft, Pending, Approved, Rejected)
+  - Data table with all transfer requests
+  - Create modal with client info and transfer details
+  - Edit modal with checklist Yes/No/N/A dropdowns
+  - Decision modal with approval/rejection options
+  - PDF download button
+- **Status Flow**: draft → under_review → decision_made
+- **PDF Generator**: `/app/backend/pre_transfer_review_generator.py` - Bilingual PDF with:
+  - Client information (English and Arabic)
+  - Transfer details and reason
+  - Compliance checklist results
+  - Decision and reviewer information
+
 ## Backend Refactoring (February 2026) - IN PROGRESS
 
 ### Completed Modular Extraction

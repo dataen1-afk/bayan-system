@@ -1054,6 +1054,92 @@ class AuditorNotes(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= NONCONFORMITY REPORT MODELS (BACF6-13) =================
+
+class NonconformityItem(BaseModel):
+    """Single nonconformity entry in the report"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    standard_clause: str = ""
+    description: str = ""
+    description_ar: str = ""
+    nc_type: str = "minor"  # "major" or "minor"
+    root_cause: str = ""
+    root_cause_ar: str = ""
+    corrections: str = ""
+    corrections_ar: str = ""
+    corrective_actions: str = ""
+    corrective_actions_ar: str = ""
+    verification_evidence: str = ""
+    verification_decision: str = ""
+    verification_date: str = ""
+    verified_by: str = ""
+    status: str = "open"  # open, closed, pending_verification
+
+class NonconformityReportCreate(BaseModel):
+    """Create Nonconformity Report"""
+    stage2_report_id: Optional[str] = None
+    client_name: str = ""
+    certificate_no: str = ""
+    standards: List[str] = []
+    audit_type: str = ""
+    audit_date: str = ""
+    lead_auditor: str = ""
+    management_representative: str = ""
+
+class NonconformityReportUpdate(BaseModel):
+    """Update Nonconformity Report"""
+    client_name: Optional[str] = None
+    certificate_no: Optional[str] = None
+    standards: Optional[List[str]] = None
+    audit_type: Optional[str] = None
+    audit_date: Optional[str] = None
+    lead_auditor: Optional[str] = None
+    management_representative: Optional[str] = None
+    nonconformities: Optional[List[Dict[str, Any]]] = None
+    submission_deadline: Optional[str] = None
+    verification_options: Optional[Dict[str, bool]] = None
+    management_rep_date: Optional[str] = None
+    audit_team_leader_date: Optional[str] = None
+    evidence_submission_date: Optional[str] = None
+    final_date: Optional[str] = None
+
+class NonconformityReport(BaseModel):
+    """Nonconformity Report (BACF6-13)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    stage2_report_id: str = ""
+    job_order_id: str = ""
+    audit_program_id: str = ""
+    contract_review_id: str = ""
+    # Header fields
+    client_name: str = ""
+    client_name_ar: str = ""
+    certificate_no: str = ""
+    standards: List[str] = []
+    audit_type: str = ""
+    audit_date: str = ""
+    lead_auditor: str = ""
+    lead_auditor_ar: str = ""
+    management_representative: str = ""
+    management_representative_ar: str = ""
+    # Nonconformities
+    nonconformities: List[Dict[str, Any]] = []
+    submission_deadline: str = ""
+    # Verification options
+    verification_options: Dict[str, bool] = {}
+    # Signatures
+    management_rep_date: str = ""
+    audit_team_leader_date: str = ""
+    evidence_submission_date: str = ""
+    final_date: str = ""
+    # Status and stats
+    status: str = "draft"  # draft, sent_to_client, pending_verification, closed
+    total_major: int = 0
+    total_minor: int = 0
+    closed_count: int = 0
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

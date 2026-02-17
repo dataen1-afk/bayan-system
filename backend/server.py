@@ -906,6 +906,94 @@ class Stage1AuditReport(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= STAGE 2 AUDIT REPORT MODELS (BACF6-11) =================
+
+class Nonconformity(BaseModel):
+    """Nonconformity finding in Stage 2 audit"""
+    clause: str = ""  # Standard clause reference
+    description: str = ""
+    rating: int = 1  # 1=Minor NC, 2=Major NC
+
+class OpportunityForImprovement(BaseModel):
+    """Opportunity for improvement"""
+    department: str = ""
+    recommendation: str = ""
+
+class Stage2AuditReportCreate(BaseModel):
+    """Create Stage 2 Audit Report"""
+    stage2_plan_id: Optional[str] = None
+    stage1_report_id: Optional[str] = None
+
+class Stage2AuditReportUpdate(BaseModel):
+    """Update Stage 2 Audit Report"""
+    # Change details
+    employee_change: Optional[str] = None
+    scope_change: Optional[str] = None
+    integrated_system: Optional[str] = None
+    additional_info: Optional[str] = None
+    # Findings
+    positive_findings: Optional[List[Dict[str, Any]]] = None
+    opportunities_for_improvement: Optional[List[Dict[str, Any]]] = None
+    nonconformities: Optional[List[Dict[str, Any]]] = None
+    # Certification recommendations
+    certification_recommendation: Optional[Dict[str, bool]] = None
+    overall_recommendation: Optional[str] = None
+    # Checklist
+    checklist_items: Optional[List[Dict[str, Any]]] = None
+    notes: Optional[str] = None
+
+class Stage2AuditReport(BaseModel):
+    """Stage 2 Audit Report (BACF6-11)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    stage2_plan_id: str = ""
+    stage1_report_id: str = ""
+    job_order_id: str = ""
+    audit_program_id: str = ""
+    # Organization details
+    organization_name: str = ""
+    address: str = ""
+    site_address: str = ""
+    standards: List[str] = []
+    num_employees: str = ""
+    num_shifts: str = ""
+    email: str = ""
+    contact_person: str = ""
+    phone: str = ""
+    scope: str = ""
+    ea_code: str = ""
+    exclusions: str = ""
+    # Audit team
+    audit_team: Dict[str, Any] = {}
+    audit_duration: str = ""
+    start_date: str = ""
+    end_date: str = ""
+    # Change details
+    employee_change: str = ""
+    scope_change: str = ""
+    integrated_system: str = ""
+    additional_info: str = ""
+    # Attendees
+    attendees: List[Dict[str, Any]] = []
+    # Findings
+    positive_findings: List[Dict[str, Any]] = []
+    opportunities_for_improvement: List[Dict[str, Any]] = []  # OFI list
+    nonconformities: List[Dict[str, Any]] = []  # NC list with rating
+    # Certification recommendations (checkboxes)
+    certification_recommendation: Dict[str, bool] = {}  # issue_certificate, use_logo, etc.
+    # Overall recommendation
+    overall_recommendation: str = ""  # recommend_certification, recommend_minor_nc, major_nc_evidence, not_recommended
+    # Checklist
+    checklist_items: List[Dict[str, Any]] = []
+    # Status
+    status: str = "draft"  # draft, completed, approved
+    completed_date: str = ""
+    approved_by: str = ""
+    approved_date: str = ""
+    notes: str = ""
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

@@ -543,6 +543,33 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Test File**: `/app/backend/tests/test_audit_programs.py`
 - **Test Report**: `/app/test_reports/iteration_23.json` - 100% pass rate
 
+### Job Order (BACF6-06) Feature ✅ (NEW - Feb 2026)
+- **Purpose**: Auditor appointment with internal approval and auditor confirmation
+- **Workflow**: 
+  1. Admin creates Job Order from approved Audit Program
+  2. Admin selects auditor from system's registered auditors
+  3. Certification Manager approves the job order
+  4. System generates confirmation link
+  5. Auditor receives link, reviews details, confirms or declines with reason
+- **Backend API Endpoints**:
+  - `POST /api/job-orders` - Create from audit program with auditor assignment
+  - `GET /api/job-orders` - List all job orders
+  - `GET /api/job-orders/{id}` - Get specific job order
+  - `PUT /api/job-orders/{id}` - Update job order
+  - `DELETE /api/job-orders/{id}` - Delete job order
+  - `POST /api/job-orders/{id}/approve` - Manager approval
+  - `POST /api/job-orders/{id}/send-to-auditor` - Generate confirmation link
+  - `GET /api/job-orders/{id}/pdf` - Generate bilingual PDF
+  - `GET /api/public/job-orders/{token}` - Public access for auditor
+  - `POST /api/public/job-orders/{token}/confirm` - Auditor confirms/declines
+- **Frontend Pages**:
+  - `/job-orders` - Admin management page with stats, table, create/view modals
+  - `/job-order-confirm/:accessToken` - Public auditor confirmation page
+- **Status Flow**: pending_approval → approved → pending_auditor → confirmed/rejected
+- **PDF Generator**: `/app/backend/job_order_generator.py` - Bilingual PDF with declaration
+- **Test File**: `/app/backend/tests/test_job_orders.py`
+- **Test Report**: `/app/test_reports/iteration_24.json` - 100% pass rate
+
 ## Upcoming Tasks
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts
 - **PayTabs Payment Integration** - Ready for activation when API keys are provided

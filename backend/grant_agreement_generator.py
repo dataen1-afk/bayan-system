@@ -214,7 +214,7 @@ def fill_grant_agreement_template(agreement_data: dict, output_docx_path: str) -
                     run.text = org_name
         
         # === Para 108: Client Signatory Name ===
-        if 'Name of Signatory: Eng.' in text:
+        if 'Name of Signatory:' in text and 'Eng.' in text:
             for run in paragraph.runs:
                 if 'Eng.' in run.text:
                     run.text = run.text.replace('Eng.', client_signatory_name if client_signatory_name else '________________')

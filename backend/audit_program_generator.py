@@ -76,7 +76,7 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
                     c.drawRightString(x, y, bidi_text)
                 else:
                     c.drawString(x, y, bidi_text)
-            except:
+            except Exception:
                 pass
     
     def draw_footer(page_num):
@@ -99,7 +99,7 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
             c.setFillColor(colors.white)
             c.roundRect(25, height - 85, 65, 65, 5, fill=True, stroke=False)
             c.drawImage(str(logo_path), 28, height - 82, width=59, height=59, preserveAspectRatio=True, mask='auto')
-        except:
+        except Exception:
             pass
     
     # Title

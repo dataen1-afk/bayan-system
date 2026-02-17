@@ -1465,7 +1465,7 @@ const resources = {
       "certificationApplication": "طلب المنح",
       "fillAssignedForms": "أكمل طلبات المنح المعينة لك",
       "applicationFormsWillAppearHere": "ستظهر طلبات المنح المعينة لك هنا",
-      "clientApplicationFormsEmptyStateHelp": "عندما يعين لك المسؤول طلب اعتماد، يمكنك ملؤه خطوة بخطوة هنا.",
+      "clientApplicationFormsEmptyStateHelp": "عندما يعين لك المسؤول طلب منح، يمكنك ملؤه خطوة بخطوة هنا.",
       "notStarted": "لم يبدأ بعد",
       "continueForm": "متابعة النموذج",
       "startForm": "بدء النموذج",

@@ -2,70 +2,87 @@
 Site management routes.
 """
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime, timezone
+import uuid
 
 from database import db
-from auth import require_admin
-from models.site import Site, SiteCreate
+from auth import get_current_user
 
 router = APIRouter(prefix="/sites", tags=["Sites"])
+security = HTTPBearer()
 
 
-@router.get("", response_model=List[dict])
-async def get_sites(
-    organization_id: Optional[str] = None,
-    current_user: dict = Depends(require_admin)
-):
-    """Get all sites with optional filtering by organization"""
-    query = {}
-    if organization_id:
-        query["organization_id"] = organization_id
-    
-    sites = await db.sites.find(query, {"_id": 0}).to_list(1000)
+# Pydantic models (matching monolith schema)
+class Site(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    contract_id: str = ""  # Links to proposal/contract
+    name: str
+    address: str = ""
+    city: str = ""
+    country: str = ""
+    contact_name: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    is_main_site: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class SiteCreate(BaseModel):
+    contract_id: str = ""
+    name: str
+    address: str = ""
+    city: str = ""
+    country: str = ""
+    contact_name: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    is_main_site: bool = False
+
+
+@router.get("")
+async def get_sites(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get all sites"""
+    await get_current_user(credentials)
+    sites = await db.sites.find({}, {"_id": 0}).to_list(1000)
     return sites
 
 
-@router.post("", response_model=dict)
+@router.post("")
 async def create_site(
-    site_data: SiteCreate,
-    current_user: dict = Depends(require_admin)
+    site_data: SiteCreate, 
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Create a new site"""
+    await get_current_user(credentials)
+    
     site = Site(
+        contract_id=site_data.contract_id,
         name=site_data.name,
-        name_ar=site_data.name_ar,
         address=site_data.address,
         city=site_data.city,
         country=site_data.country,
         contact_name=site_data.contact_name,
-        contact_phone=site_data.contact_phone,
         contact_email=site_data.contact_email,
-        organization_id=site_data.organization_id
+        contact_phone=site_data.contact_phone,
+        is_main_site=site_data.is_main_site
     )
     
-    await db.sites.insert_one(site.model_dump())
-    return site.model_dump()
-
-
-@router.get("/{site_id}", response_model=dict)
-async def get_site(
-    site_id: str,
-    current_user: dict = Depends(require_admin)
-):
-    """Get a specific site"""
-    site = await db.sites.find_one({"id": site_id}, {"_id": 0})
-    if not site:
-        raise HTTPException(status_code=404, detail="Site not found")
-    return site
+    site_doc = site.model_dump()
+    site_doc['created_at'] = site_doc['created_at'].isoformat()
+    
+    await db.sites.insert_one(site_doc)
+    return {"message": "Site created", "id": site.id}
 
 
 @router.delete("/{site_id}")
 async def delete_site(
-    site_id: str,
-    current_user: dict = Depends(require_admin)
+    site_id: str, 
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Delete a site"""
-    result = await db.sites.delete_one({"id": site_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Site not found")
-    return {"status": "success"}
+    await get_current_user(credentials)
+    await db.sites.delete_one({"id": site_id})
+    return {"message": "Site deleted"}

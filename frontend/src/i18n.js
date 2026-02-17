@@ -338,7 +338,7 @@ const resources = {
 
       // ISMS
       "informationSecurityManagement": "Information Security Management",
-      "businessComplexity": "Business and Organization Complexity",
+      "businessComplexity": "Business and Facility Complexity",
       "itEnvironmentComplexity": "IT Environment Complexity",
       "outsourcingDependency": "Dependency on Outsourcing",
       "isms_nonCritical": "Organization works in non-critical business sector and non-regulated sector",

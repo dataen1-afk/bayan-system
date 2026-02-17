@@ -28,7 +28,8 @@ import {
   FileBadge,
   NotebookPen,
   AlertTriangle,
-  FileOutput
+  FileOutput,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

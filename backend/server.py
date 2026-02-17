@@ -44,6 +44,11 @@ from auditor_notes_generator import generate_auditor_notes_pdf
 from nonconformity_report_generator import generate_nonconformity_report_pdf
 from certificate_data_generator import generate_certificate_data_pdf
 
+# Import modular routers
+from routes.auth import router as auth_router
+from routes.auditors import router as auditors_router
+from routes.certificates import router as certificates_router
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 

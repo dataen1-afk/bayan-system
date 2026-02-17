@@ -521,6 +521,28 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - All 4 notes now correspond side-by-side (English left, Arabic right)
   - Contact line "للاستفسارات، تواصل معنا على" now matches English equivalent
 
+### Audit Program (BACF6-05) Feature ✅ (NEW - Feb 2026)
+- **Purpose**: Schedule audit stages (Stage 1, Stage 2, Surveillance 1 & 2, Recertification)
+- **Backend API Endpoints**:
+  - `GET /api/audit-programs` - List all audit programs
+  - `POST /api/audit-programs` - Create from completed contract review
+  - `GET /api/audit-programs/{id}` - Get specific program
+  - `PUT /api/audit-programs/{id}` - Update activities and approval
+  - `DELETE /api/audit-programs/{id}` - Delete program
+  - `GET /api/audit-programs/{id}/pdf` - Generate bilingual PDF
+  - `POST /api/audit-programs/{id}/approve` - Approve program
+- **Frontend Page**: `/audit-programs` - Admin management page
+  - Stats cards (Total, Draft, Approved, Completed)
+  - Programs table with organization, standards, activities count, status
+  - Create modal (select from completed contract reviews)
+  - Edit modal with full activities table
+- **Activities Table Columns**: Activity, Audit Type, Stage 1, Stage 2, SUR 1, SUR 2, RC, Planned Date
+- **Default Activities**: Document Review, Opening Meeting, Management Review, Process Audits, Internal Audit Review, Closing Meeting
+- **PDF Generator**: `/app/backend/audit_program_generator.py` - Bilingual PDF using ReportLab
+- **Workflow**: Contract Review (BACF6-04) → Audit Program (BACF6-05)
+- **Test File**: `/app/backend/tests/test_audit_programs.py`
+- **Test Report**: `/app/test_reports/iteration_23.json` - 100% pass rate
+
 ## Upcoming Tasks
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts
 - **PayTabs Payment Integration** - Ready for activation when API keys are provided

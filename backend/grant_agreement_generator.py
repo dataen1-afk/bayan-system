@@ -1,318 +1,98 @@
 """
 Grant Agreement Generator
-Uses the official BAYAN template to generate professional Grant Agreement PDFs
+Uses the official BAYAN DOCX template to generate professional Grant Agreement PDFs
+Fills the template with client data and converts to PDF using LibreOffice
 """
 
 from docx import Document
-from docx.shared import Pt, Inches, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_TABLE_ALIGNMENT
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import cm, mm
-from reportlab.lib.colors import HexColor, black, white
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT, TA_JUSTIFY
+from docx.shared import Pt, Inches
 from pathlib import Path
+import subprocess
+import shutil
 import os
-import copy
-import arabic_reshaper
-from bidi.algorithm import get_display
+import logging
+import tempfile
+import base64
+from io import BytesIO
+from datetime import datetime
 
 ROOT_DIR = Path(__file__).parent
 ASSETS_DIR = ROOT_DIR / "assets"
-FONTS_DIR = ROOT_DIR / "fonts"
 TEMPLATE_PATH = ASSETS_DIR / "grant_agreement_template.docx"
+CONTRACTS_DIR = ROOT_DIR / "contracts"
 
-# Register Arabic fonts
-try:
-    pdfmetrics.registerFont(TTFont('Amiri', str(FONTS_DIR / 'Amiri-Regular.ttf')))
-    pdfmetrics.registerFont(TTFont('Amiri-Bold', str(FONTS_DIR / 'Amiri-Bold.ttf')))
-    ARABIC_FONT_REGISTERED = True
-except:
-    ARABIC_FONT_REGISTERED = False
-
-# Brand colors
-NAVY_BLUE = HexColor('#1e3a5f')
-GOLD = HexColor('#c9a227')
+# Ensure contracts directory exists
+CONTRACTS_DIR.mkdir(exist_ok=True)
 
 
-def process_arabic(text):
-    """Process Arabic text for proper display"""
-    if not text:
-        return text
+def add_image_to_paragraph(paragraph, image_data: str, width_inches: float = 1.5):
+    """Add an image from base64 data to a paragraph"""
     try:
-        reshaped = arabic_reshaper.reshape(str(text))
-        return get_display(reshaped)
-    except:
-        return str(text)
+        # Remove data URL prefix if present
+        if 'base64,' in image_data:
+            image_data = image_data.split('base64,')[1]
+        
+        # Decode base64
+        image_bytes = base64.b64decode(image_data)
+        image_stream = BytesIO(image_bytes)
+        
+        # Add image to paragraph
+        run = paragraph.add_run()
+        run.add_picture(image_stream, width=Inches(width_inches))
+        return True
+    except Exception as e:
+        logging.error(f"Failed to add image: {e}")
+        return False
 
 
-def generate_grant_agreement_pdf(agreement_data: dict, output_path: str) -> str:
-    """
-    Generate a Grant Agreement PDF using the official BAYAN template
+def replace_text_in_paragraph(paragraph, old_text: str, new_text: str):
+    """Replace text in a paragraph while preserving formatting"""
+    if old_text not in paragraph.text:
+        return False
     
-    Args:
-        agreement_data: Dictionary containing agreement information
-        output_path: Path to save the PDF
+    # Simple replacement for plain text
+    for run in paragraph.runs:
+        if old_text in run.text:
+            run.text = run.text.replace(old_text, new_text)
+            return True
     
-    Returns:
-        Path to generated PDF
-    """
+    # If runs don't contain the text directly, try full paragraph replacement
+    if old_text in paragraph.text:
+        # Get the full text and replace
+        full_text = paragraph.text
+        new_full_text = full_text.replace(old_text, new_text)
+        
+        # Clear existing runs and add new text
+        for run in paragraph.runs:
+            run.text = ""
+        if paragraph.runs:
+            paragraph.runs[0].text = new_full_text
+        else:
+            paragraph.add_run(new_full_text)
+        return True
     
-    # Create PDF using ReportLab with proper formatting
-    doc = SimpleDocTemplate(
-        output_path,
-        pagesize=A4,
-        rightMargin=2*cm,
-        leftMargin=2*cm,
-        topMargin=2*cm,
-        bottomMargin=2*cm
-    )
-    
-    # Define styles
-    styles = getSampleStyleSheet()
-    
-    # Header style
-    header_style = ParagraphStyle(
-        'Header',
-        parent=styles['Normal'],
-        fontSize=10,
-        alignment=TA_CENTER,
-        spaceAfter=6
-    )
-    
-    # Title style
-    title_style = ParagraphStyle(
-        'Title',
-        parent=styles['Heading1'],
-        fontSize=16,
-        alignment=TA_CENTER,
-        spaceAfter=12,
-        spaceBefore=12,
-        textColor=NAVY_BLUE,
-        fontName='Helvetica-Bold'
-    )
-    
-    # Arabic title style
-    arabic_title_style = ParagraphStyle(
-        'ArabicTitle',
-        parent=styles['Heading1'],
-        fontSize=14,
-        alignment=TA_CENTER,
-        spaceAfter=20,
-        textColor=NAVY_BLUE,
-        fontName='Amiri-Bold' if ARABIC_FONT_REGISTERED else 'Helvetica-Bold'
-    )
-    
-    # Section header style
-    section_style = ParagraphStyle(
-        'Section',
-        parent=styles['Heading2'],
-        fontSize=11,
-        spaceBefore=12,
-        spaceAfter=6,
-        textColor=NAVY_BLUE,
-        fontName='Helvetica-Bold'
-    )
-    
-    # Body style
-    body_style = ParagraphStyle(
-        'Body',
-        parent=styles['Normal'],
-        fontSize=10,
-        alignment=TA_JUSTIFY,
-        spaceAfter=6,
-        leading=14
-    )
-    
-    # Bullet style
-    bullet_style = ParagraphStyle(
-        'Bullet',
-        parent=body_style,
-        leftIndent=20,
-        bulletIndent=10
-    )
-    
-    # Build content
-    story = []
-    
-    # Header with logo
-    logo_path = ASSETS_DIR / "bayan-logo.png"
-    if logo_path.exists():
-        try:
-            story.append(RLImage(str(logo_path), width=2*cm, height=1.5*cm))
-        except:
-            pass
-    
-    # Company header
-    story.append(Paragraph("BAYAN AUDITING & CONFORMITY", header_style))
-    story.append(Paragraph("بيان للتحقق والمطابقة", ParagraphStyle('ArabicHeader', parent=header_style, fontName='Amiri' if ARABIC_FONT_REGISTERED else 'Helvetica')))
-    story.append(Paragraph("3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia", header_style))
-    story.append(Spacer(1, 0.5*cm))
-    
-    # Main Title
-    story.append(Paragraph("GRANT AGREEMENT", title_style))
-    ar_title = process_arabic("اتفاقية المنح") if ARABIC_FONT_REGISTERED else "اتفاقية المنح"
-    story.append(Paragraph(ar_title, arabic_title_style))
-    story.append(Spacer(1, 0.5*cm))
-    
-    # Extract data
-    org_name = agreement_data.get('organization_name', agreement_data.get('organizationName', ''))
-    org_address = agreement_data.get('organization_address', agreement_data.get('organizationAddress', ''))
-    standards = agreement_data.get('standards', [])
-    scope = agreement_data.get('scope', '')
-    contact_name = agreement_data.get('contact_name', agreement_data.get('contactName', ''))
-    
-    # Section 1: Parties
-    story.append(Paragraph("1. Parties to the Agreement", section_style))
-    story.append(Paragraph(
-        "This Grant Agreement (\"Agreement\") is made between:",
-        body_style
-    ))
-    story.append(Paragraph(
-        "<b>• Certification Body:</b> BAYAN AUDITING & CONFORMITY (BAC) Arabia Limited Certification Body (hereafter referred to as \"the Certification Body\" or \"CB\")",
-        bullet_style
-    ))
-    story.append(Paragraph(
-        "Address: 3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia",
-        ParagraphStyle('Address', parent=bullet_style, leftIndent=40)
-    ))
-    story.append(Paragraph(
-        f"<b>• Client Facility:</b> {org_name} (hereafter referred to as \"the Client\")",
-        bullet_style
-    ))
-    story.append(Paragraph(
-        f"Address: {org_address}",
-        ParagraphStyle('Address', parent=bullet_style, leftIndent=40)
-    ))
-    
-    # Section 2: Purpose and Scope
-    story.append(Paragraph("2. Purpose and Scope", section_style))
-    story.append(Paragraph(
-        "This Agreement defines the legally enforceable terms and conditions under which the CB provides certification services for the following management system standard(s):",
-        body_style
-    ))
-    
-    # Standards checkboxes
-    all_standards = ['ISO 9001', 'ISO 14001', 'ISO 45001', 'ISO 22000', 'ISO 22301', 'ISO 27001']
-    standards_text = ""
-    for std in all_standards:
-        checked = "☑" if std in standards else "☐"
-        standards_text += f"{checked} {std}   "
-    story.append(Paragraph(standards_text, body_style))
-    
-    if scope:
-        story.append(Paragraph(f"<b>Scope:</b> {scope}", body_style))
-    
-    # Section 3: Legal Enforceability
-    story.append(Paragraph("3. Legal Enforceability", section_style))
-    story.append(Paragraph("• This Agreement is legally binding.", bullet_style))
-    story.append(Paragraph("• The CB retains full authority to grant, maintain, reduce, suspend, or withdraw certification.", bullet_style))
-    story.append(Paragraph("• Certification activities shall comply with ISO/IEC 17021-1:2015 and applicable IAF Mandatory Documents.", bullet_style))
-    
-    # Section 4: Certification Body Responsibilities
-    story.append(Paragraph("4. Certification Body Responsibilities", section_style))
-    story.append(Paragraph("The Certification Body agrees to:", body_style))
-    story.append(Paragraph("• Maintain impartiality and avoid conflicts of interest", bullet_style))
-    story.append(Paragraph("• Assign competent auditors for the applicable scheme and sector", bullet_style))
-    story.append(Paragraph("• Notify clients of changes in certification requirements", bullet_style))
-    story.append(Paragraph("• Respect confidentiality of client data", bullet_style))
-    story.append(Paragraph("• Handle appeals and complaints transparently", bullet_style))
-    
-    # Section 5: Client Responsibilities
-    story.append(Paragraph("5. Client Responsibilities", section_style))
-    story.append(Paragraph("The Client agrees to:", body_style))
-    story.append(Paragraph("• Comply with applicable certification requirements", bullet_style))
-    story.append(Paragraph("• Provide unrestricted access to premises, personnel, documentation for audit purposes", bullet_style))
-    story.append(Paragraph("• Maintain system performance and notify CB of changes affecting certification", bullet_style))
-    story.append(Paragraph("• Use certification status in accordance with CB requirements", bullet_style))
-    story.append(Paragraph("• Cease all use of certificates upon suspension or withdrawal", bullet_style))
-    
-    # Section 6: Use of Certification
-    story.append(Paragraph("6. Use and Misuse of Certification", section_style))
-    story.append(Paragraph("The Client shall:", body_style))
-    story.append(Paragraph("a) Follow CB guidance when referencing certification", bullet_style))
-    story.append(Paragraph("b) Avoid any misleading statements regarding certification", bullet_style))
-    story.append(Paragraph("c) Not misuse certification documents or marks", bullet_style))
-    story.append(Paragraph("d) Discontinue use upon withdrawal or suspension", bullet_style))
-    
-    # Section 7: Confidentiality
-    story.append(Paragraph("7. Confidentiality", section_style))
-    story.append(Paragraph(
-        "The CB shall manage all information obtained during certification as confidential, except where disclosure is required by law or approved by the client.",
-        body_style
-    ))
-    
-    # Section 8-14: Brief summaries
-    story.append(Paragraph("8. Information Provided by the CB", section_style))
-    story.append(Paragraph("The CB shall provide the client with certification process details, normative requirements, applicable fees, and complaints/appeals procedures.", body_style))
-    
-    story.append(Paragraph("9. Fees and Payment", section_style))
-    story.append(Paragraph("All fees are as per the official proposal. Invoices are payable within 14 days. Certification is issued only after full payment.", body_style))
-    
-    story.append(Paragraph("10. Notification of Changes", section_style))
-    story.append(Paragraph("The Client shall inform the CB of any changes affecting certification without delay.", body_style))
-    
-    story.append(Paragraph("11. Suspension, Withdrawal, and Termination", section_style))
-    story.append(Paragraph("Either party may terminate with two months' written notice. Upon termination, the Client shall cease all use of certification.", body_style))
-    
-    story.append(Paragraph("12. Liability and Indemnity", section_style))
-    story.append(Paragraph("Maximum liability is limited to the total fee paid for certification.", body_style))
-    
-    story.append(Paragraph("13. Force Majeure", section_style))
-    story.append(Paragraph("Neither party is liable for non-performance due to events beyond their control.", body_style))
-    
-    story.append(Paragraph("14. Governing Law", section_style))
-    story.append(Paragraph("This Agreement is governed by the laws of the Kingdom of Saudi Arabia.", body_style))
-    
-    # Acknowledgments
-    story.append(Spacer(1, 0.5*cm))
-    story.append(Paragraph("Acknowledgments:", section_style))
-    story.append(Paragraph("☑ We have reviewed and understood the BAYAN certification process.", bullet_style))
-    story.append(Paragraph("☑ We agree to the rules of certification mark usage.", bullet_style))
-    story.append(Paragraph("☑ We will notify BAYAN of any significant changes to the management system.", bullet_style))
-    
-    # Signatures section
-    story.append(Spacer(1, 1*cm))
-    story.append(Paragraph("Acceptance and Signatures", section_style))
-    
-    # Signature table
-    sig_data = [
-        ["For BAYAN AUDITING & CONFORMITY", "For Client Facility"],
-        ["Name: Islam Abd El-Aal", f"Name: {contact_name}"],
-        ["Position: Director", "Position: ________________"],
-        ["Signature: ________________", "Signature: ________________"],
-        ["Date: ________________", "Date: ________________"]
-    ]
-    
-    sig_table = Table(sig_data, colWidths=[8*cm, 8*cm])
-    sig_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
-    story.append(sig_table)
-    
-    # Build PDF
-    doc.build(story)
-    
-    return output_path
+    return False
 
 
-def fill_docx_template(agreement_data: dict, output_path: str) -> str:
+def fill_docx_template(agreement_data: dict, output_docx_path: str) -> str:
     """
     Fill the DOCX template with agreement data
     
     Args:
-        agreement_data: Dictionary containing agreement information
-        output_path: Path to save the filled document
+        agreement_data: Dictionary containing:
+            - organization_name: Client organization name
+            - organization_address: Client address
+            - standards: List of selected standards
+            - scope: Scope of services
+            - sites: Site locations
+            - signatory_name: Client signatory name
+            - signatory_position: Client signatory position
+            - signatory_date: Date of signing
+            - signature_image: Base64 encoded signature image
+            - stamp_image: Base64 encoded stamp image
+            - issuer_name: BAC signatory name
+            - issuer_designation: BAC signatory position
+        output_docx_path: Path to save the filled document
     
     Returns:
         Path to generated DOCX
@@ -324,34 +104,222 @@ def fill_docx_template(agreement_data: dict, output_path: str) -> str:
     # Load template
     doc = Document(str(TEMPLATE_PATH))
     
-    # Extract data
-    org_name = agreement_data.get('organization_name', agreement_data.get('organizationName', ''))
-    org_address = agreement_data.get('organization_address', agreement_data.get('organizationAddress', ''))
-    standards = agreement_data.get('standards', [])
-    scope = agreement_data.get('scope', '')
-    contact_name = agreement_data.get('contact_name', agreement_data.get('contactName', ''))
+    # Extract data with fallbacks
+    org_name = agreement_data.get('organization_name', '') or agreement_data.get('organizationName', '') or ''
+    org_address = agreement_data.get('organization_address', '') or agreement_data.get('organizationAddress', '') or ''
+    standards = agreement_data.get('standards', []) or agreement_data.get('selected_standards', []) or []
+    scope = agreement_data.get('scope', '') or agreement_data.get('scope_of_services', '') or ''
+    sites = agreement_data.get('sites', []) or []
+    signatory_name = agreement_data.get('signatory_name', '') or agreement_data.get('contact_name', '') or ''
+    signatory_position = agreement_data.get('signatory_position', '') or ''
+    signatory_date = agreement_data.get('signatory_date', '') or datetime.now().strftime('%Y-%m-%d')
+    issuer_name = agreement_data.get('issuer_name', 'Abdullah Al-Rashid')
+    issuer_designation = agreement_data.get('issuer_designation', 'General Manager')
     
-    # Replace placeholders in the document
+    # Format sites as string
+    sites_str = ', '.join(sites) if isinstance(sites, list) else str(sites)
+    
+    # Format standards as string  
+    standards_str = ', '.join(standards) if isinstance(standards, list) else str(standards)
+    
+    # Process all paragraphs
     for paragraph in doc.paragraphs:
-        if 'Client Organization' in paragraph.text:
-            paragraph.text = paragraph.text.replace('Client Organization', org_name)
-        if 'XXXXXXXXXXXXXXXXXXX' in paragraph.text:
-            paragraph.text = paragraph.text.replace('XXXXXXXXXXXXXXXXXXX', org_address)
-        if 'xxxxx' in paragraph.text.lower():
-            paragraph.text = paragraph.text.replace('xxxxx', org_name)
-            paragraph.text = paragraph.text.replace('XXXXX', org_name)
+        text = paragraph.text
+        
+        # Replace Client Organization name placeholder
+        if 'Client Organization:' in text and text.strip().endswith('.'):
+            # This is the organization name line
+            replace_text_in_paragraph(paragraph, 'Client Organization:', f'Client Organization: {org_name}')
+        elif 'Client Organization Name:' in text:
+            replace_text_in_paragraph(paragraph, 'Client Organization Name:', f'Client Organization Name: {org_name}')
+        
+        # Replace address placeholder
+        if 'XXXXXXXXXXXXXXXXXXX' in text:
+            replace_text_in_paragraph(paragraph, 'XXXXXXXXXXXXXXXXXXX', org_address)
+        
+        # Replace sites placeholder
+        if 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx' in text:
+            replace_text_in_paragraph(paragraph, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx', sites_str if sites_str else 'As per application')
+        
+        # Replace scope - look for the example scope text
+        if 'Scope: Providing senior management' in text:
+            # Replace the entire scope line with actual scope
+            new_scope_text = f"Scope: {scope}" if scope else "Scope: As per certification application"
+            for run in paragraph.runs:
+                run.text = ""
+            if paragraph.runs:
+                paragraph.runs[0].text = new_scope_text
+            else:
+                paragraph.add_run(new_scope_text)
+        
+        # Replace in signature section - organization name placeholder
+        if 'xxxxx' in text.lower():
+            replace_text_in_paragraph(paragraph, 'xxxxx', org_name)
+            replace_text_in_paragraph(paragraph, 'XXXXX', org_name)
+        
+        # Replace BAC signatory name
+        if 'Islam Abd El-Aal' in text:
+            replace_text_in_paragraph(paragraph, 'Islam Abd El-Aal', issuer_name)
+        
+        # Replace "Company  ." with actual company name
+        if 'Company  .' in text:
+            replace_text_in_paragraph(paragraph, 'Company  .', f'{org_name}')
+        
+        # Handle signatory name fields
+        if 'Name of Signatory:' in text and 'Eng.' in text:
+            # This is the client signatory line
+            replace_text_in_paragraph(paragraph, 'Name of Signatory: Eng.', f'Name of Signatory: {signatory_name}')
     
-    # Also check tables
+    # Process tables if any
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for paragraph in cell.paragraphs:
-                    if 'Client Organization' in paragraph.text:
-                        paragraph.text = paragraph.text.replace('Client Organization', org_name)
-                    if 'XXXXXXXXXXXXXXXXXXX' in paragraph.text:
-                        paragraph.text = paragraph.text.replace('XXXXXXXXXXXXXXXXXXX', org_address)
+                    text = paragraph.text
+                    
+                    if 'XXXXXXXXXXXXXXXXXXX' in text:
+                        replace_text_in_paragraph(paragraph, 'XXXXXXXXXXXXXXXXXXX', org_address)
+                    if 'xxxxx' in text.lower():
+                        replace_text_in_paragraph(paragraph, 'xxxxx', org_name)
+                        replace_text_in_paragraph(paragraph, 'XXXXX', org_name)
     
     # Save filled document
-    doc.save(output_path)
+    doc.save(output_docx_path)
+    logging.info(f"Filled DOCX saved to: {output_docx_path}")
     
-    return output_path
+    return output_docx_path
+
+
+def convert_docx_to_pdf(docx_path: str, output_pdf_path: str) -> str:
+    """
+    Convert DOCX to PDF using LibreOffice
+    
+    Args:
+        docx_path: Path to input DOCX file
+        output_pdf_path: Path for output PDF file
+    
+    Returns:
+        Path to generated PDF
+    """
+    
+    docx_path = Path(docx_path)
+    output_pdf_path = Path(output_pdf_path)
+    
+    if not docx_path.exists():
+        raise FileNotFoundError(f"DOCX file not found: {docx_path}")
+    
+    # Use LibreOffice to convert
+    output_dir = output_pdf_path.parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        # Run LibreOffice in headless mode
+        result = subprocess.run([
+            'libreoffice',
+            '--headless',
+            '--convert-to', 'pdf',
+            '--outdir', str(output_dir),
+            str(docx_path)
+        ], capture_output=True, text=True, timeout=60)
+        
+        if result.returncode != 0:
+            logging.error(f"LibreOffice conversion failed: {result.stderr}")
+            raise RuntimeError(f"PDF conversion failed: {result.stderr}")
+        
+        # LibreOffice outputs with the same name but .pdf extension
+        generated_pdf = output_dir / f"{docx_path.stem}.pdf"
+        
+        # Rename to desired output path if different
+        if generated_pdf != output_pdf_path:
+            if generated_pdf.exists():
+                shutil.move(str(generated_pdf), str(output_pdf_path))
+            else:
+                # Check if file was created with expected name
+                raise FileNotFoundError(f"Expected PDF not created: {generated_pdf}")
+        
+        logging.info(f"PDF generated: {output_pdf_path}")
+        return str(output_pdf_path)
+        
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("PDF conversion timed out")
+    except Exception as e:
+        logging.error(f"PDF conversion error: {e}")
+        raise
+
+
+def generate_grant_agreement_pdf(agreement_data: dict, output_path: str) -> str:
+    """
+    Generate a Grant Agreement PDF using the official BAYAN template
+    
+    This function:
+    1. Fills the DOCX template with client data
+    2. Converts the filled DOCX to PDF using LibreOffice
+    
+    Args:
+        agreement_data: Dictionary containing agreement information
+        output_path: Path to save the PDF
+    
+    Returns:
+        Path to generated PDF
+    """
+    
+    output_path = Path(output_path)
+    
+    # Create temporary DOCX file
+    temp_docx = output_path.parent / f"temp_{output_path.stem}.docx"
+    
+    try:
+        # Step 1: Fill the template
+        logging.info("Filling DOCX template...")
+        fill_docx_template(agreement_data, str(temp_docx))
+        
+        # Step 2: Convert to PDF
+        logging.info("Converting to PDF...")
+        convert_docx_to_pdf(str(temp_docx), str(output_path))
+        
+        return str(output_path)
+        
+    finally:
+        # Cleanup temporary DOCX
+        if temp_docx.exists():
+            try:
+                os.remove(temp_docx)
+            except:
+                pass
+
+
+def generate_grant_agreement_docx(agreement_data: dict, output_path: str) -> str:
+    """
+    Generate only the filled DOCX (without PDF conversion)
+    Useful for debugging or when PDF is not needed
+    
+    Args:
+        agreement_data: Dictionary containing agreement information
+        output_path: Path to save the DOCX
+    
+    Returns:
+        Path to generated DOCX
+    """
+    
+    return fill_docx_template(agreement_data, output_path)
+
+
+# For testing
+if __name__ == "__main__":
+    # Test data
+    test_data = {
+        "organization_name": "Test Company Ltd",
+        "organization_address": "123 Test Street, Riyadh, Saudi Arabia",
+        "standards": ["ISO 9001", "ISO 14001"],
+        "scope": "Manufacturing and distribution of electronic components",
+        "sites": ["Main Office - Riyadh", "Factory - Jeddah"],
+        "signatory_name": "Mohammed Al-Test",
+        "signatory_position": "CEO",
+        "signatory_date": "2025-02-17",
+        "issuer_name": "Abdullah Al-Rashid",
+        "issuer_designation": "General Manager"
+    }
+    
+    output_pdf = CONTRACTS_DIR / "test_grant_agreement.pdf"
+    result = generate_grant_agreement_pdf(test_data, str(output_pdf))
+    print(f"Generated: {result}")

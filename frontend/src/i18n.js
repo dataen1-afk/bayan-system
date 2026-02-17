@@ -1073,7 +1073,7 @@ const resources = {
       "completedAudits": "Completed",
       "scheduledAudits": "Scheduled",
       "pendingAudits": "Pending",
-      "forms": "Forms",
+      "forms": "Grant Applications",
       "proposals": "Proposals",
       "contracts": "Contracts",
       "noData": "No data available"

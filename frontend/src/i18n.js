@@ -390,7 +390,7 @@ const resources = {
       // Client Dashboard Application Forms
       "certificationApplication": "Certification Application",
       "fillAssignedForms": "Complete your assigned certification applications",
-      "applicationFormsWillAppearHere": "Grant requests assigned to you will appear here",
+      "applicationFormsWillAppearHere": "Grant applications assigned to you will appear here",
       "clientApplicationFormsEmptyStateHelp": "When an administrator assigns you a certification application, you can fill it out step by step here.",
       "notStarted": "Not started yet",
       "continueForm": "Continue Form",

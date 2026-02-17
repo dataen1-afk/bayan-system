@@ -103,6 +103,7 @@ function App() {
             <Route path="/contract-review/:accessToken" element={<PublicContractReviewPage />} />
             <Route path="/job-order-confirm/:accessToken" element={<PublicJobOrderConfirmPage />} />
             <Route path="/stage1-plan-review/:accessToken" element={<PublicStage1PlanReviewPage />} />
+            <Route path="/stage2-plan-review/:accessToken" element={<PublicStage2PlanReviewPage />} />
             <Route path="/track" element={<CustomerPortalPage />} />
             <Route path="/track/:trackingId" element={<CustomerPortalPage />} />
             

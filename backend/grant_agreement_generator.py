@@ -433,7 +433,9 @@ def generate_grant_agreement_pdf(agreement_data: dict, output_path: str = None) 
     
     c.setFillColor(section_color)
     c.setFont('Helvetica-Bold', 9)
-    c.drawString(40, y - 5, "CERTIFICATION STANDARDS / معايير الاعتماد:")
+    c.drawString(40, y - 5, "CERTIFICATION STANDARDS:")
+    # Draw Arabic translation separately
+    draw_arabic("معايير الاعتماد", width - 70, y - 5, 9, bold=True, right_align=True)
     
     # Draw standards with checkboxes
     c.setFillColor(colors.black)

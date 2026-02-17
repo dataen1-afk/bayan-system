@@ -1634,7 +1634,7 @@ const resources = {
       "submitting": "جاري التقديم...",
       "agreementSubmitted": "تم تقديم الاتفاقية بنجاح!",
       "thankYouForAgreement": "شكراً لإكمال اتفاقية المنح.",
-      "contractWillBePrepared": "سيتم إعداد عقد الاعتماد وإرساله إليك قريباً.",
+      "contractWillBePrepared": "سيتم إعداد عقد المنح وإرساله إليك قريباً.",
       "errorSubmittingAgreement": "خطأ في تقديم الاتفاقية:",
       "fillOrganizationDetails": "يرجى ملء اسم وعنوان المنشأة",
       "selectAtLeastOneStandard": "يرجى اختيار معيار اعتماد واحد على الأقل",

@@ -59,6 +59,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'stage2-audit-plans', icon: FileStack, label: t('stage2AuditPlans'), color: 'text-violet-600', route: '/stage2-audit-plans' },
     { id: 'opening-closing-meetings', icon: UsersRound, label: t('openingClosingMeetings'), color: 'text-cyan-600', route: '/opening-closing-meetings' },
     { id: 'stage1-audit-reports', icon: FileWarning, label: t('stage1AuditReports'), color: 'text-red-600', route: '/stage1-audit-reports' },
+    { id: 'stage2-audit-reports', icon: FileBadge, label: t('stage2AuditReports'), color: 'text-violet-600', route: '/stage2-audit-reports' },
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
     { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },

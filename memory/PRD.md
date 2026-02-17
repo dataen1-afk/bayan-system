@@ -692,6 +692,45 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Rating system: 1=OFI, 2=Probable NC in Stage 2, 3=Not Ready
   - Automatic import of data from Stage 1 plan and contract review
 
+### Stage 2 Audit Report (BACF6-11) Feature ✅ (NEW - Feb 2026)
+- **Purpose**: Comprehensive Stage 2 audit findings and certification recommendation
+- **Workflow**:
+  1. Admin creates audit report from client-accepted Stage 2 plan (optionally links Stage 1 report)
+  2. Admin fills: Change details, Positive findings, Opportunities for Improvement (OFI)
+  3. Admin records Nonconformities with rating (1=Minor NC, 2=Major NC)
+  4. Admin selects Certification Recommendations (checkboxes):
+     - Issuance of certificate, Use of BAC & EGAC Logo, Refusal, Post audit, Modification, Other
+  5. Admin selects Overall Recommendation:
+     - System complies - RECOMMENDED for certification
+     - Minor NC - Corrective action required
+     - Major NC - Corrective action within 90 days
+     - Not Recommended for certification
+  6. Admin fills Audit Checklist (28 ISO clause-based items)
+  7. Admin marks report as Complete → Approve
+- **Backend API Endpoints**:
+  - `POST /api/stage2-audit-reports` - Create from Stage 2 plan
+  - `GET /api/stage2-audit-reports` - List all reports
+  - `GET /api/stage2-audit-reports/{id}` - Get specific report
+  - `PUT /api/stage2-audit-reports/{id}` - Update report details
+  - `DELETE /api/stage2-audit-reports/{id}` - Delete report
+  - `POST /api/stage2-audit-reports/{id}/complete` - Mark as completed
+  - `POST /api/stage2-audit-reports/{id}/approve` - Approve report
+  - `GET /api/stage2-audit-reports/{id}/pdf` - Generate bilingual PDF
+- **Frontend Pages**:
+  - `/stage2-audit-reports` - Admin page with stats, table, create/edit modals
+- **Status Flow**: draft → completed → approved
+- **PDF Generator**: `/app/backend/stage2_audit_report_generator.py` - Comprehensive bilingual PDF with:
+  - Organization details, audit team, duration
+  - Positive findings, OFI, and Nonconformities tables
+  - Certification recommendation checkboxes
+  - Color-coded overall recommendation section
+  - 28-item ISO clause-based checklist (clauses 4-10)
+- **Key Differences from Stage 1**:
+  - Nonconformities instead of Areas of Concern
+  - Rating: 1=Minor NC, 2=Major NC (vs 1-3 scale in Stage 1)
+  - Certification recommendation checkboxes (issue, use logo, refuse, etc.)
+  - Overall recommendation for certification decision
+
 ## Upcoming Tasks
 - **CRITICAL REFACTOR**: Break down `server.py` monolith (7000+ lines) into modular routers - HIGH PRIORITY
 - **Phase 7: Multi-Level Approval Workflow** - Implement multi-step approval for contracts

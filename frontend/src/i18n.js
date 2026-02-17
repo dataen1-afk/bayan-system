@@ -154,6 +154,7 @@ const resources = {
       "contact": "Contact",
       "actions": "Actions",
       "organization": "Facility",
+      "facility": "Facility",
       "amount": "Amount",
       "signedDate": "Signed Date",
       "quote": "Quote",

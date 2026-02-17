@@ -1634,6 +1634,22 @@ const resources = {
       "selectMeeting": "اختر الاجتماع...",
       "completed": "مكتمل",
       
+      // Stage 2 Audit Report (BACF6-11)
+      "stage2AuditReports": "تقارير تدقيق المرحلة الثانية",
+      "stage2AuditReport": "تقرير تدقيق المرحلة الثانية",
+      "stage2ReportDescription": "نتائج تدقيق المرحلة الثانية وتوصية الاعتماد",
+      "selectStage2Plan": "يرجى اختيار خطة المرحلة الثانية",
+      "selectStage2Audit": "اختر تدقيق المرحلة الثانية المكتمل",
+      "stage2Plan": "خطة المرحلة الثانية",
+      "selectStage2": "اختر خطة المرحلة الثانية...",
+      "stage1Report": "تقرير المرحلة الأولى",
+      "selectStage1Report": "اختر تقرير المرحلة الأولى...",
+      "createFromStage2": "إنشاء تقرير من تدقيق المرحلة الثانية المكتمل",
+      "opportunitiesForImprovement": "فرص التحسين",
+      "nonconformities": "عدم المطابقات",
+      "certificationRecommendation": "توصية الاعتماد",
+      "overallRecommendation": "التوصية العامة",
+      
       // Forms
       "createNewForm": "إنشاء نموذج جديد",
       "createCustomForm": "إنشاء نموذج مخصص للعميل",

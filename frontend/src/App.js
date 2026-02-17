@@ -28,6 +28,8 @@ import Stage1AuditPlansPage from '@/pages/Stage1AuditPlansPage';
 import PublicStage1PlanReviewPage from '@/pages/PublicStage1PlanReviewPage';
 import Stage2AuditPlansPage from '@/pages/Stage2AuditPlansPage';
 import PublicStage2PlanReviewPage from '@/pages/PublicStage2PlanReviewPage';
+import OpeningClosingMeetingsPage from '@/pages/OpeningClosingMeetingsPage';
+import PublicMeetingFormPage from '@/pages/PublicMeetingFormPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;

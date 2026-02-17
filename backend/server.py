@@ -756,6 +756,54 @@ class Stage2AuditPlan(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= OPENING & CLOSING MEETING MODELS (BACF6-09) =================
+
+class MeetingAttendee(BaseModel):
+    """Attendee for opening/closing meeting"""
+    name: str = ""
+    designation: str = ""
+    opening_meeting_date: str = ""  # Date attended opening meeting
+    closing_meeting_date: str = ""  # Date attended closing meeting
+
+class OpeningClosingMeetingCreate(BaseModel):
+    """Create Opening & Closing Meeting form - sent after Stage 1 audit"""
+    stage1_plan_id: Optional[str] = None  # Reference to Stage 1 plan
+    job_order_id: Optional[str] = None  # Alternative reference
+
+class OpeningClosingMeetingSubmit(BaseModel):
+    """Client submits the meeting attendance form"""
+    attendees: List[MeetingAttendee] = []
+    opening_meeting_notes: str = ""
+    closing_meeting_notes: str = ""
+
+class OpeningClosingMeeting(BaseModel):
+    """Opening & Closing Meeting (BACF6-09) - Meeting attendance record"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    access_token: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    stage1_plan_id: Optional[str] = None
+    job_order_id: str = ""
+    audit_program_id: str = ""
+    # Company info
+    organization_name: str = ""
+    file_no: str = ""
+    address: str = ""
+    # Audit info
+    audit_type: str = ""
+    audit_date: str = ""
+    standards: List[str] = []
+    # Meeting attendees
+    attendees: List[Dict[str, Any]] = []  # List of MeetingAttendee dicts
+    # Notes
+    opening_meeting_notes: str = ""
+    closing_meeting_notes: str = ""
+    # Status
+    status: str = "pending"  # pending, submitted
+    sent_to_client: bool = False
+    submitted_date: str = ""
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

@@ -1348,6 +1348,128 @@ DEFAULT_TECHNICAL_REVIEW_CHECKLIST = [
     {"category": "Other", "item": "Certificate data request reviewed", "item_ar": "مراجعة طلب بيانات الشهادة", "checked": None, "remarks": ""},
 ]
 
+# ================= CUSTOMER FEEDBACK MODELS (BACF6-16) =================
+
+class FeedbackQuestion(BaseModel):
+    """Individual feedback question with rating"""
+    category: str = ""
+    category_ar: str = ""
+    question: str = ""
+    question_ar: str = ""
+    rating: Optional[int] = None  # 1-5 or None for N/A
+    
+class CustomerFeedbackCreate(BaseModel):
+    """Create Customer Feedback request"""
+    # Link to audit/certificate
+    certificate_id: str = ""
+    audit_id: str = ""
+    # Organization info
+    organization_name: str
+    organization_name_ar: str = ""
+    # Audit details
+    audit_type: str = ""  # Initial, 1st Surveillance, 2nd Surveillance, Re-Certification
+    standards: List[str] = []
+    audit_date: str = ""
+    lead_auditor: str = ""
+    auditor: str = ""
+
+class CustomerFeedbackSubmit(BaseModel):
+    """Client submission data"""
+    questions: List[dict] = []  # List of {question_id, rating}
+    want_same_team: Optional[bool] = None
+    suggestions: str = ""
+    respondent_name: str = ""
+    respondent_designation: str = ""
+
+class CustomerFeedback(BaseModel):
+    """Customer Feedback Survey (BACF6-16)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    access_token: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    # Links
+    certificate_id: str = ""
+    audit_id: str = ""
+    # Organization info
+    organization_name: str = ""
+    organization_name_ar: str = ""
+    # Audit details
+    audit_type: str = ""
+    standards: List[str] = []
+    audit_date: str = ""
+    lead_auditor: str = ""
+    auditor: str = ""
+    # Feedback questions with ratings
+    questions: List[dict] = []
+    # Additional questions
+    want_same_team: Optional[bool] = None
+    suggestions: str = ""
+    # Respondent info
+    respondent_name: str = ""
+    respondent_designation: str = ""
+    submission_date: str = ""
+    # Calculated scores
+    overall_score: float = 0.0  # Percentage
+    evaluation_result: str = ""  # excellent, good, average, unsatisfactory
+    # Internal review
+    reviewed_by: str = ""
+    review_date: str = ""
+    review_comments: str = ""
+    # Status
+    status: str = "pending"  # pending, submitted, reviewed
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    submitted_at: Optional[datetime] = None
+
+# Default feedback questions
+DEFAULT_FEEDBACK_QUESTIONS = [
+    {"category": "BAC Office", "category_ar": "مكتب بيان", "question": "Responsiveness to your enquiries - Promptness", "question_ar": "الاستجابة لاستفساراتكم - السرعة", "rating": None},
+    {"category": "BAC Office", "category_ar": "مكتب بيان", "question": "Accuracy of the quotes communicated to you", "question_ar": "دقة عروض الأسعار المقدمة لكم", "rating": None},
+    {"category": "BAC Office", "category_ar": "مكتب بيان", "question": "Handling of your Complaint(s)", "question_ar": "التعامل مع شكواكم", "rating": None},
+    {"category": "Audit Preparation", "category_ar": "التحضير للتدقيق", "question": "The audit Plan was sent sufficiently in advance", "question_ar": "تم إرسال خطة التدقيق مسبقاً بوقت كافٍ", "rating": None},
+    {"category": "Audit Preparation", "category_ar": "التحضير للتدقيق", "question": "The audit team was well prepared for audit", "question_ar": "كان فريق التدقيق مستعداً جيداً للتدقيق", "rating": None},
+    {"category": "Punctuality", "category_ar": "الالتزام بالمواعيد", "question": "The audit carried out as per the programme", "question_ar": "تم التدقيق وفقاً للبرنامج", "rating": None},
+    {"category": "Audit", "category_ar": "التدقيق", "question": "Opening and closing meetings were professional", "question_ar": "كانت الاجتماعات الافتتاحية والختامية احترافية", "rating": None},
+    {"category": "Audit", "category_ar": "التدقيق", "question": "Questions asked were relevant and easy to understand", "question_ar": "كانت الأسئلة ذات صلة وسهلة الفهم", "rating": None},
+    {"category": "Audit", "category_ar": "التدقيق", "question": "The audit team gave enough explanation for your questions", "question_ar": "قدم فريق التدقيق شرحاً كافياً لأسئلتكم", "rating": None},
+    {"category": "Audit", "category_ar": "التدقيق", "question": "The audit team was fair and impartial", "question_ar": "كان فريق التدقيق عادلاً ومحايداً", "rating": None},
+    {"category": "Ethics", "category_ar": "الأخلاقيات", "question": "The audit team concentrated on the audit", "question_ar": "ركز فريق التدقيق على التدقيق", "rating": None},
+    {"category": "Ethics", "category_ar": "الأخلاقيات", "question": "The audit team didn't make unreasonable demands", "question_ar": "لم يقدم فريق التدقيق طلبات غير معقولة", "rating": None},
+    {"category": "Effectiveness", "category_ar": "الفعالية", "question": "Issues found were helpful for improving your system", "question_ar": "كانت النتائج مفيدة لتحسين نظامكم", "rating": None},
+]
+
+def calculate_feedback_score(questions: List[dict]) -> tuple:
+    """Calculate overall score and evaluation result from ratings"""
+    total_score = 0
+    rated_count = 0
+    
+    for q in questions:
+        rating = q.get('rating')
+        if rating is not None and rating != 'na':
+            try:
+                rating_int = int(rating)
+                if 1 <= rating_int <= 5:
+                    total_score += rating_int
+                    rated_count += 1
+            except:
+                pass
+    
+    if rated_count == 0:
+        return 0.0, "unsatisfactory"
+    
+    # Calculate percentage (max is 5 per question)
+    percentage = (total_score / (rated_count * 5)) * 100
+    
+    # Determine evaluation result
+    if percentage >= 90:
+        evaluation = "excellent"
+    elif percentage >= 75:
+        evaluation = "good"
+    elif percentage >= 60:
+        evaluation = "average"
+    else:
+        evaluation = "unsatisfactory"
+    
+    return round(percentage, 1), evaluation
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

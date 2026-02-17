@@ -2148,7 +2148,7 @@ const resources = {
       "completedAudits": "مكتملة",
       "scheduledAudits": "مجدولة",
       "pendingAudits": "معلقة",
-      "forms": "النماذج",
+      "forms": "طلبات المنح",
       "proposals": "العروض",
       "contracts": "العقود",
       "noData": "لا توجد بيانات"

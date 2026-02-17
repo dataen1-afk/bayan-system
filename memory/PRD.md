@@ -228,6 +228,24 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Arabic + English**: All PDFs contain both languages side by side
 - **Professional formatting**: Company branding, color scheme, proper RTL text
 
+### Grant Agreement PDF from DOCX Template ✅ (NEW - Feb 2026)
+- **Template-based generation**: Uses official BAYAN DOCX template (`/app/backend/assets/grant_agreement_template.docx`)
+- **Dynamic data filling**:
+  - Client Organization name
+  - Client address
+  - Standards checkboxes (☑ for selected, ☐ for unselected)
+  - Scope of services
+  - Site locations
+  - Client signatory information
+  - BAC signatory (issuer) information
+- **PDF conversion**: Uses LibreOffice headless mode for high-quality conversion
+- **Endpoints**:
+  - Admin: `/api/contracts/{agreement_id}/pdf`
+  - Public: `/api/public/contracts/{access_token}/pdf`
+- **Files**:
+  - Generator: `/app/backend/grant_agreement_generator.py`
+  - Template: `/app/backend/assets/grant_agreement_template.docx`
+
 ## API Endpoints
 
 ### Authentication

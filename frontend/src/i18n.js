@@ -1462,8 +1462,8 @@ const resources = {
       "under_review": "قيد المراجعة",
       
       // Client Dashboard Application Forms
-      "certificationApplication": "طلب الاعتماد",
-      "fillAssignedForms": "أكمل طلبات الاعتماد المعينة لك",
+      "certificationApplication": "طلب المنح",
+      "fillAssignedForms": "أكمل طلبات المنح المعينة لك",
       "applicationFormsWillAppearHere": "ستظهر طلبات المنح المعينة لك هنا",
       "clientApplicationFormsEmptyStateHelp": "عندما يعين لك المسؤول طلب اعتماد، يمكنك ملؤه خطوة بخطوة هنا.",
       "notStarted": "لم يبدأ بعد",

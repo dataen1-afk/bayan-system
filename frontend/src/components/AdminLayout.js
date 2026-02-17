@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { AuthContext } from '../App';
 
-const AdminLayout = ({ children, user, onLogout }) => {
+const AdminLayout = ({ children }) => {
   const { i18n } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('dashboard');
   const isRTL = i18n.language === 'ar';
 
@@ -41,10 +44,15 @@ const AdminLayout = ({ children, user, onLogout }) => {
 
   const currentTab = routeToTabMap[location.pathname] || 'forms';
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className={`min-h-screen bg-gray-50 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <Header user={user} onLogout={onLogout} />
+      <Header user={user} onLogout={handleLogout} />
       
       {/* Layout with Sidebar */}
       <div className="flex pt-[102px]">

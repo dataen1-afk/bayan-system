@@ -1132,7 +1132,7 @@ const resources = {
       "welcome": "مرحباً",
       
       // Tabs
-      "forms": "النماذج",
+      "forms": "طلبات المنح",
       "myForms": "نماذجي",
       "quotations": "عروض الأسعار",
       "contracts": "العقود",

@@ -805,6 +805,106 @@ class OpeningClosingMeeting(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
+# ================= STAGE 1 AUDIT REPORT MODELS (BACF6-10) =================
+
+class AuditFinding(BaseModel):
+    """Finding in audit report"""
+    department: str = ""
+    finding: str = ""
+
+class AuditConcern(BaseModel):
+    """Area of concern in audit report"""
+    department: str = ""
+    concern: str = ""
+    rating: int = 1  # 1=OFI, 2=Probable NC, 3=Not ready
+
+class ChecklistItem(BaseModel):
+    """Checklist item for audit"""
+    requirement: str = ""
+    status: str = "C"  # C=Conforming, NC=Non-Conforming, O=Observation
+    comments: str = ""
+
+class Stage1AuditReportCreate(BaseModel):
+    """Create Stage 1 Audit Report"""
+    stage1_plan_id: Optional[str] = None
+    meeting_id: Optional[str] = None  # Opening/Closing Meeting reference
+
+class Stage1AuditReportUpdate(BaseModel):
+    """Update Stage 1 Audit Report"""
+    # Change details
+    employee_change: Optional[str] = None
+    scope_change: Optional[str] = None
+    integrated_system: Optional[str] = None
+    additional_info: Optional[str] = None
+    man_days_adequate: Optional[bool] = None
+    # Findings
+    positive_findings: Optional[List[Dict[str, Any]]] = None
+    areas_of_concern: Optional[List[Dict[str, Any]]] = None
+    # Declarations
+    declarations: Optional[Dict[str, bool]] = None
+    # Recommendation
+    recommendation: Optional[str] = None  # proceed, not_proceed, further_stage1
+    # Checklist
+    checklist_items: Optional[List[Dict[str, Any]]] = None
+    # Notes
+    notes: Optional[str] = None
+
+class Stage1AuditReport(BaseModel):
+    """Stage 1 Audit Report (BACF6-10)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    stage1_plan_id: str = ""
+    meeting_id: str = ""
+    job_order_id: str = ""
+    audit_program_id: str = ""
+    # Organization details
+    organization_name: str = ""
+    address: str = ""
+    site_address: str = ""
+    standards: List[str] = []
+    num_employees: str = ""
+    num_shifts: str = ""
+    email: str = ""
+    contact_person: str = ""
+    phone: str = ""
+    scope: str = ""
+    ea_code: str = ""
+    exclusions: str = ""
+    # Audit team
+    audit_team: Dict[str, Any] = {}  # lead_auditor, auditors, technical_experts
+    audit_duration: str = ""
+    start_date: str = ""
+    end_date: str = ""
+    # Brief & objectives
+    organization_brief: str = ""
+    audit_objective: str = "To evaluate the client's documented system, location planning and readiness for stage 2 audit."
+    audit_criteria: str = "The requirements of a defined normative document or the certified management system requirements"
+    # Change details
+    employee_change: str = ""
+    scope_change: str = ""
+    integrated_system: str = ""
+    additional_info: str = ""
+    man_days_adequate: bool = True
+    # Attendees (from meeting)
+    attendees: List[Dict[str, Any]] = []
+    # Findings
+    positive_findings: List[Dict[str, Any]] = []  # List of AuditFinding dicts
+    areas_of_concern: List[Dict[str, Any]] = []  # List of AuditConcern dicts
+    # Team leader declarations
+    declarations: Dict[str, bool] = {}
+    # Recommendation
+    recommendation: str = ""  # proceed, not_proceed, further_stage1
+    # Checklist
+    checklist_items: List[Dict[str, Any]] = []  # List of ChecklistItem dicts
+    # Status
+    status: str = "draft"  # draft, completed, approved
+    completed_date: str = ""
+    approved_by: str = ""
+    approved_date: str = ""
+    notes: str = ""
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 # ================= AUDITOR MODELS =================
 
 class AuditorAvailability(BaseModel):

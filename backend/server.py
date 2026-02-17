@@ -1332,7 +1332,7 @@ async def send_form_email(form_id: str, current_user: dict = Depends(require_adm
         raise HTTPException(status_code=404, detail="Application form not found")
     
     # Get frontend URL from environment or use default
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://facility-grants.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://contract-mgmt-9.preview.emergentagent.com')
     form_link = f"{frontend_url}/form/{form['access_token']}"
     
     client_info = form['client_info']
@@ -1545,7 +1545,7 @@ async def send_proposal(proposal_id: str, current_user: dict = Depends(require_a
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://facility-grants.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://contract-mgmt-9.preview.emergentagent.com')
     proposal_link = f"{frontend_url}/proposal/{proposal['access_token']}"
     
     email_body = f"""
@@ -5439,7 +5439,7 @@ async def send_contract_review_link(review_id: str, credentials: HTTPAuthorizati
         raise HTTPException(status_code=404, detail="Proposal not found")
     
     # Create notification with the link
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://facility-grants.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://contract-mgmt-9.preview.emergentagent.com')
     link = f"{frontend_url}/contract-review/{review['access_token']}"
     
     await create_notification(
@@ -5545,7 +5545,7 @@ async def create_certificate(cert_data: CertificateCreate, credentials: HTTPAuth
     expiry_date = (datetime.now() + timedelta(days=365*3)).strftime("%Y-%m-%d")  # 3 years validity
     
     # Generate verification URL
-    base_url = os.environ.get('FRONTEND_URL', 'https://facility-grants.preview.emergentagent.com')
+    base_url = os.environ.get('FRONTEND_URL', 'https://contract-mgmt-9.preview.emergentagent.com')
     verification_url = f"{base_url}/verify/{cert_number}"
     
     # Generate QR code

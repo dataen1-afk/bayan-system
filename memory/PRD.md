@@ -839,6 +839,48 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Certification decision with checkboxes
   - Approval signature section
 
+### Customer Feedback (BAC-F6-16) ✅ (NEW - Feb 2026)
+- **Purpose**: Customer satisfaction survey sent after audits to gather feedback
+- **Workflow**:
+  1. Admin creates feedback form (optionally linked to certificate)
+  2. System generates **public link** for client access (no login required)
+  3. Client completes survey with **13 questions** rated 1-5 stars (or N/A)
+  4. System auto-calculates score as percentage
+  5. Admin reviews feedback and adds comments
+  6. Generate bilingual PDF report
+- **Question Categories** (6):
+  - BAC Office (3 questions)
+  - Audit Preparation (2 questions)
+  - Punctuality (1 question)
+  - Audit (4 questions)
+  - Ethics (2 questions)
+  - Effectiveness (1 question)
+- **Evaluation Formula**:
+  - Score = (sum of ratings / (rated questions × 5)) × 100
+  - Excellent: ≥90%, Good: 75-89%, Average: 60-74%, Unsatisfactory: <60%
+- **Backend API Endpoints**:
+  - `POST /api/customer-feedback` - Create feedback form
+  - `GET /api/customer-feedback` - List all feedback
+  - `GET /api/customer-feedback/{id}` - Get specific feedback
+  - `PUT /api/customer-feedback/{id}` - Update feedback
+  - `DELETE /api/customer-feedback/{id}` - Delete feedback
+  - `POST /api/customer-feedback/{id}/review` - Mark as reviewed
+  - `GET /api/customer-feedback/{id}/pdf` - Generate PDF
+  - `GET /api/public/feedback/{token}` - Get form for client (no auth)
+  - `POST /api/public/feedback/{token}/submit` - Submit feedback (no auth)
+- **Frontend Pages**:
+  - `/customer-feedback` - Admin page with stats (Total, Pending, Submitted, Reviewed, Avg Score)
+  - `/feedback/{accessToken}` - Public page for client submission
+  - Create/View/Review modals
+  - Star rating component with N/A option
+- **Status Flow**: pending → submitted → reviewed
+- **PDF Generator**: `/app/backend/customer_feedback_generator.py` - Bilingual PDF with:
+  - Client and audit information
+  - Question ratings with visual indicators
+  - Overall score with evaluation badge
+  - Suggestions and respondent info
+  - Internal review section
+
 ## Backend Refactoring (February 2026) - IN PROGRESS
 
 ### Completed Modular Extraction

@@ -23,7 +23,8 @@ import {
   FileSignature,
   FileSpreadsheet,
   FileStack,
-  UsersRound
+  UsersRound,
+  FileWarning
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

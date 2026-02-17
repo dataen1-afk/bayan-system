@@ -40,7 +40,7 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
             arabic_font_available = True
             if font_bold_path.exists():
                 pdfmetrics.registerFont(TTFont('Amiri-Bold', str(font_bold_path)))
-        except:
+        except Exception:
             pass
     
     logo_path = ROOT_DIR / "assets" / "bayan-logo.png"
@@ -54,7 +54,6 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
     primary_color = colors.HexColor('#1e3a5f')
     section_color = colors.HexColor('#4a7c9b')
     light_bg = colors.HexColor('#f0f4f8')
-    accent_color = colors.HexColor('#2563eb')
     table_header_bg = colors.HexColor('#1e3a5f')
     
     # Extract data
@@ -64,7 +63,6 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
     activities = program_data.get('activities', [])
     certification_manager = program_data.get('certification_manager', '')
     approval_date = program_data.get('approval_date', '')
-    contract_review_id = program_data.get('contract_review_id', '')
     
     # Helper function for Arabic text
     def draw_arabic(text, x, y, size=10, bold=False, right_align=False):

@@ -175,6 +175,14 @@ function App() {
               element={user?.role === 'admin' ? <TechnicalReviewPage /> : <Navigate to="/login" />} 
             />
             <Route 
+              path="/customer-feedback" 
+              element={user?.role === 'admin' ? <CustomerFeedbackPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/feedback/:accessToken" 
+              element={<PublicFeedbackPage />} 
+            />
+            <Route 
               path="/create-proposal/:formId" 
               element={user?.role === 'admin' ? <CreateProposalPage /> : <Navigate to="/login" />} 
             />

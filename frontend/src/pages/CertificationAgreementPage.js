@@ -354,7 +354,7 @@ const CertificationAgreementPage = () => {
                   <p className="text-sm text-gray-600">3879 Al Khadar Street, Riyadh, 12282, Saudi Arabia</p>
                 </div>
                 
-                {/* Client Organization (Editable) */}
+                {/* Client Facility (Editable) */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>{t('clientOrganization')} *</Label>

@@ -18,7 +18,8 @@ import {
   Award,
   Bell,
   TrendingUp,
-  ClipboardList
+  ClipboardList,
+  ClipboardCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

@@ -125,6 +125,10 @@ function App() {
               element={user?.role === 'admin' ? <JobOrdersPage /> : <Navigate to="/login" />} 
             />
             <Route 
+              path="/stage1-audit-plans" 
+              element={user?.role === 'admin' ? <Stage1AuditPlansPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
               path="/create-proposal/:formId" 
               element={user?.role === 'admin' ? <CreateProposalPage /> : <Navigate to="/login" />} 
             />

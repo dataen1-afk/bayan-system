@@ -1113,7 +1113,7 @@ const resources = {
       "companyName": "اسم الشركة",
       "contact": "جهة الاتصال",
       "actions": "الإجراءات",
-      "organization": "المنظمة",
+      "organization": "المنشأة",
       "amount": "المبلغ",
       "signedDate": "تاريخ التوقيع",
       "quote": "عرض سعر",
@@ -1918,7 +1918,7 @@ const resources = {
       "auditsFor": "تدقيقات",
       "noAuditsOnThisDate": "لا توجد تدقيقات مجدولة في هذا التاريخ",
       "auditDetails": "تفاصيل التدقيق",
-      "organization": "المنظمة",
+      "organization": "المنشأة",
       "duration": "المدة",
       "more": "المزيد",
       "mainSite": "الموقع الرئيسي",
@@ -2103,7 +2103,7 @@ const resources = {
       "scanToVerify": "امسح للتحقق من الشهادة",
       "issueDate": "تاريخ الإصدار",
       "expiryDate": "تاريخ الانتهاء",
-      "organization": "المنظمة",
+      "organization": "المنشأة",
       "downloadPDF": "تحميل PDF",
       
       // Expiration Alerts

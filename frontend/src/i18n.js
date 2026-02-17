@@ -212,6 +212,25 @@ const resources = {
       "pleaseProvideDetails": "Please provide details of requested changes",
       "stage1Footer": "Stage 1 Audit Plan - BACF6-07",
       
+      // Stage 2 Audit Plan (BACF6-08)
+      "stage2AuditPlans": "Stage 2 Audit Plans",
+      "createStage2Plan": "Create Stage 2 Audit Plan",
+      "stage2Description": "Certification audit - Phase 2 planning",
+      "stage2PlanDetails": "Stage 2 Audit Plan Details",
+      "noStage2Plans": "No Stage 2 Audit Plans yet",
+      "createFromStage1": "Create a plan from a Stage 1 plan or job order",
+      "selectCreateSource": "Select where to create from",
+      "createFrom": "Create From",
+      "fromStage1": "From Stage 1 Plan",
+      "fromJobOrder": "From Job Order",
+      "stage1Plan": "Stage 1 Plan",
+      "selectStage1": "Select Stage 1 plan...",
+      "noAcceptedStage1": "No client-accepted Stage 1 plans available",
+      "selectSource": "Please select a source",
+      "stage2AuditPlanReview": "Stage 2 Audit Plan Review",
+      "stage2Objectives": "Stage 2 Audit Objectives",
+      "stage2Footer": "Stage 2 Audit Plan - BACF6-08",
+      
       // Forms
       "createNewForm": "Create New Form",
       "createCustomForm": "Create a custom form for a client",

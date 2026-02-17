@@ -153,7 +153,7 @@ const resources = {
       "companyName": "Company Name",
       "contact": "Contact",
       "actions": "Actions",
-      "organization": "Organization",
+      "organization": "Facility",
       "amount": "Amount",
       "signedDate": "Signed Date",
       "quote": "Quote",
@@ -843,7 +843,7 @@ const resources = {
       "auditsFor": "Audits for",
       "noAuditsOnThisDate": "No audits scheduled on this date",
       "auditDetails": "Audit Details",
-      "organization": "Organization",
+      "organization": "Facility",
       "duration": "Duration",
       "more": "more",
       "mainSite": "Main Site",
@@ -1029,7 +1029,7 @@ const resources = {
       "scanToVerify": "Scan to verify certificate",
       "issueDate": "Issue Date",
       "expiryDate": "Expiry Date",
-      "organization": "Organization",
+      "organization": "Facility",
       "downloadPDF": "Download PDF",
       
       // Expiration Alerts

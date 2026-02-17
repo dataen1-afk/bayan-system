@@ -403,7 +403,7 @@ const resources = {
       "contactPerson": "Contact Person",
 
       // New form creation workflow
-      "createNewApplicationForm": "Create New Grant Request",
+      "createNewApplicationForm": "Create New Grant Application",
       "enterClientInfoToCreateForm": "Enter client information to create a new certification application form",
       "clientName": "Client Name",
       "enterClientName": "Enter client name",

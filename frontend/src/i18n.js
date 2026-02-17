@@ -1306,7 +1306,7 @@ const resources = {
       "certificationProgramRequired": "برنامج الشهادة المطلوب",
       "initial": "شهادة أولية",
       "surveillance": "مراقبة",
-      "recertification": "إعادة الشهادة",
+      "recertification": "إعادة المنح",
       "stage_1": "المرحلة 1",
       "stage_2": "المرحلة 2",
       "surveillance_1": "المراقبة 1",

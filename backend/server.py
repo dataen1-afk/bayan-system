@@ -32,6 +32,7 @@ from pdf_generator import generate_contract_pdf
 from bilingual_pdf_generator import generate_bilingual_contract_pdf
 from certificate_generator import generate_certificate_pdf, get_qr_code_base64
 from grant_agreement_generator import generate_grant_agreement_pdf
+from contract_review_generator import generate_contract_review_pdf
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

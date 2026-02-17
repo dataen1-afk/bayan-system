@@ -1907,7 +1907,7 @@ const resources = {
       "auditType": "نوع التدقيق",
       "initialAudit": "تدقيق أولي",
       "surveillanceAudit": "تدقيق مراقبة",
-      "recertificationAudit": "تدقيق إعادة الاعتماد",
+      "recertificationAudit": "تدقيق إعادة المنح",
       "durationDays": "المدة (أيام)",
       "auditors": "المدققين",
       "enterAuditorNames": "أدخل أسماء المدققين",

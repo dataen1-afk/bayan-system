@@ -1420,6 +1420,8 @@ const resources = {
       "quote": "عرض سعر",
       "download": "تحميل",
       "pdf": "PDF",
+      "loading": "جاري التحميل...",
+      "create": "إنشاء",
       
       // Roles
       "admin": "مدير",

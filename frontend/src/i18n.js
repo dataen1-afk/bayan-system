@@ -520,8 +520,8 @@ const resources = {
       "proposalRejected": "Proposal Rejected",
       "proposalWasRejected": "This proposal has been rejected.",
       
-      // Certification Agreement Page
-      "certificationAgreement": "Certification Agreement",
+      // Grant Agreement Page
+      "certificationAgreement": "Grant Agreement",
       "agreementSubtitle": "Please complete this agreement to finalize your certification",
       "loadingAgreement": "Loading agreement...",
       "agreementNotAvailable": "Agreement Not Available",

@@ -1672,7 +1672,7 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
     await create_notification(
         notification_type="agreement_signed",
         title="اتفاقية جديدة موقعة",
-        message=f"قامت {agreement_data.organization_name} بتوقيع اتفاقية الاعتماد",
+        message=f"قامت {agreement_data.organization_name} بتوقيع اتفاقية المنح",
         related_id=agreement.id,
         related_type="agreement"
     )

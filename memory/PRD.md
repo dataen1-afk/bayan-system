@@ -957,6 +957,48 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
   - Important dates (issue, expiry, surveillance, recertification)
 - **Excel Export**: Professional XLSX with styled headers and full client data
 
+### Suspended Clients Registry (BAC-F6-20) ✅ (NEW - Feb 2026)
+- **Purpose**: Track all clients whose certifications have been suspended with full lifecycle management
+- **Data Structure** (from original Excel template):
+  - Sr. No. (auto-incremented serial number)
+  - Client ID, Client Name (EN/AR), Address
+  - Date of Registration (original certification date)
+  - Suspended On (suspension date)
+  - Reason for Suspension
+  - Future Action (reinstate, withdraw, extend_suspension, under_review)
+  - Remarks
+  - Status: suspended, reinstated, withdrawn
+- **Backend API Endpoints**:
+  - `GET /api/suspended-clients` - List all clients (with status filter)
+  - `POST /api/suspended-clients` - Add new suspended client record
+  - `GET /api/suspended-clients/{id}` - Get single client details
+  - `PUT /api/suspended-clients/{id}` - Update client record
+  - `DELETE /api/suspended-clients/{id}` - Delete client record
+  - `GET /api/suspended-clients/stats/overview` - Dashboard statistics
+  - `POST /api/suspended-clients/{id}/lift-suspension` - Reinstate or withdraw certification
+  - `POST /api/suspended-clients/sync-from-certified` - Sync from certified clients with suspended status
+  - `GET /api/suspended-clients/export/excel` - Export to Excel (XLSX)
+  - `GET /api/suspended-clients/{id}/pdf` - Generate PDF for single client
+- **Frontend Page**: `/suspended-clients`
+  - Stats cards: Total, Suspended, Reinstated, Withdrawn, Pending Reinstate, Under Review
+  - Filterable data table with all suspended clients
+  - Create modal with option to link from certified clients
+  - View modal showing suspension and resolution details
+  - Edit modal for updating suspension details
+  - Lift Suspension modal with reinstate/withdraw options
+  - Action buttons: View, Edit, Lift, Download PDF, Delete
+  - Export buttons: Excel (full registry), Sync from Certified
+- **Lift Suspension Workflow**:
+  - Admin can lift suspension with two options: Reinstate or Withdraw
+  - Records lifted_on date and reason
+  - Automatically updates linked certified client status
+- **PDF Generator**: `/app/backend/suspended_clients_generator.py` - Bilingual PDF with:
+  - Red-themed header indicating suspension
+  - Large status badge (Suspended/Reinstated/Withdrawn)
+  - Client information section
+  - Suspension details (date, reason, future action)
+  - Resolution details (if lifted)
+
 ## Backend Refactoring (February 2026) - IN PROGRESS
 
 ### Completed Modular Extraction

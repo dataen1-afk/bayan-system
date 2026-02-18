@@ -393,7 +393,9 @@ async def approve_technical_review(
         await create_notification(
             notification_type="certificate_issued",
             title="Certificate Issued",
+            title_ar="تم إصدار الشهادة",
             message=f"Certificate {cert_number} issued for {existing.get('client_name', '')}",
+            message_ar=f"تم إصدار الشهادة {cert_number} لـ {existing.get('client_name', '')}",
             related_id=certificate.id,
             related_type="certificate"
         )

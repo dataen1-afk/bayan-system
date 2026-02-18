@@ -100,7 +100,7 @@ export default function PublicContractReviewPage() {
             <h2 className="text-xl font-bold text-gray-900 mb-2">Data Submitted Successfully</h2>
             <p className="text-gray-600">
               Thank you for submitting your information for the contract review.
-              BAYAN Auditing & Conformity will review your submission and proceed with the audit program.
+              BAYAN for Verification and Conformity will review your submission and proceed with the audit program.
             </p>
           </CardContent>
         </Card>
@@ -275,7 +275,7 @@ export default function PublicContractReviewPage() {
         
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-500">
-          <p>BAYAN Auditing & Conformity</p>
+          <p>BAYAN for Verification and Conformity</p>
           <p>بيان للتحقق والمطابقة</p>
         </div>
       </div>

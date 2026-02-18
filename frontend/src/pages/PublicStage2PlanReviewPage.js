@@ -315,7 +315,7 @@ export default function PublicStage2PlanReviewPage() {
         
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          <p>BAYAN Auditing & Conformity</p>
+          <p>BAYAN for Verification and Conformity</p>
           <p className="mt-1">{t('stage2Footer') || 'Stage 2 Audit Plan - BACF6-08'}</p>
         </div>
       </div>

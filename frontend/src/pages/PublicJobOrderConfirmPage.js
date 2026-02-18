@@ -290,7 +290,7 @@ export default function PublicJobOrderConfirmPage() {
         
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          <p>BAYAN Auditing & Conformity</p>
+          <p>BAYAN for Verification and Conformity</p>
           <p className="mt-1">{t('jobOrderFooter') || 'Internal Audit Plan - Job Order BACF6-06'}</p>
         </div>
       </div>

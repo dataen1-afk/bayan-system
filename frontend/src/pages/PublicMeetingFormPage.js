@@ -320,7 +320,7 @@ export default function PublicMeetingFormPage() {
         
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          <p>BAYAN Auditing & Conformity</p>
+          <p>BAYAN for Verification and Conformity</p>
           <p className="mt-1">{t('meetingFooter') || 'Opening & Closing Meeting - BACF6-09'}</p>
         </div>
       </div>

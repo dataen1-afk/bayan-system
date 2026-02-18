@@ -223,61 +223,24 @@ const AuditorsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center p-8">
         <div className="text-xl">{t('loading')}...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
-        <div className="max-w-full mx-auto px-4 py-3 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className={`flex gap-3 items-center ${isRTL ? 'order-first' : 'order-last'}`}>
-            <NotificationBell />
-            <LanguageSwitcher />
-            <Button variant="outline" onClick={logout} className="bg-bayan-navy text-white hover:bg-bayan-navy-light border-bayan-navy font-semibold">
-              <LogOut className="w-4 h-4" />
-              {t('logout')}
-            </Button>
-          </div>
-          <div className={isRTL ? 'order-last' : 'order-first'}>
-            <div className="-my-2">
-              <img src="/bayan-logo.png" alt="Bayan" className="h-20 w-auto object-contain" />
-            </div>
-          </div>
-        </div>
-        <div className="h-1.5 bg-gradient-to-r from-bayan-navy via-bayan-navy-light to-bayan-navy"></div>
-      </header>
-
-      {/* Layout with Sidebar */}
-      <div className="flex pt-[102px]">
-        <Sidebar 
-          activeTab="auditors" 
-          onTabChange={(tab) => {
-            if (tab === 'forms' || tab === 'quotations' || tab === 'contracts' || tab === 'templates' || tab === 'reports') {
-              navigate(`/dashboard?tab=${tab}`);
-            }
-          }}
-          userRole="admin"
-          userName={user?.name}
-          dashboardTitle={t('adminDashboard')}
-        />
-        
-        {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-6 min-h-screen">
-          <div className="w-full">
-            {/* Header */}
-            <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
-                  {t('backToDashboard')}
-                </Button>
-                <div>
-                  <h1 className={`text-2xl font-bold text-slate-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Users className="w-7 h-7 text-bayan-navy" />
+    <div className="p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Page Header */}
+      <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
+            <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
+            {t('backToDashboard')}
+          </Button>
+          <div>
+            <h1 className={`text-2xl font-bold text-slate-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Users className="w-7 h-7 text-bayan-navy" />
                     {t('auditorManagement')}
                   </h1>
                 </div>

@@ -171,6 +171,9 @@ const CustomerPortalPage = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt isRTL={isRTL} />
+      
       {/* Navigation */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
         <div className="max-w-7xl mx-auto px-6 md:px-12">

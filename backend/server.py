@@ -2152,8 +2152,10 @@ async def submit_public_form(access_token: str, update_data: ApplicationFormUpda
     client_name = form.get('client_info', {}).get('company_name', 'Unknown')
     await create_notification(
         notification_type="form_submitted",
-        title="طلب اعتماد جديد",
-        message=f"قامت {client_name} بتقديم طلب اعتماد جديد",
+        title="New Accreditation Application",
+        title_ar="طلب اعتماد جديد",
+        message=f"{client_name} submitted a new accreditation application",
+        message_ar=f"قامت {client_name} بتقديم طلب اعتماد جديد",
         related_id=updated_form['id'],
         related_type="form"
     )

@@ -220,10 +220,10 @@ const NotificationBell = () => {
                     </div>
                     <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                       <p className={`text-sm font-medium text-gray-800 ${!notification.is_read ? 'font-semibold' : ''}`}>
-                        {notification.title}
+                        {isRTL && notification.title_ar ? notification.title_ar : notification.title}
                       </p>
                       <p className="text-sm text-gray-600 mt-1 break-words leading-relaxed">
-                        {notification.message}
+                        {isRTL && notification.message_ar ? notification.message_ar : notification.message}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
                         {formatTime(notification.created_at)}

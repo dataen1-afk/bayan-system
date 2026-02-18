@@ -34,7 +34,8 @@ import {
   ArrowRightLeft,
   UserX,
   FileQuestion,
-  Mail
+  Mail,
+  CheckSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

@@ -130,12 +130,11 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
           !isActive && "text-gray-600",
           isCollapsed && "justify-center px-2"
         )}
-        style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}
         title={isCollapsed ? item.label : ''}
       >
         <Icon className={cn("w-5 h-5 flex-shrink-0", isActive ? 'text-bayan-navy' : item.color)} />
         {!isCollapsed && (
-          <span className={cn("truncate text-sm", isRTL && "text-right")}>{item.label}</span>
+          <span className="truncate text-sm">{item.label}</span>
         )}
         {isActive && !isCollapsed && (
           <div className={cn(

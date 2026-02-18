@@ -60,6 +60,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
 
   // Menu items based on user role
   const menuItems = userRole === 'admin' ? [
+    { id: 'dashboard', icon: LayoutDashboard, label: t('dashboard'), color: 'text-slate-700' },
     { id: 'forms', icon: FileText, label: t('forms'), color: 'text-blue-600' },
     { id: 'quotations', icon: DollarSign, label: t('quotations'), color: 'text-green-600' },
     { id: 'contracts', icon: FileCheck, label: t('contracts'), color: 'text-purple-600' },

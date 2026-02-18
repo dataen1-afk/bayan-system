@@ -54,6 +54,7 @@ from routes.notifications import router as notifications_router
 from routes.sites import router as sites_router
 from routes.contacts import router as contacts_router
 from routes.documents import router as documents_router
+from routes.technical_reviews import router as technical_reviews_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

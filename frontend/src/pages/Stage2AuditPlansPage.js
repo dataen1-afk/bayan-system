@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function Stage2AuditPlansPage() {
+export default function Stage2AuditPlansPage({ embedded = false }) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
   

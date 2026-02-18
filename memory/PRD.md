@@ -1,7 +1,7 @@
 # Service Contract Management System - PRD
 
 ## Original Problem Statement
-Build a full-stack application for managing service contracts for Bayan Auditing & Conformity with the following workflow:
+Build a full-stack application for managing service contracts for Bayan for Verification and Conformity with the following workflow:
 1. Admin creates a form by entering client information (name, company, email, phone)
 2. System generates a unique public link for the form
 3. Admin shares the link with the client (via email, WhatsApp, etc.)

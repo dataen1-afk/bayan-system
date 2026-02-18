@@ -2181,6 +2181,11 @@ const resources = {
       "contactMessages.title": "رسائل التواصل",
       "contactMessages.subtitle": "إدارة رسائل التواصل من بوابة العملاء",
       
+      // Approvals
+      "approvals": "الموافقات",
+      "approvals.title": "إدارة الموافقات",
+      "approvals.subtitle": "سير عمل الموافقات متعددة المستويات",
+      
       // Forms
       "createNewForm": "إنشاء نموذج جديد",
       "createCustomForm": "إنشاء نموذج مخصص للعميل",

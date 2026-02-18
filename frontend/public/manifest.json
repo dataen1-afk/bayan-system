@@ -1,0 +1,28 @@
+{
+  "name": "Bayan Auditing & Conformity",
+  "short_name": "Bayan Audit",
+  "description": "Service Contract Management System - Auditor Portal",
+  "start_url": "/portal",
+  "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#1e3a5f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/bayan-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/bayan-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en",
+  "dir": "auto",
+  "prefer_related_applications": false
+}

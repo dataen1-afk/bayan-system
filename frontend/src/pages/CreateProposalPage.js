@@ -7,9 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, ArrowRight, Save, Send, FileText, Building, DollarSign, Clock, Check } from 'lucide-react';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import Sidebar from '@/components/Sidebar';
+import { ArrowLeft, Save, Send, FileText, Building, DollarSign, Clock, Check } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 

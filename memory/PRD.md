@@ -1366,3 +1366,41 @@ New dashboard home screen with interactive widgets:
 - **Setup**: Using @fontsource/ibm-plex-sans-arabic package
 - **Note**: Previous handoff mentioned "Almarai" font issues - this was already resolved by using IBM Plex Sans Arabic instead
 
+## Sidebar Simplification - COMPLETED ✅ (Feb 18, 2026)
+
+### Summary
+Simplified the admin sidebar by combining Stage 1 and Stage 2 audit items into single unified menu entries with tabbed navigation.
+
+### Changes Made
+1. **Combined Menu Items**:
+   - "Stage 1 Audit Plans" + "Stage 2 Audit Plans" → "Audit Plans" (`/audit-plans`)
+   - "Stage 1 Audit Reports" + "Stage 2 Audit Reports" → "Audit Reports" (`/audit-reports`)
+
+2. **New Container Pages**:
+   - `/app/frontend/src/pages/AuditPlansPage.js` - Container with Stage 1/Stage 2 tabs
+   - `/app/frontend/src/pages/AuditReportsPage.js` - Container with Stage 1/Stage 2 tabs
+
+3. **Tab Navigation**:
+   - Both pages use shadcn/ui Tabs component
+   - "المرحلة الأولى" (Stage 1) tab - shows Stage 1 content
+   - "المرحلة الثانية" (Stage 2) tab - shows Stage 2 content
+   - URL updates with `?stage=stage1` or `?stage=stage2` parameter
+
+4. **Embedded Components**:
+   - Existing Stage1/Stage2 page components embedded with `embedded={true}` prop
+   - Hides individual page titles when embedded
+
+### Files Modified
+- `/app/frontend/src/components/Sidebar.js` - Removed separate Stage 1/2 items, kept combined items
+- `/app/frontend/src/App.js` - Added routes for `/audit-plans` and `/audit-reports`
+- `/app/frontend/src/pages/AuditPlansPage.js` - NEW
+- `/app/frontend/src/pages/AuditReportsPage.js` - NEW
+
+### Testing Status
+- ✅ Sidebar navigation to `/audit-plans` works
+- ✅ Sidebar navigation to `/audit-reports` works
+- ✅ Tab switching between Stage 1 and Stage 2 works
+- ✅ Content updates correctly when switching tabs
+- ✅ RTL layout maintained correctly
+- ✅ Full bilingual support (Arabic/English)
+

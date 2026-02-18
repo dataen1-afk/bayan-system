@@ -957,7 +957,7 @@ const resources = {
       "formForCompany": "Form for company",
       "thankYouForSubmitting": "Thank you for submitting your application!",
       "applicationSubmittedMessage": "Your application has been received and will be reviewed by our team. We will contact you soon with the next steps.",
-      "bayanAuditingConformity": "Bayan Auditing & Conformity",
+      "bayanAuditingConformity": "Bayan for Verification and Conformity",
       "allRightsReserved": "All Rights Reserved",
       
       // Audit Calculation

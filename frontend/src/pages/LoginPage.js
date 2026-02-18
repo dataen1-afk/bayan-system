@@ -115,7 +115,7 @@ const LoginPage = () => {
               <div className="mb-6 text-center">
                 <img 
                   src="/bayan-logo.png" 
-                  alt="Bayan Auditing & Conformity" 
+                  alt="Bayan for Verification and Conformity" 
                   className="h-24 w-auto object-contain mx-auto"
                 />
               </div>
@@ -202,7 +202,7 @@ const LoginPage = () => {
 
           {/* Footer */}
           <p className="text-center text-sm text-slate-500 mt-6">
-            © {new Date().getFullYear()} {isRTL ? 'بيان للتدقيق والمطابقة' : 'Bayan Auditing & Conformity'}
+            © {new Date().getFullYear()} {isRTL ? 'بيان للتحقق والمطابقة' : 'Bayan for Verification and Conformity'}
           </p>
         </div>
       </div>

@@ -145,6 +145,10 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
   ];
 
   const handleMenuClick = (item) => {
+    // Save current scroll position before navigation
+    const scrollPosition = navRef.current?.scrollTop || 0;
+    sessionStorage.setItem('sidebarScrollPosition', scrollPosition.toString());
+    
     if (item.route) {
       if (item.external) {
         window.open(item.route, '_blank');
@@ -158,6 +162,14 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     }
     setIsMobileOpen(false);
   };
+
+  // Restore scroll position after navigation
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('sidebarScrollPosition');
+    if (savedPosition && navRef.current) {
+      navRef.current.scrollTop = parseInt(savedPosition, 10);
+    }
+  }, [location.pathname]);
 
   const MenuItem = ({ item, isBottom = false }) => {
     const isActive = currentActiveId === item.id;

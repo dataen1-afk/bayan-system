@@ -167,7 +167,12 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
   useEffect(() => {
     const savedPosition = sessionStorage.getItem('sidebarScrollPosition');
     if (savedPosition && navRef.current) {
-      navRef.current.scrollTop = parseInt(savedPosition, 10);
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        if (navRef.current) {
+          navRef.current.scrollTop = parseInt(savedPosition, 10);
+        }
+      });
     }
   }, [location.pathname]);
 

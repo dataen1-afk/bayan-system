@@ -229,9 +229,9 @@ html[dir="ltr"] .sidebar-container {
     border-left: none !important;
 }
 
-/* Sidebar menu item RTL */
+/* Sidebar menu item RTL - Icon should be on RIGHT of text */
 html[dir="rtl"] .sidebar-menu-item {
-    flex-direction: row-reverse !important;
+    flex-direction: row !important;
     text-align: right !important;
 }
 

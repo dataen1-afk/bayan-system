@@ -69,8 +69,8 @@ const LoginPage = () => {
       {/* Gradient Overlay - Stronger on the form side */}
       <div className={`absolute inset-0 ${isRTL ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-[#1e3a5f]/80 via-[#1e3a5f]/40 to-transparent`} />
 
-      {/* Logo - Top Right Corner */}
-      <div className={`absolute top-6 ${isRTL ? 'left-6' : 'right-6'} z-20`}>
+      {/* Logo - Always Top Right Corner */}
+      <div className="absolute top-6 right-6 z-20">
         <img 
           src="/bayan-logo.png" 
           alt="Bayan for Verification and Conformity" 

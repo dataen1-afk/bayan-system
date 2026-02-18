@@ -1146,7 +1146,31 @@ All endpoints continue to work exactly as before:
 - `GET /api/rfq-requests` - Admin RFQ management
 - `GET /api/contact-messages` - Admin Contact management
 
+## Bilingual Notification System - COMPLETED ✅ (Feb 18, 2026)
+
+### Summary
+Updated the notification system to support bilingual content (English/Arabic). All new notifications now include both `title`/`message` (English) and `title_ar`/`message_ar` (Arabic) fields.
+
+### Changes Made
+1. **Backend (`dependencies.py`)**: Updated `Notification` model and `create_notification()` function to accept `title_ar` and `message_ar` parameters
+2. **All Route Files**: Updated all `create_notification()` calls to include Arabic translations
+3. **Frontend (`NotificationBell.js`)**: Updated to display Arabic title/message when UI is in Arabic mode (RTL)
+
+### Notification Types with Arabic Support
+- Form submissions
+- Proposal acceptance/rejection
+- Agreement signing
+- Technical reviews
+- Customer feedback
+- Pre-transfer reviews
+- Certified/Suspended clients
+- RFQ and Contact form submissions
+
+### Note
+Existing notifications created before this update will continue to display in English. Only new notifications will show bilingual content.
+
 ## Future Enhancements
 - Enable real email sending (SendGrid integration)
 - Customer Portal with login system
 - Progressive Web App (PWA) for auditors
+

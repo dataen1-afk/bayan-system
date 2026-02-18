@@ -83,8 +83,8 @@ const LoginPage = () => {
         <LanguageSwitcher />
       </div>
 
-      {/* Powerful Text - Center Right (Vertically Centered on Right Half) */}
-      <div className="hidden lg:flex absolute right-0 top-0 bottom-0 w-1/2 items-center justify-center pr-8 z-10">
+      {/* Powerful Text - Right Side (Moved more to the right) */}
+      <div className="hidden lg:flex absolute right-0 top-0 bottom-0 w-[40%] items-center justify-end pr-12 z-10">
         <div className="max-w-lg text-right" dir="rtl">
           <h2 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
             {isRTL ? (

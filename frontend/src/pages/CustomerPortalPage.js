@@ -872,7 +872,7 @@ const CustomerPortalPage = () => {
       <footer className="bg-[#0f1e31] text-white py-12">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className={`flex flex-col md:flex-row items-center justify-between gap-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-            <img src="/bayan-logo.png" alt="Bayan" className="h-12 brightness-0 invert" />
+            <img src="/bayan-logo.png" alt="Bayan" className="h-20 md:h-24 brightness-0 invert" />
             <p className="text-white/60 text-sm">
               © {new Date().getFullYear()} Bayan for Verification and Conformity. {isRTL ? 'جميع الحقوق محفوظة' : 'All rights reserved.'}
             </p>

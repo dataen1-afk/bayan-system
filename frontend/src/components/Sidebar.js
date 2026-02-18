@@ -110,6 +110,8 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
         navigate(item.route);
       }
     } else {
+      // Navigate to dashboard with tab parameter for items without routes
+      navigate(`/dashboard?tab=${item.id}`);
       onTabChange(item.id);
     }
     setIsMobileOpen(false);

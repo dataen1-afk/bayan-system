@@ -2472,8 +2472,10 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
     # Create notification for admin
     await create_notification(
         notification_type="agreement_signed",
-        title="اتفاقية جديدة موقعة",
-        message=f"قامت {agreement_data.organization_name} بتوقيع اتفاقية المنح",
+        title="New Agreement Signed",
+        title_ar="اتفاقية جديدة موقعة",
+        message=f"{agreement_data.organization_name} signed the grant agreement",
+        message_ar=f"قامت {agreement_data.organization_name} بتوقيع اتفاقية المنح",
         related_id=agreement.id,
         related_type="agreement"
     )

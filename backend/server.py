@@ -55,6 +55,12 @@ from routes.sites import router as sites_router
 from routes.contacts import router as contacts_router
 from routes.documents import router as documents_router
 from routes.technical_reviews import router as technical_reviews_router
+from routes.customer_feedback import router as customer_feedback_router
+from routes.customer_feedback_public import router as customer_feedback_public_router
+from routes.pre_transfer_reviews import router as pre_transfer_reviews_router
+from routes.certified_clients import router as certified_clients_router
+from routes.suspended_clients import router as suspended_clients_router
+from routes.portal import router as portal_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

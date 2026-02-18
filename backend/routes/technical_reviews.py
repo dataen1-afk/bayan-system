@@ -13,10 +13,11 @@ import uuid
 import os
 import logging
 
-# Import shared dependencies
-from server import (
+# Import shared dependencies (avoiding circular imports)
+from dependencies import (
     db, get_current_user, create_notification, 
-    generate_certificate_number, get_qr_code_base64, Certificate
+    generate_certificate_number, get_qr_code_base64, Certificate,
+    security, CONTRACTS_DIR
 )
 from technical_review_generator import generate_technical_review_pdf
 

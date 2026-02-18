@@ -681,6 +681,7 @@ const InvoicesPage = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

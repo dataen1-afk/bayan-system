@@ -235,7 +235,7 @@ const CreateProposalPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-bayan-navy border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">{t('loadingForm')}</p>
@@ -245,26 +245,8 @@ const CreateProposalPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
-        <div className="dashboard-header max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="dashboard-header-left flex items-center gap-4">
-            <img src="/Bayan-removebg-preview.png" alt="Bayan" className="h-16 w-auto object-contain" />
-          </div>
-          <div className="dashboard-header-right flex items-center gap-4">
-            <LanguageSwitcher />
-            <Button variant="outline" onClick={() => navigate('/dashboard')}>
-              {isRTL ? <ArrowRight className="w-4 h-4 ml-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
-              {t('backToDashboard')}
-            </Button>
-          </div>
-        </div>
-        <div className="h-1.5 bg-gradient-to-r from-bayan-navy via-bayan-navy-light to-bayan-navy"></div>
-      </header>
-
-      <main className="pt-28 pb-12 px-4">
-        <div className="max-w-4xl mx-auto space-y-6">
+    <div className="p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="max-w-4xl mx-auto space-y-6">
           {/* Page Title */}
           <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <FileText className="w-8 h-8 text-bayan-navy" />

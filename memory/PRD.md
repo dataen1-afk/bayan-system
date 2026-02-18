@@ -122,12 +122,19 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - **Files Created**:
   - `/app/frontend/public/manifest.json` - PWA manifest with app metadata
   - `/app/frontend/public/service-worker.js` - Service worker for caching/offline
+  - `/app/frontend/src/components/PWAInstallPrompt.js` - Install prompt banner component
 - **Features**:
   - App installable on mobile/desktop devices
   - Offline capability with smart caching strategy
   - Push notification support (prepared for future use)
   - Standalone display mode (no browser chrome)
   - Theme color matching Bayan brand (#1e3a5f)
+  - **Install Prompt Banner**: Shows on mobile devices with:
+    - Bilingual text (Arabic/English)
+    - Install and "Later" buttons
+    - Benefits list (quick access, works offline, faster experience)
+    - Smart dismissal (remembers for 7 days if dismissed)
+    - Auto-detects if already installed
 - **Service Worker Strategy**:
   - Static assets cached on install
   - Network-first for API calls (always fresh data)

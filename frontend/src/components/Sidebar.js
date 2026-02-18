@@ -159,7 +159,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
   };
 
   const MenuItem = ({ item, isBottom = false }) => {
-    const isActive = activeTab === item.id;
+    const isActive = currentActiveId === item.id;
     const Icon = item.icon;
     
     return (

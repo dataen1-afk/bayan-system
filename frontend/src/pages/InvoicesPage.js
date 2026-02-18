@@ -403,7 +403,9 @@ const InvoicesPage = () => {
               )}
             </CardContent>
           </Card>
-        </div>
+          </div>
+        </main>
+      </div>
 
       {/* Create Invoice Modal */}
       {showCreateModal && (

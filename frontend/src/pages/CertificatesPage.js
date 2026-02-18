@@ -387,6 +387,8 @@ const CertificatesPage = () => {
               </div>
             )}
           </div>
+        </main>
+      </div>
 
       {/* Create Certificate Modal */}
       {showCreateModal && (

@@ -66,8 +66,8 @@ const LoginPage = () => {
         }}
       />
       
-      {/* Gradient Overlay - Stronger on the form side */}
-      <div className={`absolute inset-0 ${isRTL ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-[#1e3a5f]/80 via-[#1e3a5f]/40 to-transparent`} />
+      {/* Gradient Overlay - Dark on left (form side), transparent on right (desert view) */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/85 via-[#1e3a5f]/50 to-transparent" />
 
       {/* Logo - Always Top Right Corner */}
       <div className="absolute top-6 right-6 z-20">

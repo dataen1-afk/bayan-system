@@ -128,14 +128,14 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
           "hover:bg-slate-100 hover:text-bayan-navy",
           isActive && "bg-slate-100 text-bayan-navy font-semibold shadow-sm",
           !isActive && "text-gray-600",
-          isCollapsed && "justify-center px-2",
-          isRTL && "flex-row-reverse"
+          isCollapsed && "justify-center px-2"
         )}
+        style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}
         title={isCollapsed ? item.label : ''}
       >
         <Icon className={cn("w-5 h-5 flex-shrink-0", isActive ? 'text-bayan-navy' : item.color)} />
         {!isCollapsed && (
-          <span className="truncate text-sm">{item.label}</span>
+          <span className={cn("truncate text-sm", isRTL && "text-right")}>{item.label}</span>
         )}
         {isActive && !isCollapsed && (
           <div className={cn(

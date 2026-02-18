@@ -119,7 +119,9 @@ async def submit_public_feedback(access_token: str, data: CustomerFeedbackSubmit
     await create_notification(
         notification_type="feedback_submitted",
         title="Customer Feedback Submitted",
+        title_ar="تم تقديم ملاحظات العميل",
         message=f"Feedback received from {feedback.get('organization_name', '')} - Score: {score}%",
+        message_ar=f"تم استلام ملاحظات من {feedback.get('organization_name', '')} - النتيجة: {score}%",
         related_id=feedback['id'],
         related_type="customer_feedback"
     )

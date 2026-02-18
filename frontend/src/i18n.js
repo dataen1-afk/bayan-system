@@ -563,6 +563,11 @@ const resources = {
       "contactMessages.title": "Contact Messages",
       "contactMessages.subtitle": "Manage contact messages from the customer portal",
       
+      // Approvals
+      "approvals": "Approvals",
+      "approvals.title": "Approval Management",
+      "approvals.subtitle": "Multi-level approval workflows",
+      
       // Forms
       "createNewForm": "Create New Form",
       "createCustomForm": "Create a custom form for a client",

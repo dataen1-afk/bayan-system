@@ -25,6 +25,51 @@ Audit calculation runs → Admin creates proposal → Proposal sent to client �
 Client accepts proposal → Client fills Agreement form → Contract PDF generated
 ```
 
+## Sidebar Simplification - COMPLETED ✅ (Feb 18, 2026)
+
+### Summary
+Simplified the admin sidebar by combining Stage 1 and Stage 2 audit items into single unified menu entries with tabbed navigation, and refactored all admin pages to use a shared AdminLayout component.
+
+### Changes Made
+1. **Combined Menu Items**:
+   - "Stage 1 Audit Plans" + "Stage 2 Audit Plans" → "Audit Plans" (`/audit-plans`)
+   - "Stage 1 Audit Reports" + "Stage 2 Audit Reports" → "Audit Reports" (`/audit-reports`)
+
+2. **New Container Pages**:
+   - `/app/frontend/src/pages/AuditPlansPage.js` - Container with Stage 1/Stage 2 tabs
+   - `/app/frontend/src/pages/AuditReportsPage.js` - Container with Stage 1/Stage 2 tabs
+
+3. **Tab Order Fixed for RTL**:
+   - Stage 1 tab appears on the RIGHT in Arabic mode
+   - Stage 2 tab appears on the LEFT in Arabic mode
+
+4. **Sidebar Navigation Fixes**:
+   - Fixed active item detection using `useLocation` hook
+   - Fixed sidebar scroll position preservation when navigating
+   - Dashboard menu item now shows in Arabic as "لوحة التحكم"
+
+5. **Page Refactoring (Full Refactoring)**:
+   - Removed duplicate header/sidebar from: InvoicesPage, AuditorsPage, CertificatesPage, ExpirationAlertsPage, AnalyticsDashboardPage, CreateProposalPage
+   - All pages now use shared AdminLayout from App.js routing
+   - Consistent sidebar across all admin pages
+
+### Files Modified
+- `/app/frontend/src/components/Sidebar.js` - Added location-based active detection, scroll preservation
+- `/app/frontend/src/pages/InvoicesPage.js` - Removed duplicate header/sidebar
+- `/app/frontend/src/pages/AuditorsPage.js` - Removed duplicate header/sidebar
+- `/app/frontend/src/pages/CertificatesPage.js` - Removed duplicate header/sidebar
+- `/app/frontend/src/pages/ExpirationAlertsPage.js` - Removed duplicate header/sidebar
+- `/app/frontend/src/pages/AnalyticsDashboardPage.js` - Removed duplicate header/sidebar
+- `/app/frontend/src/pages/CreateProposalPage.js` - Removed duplicate header/sidebar
+- `/app/frontend/src/i18n.js` - Added "dashboard" translation key
+
+### Testing Status
+- ✅ Sidebar navigation works correctly
+- ✅ Tab switching between Stage 1 and Stage 2 works
+- ✅ RTL layout maintained correctly
+- ✅ Scroll position preserved when navigating
+- ✅ All refactored pages display correctly with shared sidebar
+
 ## Completed Features (December 2025)
 
 ### Core Features ✅

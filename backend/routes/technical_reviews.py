@@ -414,9 +414,7 @@ async def get_technical_review_pdf(
         raise HTTPException(status_code=404, detail="Technical review not found")
     
     try:
-        contracts_dir = Path(__file__).parent / "contracts"
-        contracts_dir.mkdir(exist_ok=True)
-        pdf_path = str(contracts_dir / f"technical_review_{review_id[:8]}.pdf")
+        pdf_path = str(CONTRACTS_DIR / f"technical_review_{review_id[:8]}.pdf")
         
         generate_technical_review_pdf(review, pdf_path)
         

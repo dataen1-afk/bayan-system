@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,31 +18,23 @@ import {
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { 
   Search, CheckCircle, Clock, FileText, DollarSign, FileCheck, 
-  Loader2, AlertCircle, Building2, Mail, Phone, MapPin,
-  Calendar, Download, Eye, Shield, Leaf, Users, Utensils,
-  Lock, Award, ArrowRight, Send, HelpCircle, ChevronDown,
-  Globe, Target, Briefcase, Star, CheckCircle2
+  Loader2, Building2, Mail, Phone, MapPin,
+  Shield, Leaf, Users, Utensils, Lock, Award, ArrowRight, 
+  Send, ChevronDown, Globe, Star, CheckCircle2, Menu, X
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// Format date
-const formatDate = (dateString) => {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
+// Animation variants
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
 };
 
-// Format currency
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US', { 
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0 
-  }).format(amount || 0) + ' SAR';
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
 const CustomerPortalPage = () => {
@@ -50,40 +43,27 @@ const CustomerPortalPage = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language?.startsWith('ar');
   
-  // Tracking state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchId, setSearchId] = useState(trackingId || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [orderData, setOrderData] = useState(null);
   const [searched, setSearched] = useState(false);
   
-  // RFQ Form state
   const [rfqForm, setRfqForm] = useState({
-    company_name: '',
-    contact_name: '',
-    email: '',
-    phone: '',
-    employees: '',
-    sites: '1',
-    standards: [],
-    message: ''
+    company_name: '', contact_name: '', email: '', phone: '',
+    employees: '', sites: '1', standards: [], message: ''
   });
   const [rfqSubmitting, setRfqSubmitting] = useState(false);
   const [rfqSubmitted, setRfqSubmitted] = useState(false);
 
-  // Contact form state
   const [contactForm, setContactForm] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
+    name: '', email: '', subject: '', message: ''
   });
   const [contactSubmitting, setContactSubmitting] = useState(false);
 
   useEffect(() => {
-    if (trackingId) {
-      handleSearch();
-    }
+    if (trackingId) handleSearch();
   }, [trackingId]);
 
   const handleSearch = async () => {
@@ -91,20 +71,16 @@ const CustomerPortalPage = () => {
       setError(isRTL ? 'الرجاء إدخال رقم التتبع' : 'Please enter a tracking ID');
       return;
     }
-    
     setLoading(true);
     setError('');
     setSearched(true);
-    
     try {
       const response = await axios.get(`${API}/public/track/${searchId.trim()}`);
       setOrderData(response.data);
     } catch (err) {
-      if (err.response?.status === 404) {
-        setError(isRTL ? 'لم يتم العثور على الطلب' : 'Order not found');
-      } else {
-        setError(isRTL ? 'خطأ في تتبع الطلب' : 'Error tracking order');
-      }
+      setError(err.response?.status === 404 
+        ? (isRTL ? 'لم يتم العثور على الطلب' : 'Order not found')
+        : (isRTL ? 'خطأ في تتبع الطلب' : 'Error tracking order'));
       setOrderData(null);
     } finally {
       setLoading(false);
@@ -117,7 +93,6 @@ const CustomerPortalPage = () => {
       toast.error(isRTL ? 'الرجاء اختيار معيار واحد على الأقل' : 'Please select at least one standard');
       return;
     }
-    
     setRfqSubmitting(true);
     try {
       await axios.post(`${API}/public/rfq`, rfqForm);
@@ -153,747 +128,750 @@ const CustomerPortalPage = () => {
     }));
   };
 
-  // Services data
   const services = [
-    {
-      id: 'iso9001',
-      icon: Award,
-      title: isRTL ? 'ISO 9001:2015' : 'ISO 9001:2015',
-      subtitle: isRTL ? 'نظام إدارة الجودة' : 'Quality Management System',
-      description: isRTL 
-        ? 'يساعد على تحسين جودة المنتجات والخدمات وزيادة رضا العملاء'
-        : 'Helps improve product and service quality while increasing customer satisfaction',
-      color: 'blue'
-    },
-    {
-      id: 'iso14001',
-      icon: Leaf,
-      title: isRTL ? 'ISO 14001:2015' : 'ISO 14001:2015',
-      subtitle: isRTL ? 'نظام الإدارة البيئية' : 'Environmental Management System',
-      description: isRTL 
-        ? 'يدعم الاستدامة البيئية ويقلل من الأثر البيئي لمؤسستك'
-        : 'Supports environmental sustainability and reduces your organization\'s environmental impact',
-      color: 'green'
-    },
-    {
-      id: 'iso45001',
-      icon: Shield,
-      title: isRTL ? 'ISO 45001:2018' : 'ISO 45001:2018',
-      subtitle: isRTL ? 'نظام إدارة الصحة والسلامة المهنية' : 'Occupational Health & Safety',
-      description: isRTL 
-        ? 'يوفر بيئة عمل آمنة وصحية لموظفيك وأصحاب المصلحة'
-        : 'Provides a safe and healthy work environment for your employees and stakeholders',
-      color: 'orange'
-    },
-    {
-      id: 'iso22000',
-      icon: Utensils,
-      title: isRTL ? 'ISO 22000:2018' : 'ISO 22000:2018',
-      subtitle: isRTL ? 'نظام إدارة سلامة الغذاء' : 'Food Safety Management System',
-      description: isRTL 
-        ? 'يضمن سلامة الغذاء عبر سلسلة التوريد بأكملها'
-        : 'Ensures food safety throughout the entire supply chain',
-      color: 'red'
-    },
-    {
-      id: 'iso27001',
-      icon: Lock,
-      title: isRTL ? 'ISO 27001:2022' : 'ISO 27001:2022',
-      subtitle: isRTL ? 'نظام إدارة أمن المعلومات' : 'Information Security Management',
-      description: isRTL 
-        ? 'يحمي بيانات مؤسستك ومعلومات عملائك الحساسة'
-        : 'Protects your organization\'s data and sensitive customer information',
-      color: 'purple'
-    }
+    { id: 'iso9001', icon: Award, title: 'ISO 9001:2015', subtitle: isRTL ? 'نظام إدارة الجودة' : 'Quality Management', color: 'blue' },
+    { id: 'iso14001', icon: Leaf, title: 'ISO 14001:2015', subtitle: isRTL ? 'نظام الإدارة البيئية' : 'Environmental Management', color: 'emerald' },
+    { id: 'iso45001', icon: Shield, title: 'ISO 45001:2018', subtitle: isRTL ? 'الصحة والسلامة المهنية' : 'Occupational Health & Safety', color: 'amber' },
+    { id: 'iso22000', icon: Utensils, title: 'ISO 22000:2018', subtitle: isRTL ? 'سلامة الغذاء' : 'Food Safety', color: 'rose' },
+    { id: 'iso27001', icon: Lock, title: 'ISO 27001:2022', subtitle: isRTL ? 'أمن المعلومات' : 'Information Security', color: 'violet' },
   ];
 
-  // FAQ data
   const faqs = [
-    {
-      question: isRTL ? 'ما هي مدة عملية الشهادة؟' : 'How long does the certification process take?',
-      answer: isRTL 
-        ? 'تستغرق عملية الشهادة عادةً من 2 إلى 4 أشهر، اعتمادًا على حجم المؤسسة ومدى جاهزيتها. تشمل العملية مراجعة الوثائق، والتدقيق في الموقع، وإصدار الشهادة.'
-        : 'The certification process typically takes 2-4 months, depending on organization size and readiness. The process includes document review, on-site audit, and certificate issuance.'
-    },
-    {
-      question: isRTL ? 'ما هي تكلفة الحصول على الشهادة؟' : 'What is the cost of certification?',
-      answer: isRTL 
-        ? 'تختلف التكلفة بناءً على حجم المؤسسة، عدد المواقع، ونطاق الشهادة المطلوبة. نقدم عروض أسعار مجانية ومخصصة. تواصل معنا للحصول على تقدير دقيق.'
-        : 'Costs vary based on organization size, number of sites, and certification scope. We provide free, customized quotes. Contact us for an accurate estimate.'
-    },
-    {
-      question: isRTL ? 'ما هي مدة صلاحية الشهادة؟' : 'How long is the certificate valid?',
-      answer: isRTL 
-        ? 'الشهادة صالحة لمدة 3 سنوات، مع تدقيقات مراقبة سنوية للحفاظ على الشهادة. بعد 3 سنوات، يتم إجراء تدقيق إعادة الشهادة.'
-        : 'The certificate is valid for 3 years, with annual surveillance audits to maintain certification. After 3 years, a recertification audit is conducted.'
-    },
-    {
-      question: isRTL ? 'هل يمكن الحصول على شهادات متعددة؟' : 'Can we obtain multiple certifications?',
-      answer: isRTL 
-        ? 'نعم، يمكن الحصول على شهادات متعددة (نظام إدارة متكامل). يمكن دمج التدقيقات لتقليل الوقت والتكلفة.'
-        : 'Yes, you can obtain multiple certifications (Integrated Management System). Audits can be combined to reduce time and cost.'
-    },
-    {
-      question: isRTL ? 'ما المطلوب للتحضير للتدقيق؟' : 'What is required to prepare for an audit?',
-      answer: isRTL 
-        ? 'يجب توثيق العمليات والإجراءات، تدريب الموظفين، إجراء تدقيقات داخلية، ومراجعة الإدارة. سنوفر لك قائمة مرجعية كاملة.'
-        : 'You need to document processes and procedures, train employees, conduct internal audits, and perform management review. We will provide you with a complete checklist.'
-    },
-    {
-      question: isRTL ? 'ما هو نطاق اعتماد بيان؟' : 'What is Bayan\'s accreditation scope?',
-      answer: isRTL 
-        ? 'بيان معتمدة من الهيئة السعودية للاعتماد (ساك) لإصدار شهادات ISO 9001، ISO 14001، ISO 45001، ISO 22000، و ISO 27001.'
-        : 'Bayan is accredited by the Saudi Accreditation Center (SAC) to issue ISO 9001, ISO 14001, ISO 45001, ISO 22000, and ISO 27001 certifications.'
-    }
+    { q: isRTL ? 'ما هي مدة عملية الشهادة؟' : 'How long does certification take?', a: isRTL ? 'تستغرق العملية من 2-4 أشهر حسب حجم المؤسسة وجاهزيتها.' : 'The process typically takes 2-4 months depending on organization size and readiness.' },
+    { q: isRTL ? 'ما هي تكلفة الحصول على الشهادة؟' : 'What is the cost of certification?', a: isRTL ? 'تختلف التكلفة بناءً على حجم المؤسسة ونطاق الشهادة. تواصل معنا للحصول على عرض سعر مخصص.' : 'Costs vary based on organization size and scope. Contact us for a customized quote.' },
+    { q: isRTL ? 'ما هي مدة صلاحية الشهادة؟' : 'How long is the certificate valid?', a: isRTL ? 'الشهادة صالحة لمدة 3 سنوات مع تدقيقات مراقبة سنوية.' : 'The certificate is valid for 3 years with annual surveillance audits.' },
+    { q: isRTL ? 'هل يمكن الحصول على شهادات متعددة؟' : 'Can we obtain multiple certifications?', a: isRTL ? 'نعم، يمكن دمج التدقيقات للحصول على شهادات متعددة بتكلفة ووقت أقل.' : 'Yes, audits can be combined to obtain multiple certifications at reduced cost and time.' },
   ];
 
-  // Timeline steps
+  const stats = [
+    { value: '500+', label: isRTL ? 'شركة معتمدة' : 'Certified Companies' },
+    { value: '15+', label: isRTL ? 'سنوات خبرة' : 'Years Experience' },
+    { value: '50+', label: isRTL ? 'مدقق معتمد' : 'Certified Auditors' },
+    { value: '99%', label: isRTL ? 'رضا العملاء' : 'Client Satisfaction' },
+  ];
+
   const timelineSteps = [
-    { key: 'pending', label: isRTL ? 'تم إنشاء النموذج' : 'Form Created', icon: FileText },
-    { key: 'submitted', label: isRTL ? 'تم تقديم النموذج' : 'Form Submitted', icon: CheckCircle },
+    { key: 'pending', label: isRTL ? 'تم الإنشاء' : 'Created', icon: FileText },
+    { key: 'submitted', label: isRTL ? 'تم التقديم' : 'Submitted', icon: CheckCircle },
     { key: 'under_review', label: isRTL ? 'قيد المراجعة' : 'Under Review', icon: Clock },
-    { key: 'accepted', label: isRTL ? 'تم قبول العرض' : 'Proposal Accepted', icon: DollarSign },
-    { key: 'agreement_signed', label: isRTL ? 'تم توقيع الاتفاقية' : 'Agreement Signed', icon: FileCheck },
-    { key: 'contract_generated', label: isRTL ? 'العقد جاهز' : 'Contract Ready', icon: Download }
+    { key: 'accepted', label: isRTL ? 'تم القبول' : 'Accepted', icon: DollarSign },
+    { key: 'agreement_signed', label: isRTL ? 'تم التوقيع' : 'Signed', icon: FileCheck },
   ];
 
   const getStatusStep = (status) => {
-    const steps = ['pending', 'submitted', 'under_review', 'accepted', 'agreement_signed', 'contract_generated'];
+    const steps = ['pending', 'submitted', 'under_review', 'accepted', 'agreement_signed'];
     return steps.indexOf(status);
   };
 
-  const colorClasses = {
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    green: 'bg-green-50 border-green-200 text-green-700',
-    orange: 'bg-orange-50 border-orange-200 text-orange-700',
-    red: 'bg-red-50 border-red-200 text-red-700',
-    purple: 'bg-purple-50 border-purple-200 text-purple-700'
-  };
-
-  const iconBgClasses = {
-    blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    orange: 'bg-orange-100 text-orange-600',
-    red: 'bg-red-100 text-red-600',
-    purple: 'bg-purple-100 text-purple-600'
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src="/bayan-logo.png" alt="Bayan" className="h-14 w-auto object-contain" />
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#services" className="text-slate-600 hover:text-bayan-navy font-medium transition-colors">
-              {isRTL ? 'خدماتنا' : 'Services'}
-            </a>
-            <a href="#tracking" className="text-slate-600 hover:text-bayan-navy font-medium transition-colors">
-              {isRTL ? 'تتبع الطلب' : 'Track Order'}
-            </a>
-            <a href="#rfq" className="text-slate-600 hover:text-bayan-navy font-medium transition-colors">
-              {isRTL ? 'طلب عرض سعر' : 'Get Quote'}
-            </a>
-            <a href="#faq" className="text-slate-600 hover:text-bayan-navy font-medium transition-colors">
-              {isRTL ? 'الأسئلة الشائعة' : 'FAQ'}
-            </a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/login')}
-              className="hidden sm:flex"
-            >
-              {isRTL ? 'تسجيل الدخول' : 'Admin Login'}
-            </Button>
+    <div className="min-h-screen bg-[#F8F9FA]" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Navigation */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="flex items-center justify-between h-20">
+            <img src="/bayan-logo.png" alt="Bayan" className="h-14 w-auto" />
+            
+            <nav className="hidden md:flex items-center gap-8">
+              {[
+                { id: 'services', label: isRTL ? 'خدماتنا' : 'Services' },
+                { id: 'tracking', label: isRTL ? 'تتبع الطلب' : 'Track Order' },
+                { id: 'rfq', label: isRTL ? 'طلب عرض سعر' : 'Get Quote' },
+                { id: 'faq', label: isRTL ? 'الأسئلة الشائعة' : 'FAQ' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollTo(item.id)}
+                  className="text-slate-600 hover:text-[#1e3a5f] font-medium transition-colors text-sm tracking-wide"
+                  data-testid={`nav-${item.id}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            
+            <div className="flex items-center gap-4">
+              <LanguageSwitcher />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/login')}
+                className="hidden md:flex border-[#1e3a5f] text-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white"
+                data-testid="admin-login-btn"
+              >
+                {isRTL ? 'تسجيل الدخول' : 'Admin Login'}
+              </Button>
+              <button 
+                className="md:hidden p-2"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                data-testid="mobile-menu-btn"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-bayan-navy via-bayan-gold to-bayan-navy"></div>
+        
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white border-t"
+            >
+              <div className="px-6 py-4 space-y-3">
+                {['services', 'tracking', 'rfq', 'faq'].map(id => (
+                  <button
+                    key={id}
+                    onClick={() => scrollTo(id)}
+                    className="block w-full text-start py-2 text-slate-600 hover:text-[#1e3a5f]"
+                  >
+                    {id === 'services' && (isRTL ? 'خدماتنا' : 'Services')}
+                    {id === 'tracking' && (isRTL ? 'تتبع الطلب' : 'Track Order')}
+                    {id === 'rfq' && (isRTL ? 'طلب عرض سعر' : 'Get Quote')}
+                    {id === 'faq' && (isRTL ? 'الأسئلة الشائعة' : 'FAQ')}
+                  </button>
+                ))}
+                <Button 
+                  className="w-full mt-2"
+                  onClick={() => navigate('/login')}
+                >
+                  {isRTL ? 'تسجيل الدخول' : 'Admin Login'}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-bayan-navy via-bayan-navy-light to-bayan-navy text-white py-20 overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
+      <section className="relative min-h-[90vh] flex items-center pt-20 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f] via-[#1e3a5f] to-[#0f1e31]">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a55c' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }} />
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full mb-6">
-              <Shield className="w-5 h-5 text-bayan-gold" />
-              <span className="text-sm font-medium">
-                {isRTL ? 'معتمدون من الهيئة السعودية للاعتماد' : 'Accredited by Saudi Accreditation Center (SAC)'}
-              </span>
-            </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 py-20">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div 
+              initial="hidden" 
+              animate="visible" 
+              variants={staggerContainer}
+              className={isRTL ? 'text-right' : 'text-left'}
+            >
+              <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 bg-[#c9a55c]/20 rounded-full mb-8">
+                <Globe className="w-4 h-4 text-[#c9a55c]" />
+                <span className="text-sm font-medium text-[#c9a55c]">
+                  {isRTL ? 'معتمدون من الهيئة السعودية للاعتماد' : 'SAC Accredited Certification Body'}
+                </span>
+              </motion.div>
+              
+              <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tighter leading-[1.1]">
+                {isRTL ? (
+                  <>بوابة <span className="text-[#c9a55c]">العملاء</span></>
+                ) : (
+                  <>Customer <span className="text-[#c9a55c]">Portal</span></>
+                )}
+              </motion.h1>
+              
+              <motion.p variants={fadeInUp} className="text-xl text-white/70 mb-10 leading-relaxed max-w-lg">
+                {isRTL 
+                  ? 'شريكك الموثوق في رحلة الاعتماد والتميز المؤسسي'
+                  : 'Your trusted partner in the journey of accreditation and organizational excellence'}
+              </motion.p>
+              
+              <motion.div variants={fadeInUp} className={`flex flex-wrap gap-4 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                <Button 
+                  size="lg"
+                  onClick={() => scrollTo('rfq')}
+                  className="bg-[#c9a55c] hover:bg-[#b08d45] text-white font-semibold px-8 py-6 text-base shadow-lg shadow-yellow-600/20 hover:scale-[1.02] transition-all"
+                  data-testid="hero-get-quote-btn"
+                >
+                  {isRTL ? 'طلب عرض سعر' : 'Request Quote'}
+                  <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />
+                </Button>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  onClick={() => scrollTo('tracking')}
+                  className="border-2 border-white/30 text-white hover:bg-white/10 font-semibold px-8 py-6 text-base"
+                  data-testid="hero-track-btn"
+                >
+                  <Search className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {isRTL ? 'تتبع طلبك' : 'Track Order'}
+                </Button>
+              </motion.div>
+            </motion.div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              {isRTL ? 'بوابة العملاء' : 'Customer Portal'}
-            </h1>
-            <p className="text-xl md:text-2xl text-white/80 mb-8 leading-relaxed">
-              {isRTL 
-                ? 'شريكك الموثوق في رحلة الاعتماد والتميز المؤسسي'
-                : 'Your Trusted Partner in Certification & Organizational Excellence'}
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="bg-bayan-gold hover:bg-bayan-gold/90 text-bayan-navy font-semibold px-8"
-                onClick={() => document.getElementById('rfq').scrollIntoView({ behavior: 'smooth' })}
-              >
-                {isRTL ? 'طلب عرض سعر' : 'Request Quote'}
-                <ArrowRight className="w-5 h-5 ms-2" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white text-white hover:bg-white/10 px-8"
-                onClick={() => document.getElementById('tracking').scrollIntoView({ behavior: 'smooth' })}
-              >
-                <Search className="w-5 h-5 me-2" />
-                {isRTL ? 'تتبع طلبك' : 'Track Your Order'}
-              </Button>
-            </div>
+            {/* Stats */}
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="hidden lg:grid grid-cols-2 gap-6"
+            >
+              {stats.map((stat, idx) => (
+                <div 
+                  key={idx}
+                  className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10"
+                >
+                  <div className="text-4xl font-bold text-[#c9a55c] mb-2">{stat.value}</div>
+                  <div className="text-white/70 font-medium">{stat.label}</div>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
         
-        {/* Stats Bar */}
-        <div className="max-w-5xl mx-auto mt-16 px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { value: '500+', label: isRTL ? 'شركة معتمدة' : 'Certified Companies' },
-              { value: '15+', label: isRTL ? 'سنوات خبرة' : 'Years Experience' },
-              { value: '50+', label: isRTL ? 'مدقق معتمد' : 'Certified Auditors' },
-              { value: '99%', label: isRTL ? 'رضا العملاء' : 'Client Satisfaction' }
-            ].map((stat, idx) => (
-              <div key={idx} className="text-center p-4 bg-white/10 rounded-xl backdrop-blur-sm">
-                <div className="text-3xl md:text-4xl font-bold text-bayan-gold mb-1">{stat.value}</div>
-                <div className="text-sm text-white/70">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Scroll indicator */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+          >
+            <ChevronDown className="w-8 h-8 text-white/50" />
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-bayan-navy mb-4">
+      <section id="services" className="py-24 md:py-32">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className={`mb-16 ${isRTL ? 'text-right' : 'text-left'}`}
+          >
+            <motion.span variants={fadeInUp} className="text-sm font-medium tracking-widest uppercase text-[#c9a55c] mb-4 block">
+              {isRTL ? 'خدماتنا' : 'Our Services'}
+            </motion.span>
+            <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-semibold text-[#1e3a5f] tracking-tight mb-6">
               {isRTL ? 'خدمات الاعتماد' : 'Certification Services'}
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            </motion.h2>
+            <motion.p variants={fadeInUp} className="text-lg text-slate-600 max-w-2xl leading-relaxed">
               {isRTL 
-                ? 'نقدم خدمات اعتماد شاملة لمساعدة مؤسستك على تحقيق التميز'
-                : 'We provide comprehensive certification services to help your organization achieve excellence'}
-            </p>
-          </div>
+                ? 'نقدم خدمات اعتماد معترف بها دوليًا لمساعدة مؤسستك على تحقيق التميز'
+                : 'We provide internationally recognized certification services to help your organization achieve excellence'}
+            </motion.p>
+          </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => {
+          {/* Bento Grid */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {services.map((service, idx) => {
               const Icon = service.icon;
+              const isLarge = idx === 0;
               return (
-                <Card 
-                  key={service.id} 
-                  className={`border-2 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${colorClasses[service.color]}`}
+                <motion.div
+                  key={service.id}
+                  variants={fadeInUp}
+                  className={`group bg-white rounded-2xl p-8 border border-slate-100 hover:border-[#c9a55c]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] ${isLarge ? 'md:col-span-2 lg:col-span-1' : ''}`}
+                  onClick={() => toggleStandard(service.title)}
                 >
-                  <CardContent className="p-6">
-                    <div className={`w-14 h-14 rounded-xl ${iconBgClasses[service.color]} flex items-center justify-center mb-4`}>
-                      <Icon className="w-7 h-7" />
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-colors duration-300 ${rfqForm.standards.includes(service.title) ? 'bg-[#1e3a5f] text-white' : 'bg-[#1e3a5f]/5 text-[#1e3a5f] group-hover:bg-[#1e3a5f] group-hover:text-white'}`}>
+                    <Icon className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-[#1e3a5f] mb-2">{service.title}</h3>
+                  <p className="text-slate-600">{service.subtitle}</p>
+                  {rfqForm.standards.includes(service.title) && (
+                    <div className={`mt-4 flex items-center gap-2 text-[#c9a55c] text-sm font-medium ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <CheckCircle2 className="w-4 h-4" />
+                      {isRTL ? 'تم الاختيار' : 'Selected'}
                     </div>
-                    <h3 className="text-xl font-bold mb-1">{service.title}</h3>
-                    <p className="text-sm font-medium mb-3 opacity-80">{service.subtitle}</p>
-                    <p className="text-sm opacity-70">{service.description}</p>
-                  </CardContent>
-                </Card>
+                  )}
+                </motion.div>
               );
             })}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* RFQ Section */}
+      <section id="rfq" className="py-24 md:py-32 bg-gradient-to-b from-[#F8F9FA] to-white">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className={isRTL ? 'text-right order-2 lg:order-1' : 'text-left order-2 lg:order-1'}
+            >
+              <motion.span variants={fadeInUp} className="text-sm font-medium tracking-widest uppercase text-[#c9a55c] mb-4 block">
+                {isRTL ? 'احصل على عرض سعر' : 'Get a Quote'}
+              </motion.span>
+              <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-semibold text-[#1e3a5f] tracking-tight mb-6">
+                {isRTL ? 'طلب عرض سعر' : 'Request for Quote'}
+              </motion.h2>
+              <motion.p variants={fadeInUp} className="text-lg text-slate-600 leading-relaxed mb-8">
+                {isRTL 
+                  ? 'املأ النموذج وسنتواصل معك خلال 24 ساعة بعرض سعر مخصص لاحتياجات مؤسستك'
+                  : 'Fill out the form and we will contact you within 24 hours with a customized quote for your organization'}
+              </motion.p>
+              
+              <motion.div variants={fadeInUp} className="space-y-4">
+                {[
+                  { icon: CheckCircle2, text: isRTL ? 'عروض أسعار مجانية' : 'Free quotes' },
+                  { icon: Clock, text: isRTL ? 'رد خلال 24 ساعة' : '24-hour response' },
+                  { icon: Shield, text: isRTL ? 'بيانات آمنة ومحمية' : 'Secure & protected data' },
+                ].map((item, idx) => (
+                  <div key={idx} className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <item.icon className="w-5 h-5 text-[#c9a55c]" />
+                    <span className="text-slate-600">{item.text}</span>
+                  </div>
+                ))}
+              </motion.div>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="order-1 lg:order-2"
+            >
+              {rfqSubmitted ? (
+                <div className="bg-white rounded-2xl p-12 text-center shadow-[0_20px_50px_rgba(8,_112,_184,_0.1)]">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle2 className="w-10 h-10 text-green-600" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-[#1e3a5f] mb-4">
+                    {isRTL ? 'تم إرسال طلبك بنجاح!' : 'Request Submitted Successfully!'}
+                  </h3>
+                  <p className="text-slate-600 mb-6">
+                    {isRTL ? 'سنتواصل معك قريبًا' : 'We will contact you soon'}
+                  </p>
+                  <Button onClick={() => setRfqSubmitted(false)} variant="outline">
+                    {isRTL ? 'إرسال طلب آخر' : 'Submit Another Request'}
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleRfqSubmit} className="bg-white/80 backdrop-blur-xl rounded-2xl p-8 shadow-[0_20px_50px_rgba(8,_112,_184,_0.1)] border border-white/20">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                        {isRTL ? 'اسم الشركة' : 'Company Name'} *
+                      </Label>
+                      <Input
+                        required
+                        value={rfqForm.company_name}
+                        onChange={(e) => setRfqForm(prev => ({ ...prev, company_name: e.target.value }))}
+                        className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] focus:ring-[#c9a55c]/20 ${isRTL ? 'text-right' : ''}`}
+                        data-testid="rfq-company-name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                        {isRTL ? 'اسم جهة الاتصال' : 'Contact Name'} *
+                      </Label>
+                      <Input
+                        required
+                        value={rfqForm.contact_name}
+                        onChange={(e) => setRfqForm(prev => ({ ...prev, contact_name: e.target.value }))}
+                        className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] focus:ring-[#c9a55c]/20 ${isRTL ? 'text-right' : ''}`}
+                        data-testid="rfq-contact-name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                        {isRTL ? 'البريد الإلكتروني' : 'Email'} *
+                      </Label>
+                      <Input
+                        type="email"
+                        required
+                        value={rfqForm.email}
+                        onChange={(e) => setRfqForm(prev => ({ ...prev, email: e.target.value }))}
+                        className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] focus:ring-[#c9a55c]/20 ${isRTL ? 'text-right' : ''}`}
+                        data-testid="rfq-email"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                        {isRTL ? 'رقم الهاتف' : 'Phone'} *
+                      </Label>
+                      <Input
+                        required
+                        value={rfqForm.phone}
+                        onChange={(e) => setRfqForm(prev => ({ ...prev, phone: e.target.value }))}
+                        className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] focus:ring-[#c9a55c]/20 ${isRTL ? 'text-right' : ''}`}
+                        data-testid="rfq-phone"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                        {isRTL ? 'عدد الموظفين' : 'Number of Employees'}
+                      </Label>
+                      <Input
+                        value={rfqForm.employees}
+                        onChange={(e) => setRfqForm(prev => ({ ...prev, employees: e.target.value }))}
+                        placeholder={isRTL ? 'مثال: 50-100' : 'e.g., 50-100'}
+                        className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] focus:ring-[#c9a55c]/20 ${isRTL ? 'text-right' : ''}`}
+                        data-testid="rfq-employees"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                        {isRTL ? 'عدد المواقع' : 'Number of Sites'}
+                      </Label>
+                      <Input
+                        value={rfqForm.sites}
+                        onChange={(e) => setRfqForm(prev => ({ ...prev, sites: e.target.value }))}
+                        className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] focus:ring-[#c9a55c]/20 ${isRTL ? 'text-right' : ''}`}
+                        data-testid="rfq-sites"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 space-y-2">
+                    <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                      {isRTL ? 'المعايير المطلوبة' : 'Required Standards'} *
+                    </Label>
+                    <div className="flex flex-wrap gap-3">
+                      {services.map(s => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => toggleStandard(s.title)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                            rfqForm.standards.includes(s.title)
+                              ? 'bg-[#1e3a5f] text-white'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                          data-testid={`rfq-standard-${s.id}`}
+                        >
+                          {s.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 space-y-2">
+                    <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                      {isRTL ? 'رسالة إضافية' : 'Additional Message'}
+                    </Label>
+                    <Textarea
+                      value={rfqForm.message}
+                      onChange={(e) => setRfqForm(prev => ({ ...prev, message: e.target.value }))}
+                      rows={3}
+                      className={`bg-slate-50 border-slate-200 focus:border-[#c9a55c] focus:ring-[#c9a55c]/20 ${isRTL ? 'text-right' : ''}`}
+                      data-testid="rfq-message"
+                    />
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    disabled={rfqSubmitting}
+                    className="w-full mt-8 h-14 bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold text-base shadow-lg shadow-blue-900/20 hover:scale-[1.01] transition-all"
+                    data-testid="rfq-submit-btn"
+                  >
+                    {rfqSubmitting ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {isRTL ? 'إرسال الطلب' : 'Submit Request'}
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Order Tracking Section */}
-      <section id="tracking" className="py-20 bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-bayan-navy mb-4">
+      {/* Tracking Section */}
+      <section id="tracking" className="py-24 md:py-32 bg-[#1e3a5f]">
+        <div className="max-w-4xl mx-auto px-6 md:px-12">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center mb-12"
+          >
+            <motion.span variants={fadeInUp} className="text-sm font-medium tracking-widest uppercase text-[#c9a55c] mb-4 block">
               {isRTL ? 'تتبع طلبك' : 'Track Your Order'}
-            </h2>
-            <p className="text-lg text-slate-600">
-              {isRTL ? 'أدخل رقم التتبع لمتابعة حالة طلبك' : 'Enter your tracking ID to monitor your application status'}
-            </p>
-          </div>
-
-          <Card className="shadow-xl border-0" data-testid="tracking-search-card">
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    value={searchId}
-                    onChange={(e) => setSearchId(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder={isRTL ? 'أدخل رقم التتبع (مثال: TRK-XXXXXXXX)' : 'Enter tracking ID (e.g., TRK-XXXXXXXX)'}
-                    className="h-14 text-lg"
-                    data-testid="tracking-id-input"
-                    dir="ltr"
-                  />
-                </div>
-                <Button 
-                  onClick={handleSearch} 
-                  disabled={loading}
-                  className="h-14 px-8 bg-bayan-navy hover:bg-bayan-navy-light text-lg"
-                  data-testid="search-tracking-btn"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Search className="w-5 h-5 me-2" />
-                      {isRTL ? 'بحث' : 'Search'}
-                    </>
-                  )}
-                </Button>
+            </motion.span>
+            <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-6">
+              {isRTL ? 'تتبع حالة الطلب' : 'Track Order Status'}
+            </motion.h2>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,_0,_0,_0.3)]"
+          >
+            <div className={`flex gap-4 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Input
+                value={searchId}
+                onChange={(e) => setSearchId(e.target.value)}
+                placeholder={isRTL ? 'أدخل رقم التتبع أو البريد الإلكتروني' : 'Enter tracking ID or email'}
+                className={`h-14 flex-1 bg-slate-50 border-slate-200 focus:border-[#c9a55c] text-lg ${isRTL ? 'text-right' : ''}`}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                data-testid="tracking-input"
+              />
+              <Button 
+                onClick={handleSearch}
+                disabled={loading}
+                className="h-14 px-8 bg-[#c9a55c] hover:bg-[#b08d45] text-white font-semibold"
+                data-testid="tracking-search-btn"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+              </Button>
+            </div>
+            
+            {error && (
+              <div className={`p-4 rounded-lg bg-red-50 text-red-600 mb-6 ${isRTL ? 'text-right' : ''}`}>
+                {error}
               </div>
-              
-              {error && (
-                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3" data-testid="tracking-error">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                  <p className="text-red-700">{error}</p>
+            )}
+            
+            {orderData && (
+              <div className="space-y-6">
+                <div className={`p-6 bg-slate-50 rounded-xl ${isRTL ? 'text-right' : ''}`}>
+                  <h4 className="font-semibold text-[#1e3a5f] mb-4">
+                    {isRTL ? 'معلومات الطلب' : 'Order Information'}
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div><span className="text-slate-500">{isRTL ? 'الشركة:' : 'Company:'}</span> <span className="font-medium">{orderData.company_name}</span></div>
+                    <div><span className="text-slate-500">{isRTL ? 'البريد:' : 'Email:'}</span> <span className="font-medium">{orderData.email}</span></div>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Order Results */}
-          {orderData && (
-            <div className="mt-8 space-y-6" data-testid="tracking-results">
-              {/* Order Summary */}
-              <Card className="shadow-lg overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-bayan-navy to-bayan-navy-light text-white">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-3">
-                      <Building2 className="w-6 h-6" />
-                      {orderData.company_name}
-                    </CardTitle>
-                    <span className="text-sm text-white/70 font-mono" dir="ltr">
-                      {orderData.tracking_id}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <p className="text-sm text-slate-500 mb-1">{isRTL ? 'البريد الإلكتروني' : 'Email'}</p>
-                      <p className="font-medium">{orderData.contact_email || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 mb-1">{isRTL ? 'تاريخ التقديم' : 'Submitted'}</p>
-                      <p className="font-medium">{formatDate(orderData.created_at)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 mb-1">{isRTL ? 'المعايير' : 'Standards'}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {orderData.standards?.map((std) => (
-                          <span key={std} className="px-2 py-0.5 bg-bayan-navy/10 text-bayan-navy text-xs font-medium rounded">
-                            {std}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Timeline */}
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-bayan-navy" />
-                    {isRTL ? 'مسار التقدم' : 'Progress Timeline'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {timelineSteps.map((step, index) => {
-                      const currentStep = getStatusStep(orderData.current_status);
-                      const isCompleted = index <= currentStep;
-                      const isCurrent = index === currentStep;
+                
+                {/* Timeline */}
+                <div className="relative">
+                  <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    {timelineSteps.map((step, idx) => {
                       const Icon = step.icon;
-                      
+                      const currentStep = getStatusStep(orderData.status);
+                      const isComplete = idx <= currentStep;
+                      const isCurrent = idx === currentStep;
                       return (
-                        <div key={step.key} className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            isCompleted ? 'bg-emerald-500' : 'bg-slate-200'
-                          } ${isCurrent ? 'ring-4 ring-emerald-200' : ''}`}>
-                            <Icon className={`w-5 h-5 ${isCompleted ? 'text-white' : 'text-slate-400'}`} />
+                        <div key={step.key} className="flex flex-col items-center relative z-10">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                            isComplete ? 'bg-[#c9a55c] text-white' : 'bg-slate-200 text-slate-400'
+                          } ${isCurrent ? 'ring-4 ring-[#c9a55c]/30' : ''}`}>
+                            <Icon className="w-5 h-5" />
                           </div>
-                          <div className="flex-1">
-                            <p className={`font-medium ${isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
-                              {step.label}
-                              {isCurrent && (
-                                <span className="ms-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full">
-                                  {isRTL ? 'الحالي' : 'Current'}
-                                </span>
-                              )}
-                            </p>
-                          </div>
+                          <span className={`mt-3 text-xs font-medium text-center max-w-[80px] ${isComplete ? 'text-[#1e3a5f]' : 'text-slate-400'}`}>
+                            {step.label}
+                          </span>
                         </div>
                       );
                     })}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Request for Quotation Section */}
-      <section id="rfq" className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-bayan-navy mb-4">
-              {isRTL ? 'طلب عرض سعر' : 'Request for Quotation'}
-            </h2>
-            <p className="text-lg text-slate-600">
-              {isRTL 
-                ? 'املأ النموذج أدناه وسنتواصل معك خلال 24 ساعة'
-                : 'Fill out the form below and we\'ll contact you within 24 hours'}
-            </p>
-          </div>
-
-          {rfqSubmitted ? (
-            <Card className="shadow-lg border-green-200 bg-green-50">
-              <CardContent className="p-12 text-center">
-                <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-green-800 mb-4">
-                  {isRTL ? 'تم إرسال طلبك بنجاح!' : 'Your Request Has Been Submitted!'}
-                </h3>
-                <p className="text-green-700 mb-6">
-                  {isRTL 
-                    ? 'سيقوم فريقنا بمراجعة طلبك والتواصل معك في أقرب وقت ممكن.'
-                    : 'Our team will review your request and contact you as soon as possible.'}
-                </p>
-                <Button onClick={() => setRfqSubmitted(false)} variant="outline" className="border-green-500 text-green-700">
-                  {isRTL ? 'إرسال طلب آخر' : 'Submit Another Request'}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="shadow-xl">
-              <CardContent className="p-8">
-                <form onSubmit={handleRfqSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'اسم الشركة' : 'Company Name'} *</Label>
-                      <Input
-                        value={rfqForm.company_name}
-                        onChange={(e) => setRfqForm({ ...rfqForm, company_name: e.target.value })}
-                        required
-                        placeholder={isRTL ? 'أدخل اسم الشركة' : 'Enter company name'}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'اسم المسؤول' : 'Contact Name'} *</Label>
-                      <Input
-                        value={rfqForm.contact_name}
-                        onChange={(e) => setRfqForm({ ...rfqForm, contact_name: e.target.value })}
-                        required
-                        placeholder={isRTL ? 'أدخل اسم المسؤول' : 'Enter contact name'}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'} *</Label>
-                      <Input
-                        type="email"
-                        value={rfqForm.email}
-                        onChange={(e) => setRfqForm({ ...rfqForm, email: e.target.value })}
-                        required
-                        placeholder={isRTL ? 'example@company.com' : 'example@company.com'}
-                        dir="ltr"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'رقم الهاتف' : 'Phone Number'} *</Label>
-                      <Input
-                        type="tel"
-                        value={rfqForm.phone}
-                        onChange={(e) => setRfqForm({ ...rfqForm, phone: e.target.value })}
-                        required
-                        placeholder="+966 5X XXX XXXX"
-                        dir="ltr"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'عدد الموظفين' : 'Number of Employees'}</Label>
-                      <Input
-                        type="number"
-                        value={rfqForm.employees}
-                        onChange={(e) => setRfqForm({ ...rfqForm, employees: e.target.value })}
-                        placeholder={isRTL ? 'مثال: 50' : 'e.g., 50'}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'عدد المواقع' : 'Number of Sites'}</Label>
-                      <Input
-                        type="number"
-                        value={rfqForm.sites}
-                        onChange={(e) => setRfqForm({ ...rfqForm, sites: e.target.value })}
-                        placeholder="1"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>{isRTL ? 'المعايير المطلوبة' : 'Required Standards'} *</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {services.map((service) => (
-                        <label
-                          key={service.id}
-                          className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                            rfqForm.standards.includes(service.title)
-                              ? 'border-bayan-navy bg-bayan-navy/5'
-                              : 'border-slate-200 hover:border-slate-300'
-                          }`}
-                        >
-                          <Checkbox
-                            checked={rfqForm.standards.includes(service.title)}
-                            onCheckedChange={() => toggleStandard(service.title)}
-                          />
-                          <span className="text-sm font-medium">{service.title}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'رسالة إضافية' : 'Additional Message'}</Label>
-                    <Textarea
-                      value={rfqForm.message}
-                      onChange={(e) => setRfqForm({ ...rfqForm, message: e.target.value })}
-                      placeholder={isRTL ? 'أي معلومات إضافية تود مشاركتها...' : 'Any additional information you\'d like to share...'}
-                      rows={4}
+                  {/* Progress Line */}
+                  <div className="absolute top-6 left-6 right-6 h-0.5 bg-slate-200 -z-0">
+                    <div 
+                      className="h-full bg-[#c9a55c] transition-all duration-500"
+                      style={{ width: `${(getStatusStep(orderData.status) / (timelineSteps.length - 1)) * 100}%` }}
                     />
                   </div>
-
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    className="w-full bg-bayan-navy hover:bg-bayan-navy-light h-14 text-lg"
-                    disabled={rfqSubmitting}
-                  >
-                    {rfqSubmitting ? (
-                      <Loader2 className="w-5 h-5 animate-spin me-2" />
-                    ) : (
-                      <Send className="w-5 h-5 me-2" />
-                    )}
-                    {isRTL ? 'إرسال الطلب' : 'Submit Request'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          )}
+                </div>
+              </div>
+            )}
+            
+            {searched && !orderData && !loading && !error && (
+              <div className="text-center py-8 text-slate-500">
+                {isRTL ? 'لم يتم العثور على نتائج' : 'No results found'}
+              </div>
+            )}
+          </motion.div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-bayan-navy mb-4">
-              {isRTL ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
-            </h2>
-            <p className="text-lg text-slate-600">
-              {isRTL ? 'إجابات على الأسئلة الأكثر شيوعاً' : 'Answers to commonly asked questions'}
-            </p>
-          </div>
-
-          <Card className="shadow-lg">
-            <CardContent className="p-6">
-              <Accordion type="single" collapsible className="space-y-2">
-                {faqs.map((faq, index) => (
-                  <AccordionItem key={index} value={`faq-${index}`} className="border rounded-lg px-4">
-                    <AccordionTrigger className="text-start hover:no-underline py-4">
-                      <span className="font-semibold text-bayan-navy">{faq.question}</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="text-slate-600 pb-4">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
+      <section id="faq" className="py-24 md:py-32">
+        <div className="max-w-3xl mx-auto px-6 md:px-12">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center mb-12"
+          >
+            <motion.span variants={fadeInUp} className="text-sm font-medium tracking-widest uppercase text-[#c9a55c] mb-4 block">
+              {isRTL ? 'الأسئلة الشائعة' : 'FAQ'}
+            </motion.span>
+            <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-semibold text-[#1e3a5f] tracking-tight">
+              {isRTL ? 'الأسئلة المتكررة' : 'Frequently Asked Questions'}
+            </motion.h2>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Accordion type="single" collapsible className="space-y-4">
+              {faqs.map((faq, idx) => (
+                <AccordionItem 
+                  key={idx} 
+                  value={`item-${idx}`}
+                  className="bg-white rounded-xl border border-slate-100 px-6 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+                >
+                  <AccordionTrigger className={`py-6 text-[#1e3a5f] font-medium hover:no-underline ${isRTL ? 'text-right flex-row-reverse' : ''}`}>
+                    {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent className={`pb-6 text-slate-600 leading-relaxed ${isRTL ? 'text-right' : ''}`}>
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </motion.div>
         </div>
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-bayan-navy mb-4">
-              {isRTL ? 'تواصل معنا' : 'Contact Us'}
-            </h2>
-            <p className="text-lg text-slate-600">
-              {isRTL ? 'نحن هنا لمساعدتك' : 'We\'re here to help'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Info */}
-            <div className="space-y-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-bayan-navy/10 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-6 h-6 text-bayan-navy" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{isRTL ? 'العنوان' : 'Address'}</h3>
-                  <p className="text-slate-600">
-                    {isRTL 
-                      ? 'المملكة العربية السعودية، الرياض'
-                      : 'Riyadh, Kingdom of Saudi Arabia'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-bayan-navy/10 flex items-center justify-center flex-shrink-0">
-                  <Phone className="w-6 h-6 text-bayan-navy" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{isRTL ? 'الهاتف' : 'Phone'}</h3>
-                  <p className="text-slate-600" dir="ltr">+966 XX XXX XXXX</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-bayan-navy/10 flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-6 h-6 text-bayan-navy" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{isRTL ? 'البريد الإلكتروني' : 'Email'}</h3>
-                  <a href="mailto:info@bayanauditing.com" className="text-bayan-navy hover:underline">
-                    info@bayanauditing.com
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-bayan-navy/10 flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-6 h-6 text-bayan-navy" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{isRTL ? 'ساعات العمل' : 'Working Hours'}</h3>
-                  <p className="text-slate-600">
-                    {isRTL 
-                      ? 'الأحد - الخميس: 8 صباحاً - 5 مساءً'
-                      : 'Sunday - Thursday: 8 AM - 5 PM'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Form */}
-            <Card className="shadow-lg">
-              <CardContent className="p-6">
-                <form onSubmit={handleContactSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'الاسم' : 'Name'} *</Label>
-                      <Input
-                        value={contactForm.name}
-                        onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                        required
-                      />
+      <section className="py-24 md:py-32 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="grid lg:grid-cols-2 gap-16">
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className={isRTL ? 'text-right' : ''}
+            >
+              <motion.span variants={fadeInUp} className="text-sm font-medium tracking-widest uppercase text-[#c9a55c] mb-4 block">
+                {isRTL ? 'تواصل معنا' : 'Contact Us'}
+              </motion.span>
+              <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-semibold text-[#1e3a5f] tracking-tight mb-6">
+                {isRTL ? 'نحن هنا للمساعدة' : "We're Here to Help"}
+              </motion.h2>
+              <motion.p variants={fadeInUp} className="text-lg text-slate-600 leading-relaxed mb-8">
+                {isRTL 
+                  ? 'لديك استفسار؟ فريقنا جاهز للإجابة على جميع أسئلتك'
+                  : 'Have a question? Our team is ready to answer all your inquiries'}
+              </motion.p>
+              
+              <motion.div variants={fadeInUp} className="space-y-6">
+                {[
+                  { icon: Phone, label: isRTL ? 'الهاتف' : 'Phone', value: '+966 11 XXX XXXX' },
+                  { icon: Mail, label: isRTL ? 'البريد' : 'Email', value: 'info@bayan.sa' },
+                  { icon: MapPin, label: isRTL ? 'العنوان' : 'Address', value: isRTL ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia' },
+                ].map((item, idx) => (
+                  <div key={idx} className={`flex items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="w-12 h-12 rounded-xl bg-[#1e3a5f]/5 flex items-center justify-center flex-shrink-0">
+                      <item.icon className="w-5 h-5 text-[#1e3a5f]" />
                     </div>
-                    <div className="space-y-2">
-                      <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'} *</Label>
-                      <Input
-                        type="email"
-                        value={contactForm.email}
-                        onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                        required
-                        dir="ltr"
-                      />
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">{item.label}</div>
+                      <div className="font-medium text-[#1e3a5f]">{item.value}</div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'الموضوع' : 'Subject'} *</Label>
-                    <Input
-                      value={contactForm.subject}
-                      onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'الرسالة' : 'Message'} *</Label>
-                    <Textarea
-                      value={contactForm.message}
-                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                      required
-                      rows={5}
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-bayan-navy hover:bg-bayan-navy-light"
-                    disabled={contactSubmitting}
-                  >
-                    {contactSubmitting ? (
-                      <Loader2 className="w-5 h-5 animate-spin me-2" />
-                    ) : (
-                      <Send className="w-5 h-5 me-2" />
-                    )}
-                    {isRTL ? 'إرسال' : 'Send Message'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                ))}
+              </motion.div>
+            </motion.div>
+            
+            <motion.form
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              onSubmit={handleContactSubmit}
+              className="bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+            >
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                    {isRTL ? 'الاسم' : 'Name'} *
+                  </Label>
+                  <Input
+                    required
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                    className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] ${isRTL ? 'text-right' : ''}`}
+                    data-testid="contact-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                    {isRTL ? 'البريد الإلكتروني' : 'Email'} *
+                  </Label>
+                  <Input
+                    type="email"
+                    required
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                    className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] ${isRTL ? 'text-right' : ''}`}
+                    data-testid="contact-email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                    {isRTL ? 'الموضوع' : 'Subject'} *
+                  </Label>
+                  <Input
+                    required
+                    value={contactForm.subject}
+                    onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
+                    className={`h-12 bg-slate-50 border-slate-200 focus:border-[#c9a55c] ${isRTL ? 'text-right' : ''}`}
+                    data-testid="contact-subject"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                    {isRTL ? 'الرسالة' : 'Message'} *
+                  </Label>
+                  <Textarea
+                    required
+                    rows={4}
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                    className={`bg-slate-50 border-slate-200 focus:border-[#c9a55c] ${isRTL ? 'text-right' : ''}`}
+                    data-testid="contact-message"
+                  />
+                </div>
+                <Button 
+                  type="submit"
+                  disabled={contactSubmitting}
+                  className="w-full h-14 bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold"
+                  data-testid="contact-submit-btn"
+                >
+                  {contactSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                    <>
+                      <Send className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {isRTL ? 'إرسال الرسالة' : 'Send Message'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.form>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-bayan-navy text-white py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div className="md:col-span-2">
-              <img src="/bayan-logo.png" alt="Bayan" className="h-16 mb-4 brightness-0 invert" />
-              <p className="text-white/70 max-w-md">
-                {isRTL 
-                  ? 'بيان للتدقيق والمطابقة - شريكك الموثوق في رحلة الاعتماد والتميز المؤسسي'
-                  : 'Bayan Auditing & Conformity - Your trusted partner in certification and organizational excellence'}
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">{isRTL ? 'روابط سريعة' : 'Quick Links'}</h4>
-              <ul className="space-y-2 text-white/70">
-                <li><a href="#services" className="hover:text-white">{isRTL ? 'خدماتنا' : 'Services'}</a></li>
-                <li><a href="#tracking" className="hover:text-white">{isRTL ? 'تتبع الطلب' : 'Track Order'}</a></li>
-                <li><a href="#rfq" className="hover:text-white">{isRTL ? 'طلب عرض سعر' : 'Get Quote'}</a></li>
-                <li><a href="#faq" className="hover:text-white">{isRTL ? 'الأسئلة الشائعة' : 'FAQ'}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">{isRTL ? 'الشهادات' : 'Certifications'}</h4>
-              <ul className="space-y-2 text-white/70">
-                <li>ISO 9001:2015</li>
-                <li>ISO 14001:2015</li>
-                <li>ISO 45001:2018</li>
-                <li>ISO 22000:2018</li>
-                <li>ISO 27001:2022</li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-white/20 pt-8 text-center text-white/60">
-            <p>© {new Date().getFullYear()} {isRTL ? 'بيان للتدقيق والمطابقة' : 'Bayan Auditing & Conformity'}. {isRTL ? 'جميع الحقوق محفوظة' : 'All rights reserved'}.</p>
+      <footer className="bg-[#0f1e31] text-white py-12">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className={`flex flex-col md:flex-row items-center justify-between gap-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+            <img src="/bayan-logo.png" alt="Bayan" className="h-12 brightness-0 invert" />
+            <p className="text-white/60 text-sm">
+              © {new Date().getFullYear()} Bayan Auditing & Conformity. {isRTL ? 'جميع الحقوق محفوظة' : 'All rights reserved.'}
+            </p>
           </div>
         </div>
       </footer>

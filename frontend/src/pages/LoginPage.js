@@ -57,7 +57,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex" dir={isRTL ? 'rtl' : 'ltr'} data-testid="login-page">
+    <div className="min-h-screen relative flex" data-testid="login-page">
       {/* Full Screen Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -84,8 +84,8 @@ const LoginPage = () => {
       </div>
 
       {/* Left Side - Login Form (Always on left for powerful asymmetric layout) */}
-      <div className="relative z-10 w-full md:w-1/2 lg:w-[45%] min-h-screen flex flex-col justify-center ml-0">
-        <div className={`px-8 md:px-12 lg:px-16 py-12 ${isRTL ? 'text-right' : 'text-left'}`}>
+      <div className="relative z-10 w-full md:w-1/2 lg:w-[45%] min-h-screen flex flex-col justify-center">
+        <div className={`px-8 md:px-12 lg:px-16 py-12 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
           
           {/* Powerful Headline */}
           <div className="mb-10">

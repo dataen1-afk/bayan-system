@@ -57,7 +57,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'} data-testid="login-page">
+    <div className="min-h-screen relative flex" dir={isRTL ? 'rtl' : 'ltr'} data-testid="login-page">
       {/* Full Screen Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -66,49 +66,70 @@ const LoginPage = () => {
         }}
       />
       
-      {/* Subtle Dark Overlay for better readability */}
-      <div className="absolute inset-0 bg-[#1e3a5f]/30" />
+      {/* Gradient Overlay - Stronger on the form side */}
+      <div className={`absolute inset-0 ${isRTL ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-[#1e3a5f]/80 via-[#1e3a5f]/40 to-transparent`} />
 
-      {/* Language Switcher - Fixed top corner */}
-      <div className={`fixed top-4 ${isRTL ? 'left-4' : 'right-4'} z-20`}>
+      {/* Logo - Top Right Corner */}
+      <div className={`absolute top-6 ${isRTL ? 'left-6' : 'right-6'} z-20`}>
+        <img 
+          src="/bayan-logo.png" 
+          alt="Bayan for Verification and Conformity" 
+          className="h-16 md:h-20 drop-shadow-2xl"
+        />
+      </div>
+
+      {/* Language Switcher - Top Left */}
+      <div className={`absolute top-6 ${isRTL ? 'right-6' : 'left-6'} z-20`}>
         <LanguageSwitcher />
       </div>
 
-      {/* Glass Card Login Form */}
-      <div className="relative z-10 w-full max-w-md">
-        {/* Glass Card */}
-        <div className="backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-          {/* Logo Section */}
-          <div className="pt-8 pb-4 px-8 text-center">
-            <img 
-              src="/bayan-logo.png" 
-              alt="Bayan for Verification and Conformity" 
-              className="h-20 mx-auto mb-4"
-            />
-            <h1 className="text-xl font-bold text-[#1e3a5f]">
-              {isRTL ? 'تسجيل الدخول' : 'Welcome Back'}
+      {/* Left Side - Login Form */}
+      <div className={`relative z-10 w-full md:w-1/2 lg:w-[45%] min-h-screen flex flex-col justify-center ${isRTL ? 'mr-auto' : 'ml-0'}`}>
+        <div className={`px-8 md:px-12 lg:px-16 py-12 ${isRTL ? 'text-right' : 'text-left'}`}>
+          
+          {/* Powerful Headline */}
+          <div className="mb-10">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+              {isRTL ? (
+                <>
+                  <span className="block">مرحباً بك</span>
+                  <span className="block text-[#c9a55c]">في بيان</span>
+                </>
+              ) : (
+                <>
+                  <span className="block">Welcome to</span>
+                  <span className="block text-[#c9a55c]">Bayan</span>
+                </>
+              )}
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              {isRTL ? 'قم بتسجيل الدخول للوصول إلى لوحة التحكم' : 'Sign in to access your dashboard'}
+            <p className="text-lg text-white/80 max-w-md">
+              {isRTL 
+                ? 'منصتك الموثوقة للتحقق والمطابقة في المملكة العربية السعودية'
+                : 'Your trusted platform for verification and conformity in Saudi Arabia'
+              }
             </p>
           </div>
 
-          {/* Form Section */}
-          <div className="px-8 pb-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Login Form */}
+          <div className="backdrop-blur-md bg-white/10 rounded-2xl p-8 border border-white/20 shadow-2xl max-w-md">
+            <h2 className="text-xl font-semibold text-white mb-6">
+              {isRTL ? 'تسجيل الدخول' : 'Sign In'}
+            </h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl" data-testid="login-error">
+                <div className="p-3 text-sm text-red-200 bg-red-500/30 border border-red-400/50 rounded-xl" data-testid="login-error">
                   {error}
                 </div>
               )}
               
               {/* Email Field */}
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+              <div className="space-y-2">
+                <Label htmlFor="email" className={`text-sm font-medium text-white/90 ${isRTL ? 'text-right block' : ''}`}>
                   {t('email')}
                 </Label>
                 <div className="relative">
-                  <Mail className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} />
+                  <Mail className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-white/50 ${isRTL ? 'right-4' : 'left-4'}`} />
                   <Input
                     id="email"
                     type="email"
@@ -117,18 +138,18 @@ const LoginPage = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     data-testid="login-email-input"
-                    className={`h-11 bg-white/70 border-slate-200 focus:border-[#1e3a5f] focus:ring-[#1e3a5f]/20 rounded-xl ${isRTL ? 'pr-10 text-right' : 'pl-10'}`}
+                    className={`h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#c9a55c] focus:ring-[#c9a55c]/30 rounded-xl ${isRTL ? 'pr-12 text-right' : 'pl-12'}`}
                   />
                 </div>
               </div>
 
               {/* Password Field */}
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+              <div className="space-y-2">
+                <Label htmlFor="password" className={`text-sm font-medium text-white/90 ${isRTL ? 'text-right block' : ''}`}>
                   {t('password')}
                 </Label>
                 <div className="relative">
-                  <Lock className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} />
+                  <Lock className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-white/50 ${isRTL ? 'right-4' : 'left-4'}`} />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -137,29 +158,29 @@ const LoginPage = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     data-testid="login-password-input"
-                    className={`h-11 bg-white/70 border-slate-200 focus:border-[#1e3a5f] focus:ring-[#1e3a5f]/20 rounded-xl ${isRTL ? 'pr-10 pl-10 text-right' : 'pl-10 pr-10'}`}
+                    className={`h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#c9a55c] focus:ring-[#c9a55c]/30 rounded-xl ${isRTL ? 'pr-12 pl-12 text-right' : 'pl-12 pr-12'}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors ${isRTL ? 'left-3' : 'right-3'}`}
+                    className={`absolute top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors ${isRTL ? 'left-4' : 'right-4'}`}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
               {/* Remember Me */}
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <input
                   type="checkbox"
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-[#1e3a5f] bg-white border-slate-300 rounded focus:ring-[#1e3a5f] focus:ring-2"
+                  className="w-4 h-4 text-[#c9a55c] bg-white/10 border-white/30 rounded focus:ring-[#c9a55c] focus:ring-2"
                   data-testid="remember-me-checkbox"
                 />
-                <Label htmlFor="rememberMe" className="text-sm text-slate-600 cursor-pointer">
+                <Label htmlFor="rememberMe" className="text-sm text-white/80 cursor-pointer">
                   {t('rememberMe')}
                 </Label>
               </div>
@@ -167,13 +188,13 @@ const LoginPage = () => {
               {/* Submit Button */}
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold rounded-xl shadow-lg shadow-[#1e3a5f]/30 hover:shadow-xl transition-all" 
+                className="w-full h-12 bg-[#c9a55c] hover:bg-[#b8954d] text-[#1e3a5f] font-bold rounded-xl shadow-lg shadow-[#c9a55c]/30 hover:shadow-xl transition-all text-base" 
                 disabled={loading} 
                 data-testid="login-submit-button"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -185,29 +206,29 @@ const LoginPage = () => {
               </Button>
             </form>
 
-            {/* Demo Credentials - Compact */}
-            <div className="mt-4 p-3 bg-slate-50/80 rounded-xl border border-slate-100">
-              <p className={`text-xs text-slate-400 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+            {/* Demo Credentials */}
+            <div className="mt-5 p-3 bg-white/5 rounded-xl border border-white/10">
+              <p className={`text-xs text-white/50 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? 'بيانات اختبارية' : 'Demo Credentials'}
               </p>
-              <div className="flex gap-4 text-xs">
+              <div className={`flex gap-4 text-xs ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div>
-                  <span className="text-slate-400">{t('email')}: </span>
-                  <code className="text-[#1e3a5f] font-mono font-medium">admin@test.com</code>
+                  <span className="text-white/50">{t('email')}: </span>
+                  <code className="text-[#c9a55c] font-mono font-medium">admin@test.com</code>
                 </div>
                 <div>
-                  <span className="text-slate-400">{t('password')}: </span>
-                  <code className="text-[#1e3a5f] font-mono font-medium">admin123</code>
+                  <span className="text-white/50">{t('password')}: </span>
+                  <code className="text-[#c9a55c] font-mono font-medium">admin123</code>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Customer Portal Link - Bottom of card */}
-          <div className="px-8 py-4 bg-slate-50/50 border-t border-slate-100">
+          {/* Customer Portal Link */}
+          <div className="mt-8">
             <Link 
               to="/portal" 
-              className={`flex items-center justify-center gap-2 text-sm text-slate-600 hover:text-[#c9a55c] transition-colors group ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`inline-flex items-center gap-2 text-white/80 hover:text-[#c9a55c] transition-colors group ${isRTL ? 'flex-row-reverse' : ''}`}
               data-testid="customer-portal-link"
             >
               <span>{isRTL ? 'هل أنت عميل؟' : 'Are you a customer?'}</span>
@@ -215,13 +236,16 @@ const LoginPage = () => {
               <ArrowRight className={`w-4 h-4 text-[#c9a55c] group-hover:translate-x-1 transition-transform ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
             </Link>
           </div>
-        </div>
 
-        {/* Footer - Below card */}
-        <p className="text-center text-sm text-white/70 mt-6">
-          © {new Date().getFullYear()} {isRTL ? 'بيان للتحقق والمطابقة' : 'Bayan for Verification and Conformity'}
-        </p>
+          {/* Footer */}
+          <p className="text-sm text-white/50 mt-12">
+            © {new Date().getFullYear()} {isRTL ? 'بيان للتحقق والمطابقة' : 'Bayan for Verification and Conformity'}
+          </p>
+        </div>
       </div>
+
+      {/* Right Side - Empty to show the beautiful desert image */}
+      <div className="hidden md:block md:w-1/2 lg:w-[55%]" />
     </div>
   );
 };

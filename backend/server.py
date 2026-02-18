@@ -10944,6 +10944,7 @@ app.include_router(notifications_router, prefix="/api")
 app.include_router(sites_router, prefix="/api")
 app.include_router(contacts_router, prefix="/api")
 app.include_router(documents_router, prefix="/api")
+app.include_router(technical_reviews_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

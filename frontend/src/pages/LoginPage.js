@@ -108,8 +108,8 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* Login Card - Center Left (Vertically Centered on Left Half) */}
-      <div className="absolute left-0 top-0 bottom-0 w-full lg:w-1/2 flex items-center justify-center p-4 lg:pl-16 lg:pr-8 z-10">
+      {/* Login Card - Centered */}
+      <div className="absolute inset-0 flex items-center justify-center p-4 z-10">
         <div className="w-full max-w-md">
           <div className="backdrop-blur-xl bg-[#1e3a5f]/40 rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
             {/* Card Header */}

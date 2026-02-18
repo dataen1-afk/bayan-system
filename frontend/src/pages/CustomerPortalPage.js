@@ -874,7 +874,7 @@ const CustomerPortalPage = () => {
           <div className={`flex flex-col md:flex-row items-center justify-between gap-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
             <img src="/bayan-logo.png" alt="Bayan" className="h-12 brightness-0 invert" />
             <p className="text-white/60 text-sm">
-              © {new Date().getFullYear()} Bayan Auditing & Conformity. {isRTL ? 'جميع الحقوق محفوظة' : 'All rights reserved.'}
+              © {new Date().getFullYear()} Bayan for Verification and Conformity. {isRTL ? 'جميع الحقوق محفوظة' : 'All rights reserved.'}
             </p>
           </div>
         </div>

@@ -89,7 +89,7 @@ const PWAInstallPrompt = ({ isRTL }) => {
                     {isRTL ? 'تثبيت التطبيق' : 'Install App'}
                   </h3>
                   <p className="text-white/70 text-xs">
-                    {isRTL ? 'بيان للتدقيق والمطابقة' : 'Bayan Audit'}
+                    {isRTL ? 'بيان للتحقق والمطابقة' : 'Bayan'}
                   </p>
                 </div>
               </div>

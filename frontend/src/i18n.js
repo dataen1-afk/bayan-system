@@ -32,6 +32,7 @@ const resources = {
       "client": "Client",
       
       // Dashboard
+      "dashboard": "Dashboard",
       "adminDashboard": "Admin Dashboard",
       "clientDashboard": "Client Dashboard",
       "welcome": "Welcome",

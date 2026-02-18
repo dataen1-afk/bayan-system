@@ -328,7 +328,7 @@ def generate_grant_agreement_pdf(agreement_data: dict, output_path: str = None) 
         c.rect(0, 0, width, 25, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN Auditing & Conformity | Grant Agreement")
+        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Grant Agreement")
     
     # ============ PAGE 1: HEADER AND PARTIES ============
     page_num = 1

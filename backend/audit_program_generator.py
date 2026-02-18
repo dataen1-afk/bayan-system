@@ -84,7 +84,7 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
         c.rect(0, 0, width, 25, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN Auditing & Conformity | Audit Program BACF6-05")
+        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Audit Program BACF6-05")
     
     # ============ PAGE 1 ============
     page_num = 1

@@ -1,5 +1,5 @@
 """
-Bilingual PDF Contract Generator for Bayan Auditing & Conformity
+Bilingual PDF Contract Generator for Bayan for Verification and Conformity
 Generates professional certification contracts in both Arabic and English
 """
 
@@ -245,7 +245,7 @@ class BilingualContractPDFGenerator:
             'ar': 'ختم الشركة'
         },
         'digital_signature_notice': {
-            'en': 'This document has been digitally signed through the Bayan Auditing & Conformity online portal.',
+            'en': 'This document has been digitally signed through the Bayan for Verification and Conformity online portal.',
             'ar': 'تم توقيع هذه الوثيقة إلكترونياً من خلال بوابة بيان للتحقق والمطابقة.'
         },
         'terms': {
@@ -568,7 +568,7 @@ class BilingualContractPDFGenerator:
         canvas.setFillColor(colors.gray)
         canvas.setFont('Helvetica', 7)
         canvas.drawCentredString(A4[0] / 2, 32, 
-            f"© {datetime.now().year} Bayan Auditing & Conformity. All Rights Reserved. | جميع الحقوق محفوظة لبيان للتحقق والمطابقة")
+            f"© {datetime.now().year} Bayan for Verification and Conformity. All Rights Reserved. | جميع الحقوق محفوظة لبيان للتحقق والمطابقة")
         canvas.drawCentredString(A4[0] / 2, 22, 
             f"Page {doc.page}")
         

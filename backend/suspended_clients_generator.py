@@ -57,7 +57,7 @@ def generate_suspended_client_pdf(client: dict, output_path: str):
     # Arabic company name
     try:
         c.setFont("Amiri-Bold", 14)
-        arabic_name = reshape_arabic("بيان للتدقيق والمطابقة")
+        arabic_name = reshape_arabic("بيان للتحقق والمطابقة")
         c.drawRightString(width - 2*cm, y - 0.5*cm, arabic_name)
     except:
         pass

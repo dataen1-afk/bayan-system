@@ -2061,7 +2061,7 @@ Please click the following link to fill out the form:
 {form_link}
 
 Best regards,
-Bayan Auditing & Conformity
+Bayan for Verification and Conformity
 """
     
     await send_email(
@@ -2279,7 +2279,7 @@ Click the following link to review and accept the proposal:
 This proposal is valid for {proposal['validity_days']} days.
 
 Best regards,
-Bayan Auditing & Conformity
+Bayan for Verification and Conformity
 """
     
     await send_email(
@@ -5042,7 +5042,7 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     c.setFillColor(colors.white)
     c.setFont('Helvetica', 9)
     # English part
-    c.drawString(width/2 - 180, 28, "BAYAN Auditing & Conformity |")
+    c.drawString(width/2 - 180, 28, "BAYAN for Verification and Conformity |")
     # Arabic part with proper reshaping
     if arabic_font_available:
         try:
@@ -5364,7 +5364,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     c.rect(0, 0, width, 35, fill=True, stroke=False)
     c.setFillColor(colors.white)
     c.setFont('Helvetica', 9)
-    c.drawCentredString(width/2 - 60, 18, "BAYAN Auditing & Conformity")
+    c.drawCentredString(width/2 - 60, 18, "BAYAN for Verification and Conformity")
     if arabic_font_available:
         try:
             ar_footer = get_display(arabic_reshaper.reshape("بيان للتحقق والمطابقة"))
@@ -5591,7 +5591,7 @@ async def generate_bilingual_form_pdf_file(form: dict) -> str:
     c.rect(0, 0, width, 35, fill=True, stroke=False)
     c.setFillColor(colors.white)
     c.setFont('Helvetica', 9)
-    c.drawCentredString(width/2 - 60, 18, "BAYAN Auditing & Conformity")
+    c.drawCentredString(width/2 - 60, 18, "BAYAN for Verification and Conformity")
     if arabic_font_available:
         try:
             ar_footer = get_display(arabic_reshaper.reshape("بيان للتحقق والمطابقة"))
@@ -5730,7 +5730,7 @@ async def generate_bilingual_report_pdf_file(data: dict, report_type: str) -> st
     c.rect(0, 0, width, 50, fill=True, stroke=False)
     c.setFillColor(colors.white)
     c.setFont('Helvetica', 10)
-    c.drawCentredString(width/2, 20, "BAYAN Auditing & Conformity | بيان للتحقق والمطابقة")
+    c.drawCentredString(width/2, 20, "BAYAN for Verification and Conformity | بيان للتحقق والمطابقة")
     
     c.save()
     return str(pdf_path)

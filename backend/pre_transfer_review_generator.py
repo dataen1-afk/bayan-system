@@ -89,8 +89,8 @@ def generate_pre_transfer_review_pdf(data: dict, output_path: str = None) -> str
         c.rect(0, 0, width, 30, fill=1, stroke=0)
         c.setFillColor(white)
         c.setFont("Helvetica", 8)
-        c.drawString(30, 12, "BAYAN Auditing & Conformity - Pre-Transfer Review")
-        c.drawRightString(width - 30, 12, reshape_arabic("بيان للتدقيق والمطابقة - مراجعة ما قبل النقل"))
+        c.drawString(30, 12, "BAYAN for Verification and Conformity - Pre-Transfer Review")
+        c.drawRightString(width - 30, 12, reshape_arabic("بيان للتحقق والمطابقة - مراجعة ما قبل النقل"))
     
     draw_header()
     draw_footer()

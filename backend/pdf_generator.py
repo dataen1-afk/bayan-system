@@ -1,5 +1,5 @@
 """
-PDF Contract Generator for Bayan Auditing & Conformity
+PDF Contract Generator for Bayan for Verification and Conformity
 Generates professional certification contracts with company branding
 """
 
@@ -266,7 +266,7 @@ class ContractPDFGenerator:
         canvas.setFillColor(colors.gray)
         canvas.setFont('Helvetica', 8)
         canvas.drawCentredString(A4[0] / 2, 35, 
-            f"© {datetime.now().year} Bayan Auditing & Conformity. All Rights Reserved.")
+            f"© {datetime.now().year} Bayan for Verification and Conformity. All Rights Reserved.")
         canvas.drawCentredString(A4[0] / 2, 25, 
             f"Page {doc.page}")
         
@@ -539,7 +539,7 @@ class ContractPDFGenerator:
         # Add digital signature notice
         story.append(Spacer(1, 20))
         story.append(Paragraph(
-            "<i>This document has been digitally signed through the Bayan Auditing & Conformity online portal.</i>",
+            "<i>This document has been digitally signed through the Bayan for Verification and Conformity online portal.</i>",
             self.styles['Footer']
         ))
         

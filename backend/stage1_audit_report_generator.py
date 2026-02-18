@@ -117,7 +117,7 @@ def generate_stage1_audit_report_pdf(report_data: dict) -> bytes:
         c.rect(0, 0, width, 25, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN Auditing & Conformity | Stage 1 Audit Report BACF6-10")
+        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Stage 1 Audit Report BACF6-10")
     
     def check_page_break(current_y, needed_space=100):
         nonlocal page_num

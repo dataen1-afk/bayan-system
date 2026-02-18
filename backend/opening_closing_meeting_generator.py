@@ -77,7 +77,7 @@ def generate_opening_closing_meeting_pdf(meeting_data: dict) -> bytes:
         c.rect(0, 0, width, 25, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN Auditing & Conformity | Opening & Closing Meeting BACF6-09")
+        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Opening & Closing Meeting BACF6-09")
     
     # ============ PAGE 1 ============
     page_num = 1

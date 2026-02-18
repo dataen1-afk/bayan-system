@@ -105,7 +105,7 @@ def generate_stage1_audit_plan_pdf(plan_data: dict) -> bytes:
         c.rect(0, 0, width, 25, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN Auditing & Conformity | Stage 1 Audit Plan BACF6-07")
+        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Stage 1 Audit Plan BACF6-07")
     
     # ============ PAGE 1 ============
     page_num = 1

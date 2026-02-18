@@ -94,8 +94,8 @@ def generate_technical_review_pdf(data: dict, output_path: str = None) -> str:
         c.rect(0, 0, width, 30, fill=1, stroke=0)
         c.setFillColor(white)
         c.setFont("Helvetica", 8)
-        c.drawString(30, 12, "BAYAN Auditing & Conformity - Confidential")
-        c.drawRightString(width - 30, 12, "بيان للتدقيق والمطابقة - سري")
+        c.drawString(30, 12, "BAYAN for Verification and Conformity - Confidential")
+        c.drawRightString(width - 30, 12, "بيان للتحقق والمطابقة - سري")
     
     # Page 1
     draw_header(1)

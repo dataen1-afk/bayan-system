@@ -110,7 +110,7 @@ def generate_contract_review_pdf(review_data: dict) -> bytes:
         c.rect(0, 0, width, 25, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN Auditing & Conformity | Contract Review BACF6-04")
+        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Contract Review BACF6-04")
     
     def new_page(page_num):
         c.showPage()

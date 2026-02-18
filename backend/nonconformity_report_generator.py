@@ -419,7 +419,7 @@ def draw_footer(c, width, data):
     c.setFont('Helvetica', 8)
     c.setFillColor(HexColor('#718096'))
     c.drawString(1.5*cm, 1.5*cm, "BAC-F6-13 | Nonconformity Report")
-    c.drawRightString(width - 1.5*cm, 1.5*cm, "BAYAN Auditing & Conformity Assessment")
+    c.drawRightString(width - 1.5*cm, 1.5*cm, "BAYAN for Verification and Conformity Assessment")
     
     # Footer line
     c.setStrokeColor(BORDER_COLOR)

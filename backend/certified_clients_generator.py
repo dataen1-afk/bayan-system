@@ -56,7 +56,7 @@ def generate_certified_client_pdf(client: dict, output_path: str):
     # Arabic company name
     try:
         c.setFont("Amiri-Bold", 14)
-        arabic_name = reshape_arabic("بيان للتدقيق والمطابقة")
+        arabic_name = reshape_arabic("بيان للتحقق والمطابقة")
         c.drawRightString(width - 2*cm, y - 0.5*cm, arabic_name)
     except:
         pass
@@ -260,7 +260,7 @@ def generate_certified_clients_list_pdf(clients: list, output_path: str):
         
         try:
             c.setFont("Amiri-Bold", 12)
-            c.drawRightString(width - 2*cm, y - 0.5*cm, reshape_arabic("بيان للتدقيق والمطابقة"))
+            c.drawRightString(width - 2*cm, y - 0.5*cm, reshape_arabic("بيان للتحقق والمطابقة"))
         except:
             pass
         

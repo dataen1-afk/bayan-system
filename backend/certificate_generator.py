@@ -268,7 +268,7 @@ def generate_certificate_pdf(certificate_data: dict, output_path: str) -> str:
     footer_y = inner_margin + 10
     c.setFillColor(NAVY_BLUE)
     c.setFont('Helvetica', 8)
-    c.drawCentredString(width/2, footer_y, "BAYAN Auditing & Conformity | بيان للتحقق والمطابقة | www.bayan.sa")
+    c.drawCentredString(width/2, footer_y, "BAYAN for Verification and Conformity | بيان للتحقق والمطابقة | www.bayan.sa")
     
     # Decorative elements - corner ornaments
     c.setStrokeColor(GOLD)

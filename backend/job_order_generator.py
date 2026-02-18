@@ -103,7 +103,7 @@ def generate_job_order_pdf(job_order_data: dict) -> bytes:
         c.rect(0, 0, width, 25, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, "BAYAN Auditing & Conformity | Job Order BACF6-06")
+        c.drawCentredString(width/2, 10, "BAYAN for Verification and Conformity | Job Order BACF6-06")
     
     # ============ PAGE 1 - APPOINTMENT ============
     

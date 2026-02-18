@@ -175,6 +175,10 @@ function App() {
               element={user?.role === 'admin' ? <AdminLayout><JobOrdersPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
+              path="/audit-plans" 
+              element={user?.role === 'admin' ? <AdminLayout><AuditPlansPage /></AdminLayout> : <Navigate to="/login" />} 
+            />
+            <Route 
               path="/stage1-audit-plans" 
               element={user?.role === 'admin' ? <AdminLayout><Stage1AuditPlansPage /></AdminLayout> : <Navigate to="/login" />} 
             />
@@ -185,6 +189,10 @@ function App() {
             <Route 
               path="/opening-closing-meetings" 
               element={user?.role === 'admin' ? <AdminLayout><OpeningClosingMeetingsPage /></AdminLayout> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/audit-reports" 
+              element={user?.role === 'admin' ? <AdminLayout><AuditReportsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/stage1-audit-reports" 

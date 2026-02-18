@@ -310,18 +310,30 @@ export default function Stage2AuditPlansPage({ embedded = false }) {
   };
 
   return (
-    <div className={`p-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('stage2AuditPlans') || 'Stage 2 Audit Plans'}</h1>
-          <p className="text-gray-500">BACF6-08 - {t('stage2Description') || 'Certification audit - Phase 2 planning'}</p>
+    <div className={`${embedded ? '' : 'p-6'} ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Header - Only show when not embedded */}
+      {!embedded && (
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{t('stage2AuditPlans') || 'Stage 2 Audit Plans'}</h1>
+            <p className="text-gray-500">BACF6-08 - {t('stage2Description') || 'Certification audit - Phase 2 planning'}</p>
+          </div>
+          <Button onClick={() => setShowCreateModal(true)} className="bg-violet-600 hover:bg-violet-700" data-testid="create-stage2-plan-btn">
+            <Plus className="w-4 h-4 mr-2" />
+            {t('createPlan') || 'Create Plan'}
+          </Button>
         </div>
-        <Button onClick={() => setShowCreateModal(true)} className="bg-violet-600 hover:bg-violet-700" data-testid="create-stage2-plan-btn">
-          <Plus className="w-4 h-4 mr-2" />
-          {t('createPlan') || 'Create Plan'}
-        </Button>
-      </div>
+      )}
+      
+      {/* Create Button when embedded */}
+      {embedded && (
+        <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} mb-4`}>
+          <Button onClick={() => setShowCreateModal(true)} className="bg-violet-600 hover:bg-violet-700" data-testid="create-stage2-plan-btn">
+            <Plus className="w-4 h-4 mr-2" />
+            {t('createPlan') || 'Create Plan'}
+          </Button>
+        </div>
+      )}
       
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

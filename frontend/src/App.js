@@ -228,6 +228,14 @@ function App() {
               element={user?.role === 'admin' ? <AdminLayout><SuspendedClientsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
+              path="/rfq-requests" 
+              element={user?.role === 'admin' ? <AdminLayout><RFQRequestsPage /></AdminLayout> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/contact-messages" 
+              element={user?.role === 'admin' ? <AdminLayout><ContactMessagesPage /></AdminLayout> : <Navigate to="/login" />} 
+            />
+            <Route 
               path="/reports" 
               element={user?.role === 'admin' ? <AdminLayout><ReportsPage /></AdminLayout> : <Navigate to="/login" />} 
             />

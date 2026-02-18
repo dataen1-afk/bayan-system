@@ -553,6 +553,16 @@ const resources = {
       "suspendedClients.title": "Suspended Clients Registry",
       "suspendedClients.subtitle": "BAC-F6-20 - List of clients with suspended certifications",
       
+      // RFQ Requests
+      "rfqRequests": "Quote Requests",
+      "rfqRequests.title": "Quote Requests",
+      "rfqRequests.subtitle": "Manage quote requests from the customer portal",
+      
+      // Contact Messages
+      "contactMessages": "Contact Messages",
+      "contactMessages.title": "Contact Messages",
+      "contactMessages.subtitle": "Manage contact messages from the customer portal",
+      
       // Forms
       "createNewForm": "Create New Form",
       "createCustomForm": "Create a custom form for a client",

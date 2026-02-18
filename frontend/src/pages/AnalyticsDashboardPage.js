@@ -7,12 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, BarChart3, TrendingUp, TrendingDown, FileText, DollarSign, 
-  Award, Calendar, Users, CheckCircle, Clock, Target, LogOut, RefreshCw,
+  Award, Calendar, Users, CheckCircle, Clock, Target, RefreshCw,
   ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
-import Sidebar from '@/components/Sidebar';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import NotificationBell from '@/components/NotificationBell';
 import { AuthContext } from '@/App';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';

@@ -434,6 +434,20 @@ const AdminDashboard = () => {
   // Render content based on active tab
   const renderContent = () => {
     switch (activeTab) {
+      case 'dashboard':
+        return (
+          <div className="space-y-6">
+            <div className={isRTL ? 'text-right' : 'text-left'}>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                {isRTL ? 'مرحباً بك' : 'Welcome Back'}, {user?.name}
+              </h2>
+              <p className="text-slate-500">
+                {isRTL ? 'نظرة عامة على أنشطة المنصة' : 'Overview of platform activities'}
+              </p>
+            </div>
+            <DashboardWidgets isRTL={isRTL} />
+          </div>
+        );
       case 'forms':
         // Calculate quick stats for forms
         const totalForms = applicationForms.length;

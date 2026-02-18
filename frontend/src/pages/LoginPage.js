@@ -69,12 +69,12 @@ const LoginPage = () => {
       {/* Dark overlay for depth */}
       <div className="absolute inset-0 bg-[#1e3a5f]/30" />
 
-      {/* Logo - Top Right Corner - ENLARGED */}
+      {/* Logo - Top Right Corner - ENLARGED & WHITE */}
       <div className="absolute top-6 right-6 z-20">
         <img 
           src="/bayan-logo.png" 
           alt="Bayan for Verification and Conformity" 
-          className="h-20 md:h-24 lg:h-28 drop-shadow-2xl"
+          className="h-20 md:h-24 lg:h-28 drop-shadow-2xl brightness-0 invert"
         />
       </div>
 

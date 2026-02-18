@@ -117,6 +117,30 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 
 ## NEW FEATURES (December 2025)
 
+### Progressive Web App (PWA) ✅ (NEW - Feb 2026)
+- **Purpose**: Enable auditors to use the app offline and install it on devices
+- **Files Created**:
+  - `/app/frontend/public/manifest.json` - PWA manifest with app metadata
+  - `/app/frontend/public/service-worker.js` - Service worker for caching/offline
+- **Features**:
+  - App installable on mobile/desktop devices
+  - Offline capability with smart caching strategy
+  - Push notification support (prepared for future use)
+  - Standalone display mode (no browser chrome)
+  - Theme color matching Bayan brand (#1e3a5f)
+- **Service Worker Strategy**:
+  - Static assets cached on install
+  - Network-first for API calls (always fresh data)
+  - Cache-first with background update for UI assets
+  - Offline fallback to /portal
+- **index.html Updates**:
+  - Added manifest.json link
+  - Added apple-touch-icon for iOS
+  - Added apple-mobile-web-app-* meta tags
+  - Updated theme-color to #1e3a5f
+  - Updated title to "Bayan Auditing & Conformity"
+- **Service Worker Registration**: Added in `/app/frontend/src/index.js`
+
 ### Customer Portal ✅ (REDESIGNED - Feb 2026)
 - **Professional public-facing portal**: `/portal`
 - **Hero Section**: Branded banner with SAC accreditation badge, call-to-action buttons, stats bar (500+ companies, 15+ years, 50+ auditors, 99% satisfaction)

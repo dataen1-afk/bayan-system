@@ -265,10 +265,14 @@ async def lift_suspension(
             {"$set": {"status": certified_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
     
+    status_ar = {'reinstated': 'تم إعادة التفعيل', 'withdrawn': 'تم السحب'}.get(new_status, new_status)
+    
     await create_notification(
         notification_type="suspension_lifted",
         title=f"Suspension {new_status.title()}",
+        title_ar=f"رفع الإيقاف - {status_ar}",
         message=f"Client {existing.get('client_name', '')} suspension lifted - {new_status}",
+        message_ar=f"تم رفع إيقاف العميل {existing.get('client_name', '')} - {status_ar}",
         related_id=client_id,
         related_type="suspended_client"
     )

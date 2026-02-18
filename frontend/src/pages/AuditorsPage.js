@@ -471,9 +471,7 @@ const AuditorsPage = () => {
               ))}
             </div>
           )}
-          </div>
-        </main>
-      </div>
+        </div>
 
       {/* Create/Edit Auditor Modal */}
       {showCreateModal && (

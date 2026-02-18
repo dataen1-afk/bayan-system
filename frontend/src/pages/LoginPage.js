@@ -6,15 +6,15 @@ import { API, AuthContext } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { Globe, ArrowRight, Shield } from 'lucide-react';
+import { Globe, ArrowRight, Shield, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language?.startsWith('ar');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,6 @@ const LoginPage = () => {
     try {
       const response = await axios.post(`${API}/auth/login`, { email, password });
       
-      // Save credentials if "Remember me" is checked
       if (rememberMe) {
         localStorage.setItem('savedEmail', email);
         localStorage.setItem('savedPassword', password);
@@ -59,149 +58,236 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100" data-testid="login-page">
-      {/* Top Bar */}
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-bayan-navy via-bayan-gold to-bayan-navy"></div>
-      
-      {/* Header with Language Switcher */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-        <LanguageSwitcher />
+    <div className="min-h-screen flex" dir={isRTL ? 'rtl' : 'ltr'} data-testid="login-page">
+      {/* Left Side - Background Image */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden">
+        {/* Saudi Landmark Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('https://images.pexels.com/photos/31849529/pexels-photo-31849529.jpeg?auto=compress&cs=tinysrgb&w=1920')`,
+          }}
+        />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/90 via-[#1e3a5f]/70 to-transparent" />
+        
+        {/* Content on Image */}
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
+          {/* Logo */}
+          <div>
+            <img 
+              src="/bayan-logo.png" 
+              alt="Bayan" 
+              className="h-16 brightness-0 invert"
+            />
+          </div>
+          
+          {/* Middle Content */}
+          <div className="max-w-lg">
+            <h1 className="text-4xl xl:text-5xl font-bold mb-6 leading-tight">
+              {isRTL ? 'شريكك الموثوق في رحلة التميز المؤسسي' : 'Your Trusted Partner in Organizational Excellence'}
+            </h1>
+            <p className="text-lg text-white/80 leading-relaxed">
+              {isRTL 
+                ? 'نقدم خدمات التحقق والمطابقة المعتمدة دولياً لمساعدة مؤسستك على تحقيق أعلى معايير الجودة'
+                : 'We provide internationally accredited verification and conformity services to help your organization achieve the highest quality standards'}
+            </p>
+            
+            {/* Stats */}
+            <div className="flex gap-8 mt-10">
+              <div>
+                <div className="text-3xl font-bold text-[#c9a55c]">500+</div>
+                <div className="text-sm text-white/70">{isRTL ? 'شركة معتمدة' : 'Certified Companies'}</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-[#c9a55c]">15+</div>
+                <div className="text-sm text-white/70">{isRTL ? 'سنوات خبرة' : 'Years Experience'}</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-[#c9a55c]">99%</div>
+                <div className="text-sm text-white/70">{isRTL ? 'رضا العملاء' : 'Client Satisfaction'}</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Bottom - Accreditation Badge */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-[#c9a55c]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">{isRTL ? 'معتمدون من الهيئة السعودية للاعتماد' : 'SAC Accredited Certification Body'}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4 py-12">
-        <div className="w-full max-w-md">
-          {/* Customer Portal Link - Above Login */}
-          <div className="mb-6">
-            <Link to="/portal">
-              <Card className="border-2 border-bayan-gold/30 bg-gradient-to-r from-bayan-gold/5 to-bayan-gold/10 hover:shadow-lg transition-all cursor-pointer group">
-                <CardContent className="p-4">
-                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <div className="w-10 h-10 rounded-full bg-bayan-gold/20 flex items-center justify-center">
-                        <Globe className="w-5 h-5 text-bayan-gold" />
-                      </div>
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <p className="font-semibold text-bayan-navy">
-                          {isRTL ? 'بوابة العملاء' : 'Customer Portal'}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {isRTL ? 'تتبع طلبك أو احصل على عرض سعر' : 'Track your order or request a quote'}
-                        </p>
-                      </div>
-                    </div>
-                    <ArrowRight className={`w-5 h-5 text-bayan-gold group-hover:translate-x-1 transition-transform ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+      {/* Right Side - Login Form */}
+      <div className="w-full lg:w-1/2 xl:w-2/5 flex flex-col">
+        {/* Mobile Background */}
+        <div 
+          className="lg:hidden absolute inset-0 bg-cover bg-center opacity-10"
+          style={{
+            backgroundImage: `url('https://images.pexels.com/photos/31849529/pexels-photo-31849529.jpeg?auto=compress&cs=tinysrgb&w=1920')`,
+          }}
+        />
+        
+        {/* Language Switcher */}
+        <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} z-10`}>
+          <LanguageSwitcher />
+        </div>
+
+        {/* Form Container */}
+        <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12 relative z-10">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-8 text-center">
+            <img 
+              src="/bayan-logo.png" 
+              alt="Bayan" 
+              className="h-20 mx-auto"
+            />
           </div>
 
-          {/* Login Form Card */}
-          <Card className="w-full border-2 border-slate-200 shadow-xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-bayan-navy to-bayan-navy-light text-white text-center pb-8">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Shield className="w-6 h-6" />
+          {/* Customer Portal Link */}
+          <Link to="/portal" className="block mb-8 group">
+            <div className="flex items-center justify-between p-4 rounded-xl border-2 border-[#c9a55c]/30 bg-gradient-to-r from-[#c9a55c]/5 to-[#c9a55c]/10 hover:border-[#c9a55c]/50 hover:shadow-lg transition-all">
+              <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="w-10 h-10 rounded-full bg-[#c9a55c]/20 flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-[#c9a55c]" />
+                </div>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="font-semibold text-[#1e3a5f]">
+                    {isRTL ? 'بوابة العملاء' : 'Customer Portal'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {isRTL ? 'تتبع طلبك أو احصل على عرض سعر' : 'Track your order or request a quote'}
+                  </p>
+                </div>
               </div>
-              <CardTitle className="text-2xl font-bold" data-testid="login-title">
-                {isRTL ? 'تسجيل الدخول للمسؤولين' : 'Admin Login'}
-              </CardTitle>
-              <CardDescription className="text-blue-100">
-                {isRTL ? 'قم بتسجيل الدخول للوصول إلى لوحة التحكم' : 'Sign in to access the dashboard'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {/* Logo at top of white area */}
-              <div className="mb-6 text-center">
-                <img 
-                  src="/bayan-logo.png" 
-                  alt="Bayan for Verification and Conformity" 
-                  className="h-24 w-auto object-contain mx-auto"
+              <ArrowRight className={`w-5 h-5 text-[#c9a55c] group-hover:translate-x-1 transition-transform ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
+            </div>
+          </Link>
+
+          {/* Login Header */}
+          <div className={`mb-8 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#1e3a5f] mb-2">
+              {isRTL ? 'تسجيل الدخول' : 'Welcome Back'}
+            </h2>
+            <p className="text-slate-500">
+              {isRTL ? 'قم بتسجيل الدخول للوصول إلى لوحة التحكم' : 'Sign in to access your dashboard'}
+            </p>
+          </div>
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl" data-testid="login-error">
+                {error}
+              </div>
+            )}
+            
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                {t('email')}
+              </Label>
+              <div className="relative">
+                <Mail className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isRTL ? 'right-4' : 'left-4'}`} />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  data-testid="login-email-input"
+                  className={`h-12 bg-slate-50 border-slate-200 focus:border-[#1e3a5f] focus:ring-[#1e3a5f]/20 ${isRTL ? 'pr-12 text-right' : 'pl-12'}`}
                 />
               </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {error && (
-                  <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded" data-testid="login-error">
-                    {error}
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t('email')}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    data-testid="login-email-input"
-                    className="h-11"
-                  />
-                </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">{t('password')}</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    data-testid="login-password-input"
-                    className="h-11"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                  <input
-                    type="checkbox"
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 text-bayan-navy bg-gray-100 border-gray-300 rounded focus:ring-bayan-navy focus:ring-2"
-                    data-testid="remember-me-checkbox"
-                  />
-                  <Label htmlFor="rememberMe" className="text-sm font-medium text-gray-700 cursor-pointer">
-                    {t('rememberMe')}
-                  </Label>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-bayan-navy hover:bg-bayan-navy-light text-white font-semibold py-6 text-lg shadow-lg" 
-                  disabled={loading} 
-                  data-testid="login-submit-button"
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className={`text-sm font-medium text-slate-700 ${isRTL ? 'text-right block' : ''}`}>
+                {t('password')}
+              </Label>
+              <div className="relative">
+                <Lock className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isRTL ? 'right-4' : 'left-4'}`} />
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={isRTL ? 'أدخل كلمة المرور' : 'Enter your password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  data-testid="login-password-input"
+                  className={`h-12 bg-slate-50 border-slate-200 focus:border-[#1e3a5f] focus:ring-[#1e3a5f]/20 ${isRTL ? 'pr-12 pl-12 text-right' : 'pl-12 pr-12'}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 ${isRTL ? 'left-4' : 'right-4'}`}
                 >
-                  {loading ? (isRTL ? 'جاري تسجيل الدخول...' : 'Signing in...') : (isRTL ? 'تسجيل الدخول' : 'Sign In')}
-                </Button>
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
 
-                {/* Admin Credentials Display */}
-                <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
-                  <div className="text-center mb-3">
-                    <h3 className="font-semibold text-slate-700 text-sm">
-                      {isRTL ? 'بيانات اختبارية' : 'Demo Credentials'}
-                    </h3>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between bg-white p-2 rounded border border-slate-100">
-                      <span className="font-medium text-slate-500">{t('email')}:</span>
-                      <code className="text-bayan-navy font-mono bg-slate-50 px-2 py-0.5 rounded">admin@test.com</code>
-                    </div>
-                    <div className="flex items-center justify-between bg-white p-2 rounded border border-slate-100">
-                      <span className="font-medium text-slate-500">{t('password')}:</span>
-                      <code className="text-bayan-navy font-mono bg-slate-50 px-2 py-0.5 rounded">admin123</code>
-                    </div>
-                  </div>
+            {/* Remember Me */}
+            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-[#1e3a5f] bg-gray-100 border-gray-300 rounded focus:ring-[#1e3a5f] focus:ring-2"
+                data-testid="remember-me-checkbox"
+              />
+              <Label htmlFor="rememberMe" className="text-sm text-slate-600 cursor-pointer">
+                {t('rememberMe')}
+              </Label>
+            </div>
+
+            {/* Submit Button */}
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold text-base shadow-lg shadow-[#1e3a5f]/20 hover:shadow-xl transition-all" 
+              disabled={loading} 
+              data-testid="login-submit-button"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  {isRTL ? 'جاري تسجيل الدخول...' : 'Signing in...'}
+                </span>
+              ) : (
+                isRTL ? 'تسجيل الدخول' : 'Sign In'
+              )}
+            </Button>
+
+            {/* Demo Credentials */}
+            <div className="mt-6 p-4 bg-slate-50/80 backdrop-blur border border-slate-200 rounded-xl">
+              <p className={`text-xs font-medium text-slate-500 mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {isRTL ? 'بيانات اختبارية' : 'Demo Credentials'}
+              </p>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="bg-white p-2.5 rounded-lg border border-slate-100">
+                  <span className="text-slate-400 block mb-0.5">{t('email')}</span>
+                  <code className="text-[#1e3a5f] font-mono font-medium">admin@test.com</code>
                 </div>
-              </form>
-            </CardContent>
-          </Card>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-100">
+                  <span className="text-slate-400 block mb-0.5">{t('password')}</span>
+                  <code className="text-[#1e3a5f] font-mono font-medium">admin123</code>
+                </div>
+              </div>
+            </div>
+          </form>
 
           {/* Footer */}
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <p className={`text-center text-sm text-slate-400 mt-8 ${isRTL ? 'text-right' : ''}`}>
             © {new Date().getFullYear()} {isRTL ? 'بيان للتحقق والمطابقة' : 'Bayan for Verification and Conformity'}
           </p>
         </div>

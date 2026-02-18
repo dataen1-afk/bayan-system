@@ -657,7 +657,7 @@ const CreateProposalPage = () => {
             </Button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

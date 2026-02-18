@@ -1657,6 +1657,7 @@ const resources = {
       "client": "عميل",
       
       // Dashboard
+      "dashboard": "لوحة التحكم",
       "adminDashboard": "لوحة تحكم المدير",
       "clientDashboard": "لوحة تحكم العميل",
       "welcome": "مرحباً",

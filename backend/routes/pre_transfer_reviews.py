@@ -161,7 +161,9 @@ async def create_pre_transfer_review(
     await create_notification(
         notification_type="pre_transfer_created",
         title="Pre-Transfer Review Created",
+        title_ar="تم إنشاء مراجعة ما قبل النقل",
         message=f"Pre-transfer review created for {review.client_name}",
+        message_ar=f"تم إنشاء مراجعة ما قبل النقل لـ {review.client_name}",
         related_id=review.id,
         related_type="pre_transfer_review"
     )

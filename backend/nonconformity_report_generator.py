@@ -87,7 +87,7 @@ def draw_header(c, width, height, data):
     c.drawRightString(width - 1.5*cm, height - 1.2*cm, "BAYAN")
     
     c.setFont('Helvetica', 9)
-    c.drawRightString(width - 1.5*cm, height - 1.7*cm, "Auditing & Conformity Assessment")
+    c.drawRightString(width - 1.5*cm, height - 1.7*cm, "for Verification and Conformity Assessment")
     
     c.setFont('Amiri', 9)
     c.drawRightString(width - 1.5*cm, height - 2.1*cm, reshape_arabic("بيان للتدقيق وتقييم المطابقة"))

@@ -8,11 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   ArrowLeft, Bell, AlertTriangle, AlertCircle, Info, Award, Calendar,
-  Clock, Building2, ChevronRight, LogOut, RefreshCw
+  Clock, Building2, ChevronRight, RefreshCw
 } from 'lucide-react';
-import Sidebar from '@/components/Sidebar';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import NotificationBell from '@/components/NotificationBell';
 import { AuthContext } from '@/App';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';

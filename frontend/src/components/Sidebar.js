@@ -42,6 +42,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const navRef = useRef(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   

@@ -146,7 +146,9 @@ async def create_suspended_client(
     await create_notification(
         notification_type="client_suspended",
         title="Client Suspended",
+        title_ar="تم إيقاف العميل",
         message=f"Client suspended: {client.client_name}",
+        message_ar=f"تم إيقاف العميل: {client.client_name}",
         related_id=client.id,
         related_type="suspended_client"
     )

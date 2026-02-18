@@ -136,32 +136,32 @@ function App() {
                 user ? <AdminDashboard /> : <Navigate to="/login" />
               } 
             />
-            {/* Pages with their own Sidebar - no wrapper needed */}
+            {/* Admin pages - wrapped with AdminLayout */}
             <Route 
               path="/invoices" 
-              element={user?.role === 'admin' ? <InvoicesPage /> : <Navigate to="/login" />} 
+              element={user?.role === 'admin' ? <AdminLayout><InvoicesPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/auditors" 
-              element={user?.role === 'admin' ? <AuditorsPage /> : <Navigate to="/login" />} 
+              element={user?.role === 'admin' ? <AdminLayout><AuditorsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/certificates" 
-              element={user?.role === 'admin' ? <CertificatesPage /> : <Navigate to="/login" />} 
+              element={user?.role === 'admin' ? <AdminLayout><CertificatesPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/alerts" 
-              element={user?.role === 'admin' ? <ExpirationAlertsPage /> : <Navigate to="/login" />} 
+              element={user?.role === 'admin' ? <AdminLayout><ExpirationAlertsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/analytics" 
-              element={user?.role === 'admin' ? <AnalyticsDashboardPage /> : <Navigate to="/login" />} 
+              element={user?.role === 'admin' ? <AdminLayout><AnalyticsDashboardPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/create-proposal/:formId" 
-              element={user?.role === 'admin' ? <CreateProposalPage /> : <Navigate to="/login" />} 
+              element={user?.role === 'admin' ? <AdminLayout><CreateProposalPage /></AdminLayout> : <Navigate to="/login" />} 
             />
-            {/* Pages without Sidebar - wrap with AdminLayout */}
+            {/* More admin pages with AdminLayout */}
             <Route 
               path="/contract-reviews" 
               element={user?.role === 'admin' ? <AdminLayout><ContractReviewsPage /></AdminLayout> : <Navigate to="/login" />} 

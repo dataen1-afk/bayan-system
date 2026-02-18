@@ -16,6 +16,7 @@ import ApplicationForm from '@/components/ApplicationForm';
 import NotificationBell from '@/components/NotificationBell';
 import StatusTimeline from '@/components/StatusTimeline';
 import DataTable from '@/components/DataTable';
+import DashboardWidgets from '@/components/DashboardWidgets';
 
 // Format currency with Western Arabic numerals and SAR
 const formatCurrency = (amount) => {

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { Globe, ArrowRight, Shield, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 const LoginPage = () => {
   const { t, i18n } = useTranslation();
@@ -21,7 +21,6 @@ const LoginPage = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Load saved credentials on mount
   useEffect(() => {
     const savedEmail = localStorage.getItem('savedEmail');
     const savedPassword = localStorage.getItem('savedPassword');
@@ -61,15 +60,15 @@ const LoginPage = () => {
     <div className="min-h-screen flex" dir={isRTL ? 'rtl' : 'ltr'} data-testid="login-page">
       {/* Left Side - Background Image */}
       <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden">
-        {/* Saudi Landmark Background */}
+        {/* Custom Saudi Quality Background */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url('https://images.pexels.com/photos/31849529/pexels-photo-31849529.jpeg?auto=compress&cs=tinysrgb&w=1920')`,
+            backgroundImage: `url('https://static.prod-images.emergentagent.com/jobs/b2f7052b-c928-43fa-8576-4632fce854a9/images/2981159434af46d8a59e2efde0e4758a357e7cff46c8567933938f350e67d0d0.png')`,
           }}
         />
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/90 via-[#1e3a5f]/70 to-transparent" />
+        {/* Subtle Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/80 via-[#1e3a5f]/50 to-transparent" />
         
         {/* Content on Image */}
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
@@ -92,54 +91,23 @@ const LoginPage = () => {
                 ? 'نقدم خدمات التحقق والمطابقة المعتمدة دولياً لمساعدة مؤسستك على تحقيق أعلى معايير الجودة'
                 : 'We provide internationally accredited verification and conformity services to help your organization achieve the highest quality standards'}
             </p>
-            
-            {/* Stats */}
-            <div className="flex gap-8 mt-10">
-              <div>
-                <div className="text-3xl font-bold text-[#c9a55c]">500+</div>
-                <div className="text-sm text-white/70">{isRTL ? 'شركة معتمدة' : 'Certified Companies'}</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-[#c9a55c]">15+</div>
-                <div className="text-sm text-white/70">{isRTL ? 'سنوات خبرة' : 'Years Experience'}</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-[#c9a55c]">99%</div>
-                <div className="text-sm text-white/70">{isRTL ? 'رضا العملاء' : 'Client Satisfaction'}</div>
-              </div>
-            </div>
           </div>
           
-          {/* Bottom - Accreditation Badge */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-[#c9a55c]" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">{isRTL ? 'معتمدون من الهيئة السعودية للاعتماد' : 'SAC Accredited Certification Body'}</p>
-            </div>
-          </div>
+          {/* Bottom - Empty for clean look */}
+          <div></div>
         </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 xl:w-2/5 flex flex-col">
-        {/* Mobile Background */}
-        <div 
-          className="lg:hidden absolute inset-0 bg-cover bg-center opacity-10"
-          style={{
-            backgroundImage: `url('https://images.pexels.com/photos/31849529/pexels-photo-31849529.jpeg?auto=compress&cs=tinysrgb&w=1920')`,
-          }}
-        />
-        
+      <div className="w-full lg:w-1/2 xl:w-2/5 flex flex-col bg-white">
         {/* Language Switcher */}
         <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} z-10`}>
           <LanguageSwitcher />
         </div>
 
         {/* Form Container */}
-        <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12 relative z-10">
-          {/* Mobile Logo */}
+        <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12">
+          {/* Logo for mobile */}
           <div className="lg:hidden mb-8 text-center">
             <img 
               src="/bayan-logo.png" 
@@ -147,26 +115,6 @@ const LoginPage = () => {
               className="h-20 mx-auto"
             />
           </div>
-
-          {/* Customer Portal Link */}
-          <Link to="/portal" className="block mb-8 group">
-            <div className="flex items-center justify-between p-4 rounded-xl border-2 border-[#c9a55c]/30 bg-gradient-to-r from-[#c9a55c]/5 to-[#c9a55c]/10 hover:border-[#c9a55c]/50 hover:shadow-lg transition-all">
-              <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className="w-10 h-10 rounded-full bg-[#c9a55c]/20 flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-[#c9a55c]" />
-                </div>
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                  <p className="font-semibold text-[#1e3a5f]">
-                    {isRTL ? 'بوابة العملاء' : 'Customer Portal'}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {isRTL ? 'تتبع طلبك أو احصل على عرض سعر' : 'Track your order or request a quote'}
-                  </p>
-                </div>
-              </div>
-              <ArrowRight className={`w-5 h-5 text-[#c9a55c] group-hover:translate-x-1 transition-transform ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
-            </div>
-          </Link>
 
           {/* Login Header */}
           <div className={`mb-8 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -269,7 +217,7 @@ const LoginPage = () => {
             </Button>
 
             {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-slate-50/80 backdrop-blur border border-slate-200 rounded-xl">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
               <p className={`text-xs font-medium text-slate-500 mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? 'بيانات اختبارية' : 'Demo Credentials'}
               </p>
@@ -286,8 +234,21 @@ const LoginPage = () => {
             </div>
           </form>
 
+          {/* Customer Portal Link - Simple text below form */}
+          <div className={`mt-8 pt-6 border-t border-slate-200 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <Link 
+              to="/portal" 
+              className={`inline-flex items-center gap-2 text-sm text-slate-600 hover:text-[#c9a55c] transition-colors group ${isRTL ? 'flex-row-reverse' : ''}`}
+              data-testid="customer-portal-link"
+            >
+              <span>{isRTL ? 'هل أنت عميل؟' : 'Are you a customer?'}</span>
+              <span className="font-semibold text-[#c9a55c]">{isRTL ? 'بوابة العملاء' : 'Customer Portal'}</span>
+              <ArrowRight className={`w-4 h-4 text-[#c9a55c] group-hover:translate-x-1 transition-transform ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
+            </Link>
+          </div>
+
           {/* Footer */}
-          <p className={`text-center text-sm text-slate-400 mt-8 ${isRTL ? 'text-right' : ''}`}>
+          <p className={`text-center text-sm text-slate-400 mt-8`}>
             © {new Date().getFullYear()} {isRTL ? 'بيان للتحقق والمطابقة' : 'Bayan for Verification and Conformity'}
           </p>
         </div>

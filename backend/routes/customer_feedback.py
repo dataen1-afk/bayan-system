@@ -169,7 +169,9 @@ async def create_customer_feedback(
     await create_notification(
         notification_type="feedback_created",
         title="Customer Feedback Created",
+        title_ar="تم إنشاء نموذج الملاحظات",
         message=f"Feedback form created for {feedback.organization_name}",
+        message_ar=f"تم إنشاء نموذج ملاحظات لـ {feedback.organization_name}",
         related_id=feedback.id,
         related_type="customer_feedback"
     )

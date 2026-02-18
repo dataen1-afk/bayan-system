@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, BarChart3, TrendingUp, TrendingDown, FileText, DollarSign, 
-  Award, Calendar, Users, CheckCircle, Clock, Target, RefreshCw,
+  Award, Calendar, Users, CheckCircle, Clock, Target, LogOut, RefreshCw,
   ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import NotificationBell from '@/components/NotificationBell';
 import { AuthContext } from '@/App';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -169,48 +172,85 @@ const AnalyticsDashboardPage = () => {
   
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-xl">{t('loading')}...</div>
       </div>
     );
   }
   
   return (
-    <div className="p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Page Header */}
-      <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
-            <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
-            {t('backToDashboard')}
-          </Button>
-          <div>
-            <h1 className={`text-2xl font-bold text-slate-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <BarChart3 className="w-7 h-7 text-bayan-navy" />
-              {t('analyticsOverview')}
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
+        <div className="max-w-full mx-auto px-4 py-3 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className={`flex gap-3 items-center ${isRTL ? 'order-first' : 'order-last'}`}>
+            <NotificationBell />
+            <LanguageSwitcher />
+            <Button variant="outline" onClick={logout} className="bg-bayan-navy text-white hover:bg-bayan-navy-light border-bayan-navy font-semibold">
+              <LogOut className="w-4 h-4" />
+              {t('logout')}
+            </Button>
+          </div>
+          <div className={isRTL ? 'order-last' : 'order-first'}>
+            <div className="-my-2">
+              <img src="/bayan-logo.png" alt="Bayan" className="h-20 w-auto object-contain" />
+            </div>
           </div>
         </div>
+        <div className="h-1.5 bg-gradient-to-r from-bayan-navy via-bayan-navy-light to-bayan-navy"></div>
+      </header>
+
+      {/* Layout with Sidebar */}
+      <div className="flex pt-[102px]">
+        <Sidebar 
+          activeTab="analytics" 
+          onTabChange={(tab) => {
+            if (tab === 'forms' || tab === 'quotations' || tab === 'contracts' || tab === 'templates' || tab === 'reports') {
+              navigate(`/dashboard?tab=${tab}`);
+            }
+          }}
+          userRole="admin"
+          userName={user?.name}
+          dashboardTitle={t('adminDashboard')}
+        />
         
-        <Button variant="outline" onClick={fetchAnalytics}>
-          <RefreshCw className="w-4 h-4" />
-        </Button>
-      </div>
-      
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <Card className="border-slate-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FileText className="w-5 h-5 text-blue-600" />
+        {/* Main Content */}
+        <main className="flex-1 p-4 lg:p-6 min-h-screen">
+          <div className="w-full">
+            {/* Header */}
+            <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
+                  {t('backToDashboard')}
+                </Button>
+                <div>
+                  <h1 className={`text-2xl font-bold text-slate-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <BarChart3 className="w-7 h-7 text-bayan-navy" />
+                    {t('analyticsOverview')}
+                  </h1>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{analytics?.overview?.total_forms || 0}</p>
-                <p className="text-sm text-gray-500">{t('totalForms')}</p>
-              </div>
+              
+              <Button variant="outline" onClick={fetchAnalytics}>
+                <RefreshCw className="w-4 h-4" />
+              </Button>
             </div>
-          </CardContent>
+            
+            {/* Overview Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+              <Card className="border-slate-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{analytics?.overview?.total_forms || 0}</p>
+                      <p className="text-sm text-gray-500">{t('totalForms')}</p>
+                    </div>
+                  </div>
+                </CardContent>
               </Card>
               
               <Card className="border-slate-200">

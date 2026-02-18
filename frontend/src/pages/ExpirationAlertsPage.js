@@ -8,8 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   ArrowLeft, Bell, AlertTriangle, AlertCircle, Info, Award, Calendar,
-  Clock, Building2, ChevronRight, RefreshCw
+  Clock, Building2, ChevronRight, LogOut, RefreshCw
 } from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import NotificationBell from '@/components/NotificationBell';
 import { AuthContext } from '@/App';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -138,59 +141,96 @@ const ExpirationAlertsPage = () => {
   
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-xl">{t('loading')}...</div>
       </div>
     );
   }
   
   return (
-    <div className="p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Page Header */}
-      <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
-            <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
-            {t('backToDashboard')}
-          </Button>
-          <div>
-            <h1 className={`text-2xl font-bold text-slate-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Bell className="w-7 h-7 text-bayan-navy" />
-              {t('expirationAlerts')}
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
+        <div className="max-w-full mx-auto px-4 py-3 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className={`flex gap-3 items-center ${isRTL ? 'order-first' : 'order-last'}`}>
+            <NotificationBell />
+            <LanguageSwitcher />
+            <Button variant="outline" onClick={logout} className="bg-bayan-navy text-white hover:bg-bayan-navy-light border-bayan-navy font-semibold">
+              <LogOut className="w-4 h-4" />
+              {t('logout')}
+            </Button>
+          </div>
+          <div className={isRTL ? 'order-last' : 'order-first'}>
+            <div className="-my-2">
+              <img src="/bayan-logo.png" alt="Bayan" className="h-20 w-auto object-contain" />
+            </div>
           </div>
         </div>
+        <div className="h-1.5 bg-gradient-to-r from-bayan-navy via-bayan-navy-light to-bayan-navy"></div>
+      </header>
+
+      {/* Layout with Sidebar */}
+      <div className="flex pt-[102px]">
+        <Sidebar 
+          activeTab="alerts" 
+          onTabChange={(tab) => {
+            if (tab === 'forms' || tab === 'quotations' || tab === 'contracts' || tab === 'templates' || tab === 'reports') {
+              navigate(`/dashboard?tab=${tab}`);
+            }
+          }}
+          userRole="admin"
+          userName={user?.name}
+          dashboardTitle={t('adminDashboard')}
+        />
         
-        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Select value={daysFilter} onValueChange={setDaysFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="30">{t('next30Days')}</SelectItem>
-              <SelectItem value="60">{t('next60Days')}</SelectItem>
-              <SelectItem value="90">{t('next90Days')}</SelectItem>
-              <SelectItem value="180">{t('next180Days')}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={fetchAlerts}>
-            <RefreshCw className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-      
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="border-slate-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Bell className="w-5 h-5 text-blue-600" />
+        {/* Main Content */}
+        <main className="flex-1 p-4 lg:p-6 min-h-screen">
+          <div className="w-full">
+            {/* Header */}
+            <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
+                  {t('backToDashboard')}
+                </Button>
+                <div>
+                  <h1 className={`text-2xl font-bold text-slate-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Bell className="w-7 h-7 text-bayan-navy" />
+                    {t('expirationAlerts')}
+                  </h1>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{summary.total_alerts || 0}</p>
-                <p className="text-sm text-gray-500">{t('totalAlerts')}</p>
+              
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Select value={daysFilter} onValueChange={setDaysFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">{t('next30Days')}</SelectItem>
+                    <SelectItem value="60">{t('next60Days')}</SelectItem>
+                    <SelectItem value="90">{t('next90Days')}</SelectItem>
+                    <SelectItem value="180">{t('next180Days')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" onClick={fetchAlerts}>
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
               </div>
+            </div>
+            
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card className="border-slate-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Bell className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{summary.total_alerts || 0}</p>
+                      <p className="text-sm text-gray-500">{t('totalAlerts')}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

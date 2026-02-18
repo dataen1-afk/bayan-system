@@ -11,8 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, Plus, Award, Download, Eye, QrCode, CheckCircle, AlertCircle,
-  XCircle, Clock, Search, Filter, Building2, Calendar, FileText
+  XCircle, Clock, Search, Filter, Building2, Calendar, FileText, LogOut
 } from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import NotificationBell from '@/components/NotificationBell';
 import { AuthContext } from '@/App';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -168,34 +171,71 @@ const CertificatesPage = () => {
   
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-xl">{t('loading')}...</div>
       </div>
     );
   }
   
   return (
-    <div className="p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Page Header */}
-      <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
-            <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
-            {t('backToDashboard')}
-          </Button>
-          <div>
-            <h1 className={`text-2xl font-bold text-slate-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Award className="w-7 h-7 text-bayan-navy" />
-              {t('certificates')}
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
+        <div className="max-w-full mx-auto px-4 py-3 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className={`flex gap-3 items-center ${isRTL ? 'order-first' : 'order-last'}`}>
+            <NotificationBell />
+            <LanguageSwitcher />
+            <Button variant="outline" onClick={logout} className="bg-bayan-navy text-white hover:bg-bayan-navy-light border-bayan-navy font-semibold">
+              <LogOut className="w-4 h-4" />
+              {t('logout')}
+            </Button>
+          </div>
+          <div className={isRTL ? 'order-last' : 'order-first'}>
+            <div className="-my-2">
+              <img src="/bayan-logo.png" alt="Bayan" className="h-20 w-auto object-contain" />
+            </div>
           </div>
         </div>
+        <div className="h-1.5 bg-gradient-to-r from-bayan-navy via-bayan-navy-light to-bayan-navy"></div>
+      </header>
+
+      {/* Layout with Sidebar */}
+      <div className="flex pt-[102px]">
+        <Sidebar 
+          activeTab="certificates" 
+          onTabChange={(tab) => {
+            if (tab === 'forms' || tab === 'quotations' || tab === 'contracts' || tab === 'templates' || tab === 'reports') {
+              navigate(`/dashboard?tab=${tab}`);
+            }
+          }}
+          userRole="admin"
+          userName={user?.name}
+          dashboardTitle={t('adminDashboard')}
+        />
         
-        <Button onClick={() => setShowCreateModal(true)} className="bg-bayan-primary hover:bg-bayan-primary/90" data-testid="create-certificate-btn">
-          <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-          {t('issueCertificate')}
-        </Button>
-      </div>
+        {/* Main Content */}
+        <main className="flex-1 p-4 lg:p-6 min-h-screen">
+          <div className="w-full">
+            {/* Header */}
+            <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
+                  {t('backToDashboard')}
+                </Button>
+                <div>
+                  <h1 className={`text-2xl font-bold text-slate-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Award className="w-7 h-7 text-bayan-navy" />
+                    {t('certificates')}
+                  </h1>
+                </div>
+              </div>
+              
+              <Button onClick={() => setShowCreateModal(true)} className="bg-bayan-primary hover:bg-bayan-primary/90" data-testid="create-certificate-btn">
+                <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('issueCertificate')}
+              </Button>
+            </div>
             
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">

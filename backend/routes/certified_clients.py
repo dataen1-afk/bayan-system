@@ -160,7 +160,9 @@ async def create_certified_client(
     await create_notification(
         notification_type="certified_client_added",
         title="Certified Client Added",
+        title_ar="تمت إضافة عميل معتمد",
         message=f"New certified client added: {client.client_name}",
+        message_ar=f"تمت إضافة عميل معتمد جديد: {client.client_name}",
         related_id=client.id,
         related_type="certified_client"
     )

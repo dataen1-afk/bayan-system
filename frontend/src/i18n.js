@@ -161,6 +161,12 @@ const resources = {
       "pleaseSelectRequired": "Please select audit program and auditor",
       "pleaseProvideReason": "Please provide a reason for declining",
       
+      // Combined Audit Plans & Reports
+      "auditPlans": "Audit Plans",
+      "auditReports": "Audit Reports",
+      "stage1Tab": "Stage 1",
+      "stage2Tab": "Stage 2",
+      
       // Stage 1 Audit Plan (BACF6-07)
       "stage1AuditPlans": "Stage 1 Audit Plans",
       "createStage1Plan": "Create Stage 1 Audit Plan",

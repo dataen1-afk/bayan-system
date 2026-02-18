@@ -233,11 +233,15 @@ html[dir="ltr"] .sidebar-container {
 html[dir="rtl"] .sidebar-menu-item {
     flex-direction: row !important;
     text-align: right !important;
+    position: relative !important;
+    z-index: 1 !important;
 }
 
 html[dir="ltr"] .sidebar-menu-item {
     flex-direction: row !important;
     text-align: left !important;
+    position: relative !important;
+    z-index: 1 !important;
 }
 
 /* Main content adjustment when sidebar is present */

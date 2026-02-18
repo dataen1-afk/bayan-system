@@ -1,6 +1,6 @@
 {
-  "name": "Bayan Auditing & Conformity",
-  "short_name": "Bayan Audit",
+  "name": "Bayan for Verification and Conformity",
+  "short_name": "Bayan",
   "description": "Service Contract Management System - Auditor Portal",
   "start_url": "/portal",
   "display": "standalone",

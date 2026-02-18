@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Save, Send, FileText, Building, DollarSign, Clock, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Send, FileText, Building, DollarSign, Clock, Check } from 'lucide-react';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Sidebar from '@/components/Sidebar';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
@@ -235,7 +237,7 @@ const CreateProposalPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-bayan-navy border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">{t('loadingForm')}</p>
@@ -245,47 +247,59 @@ const CreateProposalPage = () => {
   }
 
   return (
-    <div className="p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Page Title */}
-      <div className={`flex items-center gap-4 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <Button variant="ghost" onClick={() => navigate('/dashboard')} className={`${isRTL ? 'flex-row-reverse' : ''}`}>
-          <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180 ml-2' : 'mr-2'}`} />
-          {t('backToDashboard')}
-        </Button>
-        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <FileText className="w-8 h-8 text-bayan-navy" />
-          <div>
-            <h1 className="text-2xl font-bold text-bayan-navy">{t('createProposal')}</h1>
-            <p className="text-gray-500">{t('proposalFor')}: {formData.organization_name}</p>
+    <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
+        <div className="dashboard-header max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="dashboard-header-left flex items-center gap-4">
+            <img src="/Bayan-removebg-preview.png" alt="Bayan" className="h-16 w-auto object-contain" />
+          </div>
+          <div className="dashboard-header-right flex items-center gap-4">
+            <LanguageSwitcher />
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>
+              {isRTL ? <ArrowRight className="w-4 h-4 ml-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
+              {t('backToDashboard')}
+            </Button>
           </div>
         </div>
-      </div>
+        <div className="h-1.5 bg-gradient-to-r from-bayan-navy via-bayan-navy-light to-bayan-navy"></div>
+      </header>
 
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Facility Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="w-5 h-5" />
-              {t('organizationDetails')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('organizationName')} *</Label>
-                <Input
-                  value={formData.organization_name}
-                  onChange={(e) => handleInputChange('organization_name', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('address')}</Label>
-                <Input
-                  value={formData.organization_address}
-                  onChange={(e) => handleInputChange('organization_address', e.target.value)}
-                />
-              </div>
+      <main className="pt-28 pb-12 px-4">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Page Title */}
+          <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <FileText className="w-8 h-8 text-bayan-navy" />
+            <div>
+              <h1 className="text-2xl font-bold text-bayan-navy">{t('createProposal')}</h1>
+              <p className="text-gray-500">{t('proposalFor')}: {formData.organization_name}</p>
+            </div>
+          </div>
+
+          {/* Facility Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="w-5 h-5" />
+                {t('organizationDetails')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('organizationName')} *</Label>
+                  <Input
+                    value={formData.organization_name}
+                    onChange={(e) => handleInputChange('organization_name', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('address')}</Label>
+                  <Input
+                    value={formData.organization_address}
+                    onChange={(e) => handleInputChange('organization_address', e.target.value)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>{t('phone')}</Label>
                   <Input
@@ -657,7 +671,7 @@ const CreateProposalPage = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

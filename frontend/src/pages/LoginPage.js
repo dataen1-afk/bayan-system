@@ -85,7 +85,7 @@ const LoginPage = () => {
 
       {/* Left Side - Login Form (Always on left for powerful asymmetric layout) */}
       <div className="relative z-10 w-full md:w-1/2 lg:w-[45%] min-h-screen flex flex-col justify-center ml-0">
-        <div className={`px-8 md:px-12 lg:px-16 py-12 ${isRTL ? 'text-right' : 'text-left'}`}
+        <div className={`px-8 md:px-12 lg:px-16 py-12 ${isRTL ? 'text-right' : 'text-left'}`}>
           
           {/* Powerful Headline */}
           <div className="mb-10">

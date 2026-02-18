@@ -2166,6 +2166,16 @@ const resources = {
       "suspendedClients.title": "سجل العملاء المعلقين",
       "suspendedClients.subtitle": "BAC-F6-20 - قائمة العملاء ذوي الشهادات المعلقة",
       
+      // RFQ Requests
+      "rfqRequests": "طلبات عروض الأسعار",
+      "rfqRequests.title": "طلبات عروض الأسعار",
+      "rfqRequests.subtitle": "إدارة طلبات عروض الأسعار من بوابة العملاء",
+      
+      // Contact Messages
+      "contactMessages": "رسائل التواصل",
+      "contactMessages.title": "رسائل التواصل",
+      "contactMessages.subtitle": "إدارة رسائل التواصل من بوابة العملاء",
+      
       // Forms
       "createNewForm": "إنشاء نموذج جديد",
       "createCustomForm": "إنشاء نموذج مخصص للعميل",

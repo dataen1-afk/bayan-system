@@ -249,10 +249,14 @@ async def make_transfer_decision(
     
     await db.pre_transfer_reviews.update_one({"id": review_id}, {"$set": update_data})
     
+    decision_ar = {'approved': 'تمت الموافقة', 'rejected': 'مرفوض', 'pending': 'قيد الانتظار'}.get(decision, decision)
+    
     await create_notification(
         notification_type="transfer_decision",
         title="Transfer Decision Made",
+        title_ar="تم اتخاذ قرار النقل",
         message=f"Transfer decision for {existing.get('client_name', '')}: {decision.title()}",
+        message_ar=f"قرار النقل لـ {existing.get('client_name', '')}: {decision_ar}",
         related_id=review_id,
         related_type="pre_transfer_review"
     )

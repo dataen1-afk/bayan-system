@@ -2351,16 +2351,20 @@ async def respond_to_proposal(access_token: str, response: ProposalResponse):
     if response.status == "accepted":
         await create_notification(
             notification_type="proposal_accepted",
-            title="تم قبول العرض",
-            message=f"قامت {org_name} بقبول عرض السعر",
+            title="Proposal Accepted",
+            title_ar="تم قبول العرض",
+            message=f"{org_name} accepted the proposal",
+            message_ar=f"قامت {org_name} بقبول عرض السعر",
             related_id=proposal['id'],
             related_type="proposal"
         )
     else:
         await create_notification(
             notification_type="proposal_rejected",
-            title="تم رفض العرض",
-            message=f"قامت {org_name} برفض عرض السعر",
+            title="Proposal Rejected",
+            title_ar="تم رفض العرض",
+            message=f"{org_name} rejected the proposal",
+            message_ar=f"قامت {org_name} برفض عرض السعر",
             related_id=proposal['id'],
             related_type="proposal"
         )

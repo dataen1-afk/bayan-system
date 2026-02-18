@@ -1785,6 +1785,12 @@ const resources = {
       "pleaseSelectRequired": "يرجى اختيار برنامج التدقيق والمدقق",
       "pleaseProvideReason": "يرجى تقديم سبب للرفض",
       
+      // Combined Audit Plans & Reports
+      "auditPlans": "خطط التدقيق",
+      "auditReports": "تقارير التدقيق",
+      "stage1Tab": "المرحلة الأولى",
+      "stage2Tab": "المرحلة الثانية",
+      
       // Stage 1 Audit Plan (BACF6-07)
       "stage1AuditPlans": "خطط تدقيق المرحلة الأولى",
       "createStage1Plan": "إنشاء خطة تدقيق المرحلة الأولى",

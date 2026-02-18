@@ -314,10 +314,18 @@ async def make_certification_decision(
     
     await db.technical_reviews.update_one({"id": review_id}, {"$set": update_data})
     
+    decision_ar = {
+        'issue_certificate': 'إصدار الشهادة',
+        'reject_certificate': 'رفض الشهادة',
+        'needs_review': 'يحتاج مراجعة'
+    }.get(decision, decision)
+    
     await create_notification(
         notification_type="certification_decision",
         title="Certification Decision Made",
+        title_ar="تم اتخاذ قرار الشهادة",
         message=f"Decision for {existing.get('client_name', '')}: {decision.replace('_', ' ').title()}",
+        message_ar=f"قرار لـ {existing.get('client_name', '')}: {decision_ar}",
         related_id=review_id,
         related_type="technical_review"
     )

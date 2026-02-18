@@ -16,6 +16,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { 
   Search, CheckCircle, Clock, FileText, DollarSign, FileCheck, 
   Loader2, Building2, Mail, Phone, MapPin,

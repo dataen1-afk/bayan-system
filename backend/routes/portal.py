@@ -58,7 +58,9 @@ async def submit_rfq(data: RFQRequest):
     await create_notification(
         notification_type="rfq_received",
         title="New Quote Request",
+        title_ar="طلب عرض سعر جديد",
         message=f"New RFQ from {data.company_name} - Standards: {', '.join(data.standards)}",
+        message_ar=f"طلب عرض سعر جديد من {data.company_name} - المعايير: {', '.join(data.standards)}",
         related_id=rfq_record['id'],
         related_type="rfq"
     )

@@ -47,7 +47,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(() => {
     // Initialize from URL params if available
     const tabParam = new URLSearchParams(window.location.search).get('tab');
-    return tabParam || 'forms';
+    return tabParam || 'dashboard';
   });
   const [highlightedId, setHighlightedId] = useState(null);
   const [forms, setForms] = useState([]);

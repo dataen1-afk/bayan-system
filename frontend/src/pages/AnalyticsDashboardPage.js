@@ -397,8 +397,6 @@ const AnalyticsDashboardPage = () => {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
     </div>
   );
 };

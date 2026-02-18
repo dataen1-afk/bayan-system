@@ -178,8 +178,8 @@ const LoginPage = () => {
                   </div>
                 </div>
 
-                {/* Remember Me */}
-                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                {/* Remember Me - Right aligned */}
+                <div className={`flex items-center gap-3 justify-end ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <input
                     type="checkbox"
                     id="rememberMe"

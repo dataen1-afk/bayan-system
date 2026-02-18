@@ -32,7 +32,9 @@ import {
   ShieldCheck,
   MessageSquare,
   ArrowRightLeft,
-  UserX
+  UserX,
+  FileQuestion,
+  Mail
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

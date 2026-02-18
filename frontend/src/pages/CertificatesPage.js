@@ -11,11 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, Plus, Award, Download, Eye, QrCode, CheckCircle, AlertCircle,
-  XCircle, Clock, Search, Filter, Building2, Calendar, FileText, LogOut
+  XCircle, Clock, Search, Filter, Building2, Calendar, FileText
 } from 'lucide-react';
-import Sidebar from '@/components/Sidebar';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import NotificationBell from '@/components/NotificationBell';
 import { AuthContext } from '@/App';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';

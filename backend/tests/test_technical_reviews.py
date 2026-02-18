@@ -7,7 +7,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://audit-workflow-hub-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://contract-audit-hub.preview.emergentagent.com').rstrip('/')
 
 class TestTechnicalReviewsFeature:
     """Test Technical Review endpoints (BAC-F6-15)"""

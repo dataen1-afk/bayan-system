@@ -13,7 +13,7 @@ from datetime import datetime
 # Get BASE_URL from environment
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://contract-audit-hub.preview.emergentagent.com"
+    BASE_URL = "https://bayan-verify-portal.preview.emergentagent.com"
 
 API_URL = f"{BASE_URL}/api"
 

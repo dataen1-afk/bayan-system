@@ -189,7 +189,6 @@ const InvoicesPage = () => {
   }
 
   return (
-    <>
     <div className="p-4 lg:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Page Header */}
       <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -219,14 +218,14 @@ const InvoicesPage = () => {
             <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 bg-blue-100 rounded-lg">
                 <FileText className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className={isRTL ? 'text-right' : ''}>
-                <p className="text-2xl font-bold">{stats.total_invoices || 0}</p>
-                <p className="text-xs text-slate-500">{t('totalInvoices')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  </div>
+                  <div className={isRTL ? 'text-right' : ''}>
+                    <p className="text-2xl font-bold">{stats.total_invoices || 0}</p>
+                    <p className="text-xs text-slate-500">{t('totalInvoices')}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
             <Card className="border-emerald-200">
               <CardContent className="pt-4">
@@ -681,7 +680,6 @@ const InvoicesPage = () => {
         </div>
       )}
     </div>
-    </>
   );
 };
 

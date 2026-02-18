@@ -267,6 +267,8 @@ const ExpirationAlertsPage = () => {
               </>
             )}
           </div>
+        </main>
+      </div>
     </div>
   );
 };

@@ -10526,6 +10526,12 @@ app.include_router(sites_router, prefix="/api")
 app.include_router(contacts_router, prefix="/api")
 app.include_router(documents_router, prefix="/api")
 app.include_router(technical_reviews_router, prefix="/api")
+app.include_router(customer_feedback_router, prefix="/api")
+app.include_router(customer_feedback_public_router, prefix="/api")
+app.include_router(pre_transfer_reviews_router, prefix="/api")
+app.include_router(certified_clients_router, prefix="/api")
+app.include_router(suspended_clients_router, prefix="/api")
+app.include_router(portal_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

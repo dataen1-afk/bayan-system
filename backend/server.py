@@ -61,6 +61,7 @@ from routes.pre_transfer_reviews import router as pre_transfer_reviews_router
 from routes.certified_clients import router as certified_clients_router
 from routes.suspended_clients import router as suspended_clients_router
 from routes.portal import router as portal_router
+from routes.approvals import router as approvals_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

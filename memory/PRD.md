@@ -41,6 +41,7 @@ Client accepts proposal → Client fills Agreement form → Contract PDF generat
 - Full RTL layout support for Arabic
 
 ### UI/UX Improvements ✅
+- **Login Page Redesign (Feb 2026)**: Professional split-screen design with Kingdom Centre Tower (Saudi landmark) background, gradient overlay, company stats, SAC accreditation badge, icons for form fields, show/hide password toggle
 - **Forms Screen**: Quick Stats header (Total, Pending, Submitted, Completed), improved list design with status badges
 - **Quotations Screen**: Quick Stats header (Total Proposals, Pending Review, Accepted, Total Quoted), prominent pricing
 - **Contracts Screen**: Stats cards (Total Contracts, Revenue, Most Recent), Download PDF buttons

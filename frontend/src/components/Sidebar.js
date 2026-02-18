@@ -281,7 +281,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
         </div>
 
         {/* Main Menu */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav ref={navRef} className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => (
             <MenuItem key={item.id} item={item} />
           ))}

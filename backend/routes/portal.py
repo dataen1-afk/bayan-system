@@ -86,7 +86,9 @@ async def submit_contact_form(data: ContactRequest):
     await create_notification(
         notification_type="contact_received",
         title="New Contact Message",
+        title_ar="رسالة تواصل جديدة",
         message=f"Message from {data.name}: {data.subject}",
+        message_ar=f"رسالة من {data.name}: {data.subject}",
         related_id=contact_record['id'],
         related_type="contact"
     )

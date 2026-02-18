@@ -35,7 +35,8 @@ import {
   UserX,
   FileQuestion,
   Mail,
-  CheckSquare
+  CheckSquare,
+  LayoutDashboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

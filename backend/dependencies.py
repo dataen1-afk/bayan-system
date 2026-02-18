@@ -54,7 +54,9 @@ class Notification(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: str
     title: str
+    title_ar: str = ""  # Arabic title
     message: str
+    message_ar: str = ""  # Arabic message
     related_id: Optional[str] = None
     related_type: Optional[str] = None
     is_read: bool = False

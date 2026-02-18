@@ -110,12 +110,14 @@ async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
 
 # ================= NOTIFICATION HELPER =================
 
-async def create_notification(notification_type: str, title: str, message: str, related_id: str = None, related_type: str = None):
-    """Helper function to create a notification"""
+async def create_notification(notification_type: str, title: str, message: str, related_id: str = None, related_type: str = None, title_ar: str = "", message_ar: str = ""):
+    """Helper function to create a notification with bilingual support"""
     notification = Notification(
         type=notification_type,
         title=title,
+        title_ar=title_ar,
         message=message,
+        message_ar=message_ar,
         related_id=related_id,
         related_type=related_type
     )

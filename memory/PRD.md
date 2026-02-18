@@ -1169,6 +1169,50 @@ Updated the notification system to support bilingual content (English/Arabic). A
 ### Note
 Existing notifications created before this update will continue to display in English. Only new notifications will show bilingual content.
 
+## Admin Pages for Portal Forms - COMPLETED ✅ (Feb 18, 2026)
+
+### Summary
+Created two new admin pages to manage incoming RFQ requests and Contact messages from the customer portal.
+
+### New Pages Created
+1. **RFQ Requests Page** (`/rfq-requests`)
+   - View all quote requests from the customer portal
+   - Filter by status (New, In Progress, Quoted, Closed)
+   - Search by company name or contact
+   - Update request status
+   - View detailed request information
+   - Delete requests
+   - Export to CSV
+   - Statistics dashboard with counts by status
+
+2. **Contact Messages Page** (`/contact-messages`)
+   - View all contact messages from the customer portal
+   - Filter by status (Unread, Read, Replied, Archived)
+   - Search by name or subject
+   - Update message status (auto-marks as read when opened)
+   - Reply via email (opens email client)
+   - Archive messages
+   - Delete messages
+   - Export to CSV
+   - Statistics dashboard with counts by status
+
+### Files Created
+- `/app/frontend/src/pages/RFQRequestsPage.js` - RFQ management page
+- `/app/frontend/src/pages/ContactMessagesPage.js` - Contact messages management page
+
+### Updated Files
+- `/app/frontend/src/App.js` - Added routes for new pages
+- `/app/frontend/src/components/Sidebar.js` - Added navigation items
+- `/app/frontend/src/i18n.js` - Added translations (English and Arabic)
+
+### Features
+- Full RTL support (Arabic)
+- Bilingual interface
+- Responsive design
+- Real-time statistics
+- CSV export functionality
+- Status management workflow
+
 ## Future Enhancements
 - Enable real email sending (SendGrid integration)
 - Customer Portal with login system

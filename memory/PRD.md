@@ -1213,6 +1213,60 @@ Created two new admin pages to manage incoming RFQ requests and Contact messages
 - CSV export functionality
 - Status management workflow
 
+## Phase 7: Multi-Level Approval Workflow - COMPLETED ✅ (Feb 18, 2026)
+
+### Summary
+Implemented a comprehensive multi-level approval workflow system for managing document approvals through multiple authorization levels.
+
+### Features
+1. **Configurable Approval Levels**
+   - Support for 1-3+ approval levels per document type
+   - Default configurations for: Contract Review, Job Order, Audit Plan, Technical Review, Certificate, Pre-Transfer
+
+2. **Approval Roles**
+   - Technical Reviewer (المراجع الفني)
+   - Manager (المدير)
+   - Certification Manager (مدير الشهادات)
+   - Director (المدير العام)
+
+3. **Workflow Status Tracking**
+   - In Progress (قيد التنفيذ)
+   - Approved (تمت الموافقة)
+   - Rejected (مرفوض)
+   - Cancelled (ملغي)
+
+4. **Admin Dashboard**
+   - Statistics overview (total, in-progress, approved, rejected, avg completion time)
+   - Filter by status and document type
+   - Search functionality
+   - Visual approval progress indicator
+
+5. **Approval Actions**
+   - Approve with optional comments
+   - Reject with optional comments
+   - Automatic progression to next level
+   - Source document status update on completion
+
+### API Endpoints
+- `GET /api/approvals` - List all approval workflows
+- `GET /api/approvals/pending` - Get pending approvals for current user
+- `GET /api/approvals/stats` - Get approval statistics
+- `GET /api/approvals/configs` - Get default approval configurations
+- `POST /api/approvals` - Create new approval workflow
+- `GET /api/approvals/{id}` - Get specific workflow
+- `POST /api/approvals/{id}/decide` - Submit approval/rejection decision
+- `POST /api/approvals/{id}/cancel` - Cancel a workflow
+- `DELETE /api/approvals/{id}` - Delete a workflow
+
+### Files Created
+- `/app/backend/routes/approvals.py` - Approval workflow backend routes
+- `/app/frontend/src/pages/ApprovalsPage.js` - Approval management frontend page
+
+### Bilingual Support
+- Full RTL Arabic support
+- All labels and messages in both English and Arabic
+- Bilingual notifications for approval events
+
 ## Future Enhancements
 - Enable real email sending (SendGrid integration)
 - Customer Portal with login system

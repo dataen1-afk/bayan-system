@@ -263,21 +263,21 @@ const CreateProposalPage = () => {
         </div>
 
         {/* Facility Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                {t('organizationDetails')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('organizationName')} *</Label>
-                  <Input
-                    value={formData.organization_name}
-                    onChange={(e) => handleInputChange('organization_name', e.target.value)}
-                  />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building className="w-5 h-5" />
+              {t('organizationDetails')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('organizationName')} *</Label>
+                <Input
+                  value={formData.organization_name}
+                  onChange={(e) => handleInputChange('organization_name', e.target.value)}
+                />
                 </div>
                 <div className="space-y-2">
                   <Label>{t('address')}</Label>

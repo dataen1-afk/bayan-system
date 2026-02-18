@@ -41,11 +41,56 @@ import { cn } from '@/lib/utils';
 const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboardTitle }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   
   // Check for RTL
   const isRTL = i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
+
+  // Determine active item based on current route or activeTab prop
+  const getActiveItemId = () => {
+    const currentPath = location.pathname;
+    
+    // Check if current path matches any menu item's route
+    const routeBasedItems = [
+      { id: 'contract-reviews', route: '/contract-reviews' },
+      { id: 'audit-programs', route: '/audit-programs' },
+      { id: 'job-orders', route: '/job-orders' },
+      { id: 'audit-plans', route: '/audit-plans' },
+      { id: 'opening-closing-meetings', route: '/opening-closing-meetings' },
+      { id: 'audit-reports', route: '/audit-reports' },
+      { id: 'auditor-notes', route: '/auditor-notes' },
+      { id: 'nc-reports', route: '/nonconformity-reports' },
+      { id: 'cert-data', route: '/certificate-data' },
+      { id: 'technical-reviews', route: '/technical-reviews' },
+      { id: 'customer-feedback', route: '/customer-feedback' },
+      { id: 'pre-transfer-reviews', route: '/pre-transfer-reviews' },
+      { id: 'certified-clients', route: '/certified-clients' },
+      { id: 'suspended-clients', route: '/suspended-clients' },
+      { id: 'rfq-requests', route: '/rfq-requests' },
+      { id: 'contact-messages', route: '/contact-messages' },
+      { id: 'approvals', route: '/approvals' },
+      { id: 'audit-scheduling', route: '/audit-scheduling' },
+      { id: 'auditors', route: '/auditors' },
+      { id: 'invoices', route: '/invoices' },
+      { id: 'certificates', route: '/certificates' },
+      { id: 'alerts', route: '/alerts' },
+      { id: 'analytics', route: '/analytics' },
+      { id: 'reports', route: '/reports' },
+      { id: 'templates', route: '/templates' },
+    ];
+    
+    const matchedItem = routeBasedItems.find(item => currentPath === item.route);
+    if (matchedItem) {
+      return matchedItem.id;
+    }
+    
+    // Fall back to activeTab prop for dashboard tabs
+    return activeTab;
+  };
+  
+  const currentActiveId = getActiveItemId();
 
   // Listen for language changes
   useEffect(() => {

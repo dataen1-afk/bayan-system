@@ -111,7 +111,7 @@ const LoginPage = () => {
       {/* Login Card - Center Left (Vertically Centered on Left Half) */}
       <div className="absolute left-0 top-0 bottom-0 w-full lg:w-1/2 flex items-center justify-center p-4 lg:pl-16 lg:pr-8 z-10">
         <div className="w-full max-w-md">
-          <div className="backdrop-blur-xl bg-[#1e3a5f]/60 rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+          <div className="backdrop-blur-xl bg-[#1e3a5f]/40 rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
             {/* Card Header */}
             <div className="pt-8 pb-4 px-8 text-center" dir={isRTL ? 'rtl' : 'ltr'}>
               <h1 className="text-2xl font-bold text-white">

@@ -1302,5 +1302,67 @@ Implemented a comprehensive multi-level approval workflow system for managing do
 ## Future Enhancements
 - Enable real email sending (SendGrid integration)
 - Customer Portal with login system
-- Progressive Web App (PWA) for auditors
+
+## Phase 8: Dashboard Analytics Widgets & Login Page Redesign - COMPLETED ✅ (Feb 18, 2026)
+
+### Login Page Redesign (Dark Glass Design)
+- **Full-screen desert background**: Custom AI-generated Saudi desert dunes image
+- **Dark glassmorphism card**: Semi-transparent dark card with backdrop blur (`bg-[#1e3a5f]/40 backdrop-blur-xl`)
+- **White enlarged logo**: Positioned in upper-right corner with inverted color filter
+- **Powerful Arabic text**: "شريكك الموثوق في رحلة التميز المؤسسي" - centered on right side
+- **Gold submit button**: Amber/gold colored button (#c9a55c) matching Bayan brand
+- **Semi-transparent inputs**: White/10 background with white/30 borders
+- **Remember me checkbox**: Right-aligned within the form
+- **Demo credentials display**: Shows test login credentials
+- **Customer portal link**: Quick access to public customer portal
+- **Bilingual support**: Full Arabic/English with RTL layout
+
+### Dashboard Analytics Widgets
+New dashboard home screen with interactive widgets:
+
+1. **Certificate Expiration Widget** (`data-testid="cert-expiration-widget"`)
+   - Shows certificates expiring in 30/60/90 days
+   - Color-coded urgency (red for 30 days, amber for 60, yellow for 90)
+   - "View Details" button navigates to expiration alerts page
+
+2. **Quick Actions Card** (`data-testid="quick-actions-widget"`)
+   - Create Form - Opens form creation
+   - Pending Approvals - Shows pending count badge, navigates to approvals
+   - Audit Programs - Quick access to audit programs
+   - Certificates - Quick access to certificates page
+
+3. **Revenue Target Progress** (`data-testid="revenue-widget"`)
+   - Monthly revenue display in SAR
+   - Target amount (configurable, default 500,000 SAR)
+   - Progress bar with percentage
+   - Total revenue summary
+
+4. **Today's Activity** (`data-testid="activity-widget"`)
+   - New forms count
+   - New proposals count
+   - Recent notifications list
+
+5. **Auditor Workload Chart** (`data-testid="auditor-workload-widget"`)
+   - Visual bar chart showing task distribution
+   - Per-auditor breakdown (job orders, stage 1, stage 2)
+   - Color-coded progress bars
+   - Arabic name support (name_ar)
+
+### New API Endpoints
+- `GET /api/dashboard/stats` - Comprehensive dashboard statistics
+  - Returns: certificates (expiring counts), forms, proposals, approvals, revenue, auditor_workload, today_activity
+- `GET /api/dashboard/quick-actions` - Quick action badge counts
+
+### Files Created/Updated
+- `/app/backend/routes/dashboard.py` - Dashboard analytics API
+- `/app/frontend/src/components/DashboardWidgets.js` - Dashboard widgets component
+- `/app/frontend/src/pages/AdminDashboard.js` - Integrated widgets, added dashboard tab as default
+- `/app/frontend/src/components/Sidebar.js` - Added LayoutDashboard icon and dashboard menu item
+- `/app/frontend/src/pages/LoginPage.js` - Complete redesign with dark glass effect
+
+### Arabic Font Status
+- **Font**: IBM Plex Sans Arabic (400, 500, 600, 700 weights)
+- **Status**: Working correctly - no console errors
+- **Setup**: Using @fontsource/ibm-plex-sans-arabic package
+- **Note**: Previous handoff mentioned "Almarai" font issues - this was already resolved by using IBM Plex Sans Arabic instead
 

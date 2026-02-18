@@ -31,22 +31,45 @@ export default function AuditPlansPage() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className={`grid w-full max-w-md grid-cols-2 mb-6 ${isRTL ? 'mr-0 ml-auto' : ''}`}>
-          <TabsTrigger 
-            value="stage1" 
-            className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-            data-testid="audit-plans-stage1-tab"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            {t('stage1Tab')}
-          </TabsTrigger>
-          <TabsTrigger 
-            value="stage2" 
-            className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-            data-testid="audit-plans-stage2-tab"
-          >
-            <FileStack className="w-4 h-4" />
-            {t('stage2Tab')}
-          </TabsTrigger>
+          {isRTL ? (
+            <>
+              <TabsTrigger 
+                value="stage2" 
+                className="flex items-center gap-2 flex-row-reverse"
+                data-testid="audit-plans-stage2-tab"
+              >
+                <FileStack className="w-4 h-4" />
+                {t('stage2Tab')}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="stage1" 
+                className="flex items-center gap-2 flex-row-reverse"
+                data-testid="audit-plans-stage1-tab"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                {t('stage1Tab')}
+              </TabsTrigger>
+            </>
+          ) : (
+            <>
+              <TabsTrigger 
+                value="stage1" 
+                className="flex items-center gap-2"
+                data-testid="audit-plans-stage1-tab"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                {t('stage1Tab')}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="stage2" 
+                className="flex items-center gap-2"
+                data-testid="audit-plans-stage2-tab"
+              >
+                <FileStack className="w-4 h-4" />
+                {t('stage2Tab')}
+              </TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="stage1">

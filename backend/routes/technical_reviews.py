@@ -201,7 +201,9 @@ async def create_technical_review(
     await create_notification(
         notification_type="technical_review_created",
         title="Technical Review Created",
+        title_ar="تم إنشاء مراجعة فنية",
         message=f"Technical review created for {review.client_name}",
+        message_ar=f"تم إنشاء مراجعة فنية لـ {review.client_name}",
         related_id=review.id,
         related_type="technical_review"
     )

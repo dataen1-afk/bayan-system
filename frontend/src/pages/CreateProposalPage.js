@@ -650,7 +650,6 @@ const CreateProposalPage = () => {
               {t('saveAndSend')}
             </Button>
           </div>
-        </div>
       </div>
     </div>
   );

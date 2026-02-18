@@ -8945,6 +8945,7 @@ app.include_router(certified_clients_router, prefix="/api")
 app.include_router(suspended_clients_router, prefix="/api")
 app.include_router(portal_router, prefix="/api")
 app.include_router(approvals_router, prefix="/api")
+app.include_router(dashboard_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

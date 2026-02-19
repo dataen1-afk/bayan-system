@@ -75,6 +75,7 @@ const PWAInstallPrompt = ({ isRTL }) => {
       setShowPrompt(false);
     }
     setDeferredPrompt(null);
+    window.deferredPWAPrompt = null; // Clear global reference
   };
 
   const handleDismiss = () => {

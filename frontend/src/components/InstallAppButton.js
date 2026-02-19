@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 
 const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {

@@ -395,20 +395,13 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
                 if (deferredPrompt) {
                   onInstall();
                 } else {
-                  // For browsers without native install support, guide the user
-                  if (isIOS) {
-                    alert(isRTL 
-                      ? 'اضغط على أيقونة المشاركة في الأسفل، ثم اختر "إضافة إلى الشاشة الرئيسية"'
-                      : 'Tap the Share button at the bottom, then select "Add to Home Screen"');
-                  } else if (isAndroid) {
-                    alert(isRTL 
-                      ? 'اضغط على قائمة المتصفح (⋮) واختر "تثبيت التطبيق"'
-                      : 'Tap browser menu (⋮) and select "Install app"');
-                  } else {
-                    // Try to trigger Chrome's install prompt via keyboard shortcut hint
-                    alert(isRTL 
-                      ? 'ابحث عن أيقونة التثبيت (⊕) في شريط العنوان، أو اضغط على قائمة المتصفح واختر "تثبيت..."'
-                      : 'Look for the install icon (⊕) in the address bar, or click browser menu and select "Install..."');
+                  // Highlight the first step for manual installation
+                  const firstStep = document.querySelector('[data-step="1"]');
+                  if (firstStep) {
+                    firstStep.classList.add('bg-amber-100', 'ring-2', 'ring-amber-400');
+                    setTimeout(() => {
+                      firstStep.classList.remove('bg-amber-100', 'ring-2', 'ring-amber-400');
+                    }, 3000);
                   }
                 }
               }}
@@ -421,7 +414,10 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
               ) : (
                 <>
                   <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {isRTL ? 'تثبيت الآن' : 'Install Now'}
+                  {deferredPrompt 
+                    ? (isRTL ? 'تثبيت الآن' : 'Install Now')
+                    : (isRTL ? 'اتبع الخطوات أعلاه' : 'Follow Steps Above')
+                  }
                 </>
               )}
             </Button>

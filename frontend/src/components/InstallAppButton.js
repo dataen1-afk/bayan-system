@@ -96,8 +96,8 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
 
   const benefits = [
     { icon: Home, text: isRTL ? 'وصول سريع من الشاشة الرئيسية' : 'Quick access from home screen' },
-    { icon: Wifi, text: isRTL ? 'يعمل بدون اتصال بالإنترنت' : 'Works offline' },
-    { icon: Zap, text: isRTL ? 'أداء أسرع وأفضل' : 'Faster performance' },
+    { icon: Zap, text: isRTL ? 'تحميل أسرع وأداء أفضل' : 'Faster loading & performance' },
+    { icon: Smartphone, text: isRTL ? 'تجربة تطبيق متكاملة' : 'Full app-like experience' },
   ];
 
   // Sidebar variant - compact button

@@ -116,6 +116,11 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
   };
 
   const handleButtonClick = () => {
+    // Dismiss tooltip when button is clicked
+    setShowTooltip(false);
+    setShouldPulse(false);
+    localStorage.setItem('pwa-install-tooltip-seen', 'true');
+    
     if (deferredPrompt) {
       handleInstall();
     } else {

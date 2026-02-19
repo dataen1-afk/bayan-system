@@ -274,18 +274,73 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
   );
 };
 
-// Installation Guide Dialog Component - Simplified
+// Installation Guide Dialog Component - With Desktop Shortcut Download
 const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, deferredPrompt, isInstalling }) => {
-  const [showError, setShowError] = useState(false);
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isMac = /Mac/i.test(navigator.userAgent) && !isIOS;
+  const isWindows = /Win/i.test(navigator.userAgent);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  const handleInstallClick = async () => {
+  // Get the current site URL for the shortcut
+  const siteUrl = window.location.origin + '/portal';
+  const siteName = 'Bayan - بيان';
+
+  // Download desktop shortcut for Windows (.url file)
+  const downloadWindowsShortcut = () => {
+    const content = `[InternetShortcut]
+URL=${siteUrl}
+IconIndex=0
+`;
+    const blob = new Blob([content], { type: 'application/internet-shortcut' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${siteName}.url`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    onClose();
+  };
+
+  // Download desktop shortcut for Mac (.webloc file)
+  const downloadMacShortcut = () => {
+    const content = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>URL</key>
+    <string>${siteUrl}</string>
+</dict>
+</plist>`;
+    const blob = new Blob([content], { type: 'application/x-apple-plist' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${siteName}.webloc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    onClose();
+  };
+
+  const handleInstallClick = () => {
     if (deferredPrompt) {
-      // Native install available - use it
+      // Native PWA install available
       onInstall();
+    } else if (isWindows) {
+      // Download Windows shortcut
+      downloadWindowsShortcut();
+    } else if (isMac) {
+      // Download Mac shortcut
+      downloadMacShortcut();
+    } else if (isMobile) {
+      // For mobile, download a generic shortcut or show instructions
+      downloadWindowsShortcut(); // .url files work on Android too
     } else {
-      // No native install - show error message
-      setShowError(true);
+      // Fallback - download Windows shortcut (most compatible)
+      downloadWindowsShortcut();
     }
   };
 
@@ -295,19 +350,19 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
             <div className="w-14 h-14 bg-gradient-to-br from-[#1e3a5f] to-[#2a4a6f] rounded-2xl flex items-center justify-center shadow-lg">
-              <Smartphone className="w-7 h-7 text-white" />
+              <Download className="w-7 h-7 text-white" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-[#1e3a5f]">
-                {isRTL ? 'تثبيت بيان' : 'Install Bayan'}
+                {isRTL ? 'تحميل التطبيق' : 'Download App'}
               </h3>
               <p className="text-sm text-slate-500 font-normal">
-                {isRTL ? 'احصل على التطبيق' : 'Get the app'}
+                {isRTL ? 'أضف اختصار لسطح المكتب' : 'Add shortcut to desktop'}
               </p>
             </div>
           </DialogTitle>
           <DialogDescription className="sr-only">
-            {isRTL ? 'تثبيت تطبيق بيان' : 'Install Bayan app'}
+            {isRTL ? 'تحميل اختصار التطبيق' : 'Download app shortcut'}
           </DialogDescription>
         </DialogHeader>
 
@@ -327,26 +382,16 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
             ))}
           </div>
 
-          {/* Error Message - shows when install not available */}
-          {showError && (
-            <div className={`p-4 bg-amber-50 border border-amber-200 rounded-xl ${isRTL ? 'text-right' : 'text-left'}`}>
-              <p className="text-sm text-amber-800 font-medium mb-2">
-                {isRTL ? 'التثبيت غير متاح حالياً' : 'Installation not available'}
-              </p>
-              <p className="text-xs text-amber-700">
-                {isIOS 
-                  ? (isRTL 
-                      ? 'على Safari: اضغط على زر المشاركة ⬆️ ثم "إضافة إلى الشاشة الرئيسية"' 
-                      : 'On Safari: Tap Share ⬆️ then "Add to Home Screen"')
-                  : (isRTL 
-                      ? 'افتح الموقع في Chrome واضغط على ⋮ ثم "تثبيت التطبيق"' 
-                      : 'Open in Chrome, tap ⋮ menu, then "Install app"')
-                }
-              </p>
-            </div>
-          )}
+          {/* Info box */}
+          <div className={`p-4 bg-blue-50 border border-blue-100 rounded-xl ${isRTL ? 'text-right' : 'text-left'}`}>
+            <p className="text-sm text-blue-800">
+              {isRTL 
+                ? 'سيتم تحميل اختصار يمكنك وضعه على سطح المكتب. يمكنك أيضاً فتح الموقع في المتصفح في أي وقت.'
+                : 'A shortcut will be downloaded that you can place on your desktop. You can also open the site in the browser anytime.'}
+            </p>
+          </div>
 
-          {/* Install Button */}
+          {/* Download Button */}
           <Button
             onClick={handleInstallClick}
             disabled={isInstalling}
@@ -354,11 +399,11 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
             data-testid="install-now-btn"
           >
             {isInstalling ? (
-              <span className="animate-pulse">{isRTL ? 'جاري التثبيت...' : 'Installing...'}</span>
+              <span className="animate-pulse">{isRTL ? 'جاري التحميل...' : 'Downloading...'}</span>
             ) : (
               <>
                 <Download className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                {isRTL ? 'تثبيت الآن' : 'Install Now'}
+                {isRTL ? 'تحميل الآن' : 'Download Now'}
               </>
             )}
           </Button>

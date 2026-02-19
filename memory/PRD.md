@@ -90,6 +90,26 @@ Verified with mobile viewport (375x812):
 - Menu items are visible and clickable
 - Navigation works as expected
 
+## Deployment Health Check Fix - COMPLETED ✅ (Feb 19, 2026)
+
+### Issue
+Deployment health checks failing with 404 errors on `/health` and `/api/health` endpoints.
+
+### Fix Applied
+Added health check endpoints to `/app/backend/server.py`:
+```python
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "contract-audit-hub"}
+
+@app.get("/api/health")
+async def api_health_check():
+    return {"status": "healthy", "service": "contract-audit-hub"}
+```
+
+### Testing
+Verified endpoint returns: `{"status":"healthy","service":"contract-audit-hub"}`
+
 ## Completed Features (December 2025)
 
 ### Core Features ✅

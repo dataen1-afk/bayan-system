@@ -298,6 +298,15 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
           <div className="border-t border-gray-200" />
         </div>
 
+        {/* Install App Button */}
+        <div className="px-3 py-2">
+          {isCollapsed ? (
+            <InstallAppButton isRTL={isRTL} variant="sidebar-collapsed" />
+          ) : (
+            <InstallAppButton isRTL={isRTL} variant="sidebar" />
+          )}
+        </div>
+
         {/* Bottom Menu */}
         <nav className="px-3 py-4 space-y-1">
           {bottomMenuItems.map((item) => (

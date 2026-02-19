@@ -1,8 +1,9 @@
 {
   "name": "Bayan for Verification and Conformity",
   "short_name": "Bayan",
-  "description": "Service Contract Management System - Auditor Portal",
+  "description": "Service Contract Management System - Customer Portal",
   "start_url": "/portal",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#1e3a5f",
   "theme_color": "#1e3a5f",

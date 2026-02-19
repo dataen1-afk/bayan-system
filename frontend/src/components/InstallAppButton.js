@@ -15,12 +15,35 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
   const [isInstalled, setIsInstalled] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [shouldPulse, setShouldPulse] = useState(false);
 
   useEffect(() => {
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
       return;
+    }
+
+    // Check if this is first visit (for tooltip)
+    const hasSeenTooltip = localStorage.getItem('pwa-install-tooltip-seen');
+    if (!hasSeenTooltip) {
+      // Show tooltip after a short delay
+      const tooltipTimer = setTimeout(() => {
+        setShowTooltip(true);
+        setShouldPulse(true);
+      }, 2000);
+
+      // Auto-hide tooltip after 6 seconds
+      const hideTimer = setTimeout(() => {
+        setShowTooltip(false);
+        localStorage.setItem('pwa-install-tooltip-seen', 'true');
+      }, 8000);
+
+      return () => {
+        clearTimeout(tooltipTimer);
+        clearTimeout(hideTimer);
+      };
     }
 
     // Check if prompt was already captured globally
@@ -45,6 +68,8 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
       setDeferredPrompt(null);
       window.deferredPWAPrompt = null;
       setShowGuide(false);
+      setShowTooltip(false);
+      setShouldPulse(false);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
@@ -56,6 +81,13 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
       window.removeEventListener('pwaPromptAvailable', handlePromptAvailable);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
+  }, []);
+
+  // Also check for deferred prompt on mount
+  useEffect(() => {
+    if (window.deferredPWAPrompt) {
+      setDeferredPrompt(window.deferredPWAPrompt);
+    }
   }, []);
 
   const handleInstall = async () => {

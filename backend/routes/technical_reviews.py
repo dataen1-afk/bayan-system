@@ -360,7 +360,7 @@ async def approve_technical_review(
         issue_date = datetime.now().strftime("%Y-%m-%d")
         expiry_date = (datetime.now() + timedelta(days=365*3)).strftime("%Y-%m-%d")
         
-        base_url = os.environ.get('FRONTEND_URL', 'https://service-audit-portal.preview.emergentagent.com')
+        base_url = os.environ.get('FRONTEND_URL', 'https://contract-audit-hub-1.preview.emergentagent.com')
         verification_url = f"{base_url}/verify/{cert_number}"
         qr_base64 = get_qr_code_base64(verification_url)
         

@@ -233,26 +233,28 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className={`absolute top-full mt-2 z-50 ${isRTL ? 'right-0' : 'left-0'}`}
+            className={`absolute top-full mt-3 z-50 ${isRTL ? 'left-0' : 'left-0'}`}
+            style={{ minWidth: '200px' }}
           >
-            <div className="bg-[#1e3a5f] text-white px-4 py-3 rounded-xl shadow-xl max-w-[220px] relative">
+            <div className="bg-[#1e3a5f] text-white px-4 py-3 rounded-xl shadow-2xl relative">
               {/* Arrow */}
               <div 
                 className={`absolute -top-2 w-4 h-4 bg-[#1e3a5f] transform rotate-45 ${isRTL ? 'right-4' : 'left-4'}`}
               />
-              <p className={`text-sm font-medium relative z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <p className={`text-sm leading-relaxed relative z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL 
-                  ? 'ثبّت التطبيق للوصول السريع من شاشتك الرئيسية' 
-                  : 'Install the app for quick access from your home screen'}
+                  ? 'ثبّت التطبيق للوصول السريع' 
+                  : 'Install for quick access'}
               </p>
               <button
                 onClick={() => {
                   setShowTooltip(false);
+                  setShouldPulse(false);
                   localStorage.setItem('pwa-install-tooltip-seen', 'true');
                 }}
-                className={`mt-2 text-xs text-emerald-300 hover:text-emerald-200 ${isRTL ? 'text-right w-full' : ''}`}
+                className={`mt-2 text-xs text-emerald-300 hover:text-emerald-200 font-medium ${isRTL ? 'text-right w-full block' : ''}`}
               >
-                {isRTL ? 'حسناً، فهمت' : 'Got it'}
+                {isRTL ? 'حسناً' : 'Got it'}
               </button>
             </div>
           </motion.div>

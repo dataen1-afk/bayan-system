@@ -274,160 +274,107 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
   );
 };
 
-// Installation Guide Dialog Component
+// Installation Guide Dialog Component - Simplified
 const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, deferredPrompt, isInstalling }) => {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const [showError, setShowError] = useState(false);
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const isAndroid = /Android/i.test(navigator.userAgent);
 
-  const getInstallInstructions = () => {
+  const handleInstallClick = async () => {
     if (deferredPrompt) {
-      return {
-        title: isRTL ? 'جاهز للتثبيت' : 'Ready to Install',
-        steps: [
-          isRTL ? 'انقر على زر "تثبيت الآن" أدناه' : 'Click "Install Now" button below',
-          isRTL ? 'اتبع تعليمات المتصفح' : 'Follow browser prompts',
-          isRTL ? 'استمتع بالتطبيق من شاشتك الرئيسية' : 'Enjoy the app from your home screen',
-        ],
-      };
+      // Native install available - use it
+      onInstall();
+    } else {
+      // No native install - show error message
+      setShowError(true);
     }
-
-    if (isIOS) {
-      return {
-        title: isRTL ? 'التثبيت على iOS' : 'Install on iOS',
-        steps: [
-          isRTL ? 'اضغط على أيقونة المشاركة في شريط المتصفح' : 'Tap the Share icon in the browser toolbar',
-          isRTL ? 'مرر للأسفل واضغط "إضافة إلى الشاشة الرئيسية"' : 'Scroll down and tap "Add to Home Screen"',
-          isRTL ? 'اضغط "إضافة" للتأكيد' : 'Tap "Add" to confirm',
-        ],
-      };
-    }
-
-    if (isAndroid) {
-      return {
-        title: isRTL ? 'التثبيت على Android' : 'Install on Android',
-        steps: [
-          isRTL ? 'اضغط على قائمة المتصفح (⋮)' : 'Tap browser menu (⋮)',
-          isRTL ? 'اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية"' : 'Select "Install app" or "Add to Home Screen"',
-          isRTL ? 'اتبع التعليمات للتأكيد' : 'Follow prompts to confirm',
-        ],
-      };
-    }
-
-    // Desktop browsers
-    return {
-      title: isRTL ? 'التثبيت على الكمبيوتر' : 'Install on Desktop',
-      steps: [
-        isRTL ? 'ابحث عن أيقونة التثبيت في شريط العنوان' : 'Look for install icon in address bar',
-        isRTL ? 'أو اضغط على قائمة المتصفح واختر "تثبيت..."' : 'Or click browser menu and select "Install..."',
-        isRTL ? 'اتبع التعليمات للتأكيد' : 'Follow prompts to confirm',
-      ],
-    };
   };
-
-  const instructions = getInstallInstructions();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`sm:max-w-md ${isRTL ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-            <div className="w-12 h-12 bg-gradient-to-br from-[#1e3a5f] to-[#2a4a6f] rounded-xl flex items-center justify-center shadow-lg">
-              <Smartphone className="w-6 h-6 text-white" />
+            <div className="w-14 h-14 bg-gradient-to-br from-[#1e3a5f] to-[#2a4a6f] rounded-2xl flex items-center justify-center shadow-lg">
+              <Smartphone className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-[#1e3a5f]">
+              <h3 className="text-xl font-bold text-[#1e3a5f]">
                 {isRTL ? 'تثبيت بيان' : 'Install Bayan'}
               </h3>
               <p className="text-sm text-slate-500 font-normal">
-                {instructions.title}
+                {isRTL ? 'احصل على التطبيق' : 'Get the app'}
               </p>
             </div>
           </DialogTitle>
           <DialogDescription className="sr-only">
-            {isRTL ? 'دليل تثبيت تطبيق بيان' : 'Bayan app installation guide'}
+            {isRTL ? 'تثبيت تطبيق بيان' : 'Install Bayan app'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
           {/* Benefits */}
           <div className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <p className="text-sm font-medium text-slate-700">
-              {isRTL ? 'مميزات التطبيق:' : 'App Benefits:'}
-            </p>
             {benefits.map((benefit, idx) => (
               <div 
                 key={idx} 
                 className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}
               >
-                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <benefit.icon className="w-4 h-4 text-emerald-600" />
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <benefit.icon className="w-5 h-5 text-emerald-600" />
                 </div>
-                <span className="text-sm text-slate-600">{benefit.text}</span>
+                <span className="text-sm text-slate-700 font-medium">{benefit.text}</span>
               </div>
             ))}
           </div>
 
-          {/* Installation Steps */}
-          <div className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <p className="text-sm font-medium text-slate-700">
-              {isRTL ? 'خطوات التثبيت:' : 'Installation Steps:'}
-            </p>
-            <div className="space-y-2">
-              {instructions.steps.map((step, idx) => (
-                <div 
-                  key={idx}
-                  data-step={idx + 1}
-                  className={`flex items-start gap-3 p-2 rounded-lg transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
-                >
-                  <div className="w-6 h-6 bg-[#1e3a5f] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
-                    {idx + 1}
-                  </div>
-                  <span className="text-sm text-slate-600 pt-0.5">{step}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className={`flex gap-3 pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Button
-              onClick={() => {
-                if (deferredPrompt) {
-                  onInstall();
-                } else {
-                  // Highlight the first step for manual installation
-                  const firstStep = document.querySelector('[data-step="1"]');
-                  if (firstStep) {
-                    firstStep.classList.add('bg-amber-100', 'ring-2', 'ring-amber-400');
-                    setTimeout(() => {
-                      firstStep.classList.remove('bg-amber-100', 'ring-2', 'ring-amber-400');
-                    }, 3000);
-                  }
+          {/* Error Message - shows when install not available */}
+          {showError && (
+            <div className={`p-4 bg-amber-50 border border-amber-200 rounded-xl ${isRTL ? 'text-right' : 'text-left'}`}>
+              <p className="text-sm text-amber-800 font-medium mb-2">
+                {isRTL ? 'التثبيت غير متاح حالياً' : 'Installation not available'}
+              </p>
+              <p className="text-xs text-amber-700">
+                {isIOS 
+                  ? (isRTL 
+                      ? 'على Safari: اضغط على زر المشاركة ⬆️ ثم "إضافة إلى الشاشة الرئيسية"' 
+                      : 'On Safari: Tap Share ⬆️ then "Add to Home Screen"')
+                  : (isRTL 
+                      ? 'افتح الموقع في Chrome واضغط على ⋮ ثم "تثبيت التطبيق"' 
+                      : 'Open in Chrome, tap ⋮ menu, then "Install app"')
                 }
-              }}
-              disabled={isInstalling}
-              className="flex-1 bg-[#1e3a5f] hover:bg-[#152a45] text-white"
-              data-testid="install-now-btn"
-            >
-              {isInstalling ? (
-                <span className="animate-pulse">{isRTL ? 'جاري التثبيت...' : 'Installing...'}</span>
-              ) : (
-                <>
-                  <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {deferredPrompt 
-                    ? (isRTL ? 'تثبيت الآن' : 'Install Now')
-                    : (isRTL ? 'اتبع الخطوات أعلاه' : 'Follow Steps Above')
-                  }
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={onClose}
-              variant="outline"
-            >
-              {isRTL ? 'إغلاق' : 'Close'}
-            </Button>
+              </p>
+            </div>
+          )}
+
+          {/* Install Button */}
+          <Button
+            onClick={handleInstallClick}
+            disabled={isInstalling}
+            className="w-full h-14 bg-[#1e3a5f] hover:bg-[#152a45] text-white text-lg font-semibold shadow-lg"
+            data-testid="install-now-btn"
+          >
+            {isInstalling ? (
+              <span className="animate-pulse">{isRTL ? 'جاري التثبيت...' : 'Installing...'}</span>
+            ) : (
+              <>
+                <Download className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                {isRTL ? 'تثبيت الآن' : 'Install Now'}
+              </>
+            )}
+          </Button>
+
+          {/* Close link */}
+          <button
+            onClick={onClose}
+            className="w-full text-center text-sm text-slate-500 hover:text-slate-700"
+          >
+            {isRTL ? 'ليس الآن' : 'Not now'}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
           </div>
         </div>
       </DialogContent>

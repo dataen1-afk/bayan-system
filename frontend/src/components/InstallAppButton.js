@@ -191,21 +191,73 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
     );
   }
 
-  // Default variant - header button
+  // Default variant - header button with pulsing animation and tooltip
   return (
-    <>
-      <Button
-        onClick={handleButtonClick}
-        variant="outline"
-        size="sm"
-        data-testid="install-app-header-btn"
-        className={`border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 gap-2 ${className}`}
+    <div className="relative">
+      {/* Pulsing Button */}
+      <motion.div
+        animate={shouldPulse ? {
+          scale: [1, 1.05, 1],
+          boxShadow: [
+            '0 0 0 0 rgba(16, 185, 129, 0)',
+            '0 0 0 8px rgba(16, 185, 129, 0.3)',
+            '0 0 0 0 rgba(16, 185, 129, 0)'
+          ]
+        } : {}}
+        transition={{
+          duration: 2,
+          repeat: shouldPulse ? Infinity : 0,
+          ease: "easeInOut"
+        }}
+        className="rounded-md"
       >
-        <Download className="w-4 h-4" />
-        <span className="hidden sm:inline">
-          {isRTL ? 'تثبيت التطبيق' : 'Install App'}
-        </span>
-      </Button>
+        <Button
+          onClick={handleButtonClick}
+          variant="outline"
+          size="sm"
+          data-testid="install-app-header-btn"
+          className={`border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 gap-2 ${className}`}
+        >
+          <Download className="w-4 h-4" />
+          <span className="hidden sm:inline">
+            {isRTL ? 'تثبيت التطبيق' : 'Install App'}
+          </span>
+        </Button>
+      </motion.div>
+
+      {/* Tooltip for first-time visitors */}
+      <AnimatePresence>
+        {showTooltip && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className={`absolute top-full mt-2 z-50 ${isRTL ? 'right-0' : 'left-0'}`}
+          >
+            <div className="bg-[#1e3a5f] text-white px-4 py-3 rounded-xl shadow-xl max-w-[220px] relative">
+              {/* Arrow */}
+              <div 
+                className={`absolute -top-2 w-4 h-4 bg-[#1e3a5f] transform rotate-45 ${isRTL ? 'right-4' : 'left-4'}`}
+              />
+              <p className={`text-sm font-medium relative z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {isRTL 
+                  ? 'ثبّت التطبيق للوصول السريع من شاشتك الرئيسية' 
+                  : 'Install the app for quick access from your home screen'}
+              </p>
+              <button
+                onClick={() => {
+                  setShowTooltip(false);
+                  localStorage.setItem('pwa-install-tooltip-seen', 'true');
+                }}
+                className={`mt-2 text-xs text-emerald-300 hover:text-emerald-200 ${isRTL ? 'text-right w-full' : ''}`}
+              >
+                {isRTL ? 'حسناً، فهمت' : 'Got it'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <InstallGuideDialog 
         isOpen={showGuide} 
@@ -216,7 +268,7 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
         deferredPrompt={deferredPrompt}
         isInstalling={isInstalling}
       />
-    </>
+    </div>
   );
 };
 

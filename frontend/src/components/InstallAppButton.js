@@ -376,8 +376,9 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
             <div className="space-y-2">
               {instructions.steps.map((step, idx) => (
                 <div 
-                  key={idx} 
-                  className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}
+                  key={idx}
+                  data-step={idx + 1}
+                  className={`flex items-start gap-3 p-2 rounded-lg transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
                   <div className="w-6 h-6 bg-[#1e3a5f] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
                     {idx + 1}

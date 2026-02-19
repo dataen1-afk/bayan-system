@@ -3,6 +3,15 @@ import ReactDOM from "react-dom/client";
 import "@/index.css";
 import App from "@/App";
 
+// Capture PWA install prompt globally (before React mounts)
+window.deferredPWAPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.deferredPWAPrompt = e;
+  // Dispatch custom event for components to listen
+  window.dispatchEvent(new CustomEvent('pwaPromptAvailable'));
+});
+
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

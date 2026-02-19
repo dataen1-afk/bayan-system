@@ -1,7 +1,7 @@
 {
-  "name": "Bayan Auditing & Conformity",
+  "name": "بيان للتحقق والمطابقة (BAC)",
   "short_name": "BAC",
-  "description": "Bayan Auditing & Conformity - Customer Portal",
+  "description": "بيان للتحقق والمطابقة - بوابة العملاء",
   "start_url": "/portal",
   "scope": "/",
   "display": "standalone",
@@ -23,7 +23,7 @@
     }
   ],
   "categories": ["business", "productivity"],
-  "lang": "en",
-  "dir": "auto",
+  "lang": "ar",
+  "dir": "rtl",
   "prefer_related_applications": false
 }

@@ -1489,3 +1489,64 @@ Simplified the admin sidebar by combining Stage 1 and Stage 2 audit items into s
 - ✅ RTL layout maintained correctly
 - ✅ Full bilingual support (Arabic/English)
 
+
+
+## PWA Install App Button - COMPLETED ✅ (Feb 19, 2026)
+
+### Summary
+Added a manual "Install App" button as a fallback option for PWA installation, plus new professional 3D PWA app icons.
+
+### Features Implemented
+1. **Install App Button in Customer Portal Header**
+   - Visible on both mobile and desktop
+   - Shows download icon with green border
+   - On mobile: icon only (compact)
+   - On desktop: icon + "تثبيت التطبيق" / "Install App" text
+
+2. **Install App Button in Admin Dashboard Sidebar**
+   - Positioned below main menu items, above Settings
+   - Green download icon with text
+   - Responsive: icon only when sidebar collapsed
+
+3. **Professional Installation Guide Dialog**
+   - Opens when clicking Install App button
+   - Shows app benefits:
+     - Quick access from home screen
+     - Works offline
+     - Faster performance
+   - Device-specific installation instructions:
+     - iOS: Share icon → Add to Home Screen
+     - Android: Menu → Install app
+     - Desktop: Install icon in address bar or browser menu
+   - "Install Now" button (if browser supports native install)
+   - Close button
+
+4. **New PWA App Icons**
+   - 3D design with rounded corners
+   - Navy blue background (#1e3a5f)
+   - White "B" fingerprint logo centered
+   - Generated sizes: 192x192 and 512x512
+
+### Files Created/Modified
+- `/app/frontend/src/components/InstallAppButton.js` - NEW component
+- `/app/frontend/src/pages/CustomerPortalPage.js` - Added InstallAppButton to header
+- `/app/frontend/src/components/Sidebar.js` - Added InstallAppButton to sidebar
+- `/app/frontend/public/manifest.json` - Updated icon paths
+- `/app/frontend/public/pwa-icon-192.png` - NEW 3D icon
+- `/app/frontend/public/pwa-icon-512.png` - NEW 3D icon
+
+### Technical Details
+- Button hidden when app is already installed (uses `window.matchMedia('(display-mode: standalone)')`)
+- Three variants: default (header), sidebar, sidebar-collapsed
+- Full RTL support with isRTL prop
+- Accessibility: Added DialogDescription for screen readers
+- data-testid attributes for testing
+
+### Testing Status
+- ✅ Button visible in Customer Portal header (desktop & mobile)
+- ✅ Button visible in Admin Dashboard sidebar
+- ✅ Installation dialog opens with benefits and steps
+- ✅ Close button works correctly
+- ✅ PWA icons accessible at correct URLs
+- ✅ 100% frontend test pass rate
+

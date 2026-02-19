@@ -375,11 +375,5 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
     </Dialog>
   );
 };
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 export default InstallAppButton;

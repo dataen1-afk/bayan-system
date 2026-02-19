@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, Smartphone, Monitor, CheckCircle2, Wifi, Zap, Home } from 'lucide-react';
+import { Download, X, Smartphone, Monitor, CheckCircle2, Zap, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

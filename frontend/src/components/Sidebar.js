@@ -240,7 +240,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
       <aside
         data-testid="sidebar"
         className={cn(
-          "sidebar-container bg-white border-gray-200 shadow-lg z-30 transition-all duration-300 flex flex-col border-t border-t-gray-200",
+          "sidebar-container bg-white border-gray-200 shadow-lg z-50 transition-all duration-300 flex flex-col border-t border-t-gray-200",
           isRTL ? "border-l" : "border-r",
           isCollapsed ? "w-16" : "w-64",
           // Desktop: fixed position, Mobile: slide in/out

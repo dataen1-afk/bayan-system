@@ -200,6 +200,7 @@ const CustomerPortalPage = () => {
             </nav>
             
             <div className="flex items-center gap-4">
+              <InstallAppButton isRTL={isRTL} />
               <LanguageSwitcher />
               <Button 
                 variant="outline" 

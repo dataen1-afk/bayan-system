@@ -37,6 +37,7 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import InstallAppButton from '@/components/InstallAppButton';
 
 const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboardTitle }) => {
   const { t, i18n } = useTranslation();

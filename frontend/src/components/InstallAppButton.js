@@ -390,27 +390,44 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
 
           {/* Action Buttons */}
           <div className={`flex gap-3 pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            {deferredPrompt ? (
-              <Button
-                onClick={onInstall}
-                disabled={isInstalling}
-                className="flex-1 bg-[#1e3a5f] hover:bg-[#152a45] text-white"
-                data-testid="install-now-btn"
-              >
-                {isInstalling ? (
-                  <span className="animate-pulse">{isRTL ? 'جاري التثبيت...' : 'Installing...'}</span>
-                ) : (
-                  <>
-                    <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {isRTL ? 'تثبيت الآن' : 'Install Now'}
-                  </>
-                )}
-              </Button>
-            ) : null}
+            <Button
+              onClick={() => {
+                if (deferredPrompt) {
+                  onInstall();
+                } else {
+                  // For browsers without native install support, guide the user
+                  if (isIOS) {
+                    alert(isRTL 
+                      ? 'اضغط على أيقونة المشاركة في الأسفل، ثم اختر "إضافة إلى الشاشة الرئيسية"'
+                      : 'Tap the Share button at the bottom, then select "Add to Home Screen"');
+                  } else if (isAndroid) {
+                    alert(isRTL 
+                      ? 'اضغط على قائمة المتصفح (⋮) واختر "تثبيت التطبيق"'
+                      : 'Tap browser menu (⋮) and select "Install app"');
+                  } else {
+                    // Try to trigger Chrome's install prompt via keyboard shortcut hint
+                    alert(isRTL 
+                      ? 'ابحث عن أيقونة التثبيت (⊕) في شريط العنوان، أو اضغط على قائمة المتصفح واختر "تثبيت..."'
+                      : 'Look for the install icon (⊕) in the address bar, or click browser menu and select "Install..."');
+                  }
+                }
+              }}
+              disabled={isInstalling}
+              className="flex-1 bg-[#1e3a5f] hover:bg-[#152a45] text-white"
+              data-testid="install-now-btn"
+            >
+              {isInstalling ? (
+                <span className="animate-pulse">{isRTL ? 'جاري التثبيت...' : 'Installing...'}</span>
+              ) : (
+                <>
+                  <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {isRTL ? 'تثبيت الآن' : 'Install Now'}
+                </>
+              )}
+            </Button>
             <Button
               onClick={onClose}
               variant="outline"
-              className={deferredPrompt ? '' : 'flex-1'}
             >
               {isRTL ? 'إغلاق' : 'Close'}
             </Button>

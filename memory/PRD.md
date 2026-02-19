@@ -1502,6 +1502,8 @@ Added a manual "Install App" button as a fallback option for PWA installation, p
    - Shows download icon with green border
    - On mobile: icon only (compact)
    - On desktop: icon + "تثبيت التطبيق" / "Install App" text
+   - **Pulsing animation** on first visit to attract attention
+   - **Tooltip hint** explaining the install feature (auto-dismisses after 6 seconds)
 
 2. **Install App Button in Admin Dashboard Sidebar**
    - Positioned below main menu items, above Settings
@@ -1512,8 +1514,8 @@ Added a manual "Install App" button as a fallback option for PWA installation, p
    - Opens when clicking Install App button
    - Shows app benefits:
      - Quick access from home screen
-     - Works offline
-     - Faster performance
+     - Faster loading & performance
+     - Full app-like experience
    - Device-specific installation instructions:
      - iOS: Share icon → Add to Home Screen
      - Android: Menu → Install app
@@ -1527,8 +1529,15 @@ Added a manual "Install App" button as a fallback option for PWA installation, p
    - White "B" fingerprint logo centered
    - Generated sizes: 192x192 and 512x512
 
+### First-Time Visitor Experience
+- Tooltip appears after 2 seconds on first visit
+- Button pulses with green glow to attract attention
+- Tooltip auto-dismisses after 6 seconds
+- "Got it" button to manually dismiss
+- State saved in localStorage (won't show again)
+
 ### Files Created/Modified
-- `/app/frontend/src/components/InstallAppButton.js` - NEW component
+- `/app/frontend/src/components/InstallAppButton.js` - NEW component with pulsing + tooltip
 - `/app/frontend/src/pages/CustomerPortalPage.js` - Added InstallAppButton to header
 - `/app/frontend/src/components/Sidebar.js` - Added InstallAppButton to sidebar
 - `/app/frontend/public/manifest.json` - Updated icon paths
@@ -1541,12 +1550,14 @@ Added a manual "Install App" button as a fallback option for PWA installation, p
 - Full RTL support with isRTL prop
 - Accessibility: Added DialogDescription for screen readers
 - data-testid attributes for testing
+- localStorage used to track first-visit tooltip state
 
 ### Testing Status
 - ✅ Button visible in Customer Portal header (desktop & mobile)
 - ✅ Button visible in Admin Dashboard sidebar
+- ✅ Pulsing animation works on first visit
+- ✅ Tooltip appears and auto-dismisses
 - ✅ Installation dialog opens with benefits and steps
 - ✅ Close button works correctly
 - ✅ PWA icons accessible at correct URLs
-- ✅ 100% frontend test pass rate
 

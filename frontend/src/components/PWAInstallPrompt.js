@@ -26,6 +26,12 @@ const PWAInstallPrompt = ({ isRTL }) => {
       }
     }
 
+    // Check if prompt was already captured globally
+    if (window.deferredPWAPrompt) {
+      setDeferredPrompt(window.deferredPWAPrompt);
+      setTimeout(() => setShowPrompt(true), 2000);
+    }
+
     const handleBeforeInstall = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -33,17 +39,28 @@ const PWAInstallPrompt = ({ isRTL }) => {
       setTimeout(() => setShowPrompt(true), 2000);
     };
 
+    // Listen for the global custom event
+    const handlePromptAvailable = () => {
+      if (window.deferredPWAPrompt) {
+        setDeferredPrompt(window.deferredPWAPrompt);
+        setTimeout(() => setShowPrompt(true), 2000);
+      }
+    };
+
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setShowPrompt(false);
       setDeferredPrompt(null);
+      window.deferredPWAPrompt = null;
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('pwaPromptAvailable', handlePromptAvailable);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('pwaPromptAvailable', handlePromptAvailable);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);

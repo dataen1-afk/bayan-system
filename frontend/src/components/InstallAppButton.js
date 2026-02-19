@@ -253,6 +253,9 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
               </p>
             </div>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {isRTL ? 'دليل تثبيت تطبيق بيان' : 'Bayan app installation guide'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 pt-4">

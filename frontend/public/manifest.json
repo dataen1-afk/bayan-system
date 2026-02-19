@@ -1,7 +1,7 @@
 {
-  "name": "Bayan for Verification and Conformity",
-  "short_name": "Bayan",
-  "description": "Service Contract Management System - Customer Portal",
+  "name": "Bayan Auditing & Conformity",
+  "short_name": "BAC",
+  "description": "Bayan Auditing & Conformity - Customer Portal",
   "start_url": "/portal",
   "scope": "/",
   "display": "standalone",

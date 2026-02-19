@@ -274,12 +274,15 @@ const InstallAppButton = ({ isRTL, variant = 'default', className = '' }) => {
   );
 };
 
-// Installation Guide Dialog Component - With Desktop Shortcut Download
+// Installation Guide Dialog Component - With Desktop Shortcut Download & Mobile Support
 const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, deferredPrompt, isInstalling }) => {
+  const [showMobileGuide, setShowMobileGuide] = useState(false);
+  
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
   const isMac = /Mac/i.test(navigator.userAgent) && !isIOS;
   const isWindows = /Win/i.test(navigator.userAgent);
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isMobile = isIOS || isAndroid;
 
   // Get the current site URL for the shortcut
   const siteUrl = window.location.origin + '/portal';
@@ -327,23 +330,151 @@ IconIndex=0
 
   const handleInstallClick = () => {
     if (deferredPrompt) {
-      // Native PWA install available
+      // Native PWA install available (works on Android Chrome)
       onInstall();
+    } else if (isMobile) {
+      // Show mobile instructions
+      setShowMobileGuide(true);
     } else if (isWindows) {
-      // Download Windows shortcut
       downloadWindowsShortcut();
     } else if (isMac) {
-      // Download Mac shortcut
       downloadMacShortcut();
-    } else if (isMobile) {
-      // For mobile, download a generic shortcut or show instructions
-      downloadWindowsShortcut(); // .url files work on Android too
     } else {
-      // Fallback - download Windows shortcut (most compatible)
       downloadWindowsShortcut();
     }
   };
 
+  // Mobile Guide View
+  if (showMobileGuide) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className={`sm:max-w-md ${isRTL ? 'rtl' : 'ltr'}`}>
+          <DialogHeader>
+            <DialogTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+              <div className="w-14 h-14 bg-gradient-to-br from-[#1e3a5f] to-[#2a4a6f] rounded-2xl flex items-center justify-center shadow-lg">
+                <Smartphone className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[#1e3a5f]">
+                  {isRTL ? 'إضافة للشاشة الرئيسية' : 'Add to Home Screen'}
+                </h3>
+                <p className="text-sm text-slate-500 font-normal">
+                  {isIOS ? 'Safari' : 'Chrome'}
+                </p>
+              </div>
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {isRTL ? 'إضافة التطبيق للشاشة الرئيسية' : 'Add app to home screen'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-4">
+            {isIOS ? (
+              // iOS Instructions
+              <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className={`flex items-start gap-4 p-4 bg-slate-50 rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xl">
+                    ⬆️
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {isRTL ? 'الخطوة 1: اضغط على زر المشاركة' : 'Step 1: Tap Share button'}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {isRTL ? 'في أسفل الشاشة (Safari)' : 'At the bottom of screen (Safari)'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className={`flex items-start gap-4 p-4 bg-slate-50 rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xl">
+                    ➕
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {isRTL ? 'الخطوة 2: إضافة للشاشة الرئيسية' : 'Step 2: Add to Home Screen'}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {isRTL ? 'مرر للأسفل واضغط "إضافة إلى الشاشة الرئيسية"' : 'Scroll down and tap "Add to Home Screen"'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`flex items-start gap-4 p-4 bg-slate-50 rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xl">
+                    ✓
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {isRTL ? 'الخطوة 3: اضغط إضافة' : 'Step 3: Tap Add'}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {isRTL ? 'سيظهر الأيقونة على شاشتك الرئيسية' : 'The icon will appear on your home screen'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Android Instructions
+              <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className={`flex items-start gap-4 p-4 bg-slate-50 rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xl font-bold">
+                    ⋮
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {isRTL ? 'الخطوة 1: اضغط على القائمة' : 'Step 1: Tap menu'}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {isRTL ? 'النقاط الثلاث في أعلى المتصفح' : 'Three dots at top of browser'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className={`flex items-start gap-4 p-4 bg-slate-50 rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xl">
+                    📲
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {isRTL ? 'الخطوة 2: تثبيت التطبيق' : 'Step 2: Install app'}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {isRTL ? 'اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية"' : 'Select "Install app" or "Add to Home Screen"'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`flex items-start gap-4 p-4 bg-slate-50 rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xl">
+                    ✓
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {isRTL ? 'الخطوة 3: تأكيد التثبيت' : 'Step 3: Confirm install'}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {isRTL ? 'سيظهر الأيقونة على شاشتك الرئيسية' : 'The icon will appear on your home screen'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Close Button */}
+            <Button
+              onClick={onClose}
+              className="w-full h-12 bg-[#1e3a5f] hover:bg-[#152a45] text-white font-semibold"
+            >
+              {isRTL ? 'فهمت' : 'Got it'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Main Dialog View
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`sm:max-w-md ${isRTL ? 'rtl' : 'ltr'}`}>
@@ -354,10 +485,16 @@ IconIndex=0
             </div>
             <div>
               <h3 className="text-xl font-bold text-[#1e3a5f]">
-                {isRTL ? 'تحميل التطبيق' : 'Download App'}
+                {isMobile 
+                  ? (isRTL ? 'إضافة للشاشة الرئيسية' : 'Add to Home Screen')
+                  : (isRTL ? 'تحميل التطبيق' : 'Download App')
+                }
               </h3>
               <p className="text-sm text-slate-500 font-normal">
-                {isRTL ? 'أضف اختصار لسطح المكتب' : 'Add shortcut to desktop'}
+                {isMobile
+                  ? (isRTL ? 'أضف أيقونة للوصول السريع' : 'Add icon for quick access')
+                  : (isRTL ? 'أضف اختصار لسطح المكتب' : 'Add shortcut to desktop')
+                }
               </p>
             </div>
           </DialogTitle>
@@ -382,16 +519,21 @@ IconIndex=0
             ))}
           </div>
 
-          {/* Info box */}
+          {/* Info box - different message for mobile vs desktop */}
           <div className={`p-4 bg-blue-50 border border-blue-100 rounded-xl ${isRTL ? 'text-right' : 'text-left'}`}>
             <p className="text-sm text-blue-800">
-              {isRTL 
-                ? 'سيتم تحميل اختصار يمكنك وضعه على سطح المكتب. يمكنك أيضاً فتح الموقع في المتصفح في أي وقت.'
-                : 'A shortcut will be downloaded that you can place on your desktop. You can also open the site in the browser anytime.'}
+              {isMobile 
+                ? (isRTL 
+                    ? 'أضف أيقونة التطبيق إلى شاشتك الرئيسية للوصول السريع في أي وقت.'
+                    : 'Add the app icon to your home screen for quick access anytime.')
+                : (isRTL 
+                    ? 'سيتم تحميل اختصار يمكنك وضعه على سطح المكتب. يمكنك أيضاً فتح الموقع في المتصفح في أي وقت.'
+                    : 'A shortcut will be downloaded that you can place on your desktop. You can also open the site in the browser anytime.')
+              }
             </p>
           </div>
 
-          {/* Download Button */}
+          {/* Download/Install Button */}
           <Button
             onClick={handleInstallClick}
             disabled={isInstalling}
@@ -403,7 +545,10 @@ IconIndex=0
             ) : (
               <>
                 <Download className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                {isRTL ? 'تحميل الآن' : 'Download Now'}
+                {isMobile
+                  ? (isRTL ? 'إضافة للشاشة الرئيسية' : 'Add to Home Screen')
+                  : (isRTL ? 'تحميل الآن' : 'Download Now')
+                }
               </>
             )}
           </Button>

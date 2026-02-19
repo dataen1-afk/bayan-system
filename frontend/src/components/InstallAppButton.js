@@ -286,7 +286,7 @@ const InstallGuideDialog = ({ isOpen, onClose, onInstall, isRTL, benefits, defer
 
   // Get the current site URL for the shortcut
   const siteUrl = window.location.origin + '/portal';
-  const siteName = 'BAC - Bayan Auditing & Conformity';
+  const siteName = 'بيان للتحقق والمطابقة (BAC)';
 
   // Download desktop shortcut for Windows (.url file)
   const downloadWindowsShortcut = () => {

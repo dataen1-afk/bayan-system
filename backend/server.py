@@ -8955,6 +8955,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Health check endpoint for deployment
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for deployment monitoring"""
+    return {"status": "healthy", "service": "contract-audit-hub"}
+
+@app.get("/api/health")
+async def api_health_check():
+    """API health check endpoint"""
+    return {"status": "healthy", "service": "contract-audit-hub"}
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

@@ -69,6 +69,26 @@ Simplified the admin sidebar by combining Stage 1 and Stage 2 audit items into s
 - ✅ RTL layout maintained correctly
 - ✅ Scroll position preserved when navigating
 - ✅ All refactored pages display correctly with shared sidebar
+- ✅ Mobile sidebar works correctly (z-index fix applied Feb 19, 2026)
+
+## Mobile Sidebar Bug Fix - COMPLETED ✅ (Feb 19, 2026)
+
+### Issue
+On mobile viewports, opening the sidebar caused a dark overlay to appear on top of the sidebar itself, blocking all menu item interactions.
+
+### Root Cause
+Z-index stacking order issue:
+- Overlay element: `z-40`
+- Sidebar element: `z-30` (lower than overlay)
+
+### Fix Applied
+Changed sidebar `z-index` from `z-30` to `z-50` in `/app/frontend/src/components/Sidebar.js`
+
+### Testing
+Verified with mobile viewport (375x812):
+- Sidebar opens correctly
+- Menu items are visible and clickable
+- Navigation works as expected
 
 ## Completed Features (December 2025)
 

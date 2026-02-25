@@ -2076,8 +2076,9 @@ async def create_staff_user(user_data: dict, current_user: dict = Depends(requir
     
     await db.users.insert_one(user_doc)
     
-    # Return user without password
-    del user_doc["password"]
+    # Return user without password and _id
+    user_doc.pop("password", None)
+    user_doc.pop("_id", None)
     user_doc["role_name"] = ROLE_PERMISSIONS[role]["name"]
     user_doc["role_name_ar"] = ROLE_PERMISSIONS[role]["name_ar"]
     

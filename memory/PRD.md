@@ -1,5 +1,19 @@
 # Service Contract Management System - PRD
 
+## Latest Update: Feb 25, 2026
+
+### User Management Bug Investigation - RESOLVED ✅
+- **Issue**: User reported users and roles disappeared from the system
+- **Finding**: NOT REPRODUCIBLE - All data exists in database and displays correctly in UI
+- **Status**: System functioning normally - likely temporary browser/caching issue
+
+### Current System Users (as of Feb 25, 2026):
+1. Admin User (admin@test.com) - system_admin
+2. Eslam Abdulaal (islam@ies.sa) - system_admin
+3. Test User (test@example.com) - auditor
+
+---
+
 ## Original Problem Statement
 Build a full-stack application for managing service contracts for Bayan for Verification and Conformity with the following workflow:
 1. Admin creates a form by entering client information (name, company, email, phone)

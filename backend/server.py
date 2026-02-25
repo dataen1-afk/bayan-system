@@ -96,6 +96,9 @@ CONTRACTS_DIR.mkdir(exist_ok=True)
 # ================= MODELS =================
 
 class UserRole:
+    # System Administrator - Highest privilege
+    SYSTEM_ADMIN = "system_admin"
+    
     # Management Roles
     CEO = "ceo"
     GENERAL_MANAGER = "general_manager"
@@ -122,6 +125,13 @@ class UserRole:
 
 # Role hierarchy and permissions
 ROLE_PERMISSIONS = {
+    UserRole.SYSTEM_ADMIN: {
+        "level": 0,
+        "name": "System Administrator",
+        "name_ar": "مدير النظام",
+        "permissions": ["all", "system_admin", "manage_all_users", "delete_users", "system_settings", "view_logs", "manage_roles"],
+        "description": "Full system control - add, modify, delete all users and system settings"
+    },
     UserRole.CEO: {
         "level": 1,
         "name": "Chief Executive Officer",

@@ -46,6 +46,7 @@ import SuspendedClientsPage from '@/pages/SuspendedClientsPage';
 import RFQRequestsPage from '@/pages/RFQRequestsPage';
 import ContactMessagesPage from '@/pages/ContactMessagesPage';
 import ApprovalsPage from '@/pages/ApprovalsPage';
+import UserManagementPage from '@/pages/UserManagementPage';
 import AdminLayout from '@/components/AdminLayout';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;

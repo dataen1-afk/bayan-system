@@ -61,6 +61,17 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+// Staff roles that can access admin pages
+const STAFF_ROLES = [
+  'system_admin', 'admin', 'ceo', 'general_manager',
+  'quality_manager', 'certification_manager', 'operation_coordinator',
+  'marketing_manager', 'financial_manager', 'hr_manager',
+  'lead_auditor', 'auditor', 'technical_expert'
+];
+
+// Helper function to check if user is staff
+const isStaff = (user) => user && STAFF_ROLES.includes(user.role);
+
 export const AuthContext = React.createContext();
 
 function App() {

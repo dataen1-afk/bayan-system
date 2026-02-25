@@ -158,8 +158,8 @@ function App() {
               element={isStaff(user) ? <AdminLayout><AuditorsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
-              path="/users" 
-              element={isStaff(user) ? <AdminLayout><UserManagementPage /></AdminLayout> : <Navigate to="/login" />} 
+              path="/settings" 
+              element={isStaff(user) ? <AdminLayout><SettingsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/certificates" 

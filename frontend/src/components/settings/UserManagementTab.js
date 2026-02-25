@@ -764,4 +764,4 @@ const UserManagementTab = () => {
   );
 };
 
-export default UserManagementPage;
+export default UserManagementTab;

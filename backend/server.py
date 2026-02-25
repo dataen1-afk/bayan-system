@@ -1810,8 +1810,44 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     return payload
 
 async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
-    if current_user.get("role") != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    """Require management-level access (CEO, General Manager, Admin, or any manager role)"""
+    user_role = current_user.get("role")
+    
+    # Check if user has management access
+    if user_role in MANAGEMENT_ROLES:
+        return current_user
+    
+    # Check if user is a manager role
+    manager_roles = [UserRole.QUALITY_MANAGER, UserRole.CERTIFICATION_MANAGER, 
+                     UserRole.MARKETING_MANAGER, UserRole.FINANCIAL_MANAGER, UserRole.HR_MANAGER]
+    if user_role in manager_roles:
+        return current_user
+    
+    raise HTTPException(status_code=403, detail="Management access required")
+
+async def require_management(current_user: dict = Depends(get_current_user)) -> dict:
+    """Require top management access (CEO, General Manager, Admin only)"""
+    if current_user.get("role") not in MANAGEMENT_ROLES:
+        raise HTTPException(status_code=403, detail="Top management access required")
+    return current_user
+
+async def require_certification_authority(current_user: dict = Depends(get_current_user)) -> dict:
+    """Require certification decision authority"""
+    if current_user.get("role") not in CERTIFICATION_DECISION_ROLES:
+        raise HTTPException(status_code=403, detail="Certification authority required")
+    return current_user
+
+async def require_auditor(current_user: dict = Depends(get_current_user)) -> dict:
+    """Require auditor role"""
+    user_role = current_user.get("role")
+    if user_role not in AUDIT_ROLES and user_role not in MANAGEMENT_ROLES:
+        raise HTTPException(status_code=403, detail="Auditor access required")
+    return current_user
+
+async def require_staff(current_user: dict = Depends(get_current_user)) -> dict:
+    """Require any internal staff role (not client)"""
+    if current_user.get("role") not in STAFF_ROLES:
+        raise HTTPException(status_code=403, detail="Staff access required")
     return current_user
 
 async def send_email(to: str, subject: str, body: str):

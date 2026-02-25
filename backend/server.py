@@ -96,8 +96,196 @@ CONTRACTS_DIR.mkdir(exist_ok=True)
 # ================= MODELS =================
 
 class UserRole:
-    ADMIN = "admin"
-    CLIENT = "client"
+    # Management Roles
+    CEO = "ceo"
+    GENERAL_MANAGER = "general_manager"
+    
+    # Manager Roles
+    QUALITY_MANAGER = "quality_manager"
+    CERTIFICATION_MANAGER = "certification_manager"
+    MARKETING_MANAGER = "marketing_manager"
+    FINANCIAL_MANAGER = "financial_manager"
+    HR_MANAGER = "hr_manager"
+    
+    # Operations Role
+    OPERATION_COORDINATOR = "operation_coordinator"
+    
+    # Auditor Roles
+    LEAD_AUDITOR = "lead_auditor"
+    AUDITOR = "auditor"
+    TECHNICAL_EXPERT = "technical_expert"
+    
+    # Legacy roles for backward compatibility
+    ADMIN = "admin"  # Maps to CEO/General Manager access
+    CLIENT = "client"  # External customers
+
+
+# Role hierarchy and permissions
+ROLE_PERMISSIONS = {
+    UserRole.CEO: {
+        "level": 1,
+        "name": "Chief Executive Officer",
+        "name_ar": "الرئيس التنفيذي",
+        "permissions": ["all"],
+        "description": "Overall strategic direction, certification approval, signing certificates"
+    },
+    UserRole.GENERAL_MANAGER: {
+        "level": 2,
+        "name": "General Manager",
+        "name_ar": "المدير العام",
+        "permissions": ["all"],
+        "description": "Branch operations, approve certifications, sign agreements"
+    },
+    UserRole.QUALITY_MANAGER: {
+        "level": 3,
+        "name": "Quality Manager",
+        "name_ar": "مدير الجودة",
+        "permissions": [
+            "manage_documents", "manage_internal_audits", "manage_complaints",
+            "manage_appeals", "technical_review", "certification_decisions",
+            "view_reports", "manage_management_review"
+        ],
+        "description": "ISO 17021 compliance, document control, internal audits, complaints/appeals"
+    },
+    UserRole.CERTIFICATION_MANAGER: {
+        "level": 3,
+        "name": "Certification Manager",
+        "name_ar": "مدير الاعتماد",
+        "permissions": [
+            "manage_auditors", "assign_auditors", "technical_review",
+            "certification_decisions", "manage_audit_programs", "view_all_audits",
+            "manage_contract_reviews", "contact_accreditation_bodies"
+        ],
+        "description": "Auditor qualification, technical review, certification decisions"
+    },
+    UserRole.OPERATION_COORDINATOR: {
+        "level": 4,
+        "name": "Operation Coordinator",
+        "name_ar": "منسق العمليات",
+        "permissions": [
+            "schedule_audits", "manage_client_files", "prepare_job_orders",
+            "communicate_customers", "update_certified_list", "view_audit_reports"
+        ],
+        "description": "Schedule audits, manage client files, prepare job orders"
+    },
+    UserRole.MARKETING_MANAGER: {
+        "level": 4,
+        "name": "Marketing Manager",
+        "name_ar": "مدير التسويق",
+        "permissions": [
+            "manage_marketing", "view_customer_feedback", "manage_proposals",
+            "view_clients", "manage_portal_content"
+        ],
+        "description": "Marketing strategy, business development"
+    },
+    UserRole.FINANCIAL_MANAGER: {
+        "level": 4,
+        "name": "Financial Manager",
+        "name_ar": "المدير المالي",
+        "permissions": [
+            "manage_invoices", "view_payments", "manage_budgets",
+            "financial_reports", "manage_expenses"
+        ],
+        "description": "Financial reporting, budgeting, invoicing"
+    },
+    UserRole.HR_MANAGER: {
+        "level": 4,
+        "name": "Admin & HR Manager",
+        "name_ar": "مدير الموارد البشرية",
+        "permissions": [
+            "manage_users", "manage_staff", "manage_training",
+            "manage_policies", "approve_leaves", "view_staff_records"
+        ],
+        "description": "Staff management, recruitment, training, policy enforcement"
+    },
+    UserRole.LEAD_AUDITOR: {
+        "level": 5,
+        "name": "Lead Auditor",
+        "name_ar": "المدقق الرئيسي",
+        "permissions": [
+            "lead_audits", "create_audit_reports", "evaluate_auditors",
+            "recommend_certification", "manage_audit_team", "follow_up_ca"
+        ],
+        "description": "Lead audits, recommend certifications, evaluate auditors"
+    },
+    UserRole.AUDITOR: {
+        "level": 6,
+        "name": "Auditor",
+        "name_ar": "مدقق",
+        "permissions": [
+            "conduct_audits", "submit_audit_findings", "view_assigned_audits",
+            "create_auditor_notes"
+        ],
+        "description": "Conduct audits per plan, report findings"
+    },
+    UserRole.TECHNICAL_EXPERT: {
+        "level": 6,
+        "name": "Technical Expert",
+        "name_ar": "خبير فني",
+        "permissions": [
+            "provide_technical_expertise", "view_assigned_audits",
+            "submit_technical_findings"
+        ],
+        "description": "Provide technical expertise during audits"
+    },
+    UserRole.ADMIN: {
+        "level": 1,
+        "name": "Administrator",
+        "name_ar": "مدير النظام",
+        "permissions": ["all"],
+        "description": "Full system access (legacy)"
+    },
+    UserRole.CLIENT: {
+        "level": 10,
+        "name": "Client",
+        "name_ar": "عميل",
+        "permissions": [
+            "view_own_data", "submit_applications", "view_proposals",
+            "sign_agreements", "submit_feedback", "view_certificates"
+        ],
+        "description": "External customer access"
+    }
+}
+
+# Get all internal staff roles (excludes client)
+STAFF_ROLES = [
+    UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.QUALITY_MANAGER,
+    UserRole.CERTIFICATION_MANAGER, UserRole.OPERATION_COORDINATOR,
+    UserRole.MARKETING_MANAGER, UserRole.FINANCIAL_MANAGER, UserRole.HR_MANAGER,
+    UserRole.LEAD_AUDITOR, UserRole.AUDITOR, UserRole.TECHNICAL_EXPERT,
+    UserRole.ADMIN
+]
+
+# Management roles with full access
+MANAGEMENT_ROLES = [UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.ADMIN]
+
+# Roles that can make certification decisions
+CERTIFICATION_DECISION_ROLES = [
+    UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.QUALITY_MANAGER,
+    UserRole.CERTIFICATION_MANAGER, UserRole.ADMIN
+]
+
+# Roles that can conduct audits
+AUDIT_ROLES = [UserRole.LEAD_AUDITOR, UserRole.AUDITOR, UserRole.TECHNICAL_EXPERT]
+
+
+def has_permission(user_role: str, required_permission: str) -> bool:
+    """Check if a user role has a specific permission"""
+    role_info = ROLE_PERMISSIONS.get(user_role, {})
+    permissions = role_info.get("permissions", [])
+    
+    if "all" in permissions:
+        return True
+    
+    return required_permission in permissions
+
+
+def get_role_display_name(role: str, language: str = "en") -> str:
+    """Get display name for a role"""
+    role_info = ROLE_PERMISSIONS.get(role, {})
+    if language == "ar":
+        return role_info.get("name_ar", role)
+    return role_info.get("name", role)
 
 class UserRegister(BaseModel):
     name: str

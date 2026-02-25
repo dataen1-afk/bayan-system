@@ -142,7 +142,7 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
   ];
 
   const bottomMenuItems = [
-    { id: 'settings', icon: Settings, label: t('settings'), color: 'text-gray-600' },
+    { id: 'settings', icon: Settings, label: t('settings'), color: 'text-gray-600', route: '/settings' },
   ];
 
   const handleMenuClick = (item) => {

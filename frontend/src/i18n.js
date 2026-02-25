@@ -1656,6 +1656,7 @@ const resources = {
       // Roles
       "admin": "مدير",
       "client": "عميل",
+      "userManagement": "إدارة المستخدمين",
       
       // Dashboard
       "dashboard": "لوحة التحكم",

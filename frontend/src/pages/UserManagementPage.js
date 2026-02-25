@@ -9,9 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter 
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { 
   Users, UserPlus, Search, Edit, Shield, Mail, Phone, 
-  Building, CheckCircle, AlertCircle, Eye, EyeOff
+  Building, CheckCircle, Trash2, Eye, EyeOff, UserCog, Crown
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 import { toast } from 'sonner';
@@ -23,6 +27,9 @@ const UserManagementPage = () => {
   const { user } = useContext(AuthContext);
   const isRTL = i18n.language?.startsWith('ar');
   
+  // Check if current user is system admin
+  const isSystemAdmin = user?.role === 'system_admin' || user?.role === 'admin';
+  
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -32,6 +39,8 @@ const UserManagementPage = () => {
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditRoleModal, setShowEditRoleModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   

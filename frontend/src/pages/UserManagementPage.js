@@ -621,6 +621,145 @@ const UserManagementPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit User Modal (System Admin only) */}
+      <Dialog open={showEditUserModal} onOpenChange={setShowEditUserModal}>
+        <DialogContent className={`max-w-md ${isRTL ? 'rtl' : 'ltr'}`}>
+          <DialogHeader>
+            <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <UserCog className="w-5 h-5" />
+              {isRTL ? 'تعديل بيانات المستخدم' : 'Edit User Details'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedUser && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
+                  <Input
+                    value={selectedUser.name || ''}
+                    onChange={(e) => setSelectedUser({...selectedUser, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
+                  <Input
+                    value={selectedUser.name_ar || ''}
+                    onChange={(e) => setSelectedUser({...selectedUser, name_ar: e.target.value})}
+                    className="text-right"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                <Input
+                  type="email"
+                  value={selectedUser.email || ''}
+                  onChange={(e) => setSelectedUser({...selectedUser, email: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'كلمة المرور الجديدة (اتركها فارغة للإبقاء)' : 'New Password (leave empty to keep)'}</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={selectedUser.newPassword || ''}
+                    onChange={(e) => setSelectedUser({...selectedUser, newPassword: e.target.value})}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 ${isRTL ? 'left-3' : 'right-3'}`}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
+                <Input
+                  value={selectedUser.phone || ''}
+                  onChange={(e) => setSelectedUser({...selectedUser, phone: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'القسم' : 'Department'}</Label>
+                <Input
+                  value={selectedUser.department || ''}
+                  onChange={(e) => setSelectedUser({...selectedUser, department: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الدور' : 'Role'}</Label>
+                <Select 
+                  value={selectedUser.role} 
+                  onValueChange={(value) => setSelectedUser({...selectedUser, role: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map(role => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {isRTL ? role.name_ar : role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+            <Button variant="outline" onClick={() => setShowEditUserModal(false)}>
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button 
+              onClick={handleEditUser}
+              className="bg-[#1e3a5f] hover:bg-[#152a45]"
+            >
+              {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className={isRTL ? 'rtl' : 'ltr'}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className={`flex items-center gap-2 text-red-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Trash2 className="w-5 h-5" />
+              {isRTL ? 'تأكيد حذف المستخدم' : 'Confirm Delete User'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className={isRTL ? 'text-right' : ''}>
+              {isRTL 
+                ? `هل أنت متأكد من حذف المستخدم "${selectedUser?.name || selectedUser?.email}"؟ لا يمكن التراجع عن هذا الإجراء.`
+                : `Are you sure you want to delete the user "${selectedUser?.name || selectedUser?.email}"? This action cannot be undone.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+            <AlertDialogCancel>
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteUser}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isRTL ? 'حذف المستخدم' : 'Delete User'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

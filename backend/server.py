@@ -1936,6 +1936,134 @@ def generate_legacy_contract_pdf(quotation: Quotation, user: dict) -> str:
 async def root():
     return {"message": "Service Contract Management API"}
 
+# ================= ROLES & PERMISSIONS API =================
+
+@api_router.get("/roles")
+async def get_all_roles(current_user: dict = Depends(require_staff)):
+    """Get all available roles with their permissions"""
+    roles = []
+    for role_key, role_info in ROLE_PERMISSIONS.items():
+        roles.append({
+            "id": role_key,
+            "name": role_info.get("name", role_key),
+            "name_ar": role_info.get("name_ar", ""),
+            "level": role_info.get("level", 10),
+            "description": role_info.get("description", ""),
+            "permissions": role_info.get("permissions", [])
+        })
+    
+    # Sort by level
+    roles.sort(key=lambda x: x["level"])
+    return {"roles": roles}
+
+@api_router.get("/roles/staff")
+async def get_staff_roles(current_user: dict = Depends(require_management)):
+    """Get only internal staff roles (for user assignment)"""
+    roles = []
+    for role_key in STAFF_ROLES:
+        role_info = ROLE_PERMISSIONS.get(role_key, {})
+        roles.append({
+            "id": role_key,
+            "name": role_info.get("name", role_key),
+            "name_ar": role_info.get("name_ar", ""),
+            "level": role_info.get("level", 10),
+            "description": role_info.get("description", "")
+        })
+    
+    roles.sort(key=lambda x: x["level"])
+    return {"roles": roles}
+
+@api_router.get("/users")
+async def get_all_users(current_user: dict = Depends(require_management)):
+    """Get all users with their roles"""
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    
+    # Add role display names
+    for user in users:
+        role = user.get("role", "client")
+        role_info = ROLE_PERMISSIONS.get(role, {})
+        user["role_name"] = role_info.get("name", role)
+        user["role_name_ar"] = role_info.get("name_ar", "")
+    
+    return {"users": users}
+
+@api_router.put("/users/{user_id}/role")
+async def update_user_role(user_id: str, role_update: dict, current_user: dict = Depends(require_management)):
+    """Update a user's role (requires top management)"""
+    new_role = role_update.get("role")
+    
+    # Validate role exists
+    if new_role not in ROLE_PERMISSIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid role: {new_role}")
+    
+    # Check user exists
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update role
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"role": new_role, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Create notification
+    notification = {
+        "id": str(uuid.uuid4()),
+        "type": "role_updated",
+        "title": "Role Updated",
+        "message": f"User {user.get('name')} role changed to {ROLE_PERMISSIONS[new_role]['name']}",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    
+    return {"message": "Role updated successfully", "new_role": new_role}
+
+@api_router.post("/users/create-staff")
+async def create_staff_user(user_data: dict, current_user: dict = Depends(require_management)):
+    """Create a new staff user with a specific role"""
+    name = user_data.get("name")
+    email = user_data.get("email")
+    password = user_data.get("password")
+    role = user_data.get("role", UserRole.AUDITOR)
+    
+    if not all([name, email, password]):
+        raise HTTPException(status_code=400, detail="Name, email, and password are required")
+    
+    # Validate role
+    if role not in STAFF_ROLES:
+        raise HTTPException(status_code=400, detail="Invalid staff role")
+    
+    # Check if email exists
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "name": name,
+        "name_ar": user_data.get("name_ar", ""),
+        "email": email,
+        "password": hash_password(password),
+        "role": role,
+        "phone": user_data.get("phone", ""),
+        "department": user_data.get("department", ""),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user.get("user_id")
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Return user without password
+    del user_doc["password"]
+    user_doc["role_name"] = ROLE_PERMISSIONS[role]["name"]
+    user_doc["role_name_ar"] = ROLE_PERMISSIONS[role]["name_ar"]
+    
+    return user_doc
+
 # Authentication routes are now in routes/auth.py
 
 # Form routes

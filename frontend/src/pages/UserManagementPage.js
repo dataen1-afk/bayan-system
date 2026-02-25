@@ -124,6 +124,58 @@ const UserManagementPage = () => {
     }
   };
 
+  const handleEditUser = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const updateData = {
+        name: selectedUser.name,
+        name_ar: selectedUser.name_ar,
+        email: selectedUser.email,
+        phone: selectedUser.phone,
+        department: selectedUser.department,
+        role: selectedUser.role
+      };
+      
+      // Only include password if it was changed
+      if (selectedUser.newPassword) {
+        updateData.password = selectedUser.newPassword;
+      }
+      
+      await axios.put(`${API}/users/${selectedUser.id}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(isRTL ? 'تم تحديث المستخدم بنجاح' : 'User updated successfully');
+      setShowEditUserModal(false);
+      setSelectedUser(null);
+      loadData();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في تحديث المستخدم' : 'Error updating user'));
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/users/${selectedUser.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(isRTL ? 'تم حذف المستخدم بنجاح' : 'User deleted successfully');
+      setShowDeleteConfirm(false);
+      setSelectedUser(null);
+      loadData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في حذف المستخدم' : 'Error deleting user'));
+    }
+  };
+
   const filteredUsers = users.filter(u => {
     const matchesSearch = 
       u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,6 +187,7 @@ const UserManagementPage = () => {
 
   const getRoleColor = (role) => {
     const colors = {
+      system_admin: 'bg-red-100 text-red-800 ring-2 ring-red-300',
       ceo: 'bg-purple-100 text-purple-800',
       general_manager: 'bg-indigo-100 text-indigo-800',
       admin: 'bg-red-100 text-red-800',

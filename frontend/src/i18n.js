@@ -30,6 +30,7 @@ const resources = {
       // Roles
       "admin": "Admin",
       "client": "Client",
+      "userManagement": "User Management",
       
       // Dashboard
       "dashboard": "Dashboard",

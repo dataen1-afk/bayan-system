@@ -259,7 +259,7 @@ ROLE_PERMISSIONS = {
 
 # Get all internal staff roles (excludes client)
 STAFF_ROLES = [
-    UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.QUALITY_MANAGER,
+    UserRole.SYSTEM_ADMIN, UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.QUALITY_MANAGER,
     UserRole.CERTIFICATION_MANAGER, UserRole.OPERATION_COORDINATOR,
     UserRole.MARKETING_MANAGER, UserRole.FINANCIAL_MANAGER, UserRole.HR_MANAGER,
     UserRole.LEAD_AUDITOR, UserRole.AUDITOR, UserRole.TECHNICAL_EXPERT,
@@ -267,7 +267,10 @@ STAFF_ROLES = [
 ]
 
 # Management roles with full access
-MANAGEMENT_ROLES = [UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.ADMIN]
+MANAGEMENT_ROLES = [UserRole.SYSTEM_ADMIN, UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.ADMIN]
+
+# System admin only - highest privilege
+SYSTEM_ADMIN_ROLES = [UserRole.SYSTEM_ADMIN]
 
 # Roles that can make certification decisions
 CERTIFICATION_DECISION_ROLES = [

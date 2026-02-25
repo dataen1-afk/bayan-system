@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://contract-cert-system.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://contract-audit-mgmt.preview.emergentagent.com')
 
 # Known test data from main agent context
 EXISTING_PLAN_ID = "d8e34254-f6a0-4fb8-98f6-ea16aa057911"

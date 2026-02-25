@@ -126,7 +126,6 @@ const Sidebar = ({ activeTab, onTabChange, userRole = 'admin', userName, dashboa
     { id: 'rfq-requests', icon: FileQuestion, label: t('rfqRequests'), color: 'text-orange-600', route: '/rfq-requests' },
     { id: 'contact-messages', icon: Mail, label: t('contactMessages'), color: 'text-cyan-600', route: '/contact-messages' },
     { id: 'approvals', icon: CheckSquare, label: t('approvals'), color: 'text-indigo-600', route: '/approvals' },
-    { id: 'users', icon: UsersRound, label: t('userManagement'), color: 'text-violet-600', route: '/users' },
     { id: 'templates', icon: FolderOpen, label: t('templates'), color: 'text-orange-600' },
     { id: 'reports', icon: BarChart3, label: t('reports'), color: 'text-cyan-600' },
     { id: 'audit-scheduling', icon: Calendar, label: t('auditScheduling'), color: 'text-indigo-600', route: '/audit-scheduling' },

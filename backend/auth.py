@@ -21,8 +21,32 @@ security = HTTPBearer()
 
 
 class UserRole:
+    SYSTEM_ADMIN = "system_admin"
     ADMIN = "admin"
+    CEO = "ceo"
+    GENERAL_MANAGER = "general_manager"
+    QUALITY_MANAGER = "quality_manager"
+    CERTIFICATION_MANAGER = "certification_manager"
+    OPERATION_COORDINATOR = "operation_coordinator"
+    MARKETING_MANAGER = "marketing_manager"
+    FINANCIAL_MANAGER = "financial_manager"
+    HR_MANAGER = "hr_manager"
+    LEAD_AUDITOR = "lead_auditor"
+    AUDITOR = "auditor"
+    TECHNICAL_EXPERT = "technical_expert"
     CLIENT = "client"
+
+
+# Staff roles that can access admin features
+STAFF_ROLES = [
+    UserRole.SYSTEM_ADMIN, UserRole.ADMIN, UserRole.CEO, UserRole.GENERAL_MANAGER,
+    UserRole.QUALITY_MANAGER, UserRole.CERTIFICATION_MANAGER, UserRole.OPERATION_COORDINATOR,
+    UserRole.MARKETING_MANAGER, UserRole.FINANCIAL_MANAGER, UserRole.HR_MANAGER,
+    UserRole.LEAD_AUDITOR, UserRole.AUDITOR, UserRole.TECHNICAL_EXPERT
+]
+
+# Management roles with full access
+MANAGEMENT_ROLES = [UserRole.SYSTEM_ADMIN, UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.ADMIN]
 
 
 def hash_password(password: str) -> str:

@@ -214,15 +214,15 @@ const UserManagementPage = () => {
   }
 
   return (
-    <div className={`p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
         <div>
-          <h1 className={`text-2xl font-bold text-[#1e3a5f] flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Users className="w-7 h-7" />
+          <h2 className={`text-xl font-bold text-[#1e3a5f] flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Users className="w-6 h-6" />
             {isRTL ? 'إدارة المستخدمين' : 'User Management'}
-          </h1>
-          <p className="text-slate-600 mt-1">
+          </h2>
+          <p className="text-slate-600 text-sm mt-1">
             {isRTL ? 'إدارة حسابات المستخدمين والأدوار' : 'Manage user accounts and roles'}
           </p>
         </div>

@@ -379,18 +379,53 @@ const UserManagementPage = () => {
                       {u.department || '-'}
                     </td>
                     <td className="py-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser({ ...u, newRole: u.role });
-                          setShowEditRoleModal(true);
-                        }}
-                        className="gap-1"
-                      >
-                        <Edit className="w-4 h-4" />
-                        {isRTL ? 'تعديل الدور' : 'Edit Role'}
-                      </Button>
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                        {/* Edit Role - available to all managers */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser({ ...u, newRole: u.role });
+                            setShowEditRoleModal(true);
+                          }}
+                          className="gap-1"
+                        >
+                          <Shield className="w-4 h-4" />
+                          {isRTL ? 'الدور' : 'Role'}
+                        </Button>
+                        
+                        {/* Edit User - System Admin only */}
+                        {isSystemAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser({ ...u, newPassword: '' });
+                              setShowEditUserModal(true);
+                            }}
+                            className="gap-1 text-blue-600 hover:text-blue-800"
+                          >
+                            <Edit className="w-4 h-4" />
+                            {isRTL ? 'تعديل' : 'Edit'}
+                          </Button>
+                        )}
+                        
+                        {/* Delete User - System Admin only, can't delete yourself */}
+                        {isSystemAdmin && u.id !== user?.user_id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(u);
+                              setShowDeleteConfirm(true);
+                            }}
+                            className="gap-1 text-red-600 hover:text-red-800 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            {isRTL ? 'حذف' : 'Delete'}
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

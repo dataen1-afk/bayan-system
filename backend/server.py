@@ -2083,6 +2083,76 @@ async def create_staff_user(user_data: dict, current_user: dict = Depends(requir
     
     return user_doc
 
+@api_router.put("/users/{user_id}")
+async def update_user(user_id: str, user_data: dict, current_user: dict = Depends(require_system_admin)):
+    """Update a user's information (System Admin only)"""
+    # Check user exists
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prepare update data
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    # Update allowed fields
+    allowed_fields = ["name", "name_ar", "email", "phone", "department", "role"]
+    for field in allowed_fields:
+        if field in user_data and user_data[field] is not None:
+            if field == "role" and user_data[field] not in ROLE_PERMISSIONS:
+                raise HTTPException(status_code=400, detail=f"Invalid role: {user_data[field]}")
+            update_data[field] = user_data[field]
+    
+    # Update password if provided
+    if "password" in user_data and user_data["password"]:
+        update_data["password"] = hash_password(user_data["password"])
+    
+    await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    # Create notification
+    notification = {
+        "id": str(uuid.uuid4()),
+        "type": "user_updated",
+        "title": "User Updated",
+        "message": f"User {user.get('name')} information updated by System Administrator",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    
+    return {"message": "User updated successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: dict = Depends(require_system_admin)):
+    """Delete a user (System Admin only)"""
+    # Check user exists
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prevent deleting yourself
+    if user_id == current_user.get("user_id"):
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    # Prevent deleting other system admins (only one should exist ideally)
+    if user.get("role") == UserRole.SYSTEM_ADMIN and current_user.get("role") != UserRole.SYSTEM_ADMIN:
+        raise HTTPException(status_code=403, detail="Cannot delete System Administrator")
+    
+    # Delete user
+    await db.users.delete_one({"id": user_id})
+    
+    # Create notification
+    notification = {
+        "id": str(uuid.uuid4()),
+        "type": "user_deleted",
+        "title": "User Deleted",
+        "message": f"User {user.get('name')} ({user.get('email')}) was deleted by System Administrator",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    
+    return {"message": "User deleted successfully"}
+
 # Authentication routes are now in routes/auth.py
 
 # Form routes

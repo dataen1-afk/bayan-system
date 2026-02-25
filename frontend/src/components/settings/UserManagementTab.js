@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
-const UserManagementPage = () => {
+const UserManagementTab = () => {
   const { t, i18n } = useTranslation();
   const { user } = useContext(AuthContext);
   const isRTL = i18n.language?.startsWith('ar');

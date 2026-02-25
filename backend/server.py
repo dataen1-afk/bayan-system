@@ -1863,6 +1863,12 @@ async def require_staff(current_user: dict = Depends(get_current_user)) -> dict:
         raise HTTPException(status_code=403, detail="Staff access required")
     return current_user
 
+async def require_system_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    """Require system administrator access - highest privilege"""
+    if current_user.get("role") not in SYSTEM_ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="System administrator access required")
+    return current_user
+
 async def send_email(to: str, subject: str, body: str):
     """Send email using SMTP"""
     try:

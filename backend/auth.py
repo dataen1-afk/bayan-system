@@ -83,6 +83,18 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 
 async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
-    if current_user.get("role") != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    """Require staff-level access (any internal role)"""
+    user_role = current_user.get("role")
+    
+    # Allow all staff roles
+    if user_role in STAFF_ROLES:
+        return current_user
+    
+    raise HTTPException(status_code=403, detail="Staff access required")
+
+
+async def require_management(current_user: dict = Depends(get_current_user)) -> dict:
+    """Require management-level access"""
+    if current_user.get("role") not in MANAGEMENT_ROLES:
+        raise HTTPException(status_code=403, detail="Management access required")
     return current_user

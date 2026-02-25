@@ -151,92 +151,92 @@ function App() {
             {/* Admin pages - wrapped with AdminLayout */}
             <Route 
               path="/invoices" 
-              element={user?.role === 'admin' ? <AdminLayout><InvoicesPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><InvoicesPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/auditors" 
-              element={user?.role === 'admin' ? <AdminLayout><AuditorsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><AuditorsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/users" 
-              element={user?.role === 'admin' ? <AdminLayout><UserManagementPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><UserManagementPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/certificates" 
-              element={user?.role === 'admin' ? <AdminLayout><CertificatesPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><CertificatesPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/alerts" 
-              element={user?.role === 'admin' ? <AdminLayout><ExpirationAlertsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><ExpirationAlertsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/analytics" 
-              element={user?.role === 'admin' ? <AdminLayout><AnalyticsDashboardPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><AnalyticsDashboardPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/create-proposal/:formId" 
-              element={user?.role === 'admin' ? <AdminLayout><CreateProposalPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><CreateProposalPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             {/* More admin pages with AdminLayout */}
             <Route 
               path="/contract-reviews" 
-              element={user?.role === 'admin' ? <AdminLayout><ContractReviewsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><ContractReviewsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/audit-programs" 
-              element={user?.role === 'admin' ? <AdminLayout><AuditProgramsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><AuditProgramsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/job-orders" 
-              element={user?.role === 'admin' ? <AdminLayout><JobOrdersPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><JobOrdersPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/audit-plans" 
-              element={user?.role === 'admin' ? <AdminLayout><AuditPlansPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><AuditPlansPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/stage1-audit-plans" 
-              element={user?.role === 'admin' ? <AdminLayout><Stage1AuditPlansPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><Stage1AuditPlansPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/stage2-audit-plans" 
-              element={user?.role === 'admin' ? <AdminLayout><Stage2AuditPlansPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><Stage2AuditPlansPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/opening-closing-meetings" 
-              element={user?.role === 'admin' ? <AdminLayout><OpeningClosingMeetingsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><OpeningClosingMeetingsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/audit-reports" 
-              element={user?.role === 'admin' ? <AdminLayout><AuditReportsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><AuditReportsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/stage1-audit-reports" 
-              element={user?.role === 'admin' ? <AdminLayout><Stage1AuditReportsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><Stage1AuditReportsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/stage2-audit-reports" 
-              element={user?.role === 'admin' ? <AdminLayout><Stage2AuditReportsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><Stage2AuditReportsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/auditor-notes" 
-              element={user?.role === 'admin' ? <AdminLayout><AuditorNotesPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><AuditorNotesPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/nonconformity-reports" 
-              element={user?.role === 'admin' ? <AdminLayout><NonconformityReportsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><NonconformityReportsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/certificate-data" 
-              element={user?.role === 'admin' ? <AdminLayout><CertificateDataPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><CertificateDataPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/technical-reviews" 
-              element={user?.role === 'admin' ? <AdminLayout><TechnicalReviewPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><TechnicalReviewPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/customer-feedback" 
-              element={user?.role === 'admin' ? <AdminLayout><CustomerFeedbackPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><CustomerFeedbackPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/feedback/:accessToken" 
@@ -244,39 +244,39 @@ function App() {
             />
             <Route 
               path="/pre-transfer-reviews" 
-              element={user?.role === 'admin' ? <AdminLayout><PreTransferReviewPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><PreTransferReviewPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/certified-clients" 
-              element={user?.role === 'admin' ? <AdminLayout><CertifiedClientsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><CertifiedClientsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/suspended-clients" 
-              element={user?.role === 'admin' ? <AdminLayout><SuspendedClientsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><SuspendedClientsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/rfq-requests" 
-              element={user?.role === 'admin' ? <AdminLayout><RFQRequestsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><RFQRequestsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/contact-messages" 
-              element={user?.role === 'admin' ? <AdminLayout><ContactMessagesPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><ContactMessagesPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/approvals" 
-              element={user?.role === 'admin' ? <AdminLayout><ApprovalsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><ApprovalsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/reports" 
-              element={user?.role === 'admin' ? <AdminLayout><ReportsPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><ReportsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/templates" 
-              element={user?.role === 'admin' ? <AdminLayout><TemplatesPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><TemplatesPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
               path="/audit-scheduling" 
-              element={user?.role === 'admin' ? <AdminLayout><AuditSchedulingPage /></AdminLayout> : <Navigate to="/login" />} 
+              element={isStaff(user) ? <AdminLayout><AuditSchedulingPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
           </Routes>

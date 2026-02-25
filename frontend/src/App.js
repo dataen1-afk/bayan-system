@@ -147,6 +147,10 @@ function App() {
               element={user?.role === 'admin' ? <AdminLayout><AuditorsPage /></AdminLayout> : <Navigate to="/login" />} 
             />
             <Route 
+              path="/users" 
+              element={user?.role === 'admin' ? <AdminLayout><UserManagementPage /></AdminLayout> : <Navigate to="/login" />} 
+            />
+            <Route 
               path="/certificates" 
               element={user?.role === 'admin' ? <AdminLayout><CertificatesPage /></AdminLayout> : <Navigate to="/login" />} 
             />

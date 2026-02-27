@@ -414,7 +414,6 @@ const PublicProposalPage = () => {
             <CardContent>
               <ul className={`space-y-2 text-sm text-gray-600 ${isRTL ? 'list-disc pr-5' : 'list-disc pl-5'}`}>
                 <li>{t('term1_payment')}</li>
-                <li>{t('term2_tax')}</li>
                 <li>{t('term3_travel')}</li>
                 <li>{t('term4_validity')}</li>
                 <li>{t('term5_cancellation')}</li>

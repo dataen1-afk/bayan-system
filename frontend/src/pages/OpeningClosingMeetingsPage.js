@@ -259,46 +259,46 @@ export default function OpeningClosingMeetingsPage() {
               <p className="text-sm mt-2">{t('createFromStage1') || 'Create a form from a completed Stage 1 audit'}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+              <table className="w-full table-fixed">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium text-gray-600">{t('organization') || 'Organization'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('auditType') || 'Audit Type'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('auditDate') || 'Audit Date'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('attendees') || 'Attendees'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('status') || 'Status'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('actions') || 'Actions'}</th>
+                  <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[200px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('organization') || 'Organization'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditType') || 'Audit Type'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[110px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditDate') || 'Audit Date'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('attendees') || 'Attendees'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('status') || 'Status'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[200px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('actions') || 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {meetings.map(meeting => (
                     <tr key={meeting.id} className="border-b hover:bg-gray-50" data-testid={`meeting-row-${meeting.id}`}>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Building className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{meeting.organization_name}</span>
+                      <td className="p-3 px-4">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <Building className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="font-medium truncate">{meeting.organization_name}</span>
                         </div>
                       </td>
-                      <td className="p-3">
-                        <span className="px-2 py-1 bg-cyan-100 text-cyan-800 rounded text-sm">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
+                        <span className="px-2 py-1 bg-cyan-100 text-cyan-800 rounded text-sm whitespace-nowrap">
                           {meeting.audit_type || 'Stage 1'}
                         </span>
                       </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          {meeting.audit_date || '-'}
+                      <td className="p-3 px-4">
+                        <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span dir="ltr">{meeting.audit_date || '-'}</span>
                         </div>
                       </td>
-                      <td className="p-3">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
                         <span className="text-gray-600">
                           {meeting.attendees?.filter(a => a.name).length || 0} / {meeting.attendees?.length || 5}
                         </span>
                       </td>
-                      <td className="p-3">{getStatusBadge(meeting.status, meeting.sent_to_client)}</td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(meeting.status, meeting.sent_to_client)}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <Button 
                             size="sm" 
                             variant="outline"

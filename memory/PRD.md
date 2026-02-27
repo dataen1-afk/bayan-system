@@ -2,36 +2,34 @@
 
 ## Latest Update: Feb 27, 2026
 
-### RTL Layout Fix & E2E Workflow Test - COMPLETED ✅ (Feb 27, 2026)
+### E2E Workflow Test - COMPLETED ✅ (Feb 27, 2026)
 
-#### RTL Layout Fixes:
-- **Fixed**: "Auditor Workload Distribution" (توزيع عبء العمل على المدققين) widget
-  - Title and description now correctly aligned on RIGHT side
-  - Icon positioned on LEFT side
-  - Uses `dir={isRTL ? 'rtl' : 'ltr'}` approach for proper RTL handling
+#### Full Workflow Tested Successfully:
+1. ✅ Application Form Created (طلبات المنح)
+2. ✅ Quote/Proposal Created (عروض الأسعار) - SAR 20,000 for ISO 27001:2022
+3. ✅ Proposal Accepted (via public endpoint)
+4. ✅ Certification Agreement Signed → Contract visible
+5. ✅ Contract Review Created & Completed
+6. ✅ Audit Program Created & Approved  
+7. ✅ Job Order Created (assigned to Ahmed Al-Rashid)
+8. ✅ Certificate Generated (CERT-2026-0001)
 
-#### Bug Fix:
-- **Fixed**: `create_notification()` function in `server.py` to accept optional `title_ar` and `message_ar` parameters
-  - This was blocking proposal acceptance (TypeError: got unexpected keyword argument)
+#### Bug Fixes Applied:
+- Fixed RTL layout for "Auditor Workload Distribution" widget
+- Fixed `create_notification()` to accept optional `title_ar`, `message_ar` params
+- Fixed `generate_certificate_pdf()` call - updated to use new function signature (returns bytes)
 
-#### E2E Workflow Test Progress:
-1. ✅ Create Application Form (طلبات المنح)
-2. ✅ Create Quote/Proposal (عروض الأسعار) - SAR 20,000 for ISO 27001:2022
-3. ✅ Accept Proposal (via public endpoint)
-4. ✅ Sign Certification Agreement → Contract visible in العقود page
-5. ✅ Create Contract Review (مراجعة العقود)
-6. 🔄 Remaining: Complete Contract Review → Create Audit Program → Job Order → Certificate
-
-### Current System Users (as of Feb 27, 2026):
-1. Admin User (admin@test.com) - system_admin
-2. Eslam Abdulaal (islam@ies.sa) - system_admin
-3. Test User (test@example.com) - auditor
-
-### Test Data Created (Feb 27, 2026):
+#### Test Data Created:
 - Company: شركة العلي للتقنية (Al-Ali Technology)
 - Standard: ISO 27001:2022
 - Contract Value: SAR 20,000
-- Certification Agreement: Signed
+- Certificate Number: CERT-2026-0001
+- Auditor: أحمد الراشد (Ahmed Al-Rashid)
+
+### Current System Users (as of Feb 27, 2026):
+1. Admin User (admin@test.com) - system_admin
+2. Eslam Abdulaal (islam@ies.sa) - system_admin  
+3. Test User (test@example.com) - auditor
 
 ---
 

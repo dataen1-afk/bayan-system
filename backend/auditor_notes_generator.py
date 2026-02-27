@@ -90,29 +90,41 @@ def generate_auditor_notes_pdf(data: dict) -> str:
 
 
 def draw_header(c, width, height):
-    """Draw document header with logo"""
-    # Header background
-    c.setFillColor(PRIMARY_COLOR)
-    c.rect(0, height - 2.5*cm, width, 2.5*cm, fill=True, stroke=False)
-    
-    # Logo
+    """Draw official BAC header"""
     logo_path = Path(__file__).parent / "assets" / "bayan-logo.png"
+    
+    # Logo on top-left
+    logo_x = 40
+    logo_y = height - 75
+    
     if logo_path.exists():
         try:
-            c.drawImage(str(logo_path), 1.5*cm, height - 2.2*cm, width=3*cm, height=1.8*cm, preserveAspectRatio=True, mask='auto')
+            c.drawImage(str(logo_path), logo_x, logo_y, width=60, height=55, 
+                       preserveAspectRatio=True, mask='auto')
         except:
             pass
     
-    # Company name
-    c.setFillColor(white)
-    c.setFont('Helvetica-Bold', 14)
-    c.drawRightString(width - 1.5*cm, height - 1.2*cm, "BAYAN")
+    # Company name next to logo
+    name_x = logo_x + 70
+    name_y = height - 30
+    c.setFillColor(PRIMARY_COLOR)
+    c.setFont('Amiri-Bold', 13)
+    c.drawRightString(name_x + 130, name_y, reshape_arabic("بيان للتحقق والمطابقة"))
+    c.setFont('Helvetica-Bold', 9)
+    c.drawString(name_x, name_y - 15, "BAYAN AUDITING & CONFORMITY")
     
+    # Title centered
+    title_y = height - 95
+    c.setFont('Helvetica-Bold', 16)
+    c.setFillColor(PRIMARY_COLOR)
+    c.drawCentredString(width / 2, title_y, "AUDITOR NOTES")
+    c.setFont('Amiri-Bold', 14)
+    c.drawCentredString(width / 2, title_y - 20, reshape_arabic("ملاحظات المدقق"))
+    
+    # Form reference
     c.setFont('Helvetica', 9)
-    c.drawRightString(width - 1.5*cm, height - 1.7*cm, "for Verification and Conformity Assessment")
-    
-    c.setFont('Amiri', 9)
-    c.drawRightString(width - 1.5*cm, height - 2.1*cm, reshape_arabic("بيان للتدقيق وتقييم المطابقة"))
+    c.setFillColor(TEXT_COLOR)
+    c.drawRightString(width - 40, height - 25, "BAC-F6-12")
 
 
 def draw_form_fields(c, data, y, width):

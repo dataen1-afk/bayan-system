@@ -335,49 +335,66 @@ const UserManagementTab = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
             <table className="w-full">
               <thead>
                 <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
-                  <th className="pb-3 font-medium text-slate-600">{isRTL ? 'المستخدم' : 'User'}</th>
-                  <th className="pb-3 font-medium text-slate-600">{isRTL ? 'البريد الإلكتروني' : 'Email'}</th>
-                  <th className="pb-3 font-medium text-slate-600">{isRTL ? 'الدور' : 'Role'}</th>
-                  <th className="pb-3 font-medium text-slate-600">{isRTL ? 'القسم' : 'Department'}</th>
-                  <th className="pb-3 font-medium text-slate-600">{isRTL ? 'الإجراءات' : 'Actions'}</th>
+                  {isRTL ? (
+                    <>
+                      <th className="pb-3 font-medium text-slate-600">المستخدم</th>
+                      <th className="pb-3 font-medium text-slate-600">البريد الإلكتروني</th>
+                      <th className="pb-3 font-medium text-slate-600">الدور</th>
+                      <th className="pb-3 font-medium text-slate-600">القسم</th>
+                      <th className="pb-3 font-medium text-slate-600">الإجراءات</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="pb-3 font-medium text-slate-600">User</th>
+                      <th className="pb-3 font-medium text-slate-600">Email</th>
+                      <th className="pb-3 font-medium text-slate-600">Role</th>
+                      <th className="pb-3 font-medium text-slate-600">Department</th>
+                      <th className="pb-3 font-medium text-slate-600">Actions</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((u) => (
                   <tr key={u.id} className="border-b hover:bg-slate-50">
+                    {/* User Column */}
                     <td className="py-4">
-                      <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                         <div className="w-10 h-10 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white font-semibold">
                           {(u.name || u.email || '?').charAt(0).toUpperCase()}
                         </div>
                         <div className={isRTL ? 'text-right' : ''}>
                           <p className="font-medium text-slate-800">{isRTL ? (u.name_ar || u.name) : u.name}</p>
                           {u.phone && (
-                            <p className="text-xs text-slate-500 flex items-center gap-1">
+                            <p className={`text-xs text-slate-500 flex items-center gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                               <Phone className="w-3 h-3" /> {u.phone}
                             </p>
                           )}
                         </div>
                       </div>
                     </td>
+                    {/* Email Column */}
                     <td className="py-4">
                       <div className={`flex items-center gap-1 text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                         <Mail className="w-4 h-4" />
-                        {u.email}
+                        <span dir="ltr">{u.email}</span>
                       </div>
                     </td>
+                    {/* Role Column */}
                     <td className="py-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(u.role)}`}>
                         {isRTL ? u.role_name_ar : u.role_name}
                       </span>
                     </td>
-                    <td className="py-4 text-slate-600">
+                    {/* Department Column */}
+                    <td className={`py-4 text-slate-600 ${isRTL ? 'text-right' : ''}`}>
                       {u.department || '-'}
                     </td>
+                    {/* Actions Column */}
                     <td className="py-4">
                       <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                         {/* Edit Role - available to all managers */}
@@ -388,7 +405,7 @@ const UserManagementTab = () => {
                             setSelectedUser({ ...u, newRole: u.role });
                             setShowEditRoleModal(true);
                           }}
-                          className="gap-1"
+                          className={`gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <Shield className="w-4 h-4" />
                           {isRTL ? 'الدور' : 'Role'}
@@ -403,7 +420,7 @@ const UserManagementTab = () => {
                               setSelectedUser({ ...u, newPassword: '' });
                               setShowEditUserModal(true);
                             }}
-                            className="gap-1 text-blue-600 hover:text-blue-800"
+                            className={`gap-1 text-blue-600 hover:text-blue-800 ${isRTL ? 'flex-row-reverse' : ''}`}
                           >
                             <Edit className="w-4 h-4" />
                             {isRTL ? 'تعديل' : 'Edit'}
@@ -419,7 +436,7 @@ const UserManagementTab = () => {
                               setSelectedUser(u);
                               setShowDeleteConfirm(true);
                             }}
-                            className="gap-1 text-red-600 hover:text-red-800 hover:bg-red-50"
+                            className={`gap-1 text-red-600 hover:text-red-800 hover:bg-red-50 ${isRTL ? 'flex-row-reverse' : ''}`}
                           >
                             <Trash2 className="w-4 h-4" />
                             {isRTL ? 'حذف' : 'Delete'}

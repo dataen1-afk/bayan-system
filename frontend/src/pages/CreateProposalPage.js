@@ -143,6 +143,21 @@ const CreateProposalPage = () => {
     return fees.initial_certification + fees.surveillance_1 + fees.surveillance_2 + fees.recertification;
   };
 
+  const calculateTax = (amount) => {
+    const taxRate = formData.service_fees.tax_rate / 100;
+    return amount * taxRate;
+  };
+
+  const calculateTotalTax = () => {
+    const fees = formData.service_fees;
+    const taxRate = fees.tax_rate / 100;
+    return (fees.initial_certification + fees.surveillance_1 + fees.surveillance_2 + fees.recertification) * taxRate;
+  };
+
+  const calculateGrandTotal = () => {
+    return calculateTotal() + calculateTotalTax();
+  };
+
   const handleSaveAndSend = async () => {
     // Validation
     if (!formData.organization_name || !formData.contact_email) {

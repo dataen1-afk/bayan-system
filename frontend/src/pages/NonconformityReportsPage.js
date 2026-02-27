@@ -415,37 +415,37 @@ export default function NonconformityReportsPage() {
           ) : reportsList.length === 0 ? (
             <div className="text-center py-8 text-gray-500">{t('ncReports.empty')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full" data-testid="nc-reports-table">
+            <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+              <table className="w-full table-fixed" data-testid="nc-reports-table">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-start p-3 font-medium">{t('ncReports.clientName')}</th>
-                    <th className="text-start p-3 font-medium">{t('ncReports.auditType')}</th>
-                    <th className="text-start p-3 font-medium">{t('ncReports.ncs')}</th>
-                    <th className="text-start p-3 font-medium">{t('ncReports.date')}</th>
-                    <th className="text-start p-3 font-medium">{t('ncReports.statusLabel')}</th>
-                    <th className="text-start p-3 font-medium">{t('actions')}</th>
+                  <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <th className={`p-3 px-4 font-medium w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('ncReports.clientName')}</th>
+                    <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('ncReports.auditType')}</th>
+                    <th className={`p-3 px-4 font-medium w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('ncReports.ncs')}</th>
+                    <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('ncReports.date')}</th>
+                    <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('ncReports.statusLabel')}</th>
+                    <th className={`p-3 px-4 font-medium w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reportsList.map((report) => (
                     <tr key={report.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        <div className="font-medium">{report.client_name}</div>
-                        <div className="text-sm text-gray-500">{report.standards?.join(', ')}</div>
+                      <td className="p-3 px-4">
+                        <div className={`font-medium ${isRTL ? 'text-right' : ''}`}>{report.client_name}</div>
+                        <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>{report.standards?.join(', ')}</div>
                       </td>
-                      <td className="p-3">{report.audit_type}</td>
-                      <td className="p-3">
-                        <div className="flex gap-2 text-sm">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{report.audit_type}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex gap-2 text-sm ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <span className="text-red-600 font-medium">MJ: {report.total_major || 0}</span>
                           <span className="text-orange-600 font-medium">MN: {report.total_minor || 0}</span>
                           <span className="text-green-600">({report.closed_count || 0} {t('ncReports.closedLabel')})</span>
                         </div>
                       </td>
-                      <td className="p-3">{report.audit_date}</td>
-                      <td className="p-3">{getStatusBadge(report.status)}</td>
-                      <td className="p-3">
-                        <div className="flex gap-1">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`} dir="ltr">{report.audit_date}</td>
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(report.status)}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <Button variant="ghost" size="sm" onClick={() => openViewModal(report)} title={t('view')}>
                             <Eye className="w-4 h-4" />
                           </Button>

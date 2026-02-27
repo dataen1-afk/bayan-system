@@ -406,17 +406,15 @@ export default function CertifiedClientsPage() {
                         <div className="text-sm text-gray-500" dir="rtl">{client.client_name_ar}</div>
                       )}
                     </td>
-                    <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
-                      <div className={`flex flex-col gap-1 ${isRTL ? 'items-end' : 'items-start'}`}>
-                        {(client.accreditation || []).slice(0, 2).map((std, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
-                            {std}
-                          </span>
-                        ))}
-                        {(client.accreditation || []).length > 2 && (
-                          <span className="text-xs text-gray-500">+{client.accreditation.length - 2}</span>
-                        )}
-                      </div>
+                    <td className={`p-3 px-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {(client.accreditation || []).slice(0, 2).map((std, idx) => (
+                        <span key={idx} className="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs mb-1 mx-0.5">
+                          {std}
+                        </span>
+                      ))}
+                      {(client.accreditation || []).length > 2 && (
+                        <span className="text-xs text-gray-500">+{client.accreditation.length - 2}</span>
+                      )}
                     </td>
                     <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
                       <span className="font-mono text-sm" dir="ltr">{client.certificate_number || '-'}</span>

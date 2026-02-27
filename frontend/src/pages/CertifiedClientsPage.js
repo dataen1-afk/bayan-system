@@ -406,8 +406,8 @@ export default function CertifiedClientsPage() {
                         <div className="text-sm text-gray-500" dir="rtl">{client.client_name_ar}</div>
                       )}
                     </td>
-                    <td className="p-3 px-4">
-                      <div className={`flex flex-wrap gap-1 ${isRTL ? 'flex-row-reverse justify-start' : ''}`}>
+                    <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
+                      <div className={`flex flex-col gap-1 ${isRTL ? 'items-end' : 'items-start'}`}>
                         {(client.accreditation || []).slice(0, 2).map((std, idx) => (
                           <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
                             {std}

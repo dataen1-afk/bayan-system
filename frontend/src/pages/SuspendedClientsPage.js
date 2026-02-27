@@ -442,39 +442,39 @@ export default function SuspendedClientsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full" data-testid="suspended-clients-table">
+          <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+            <table className="w-full table-fixed" data-testid="suspended-clients-table">
               <thead>
-                <tr className="border-b bg-red-50">
-                  <th className="text-start p-3 font-medium">{isRTL ? 'الرقم' : 'Sr. No.'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'رقم العميل' : 'Client ID'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'اسم العميل' : 'Client Name'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'تاريخ التعليق' : 'Suspended On'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'السبب' : 'Reason'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'الإجراء' : 'Future Action'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'الحالة' : 'Status'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'الإجراءات' : 'Actions'}</th>
+                <tr className={`border-b bg-red-50 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <th className={`p-3 px-4 font-medium w-[70px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الرقم' : 'Sr. No.'}</th>
+                  <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'رقم العميل' : 'Client ID'}</th>
+                  <th className={`p-3 px-4 font-medium w-[160px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'اسم العميل' : 'Client Name'}</th>
+                  <th className={`p-3 px-4 font-medium w-[110px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'تاريخ التعليق' : 'Suspended On'}</th>
+                  <th className={`p-3 px-4 font-medium w-[150px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'السبب' : 'Reason'}</th>
+                  <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الإجراء' : 'Future Action'}</th>
+                  <th className={`p-3 px-4 font-medium w-[90px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الحالة' : 'Status'}</th>
+                  <th className={`p-3 px-4 font-medium w-[150px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الإجراءات' : 'Actions'}</th>
                 </tr>
               </thead>
               <tbody>
                 {clientsList.map((client) => (
                   <tr key={client.id} className="border-b hover:bg-gray-50" data-testid={`suspended-row-${client.id}`}>
-                    <td className="p-3 font-mono text-sm">{client.serial_number}</td>
-                    <td className="p-3 font-mono text-sm">{client.client_id || '-'}</td>
-                    <td className="p-3">
-                      <div className="font-medium">{client.client_name}</div>
-                      {client.client_name_ar && (
+                    <td className={`p-3 px-4 font-mono text-sm ${isRTL ? 'text-right' : ''}`}>{client.serial_number}</td>
+                    <td className={`p-3 px-4 font-mono text-sm ${isRTL ? 'text-right' : ''}`}>{client.client_id || '-'}</td>
+                    <td className="p-3 px-4">
+                      <div className={`font-medium ${isRTL ? 'text-right' : ''}`}>{isRTL ? (client.client_name_ar || client.client_name) : client.client_name}</div>
+                      {!isRTL && client.client_name_ar && (
                         <div className="text-sm text-gray-500" dir="rtl">{client.client_name_ar}</div>
                       )}
                     </td>
-                    <td className="p-3 text-sm">{client.suspended_on || '-'}</td>
-                    <td className="p-3 text-sm max-w-[200px] truncate" title={client.reason_for_suspension}>
+                    <td className={`p-3 px-4 text-sm ${isRTL ? 'text-right' : ''}`} dir="ltr">{client.suspended_on || '-'}</td>
+                    <td className={`p-3 px-4 text-sm max-w-[150px] truncate ${isRTL ? 'text-right' : ''}`} title={client.reason_for_suspension}>
                       {client.reason_for_suspension || '-'}
                     </td>
-                    <td className="p-3">{getFutureActionBadge(client.future_action)}</td>
-                    <td className="p-3">{getStatusBadge(client.status)}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1">
+                    <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getFutureActionBadge(client.future_action)}</td>
+                    <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(client.status)}</td>
+                    <td className="p-3 px-4">
+                      <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                         <Button
                           variant="ghost"
                           size="sm"

@@ -12,8 +12,13 @@ from pathlib import Path
 import arabic_reshaper
 from bidi.algorithm import get_display
 from io import BytesIO
+import qrcode
 
 ROOT_DIR = Path(__file__).parent
+
+# Company info
+COMPANY_PHONE = "+966 55 123 4567"
+COMPANY_WEBSITE = "www.bfrvc.sa"
 
 def generate_opening_closing_meeting_pdf(meeting_data: dict) -> bytes:
     """

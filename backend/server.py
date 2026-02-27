@@ -357,6 +357,24 @@ class ServiceFees(BaseModel):
     surveillance_2: float = 0
     recertification: float = 0
     currency: str = "SAR"
+    tax_rate: float = 15.0  # VAT rate in Saudi Arabia (15%)
+    
+    # Computed tax amounts per item (will be calculated)
+    initial_certification_tax: float = 0
+    surveillance_1_tax: float = 0
+    surveillance_2_tax: float = 0
+    recertification_tax: float = 0
+    
+    # Totals including tax per item
+    initial_certification_with_tax: float = 0
+    surveillance_1_with_tax: float = 0
+    surveillance_2_with_tax: float = 0
+    recertification_with_tax: float = 0
+    
+    # Grand totals
+    subtotal: float = 0  # Total excluding tax
+    total_tax: float = 0  # Total tax amount
+    grand_total: float = 0  # Total including tax
 
 class ProposalCreate(BaseModel):
     application_form_id: str

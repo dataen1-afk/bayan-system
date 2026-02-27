@@ -2634,9 +2634,47 @@ async def submit_public_form(access_token: str, update_data: ApplicationFormUpda
 @api_router.post("/proposals", response_model=Proposal)
 async def create_proposal(proposal_data: ProposalCreate, current_user: dict = Depends(require_admin)):
     """Admin creates a proposal/quotation for a client"""
-    # Calculate total amount
+    # Get fees and tax rate
     fees = proposal_data.service_fees
-    total = fees.initial_certification + fees.surveillance_1 + fees.surveillance_2 + fees.recertification
+    tax_rate = fees.tax_rate / 100  # Convert percentage to decimal
+    
+    # Calculate tax for each item
+    initial_certification_tax = fees.initial_certification * tax_rate
+    surveillance_1_tax = fees.surveillance_1 * tax_rate
+    surveillance_2_tax = fees.surveillance_2 * tax_rate
+    recertification_tax = fees.recertification * tax_rate
+    
+    # Calculate totals with tax for each item
+    initial_certification_with_tax = fees.initial_certification + initial_certification_tax
+    surveillance_1_with_tax = fees.surveillance_1 + surveillance_1_tax
+    surveillance_2_with_tax = fees.surveillance_2 + surveillance_2_tax
+    recertification_with_tax = fees.recertification + recertification_tax
+    
+    # Calculate grand totals
+    subtotal = fees.initial_certification + fees.surveillance_1 + fees.surveillance_2 + fees.recertification
+    total_tax = initial_certification_tax + surveillance_1_tax + surveillance_2_tax + recertification_tax
+    grand_total = subtotal + total_tax
+    
+    # Update service_fees with calculated values
+    updated_fees = ServiceFees(
+        initial_certification=fees.initial_certification,
+        surveillance_1=fees.surveillance_1,
+        surveillance_2=fees.surveillance_2,
+        recertification=fees.recertification,
+        currency=fees.currency,
+        tax_rate=fees.tax_rate,
+        initial_certification_tax=round(initial_certification_tax, 2),
+        surveillance_1_tax=round(surveillance_1_tax, 2),
+        surveillance_2_tax=round(surveillance_2_tax, 2),
+        recertification_tax=round(recertification_tax, 2),
+        initial_certification_with_tax=round(initial_certification_with_tax, 2),
+        surveillance_1_with_tax=round(surveillance_1_with_tax, 2),
+        surveillance_2_with_tax=round(surveillance_2_with_tax, 2),
+        recertification_with_tax=round(recertification_with_tax, 2),
+        subtotal=round(subtotal, 2),
+        total_tax=round(total_tax, 2),
+        grand_total=round(grand_total, 2)
+    )
     
     proposal = Proposal(
         application_form_id=proposal_data.application_form_id,
@@ -2651,14 +2689,14 @@ async def create_proposal(proposal_data: ProposalCreate, current_user: dict = De
         total_employees=proposal_data.total_employees,
         number_of_sites=proposal_data.number_of_sites,
         audit_duration=proposal_data.audit_duration,
-        service_fees=proposal_data.service_fees,
-        total_amount=total,
+        service_fees=updated_fees,
+        total_amount=round(grand_total, 2),
         notes=proposal_data.notes,
         validity_days=proposal_data.validity_days,
-        issuer_name=proposal_data.issuer_name,  # Use value from form
-        issuer_designation=proposal_data.issuer_designation,  # Use value from form
-        issuer_signature=proposal_data.issuer_signature,  # First party signature
-        issuer_stamp=proposal_data.issuer_stamp,  # First party stamp
+        issuer_name=proposal_data.issuer_name,
+        issuer_designation=proposal_data.issuer_designation,
+        issuer_signature=proposal_data.issuer_signature,
+        issuer_stamp=proposal_data.issuer_stamp,
         issued_date=datetime.now(timezone.utc)
     )
     

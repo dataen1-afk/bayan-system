@@ -185,39 +185,15 @@ def generate_contract_review_pdf(review_data: dict) -> bytes:
             except:
                 pass
     
-    def draw_footer(page_num):
-        c.setFillColor(primary_color)
-        c.rect(0, 0, width, 25, fill=True, stroke=False)
-        c.setFillColor(colors.white)
-        c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Contract Review BACF6-04")
-    
     def new_page(page_num):
         c.showPage()
-        # Header
-        c.setFillColor(primary_color)
-        c.rect(0, height - 50, width, 50, fill=True, stroke=False)
-        c.setFillColor(colors.white)
-        c.setFont('Helvetica-Bold', 12)
-        c.drawCentredString(width/2, height - 30, "CONTRACT REVIEW - CERTIFICATION BODY APPLICATION")
-        draw_arabic("مراجعة العقد - طلب جهة الاعتماد", width/2 + 100, height - 45, 10, bold=True)
-        return height - 70
+        return draw_official_header("CONTRACT REVIEW", "مراجعة العقد")
     
     # ============ PAGE 1 ============
     page_num = 1
     
-    # Header
-    c.setFillColor(primary_color)
-    c.rect(0, height - 100, width, 100, fill=True, stroke=False)
-    
-    # Logo
-    if logo_path.exists():
-        try:
-            c.setFillColor(colors.white)
-            c.roundRect(25, height - 85, 65, 65, 5, fill=True, stroke=False)
-            c.drawImage(str(logo_path), 28, height - 82, width=59, height=59, preserveAspectRatio=True, mask='auto')
-        except:
-            pass
+    # Draw official header
+    y = draw_official_header("CONTRACT REVIEW", "مراجعة العقد")
     
     # Title
     c.setFillColor(colors.white)

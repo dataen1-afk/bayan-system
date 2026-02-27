@@ -1025,7 +1025,6 @@ const resources = {
       "asPerApplication": "As per application",
       "termsAndConditions": "Terms and Conditions",
       "term1_payment": "Payment: 50% upon acceptance, 50% after audit completion",
-      "term2_tax": "All fees are exclusive of VAT (15%)",
       "term3_travel": "Travel and accommodation expenses are additional",
       "term4_validity": "This proposal is valid for the period mentioned above",
       "term5_cancellation": "Cancellation within 7 days of audit: 50% fee applicable",

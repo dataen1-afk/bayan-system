@@ -55,18 +55,28 @@ def generate_technical_review_pdf(data: dict, output_path: str = None) -> str:
     light_bg = HexColor("#f7fafc")
     
     def draw_header(page_num=1):
-        """Draw page header"""
-        # Header background
-        c.setFillColor(primary_color)
-        c.rect(0, height - 80, width, 80, fill=1, stroke=0)
-        
-        # Logo placeholder
+        """Draw official BAC header"""
         logo_path = Path(__file__).parent / "assets" / "bayan-logo.png"
+        
+        # Logo on top-left
+        logo_x = 40
+        logo_y = height - 75
+        
         if logo_path.exists():
             try:
-                c.drawImage(str(logo_path), 30, height - 70, width=50, height=50, preserveAspectRatio=True, mask='auto')
+                c.drawImage(str(logo_path), logo_x, logo_y, width=60, height=55, 
+                           preserveAspectRatio=True, mask='auto')
             except:
                 pass
+        
+        # Company name next to logo
+        name_x = logo_x + 70
+        name_y = height - 30
+        c.setFillColor(primary_color)
+        c.setFont('Amiri-Bold', 13)
+        c.drawRightString(name_x + 130, name_y, reshape_arabic("بيان للتحقق والمطابقة"))
+        c.setFont('Helvetica-Bold', 9)
+        c.drawString(name_x, name_y - 15, "BAYAN AUDITING & CONFORMITY")
         
         # Title
         c.setFillColor(primary_color)

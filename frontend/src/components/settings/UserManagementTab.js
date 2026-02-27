@@ -336,24 +336,24 @@ const UserManagementTab = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
                   {isRTL ? (
                     <>
-                      <th className="pb-3 font-medium text-slate-600">المستخدم</th>
-                      <th className="pb-3 font-medium text-slate-600">البريد الإلكتروني</th>
-                      <th className="pb-3 font-medium text-slate-600">الدور</th>
-                      <th className="pb-3 font-medium text-slate-600">القسم</th>
-                      <th className="pb-3 font-medium text-slate-600">الإجراءات</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[200px]">المستخدم</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[200px]">البريد الإلكتروني</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[120px]">الدور</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[120px]">القسم</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[200px]">الإجراءات</th>
                     </>
                   ) : (
                     <>
-                      <th className="pb-3 font-medium text-slate-600">User</th>
-                      <th className="pb-3 font-medium text-slate-600">Email</th>
-                      <th className="pb-3 font-medium text-slate-600">Role</th>
-                      <th className="pb-3 font-medium text-slate-600">Department</th>
-                      <th className="pb-3 font-medium text-slate-600">Actions</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[200px]">User</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[200px]">Email</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[120px]">Role</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[120px]">Department</th>
+                      <th className="pb-3 px-4 font-medium text-slate-600 w-[200px]">Actions</th>
                     </>
                   )}
                 </tr>
@@ -362,14 +362,14 @@ const UserManagementTab = () => {
                 {filteredUsers.map((u) => (
                   <tr key={u.id} className="border-b hover:bg-slate-50">
                     {/* User Column */}
-                    <td className="py-4">
+                    <td className="py-4 px-4">
                       {isRTL ? (
-                        <div className="flex items-center gap-3 justify-end">
+                        <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                             {(u.name || u.email || '?').charAt(0).toUpperCase()}
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium text-slate-800">{u.name_ar || u.name}</p>
+                          <div className="text-right min-w-0">
+                            <p className="font-medium text-slate-800 truncate">{u.name_ar || u.name}</p>
                             {u.phone && (
                               <p className="text-xs text-slate-500">{u.phone}</p>
                             )}
@@ -380,8 +380,8 @@ const UserManagementTab = () => {
                           <div className="w-10 h-10 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                             {(u.name || u.email || '?').charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <p className="font-medium text-slate-800">{u.name}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-slate-800 truncate">{u.name}</p>
                             {u.phone && (
                               <p className="text-xs text-slate-500 flex items-center gap-1">
                                 <Phone className="w-3 h-3" /> {u.phone}
@@ -392,25 +392,25 @@ const UserManagementTab = () => {
                       )}
                     </td>
                     {/* Email Column */}
-                    <td className="py-4">
-                      <div className={`flex items-center gap-1 text-slate-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                        <Mail className="w-4 h-4" />
-                        <span dir="ltr">{u.email}</span>
+                    <td className="py-4 px-4">
+                      <div className={`flex items-center gap-1 text-slate-600 ${isRTL ? 'justify-start' : ''}`}>
+                        <Mail className="w-4 h-4 flex-shrink-0" />
+                        <span dir="ltr" className="truncate">{u.email}</span>
                       </div>
                     </td>
                     {/* Role Column */}
-                    <td className="py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(u.role)}`}>
+                    <td className="py-4 px-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getRoleColor(u.role)}`}>
                         {isRTL ? u.role_name_ar : u.role_name}
                       </span>
                     </td>
                     {/* Department Column */}
-                    <td className={`py-4 text-slate-600 ${isRTL ? 'text-right' : ''}`}>
+                    <td className={`py-4 px-4 text-slate-600 ${isRTL ? 'text-right' : ''}`}>
                       {u.department || '-'}
                     </td>
                     {/* Actions Column */}
-                    <td className="py-4">
-                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                    <td className="py-4 px-4">
+                      <div className={`flex items-center gap-2 ${isRTL ? '' : ''}`}>
                         {/* Edit Role - available to all managers */}
                         <Button
                           variant="ghost"

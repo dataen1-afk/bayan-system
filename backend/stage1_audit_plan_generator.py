@@ -14,8 +14,14 @@ import arabic_reshaper
 from bidi.algorithm import get_display
 from datetime import datetime
 from io import BytesIO
+import qrcode
 
 ROOT_DIR = Path(__file__).parent
+
+# Company info
+COMPANY_PHONE = "+966 55 123 4567"
+COMPANY_WEBSITE = "www.bfrvc.sa"
+PRIMARY_COLOR_HEX = "#1e3a5f"
 
 def generate_stage1_audit_plan_pdf(plan_data: dict) -> bytes:
     """

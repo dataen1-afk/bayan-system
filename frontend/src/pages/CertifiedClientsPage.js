@@ -407,7 +407,7 @@ export default function CertifiedClientsPage() {
                       )}
                     </td>
                     <td className="p-3 px-4">
-                      <div className={`flex flex-wrap gap-1 ${isRTL ? 'justify-end' : ''}`}>
+                      <div className={`flex flex-wrap gap-1 ${isRTL ? 'flex-row-reverse justify-start' : ''}`}>
                         {(client.accreditation || []).slice(0, 2).map((std, idx) => (
                           <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
                             {std}
@@ -419,10 +419,10 @@ export default function CertifiedClientsPage() {
                       </div>
                     </td>
                     <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
-                      <span className="font-mono text-sm">{client.certificate_number || '-'}</span>
+                      <span className="font-mono text-sm" dir="ltr">{client.certificate_number || '-'}</span>
                     </td>
-                    <td className={`p-3 px-4 text-sm ${isRTL ? 'text-right' : ''}`} dir="ltr">{client.issue_date || '-'}</td>
-                    <td className={`p-3 px-4 text-sm ${isRTL ? 'text-right' : ''}`} dir="ltr">{client.expiry_date || '-'}</td>
+                    <td className={`p-3 px-4 text-sm ${isRTL ? 'text-left' : ''}`} dir="ltr">{client.issue_date || '-'}</td>
+                    <td className={`p-3 px-4 text-sm ${isRTL ? 'text-left' : ''}`} dir="ltr">{client.expiry_date || '-'}</td>
                     <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(client.status)}</td>
                     <td className="p-3 px-4">
                       <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>

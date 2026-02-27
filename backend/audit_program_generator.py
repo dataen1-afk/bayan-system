@@ -161,23 +161,6 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
     
     # Draw official header
     y = draw_official_header("AUDIT PROGRAM", "برنامج التدقيق")
-            c.drawImage(str(logo_path), 28, height - 82, width=59, height=59, preserveAspectRatio=True, mask='auto')
-        except Exception:
-            pass
-    
-    # Title
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 20)
-    c.drawCentredString(width/2, height - 35, "AUDIT PROGRAM")
-    c.setFont('Helvetica', 12)
-    c.drawCentredString(width/2, height - 52, "Internal Audit Plan")
-    draw_arabic("برنامج التدقيق", width/2 + 60, height - 70, 14, bold=True)
-    
-    # Form reference
-    c.setFont('Helvetica', 9)
-    c.drawRightString(width - 25, height - 25, "BACF6-05")
-    
-    y = height - 120
     
     # Client Information Section
     c.setFillColor(section_color)

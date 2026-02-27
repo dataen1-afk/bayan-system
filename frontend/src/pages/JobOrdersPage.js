@@ -288,26 +288,26 @@ export default function JobOrdersPage() {
               <p className="text-sm mt-2">{t('createFromAuditProgram') || 'Create a job order from an approved audit program'}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+              <table className="w-full table-fixed">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium text-gray-600">{t('auditor') || 'Auditor'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('position') || 'Position'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('organizationName') || 'Organization'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('auditType') || 'Audit Type'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('auditDate') || 'Audit Date'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('status') || 'Status'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('actions') || 'Actions'}</th>
+                  <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditor') || 'Auditor'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('position') || 'Position'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('organizationName') || 'Organization'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditType') || 'Audit Type'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[110px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditDate') || 'Audit Date'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('status') || 'Status'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('actions') || 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {jobOrders.map(order => (
                     <tr key={order.id} className="border-b hover:bg-gray-50" data-testid={`job-order-row-${order.id}`}>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <div>
+                      <td className="p-3 px-4">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <div className={isRTL ? 'text-right' : ''}>
                             <span className="font-medium">{order.auditor_name}</span>
                             {order.auditor_name_ar && (
                               <span className="text-gray-500 text-sm block">{order.auditor_name_ar}</span>
@@ -315,27 +315,27 @@ export default function JobOrdersPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3">
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                      <td className="p-3 px-4">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded whitespace-nowrap">
                           {getPositionLabel(order.position)}
                         </span>
                       </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Building className="w-4 h-4 text-gray-400" />
-                          <span>{order.organization_name}</span>
+                      <td className="p-3 px-4">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <Building className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="truncate">{order.organization_name}</span>
                         </div>
                       </td>
-                      <td className="p-3">{order.audit_type || '-'}</td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          {order.audit_date || '-'}
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{order.audit_type || '-'}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span dir="ltr">{order.audit_date || '-'}</span>
                         </div>
                       </td>
-                      <td className="p-3">{getStatusBadge(order.status, order.auditor_confirmed)}</td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(order.status, order.auditor_confirmed)}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <Button 
                             size="sm" 
                             variant="outline"

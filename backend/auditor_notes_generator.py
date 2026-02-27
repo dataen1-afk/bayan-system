@@ -244,15 +244,37 @@ def draw_notes_section(c, data, y, width, height):
 
 
 def draw_footer(c, width):
-    """Draw document footer"""
-    c.setFont('Helvetica', 8)
-    c.setFillColor(HexColor('#718096'))
-    c.drawString(1.5*cm, 1.5*cm, "BAC-F6-12 | Auditor Notes")
-    c.drawRightString(width - 1.5*cm, 1.5*cm, "BAYAN for Verification and Conformity Assessment")
+    """Draw official BAC footer"""
+    footer_y = 55
     
-    # Footer line
-    c.setStrokeColor(BORDER_COLOR)
-    c.line(1.5*cm, 2*cm, width - 1.5*cm, 2*cm)
+    c.setStrokeColor(PRIMARY_COLOR)
+    c.setLineWidth(1)
+    c.line(40, footer_y + 25, width - 40, footer_y + 25)
+    
+    try:
+        qr = qrcode.QRCode(version=1, box_size=10, border=2)
+        qr.add_data("https://www.bfrvc.sa")
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        qr_buffer = BytesIO()
+        qr_img.save(qr_buffer, format='PNG')
+        qr_buffer.seek(0)
+        from reportlab.lib.utils import ImageReader
+        c.drawImage(ImageReader(qr_buffer), 45, footer_y - 20, width=45, height=45)
+    except:
+        pass
+    
+    info_x = 100
+    info_y = footer_y + 12
+    c.setFont('Helvetica', 8)
+    c.setFillColor(TEXT_COLOR)
+    c.drawString(info_x, info_y, "Tel: +966 55 123 4567")
+    c.drawString(info_x, info_y - 11, "Web: www.bfrvc.sa")
+    
+    c.setFont('Helvetica-Bold', 8)
+    c.drawRightString(width - 45, info_y, "Director")
+    c.setFont('Helvetica', 8)
+    c.drawRightString(width - 45, info_y - 11, "BAYAN AUDITING & CONFORMITY (BAC)")
 
 
 if __name__ == "__main__":

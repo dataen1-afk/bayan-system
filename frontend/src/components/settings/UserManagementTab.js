@@ -363,18 +363,36 @@ const UserManagementTab = () => {
                   <tr key={u.id} className="border-b hover:bg-slate-50">
                     {/* User Column */}
                     <td className="py-4">
-                      <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                        <div className="w-10 h-10 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white font-semibold">
-                          {(u.name || u.email || '?').charAt(0).toUpperCase()}
-                        </div>
-                        <div className={isRTL ? 'text-right' : ''}>
-                          <p className="font-medium text-slate-800">{isRTL ? (u.name_ar || u.name) : u.name}</p>
-                          {u.phone && (
-                            <p className={`text-xs text-slate-500 flex items-center gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                              <Phone className="w-3 h-3" /> {u.phone}
-                            </p>
-                          )}
-                        </div>
+                      <div className={`flex items-center gap-3 ${isRTL ? '' : ''}`}>
+                        {isRTL ? (
+                          <>
+                            <div className="text-right">
+                              <p className="font-medium text-slate-800">{u.name_ar || u.name}</p>
+                              {u.phone && (
+                                <p className="text-xs text-slate-500 flex items-center gap-1 flex-row-reverse justify-end">
+                                  <Phone className="w-3 h-3" /> {u.phone}
+                                </p>
+                              )}
+                            </div>
+                            <div className="w-10 h-10 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                              {(u.name || u.email || '?').charAt(0).toUpperCase()}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-10 h-10 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                              {(u.name || u.email || '?').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-800">{u.name}</p>
+                              {u.phone && (
+                                <p className="text-xs text-slate-500 flex items-center gap-1">
+                                  <Phone className="w-3 h-3" /> {u.phone}
+                                </p>
+                              )}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </td>
                     {/* Email Column */}

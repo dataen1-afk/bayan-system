@@ -1,77 +1,65 @@
-<analysis>**original_problem_statement**: The user provided a Node.js/Express backend for a Service Contract Management System and requested a migration to a FastAPI backend with a new React frontend. The project has since evolved into a comprehensive, full-stack application to manage service contracts and a multi-step audit/certification workflow. The user provides requirements incrementally by uploading  and  files representing each stage of the process.
+<analysis>**original_problem_statement**: The user provided a Node.js/Express backend for a Service Contract Management System and requested a migration to a FastAPI backend with a new React frontend. The project has since evolved into a comprehensive, full-stack application to manage service contracts and a multi-step audit/certification workflow. The user provides requirements incrementally by uploading documents representing each stage of the process.
 
 **PRODUCT REQUIREMENTS**:
 *   **Core Functionality**: A full-stack application to manage service contracts, using the terminology Grant for Accreditation and Facility for Organization.
 *   **Workflow**: The system manages a multi-step audit and certification process, including a multi-level approval system.
-*   **Customer Portal**: A public-facing portal for customers to request quotes, track orders, view services, and find FAQs, without needing to log in. The user has requested a modern, professional, and minimalist visual update.
-*   **User Roles**: Admin (full access), Client/Auditor (link-based access for specific documents and a public portal).
-*   **UI/UX**: Professional, bilingual (English/Arabic) UI with full RTL support for both the web interface and generated PDFs/Excel files.
-*   **PWA**: A Progressive Web App for auditors in the field.
+*   **Customer Portal**: A public-facing portal for customers to request quotes, track orders, view services, and find FAQs, without needing to log in.
+*   **User Roles**: The system requires a complex role hierarchy with specific permissions, including 11 detailed roles (CEO, Quality Manager, Auditor, etc.) and a  role with full privileges.
+*   **UI/UX**: Professional, bilingual (English/Arabic) UI with full RTL support.
+*   **PDF Generation**: All system-generated documents must conform to a specific company letterhead template provided by the user.
+*   **PWA**: A Progressive Web App for auditors and for easy access from desktop/mobile home screens.
 
-**User's preferred language**: English. The user also provides feedback in Arabic and expects a bilingual UI. The next agent MUST respond in English.
+**User's preferred language**: English and Arabic. The user provides feedback in both languages and expects a bilingual UI. The next agent MUST respond in English.
 
 **what currently exists?**
-A full-stack FastAPI/React application. In this session, the agent fixed a critical mobile sidebar bug that prevented interaction. Following the fix, the user reported a deployment failure. The agent diagnosed the issue from deployment logs, identifying a missing  endpoint required by the production environment's health checks. The agent implemented this endpoint in the backend. However, the user is now blocked from redeploying due to what they perceive as an incorrect billing charge, and is frustrated with the platform.
+A full-stack FastAPI/React application. In the last session, the agent performed significant UI/UX and backend work. Key accomplishments include:
+- Resolved a critical disappearing users bug by verifying data integrity and frontend display logic.
+- Implemented system-wide Right-to-Left (RTL) layout fixes for all tables across ~20 pages to ensure a consistent and correct user experience in Arabic.
+- Standardized all system-generated PDF documents to use an official company letterhead, creating a central template () and updating the majority of the 20+ PDF generator modules.
+- Cleaned the production environment by removing demo credentials from the login page and deleting all trial data from the database.
+- Created a new, professional certificate design as requested.
+- Reordered dashboard cards to better suit the RTL layout.
 
 **Last working item**:
-    - Last item agent was working: Addressing user frustration regarding a perceived incorrect charge for redeploying the application after a previous deployment failed. The agent advised the user to contact support and explained the difference between Redeploy and Deploy Now. The user remains blocked and unhappy.
-    - Status: BLOCKED
-    - Agent Testing Done: N/A (This is a platform/billing issue, not a code issue)
-    - Which testing method agent to use? N/A. The next agent should be prepared to use the  to get help for the user if they are still blocked.
+    - Last item agent was working: Reordering the main cards on the  page to better align with the RTL layout. The Daily Activity card was moved to the right, and the Certificates Expiring card to the left.
+    - Status: USER VERIFICATION PENDING
+    - Agent Testing Done: N
+    - Which testing method agent to use? screenshot tool. A quick visual check is needed to confirm the dashboard cards have been swapped correctly in the UI.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: User blocked by platform billing issue on redeployment (P0)
-  - Issue 2: Deployment failing due to health check (P1)
-  - Issue 3: PWA Install Prompt Behavior (P2)
-  
-  **Issues Detail**:
-  - **Issue 1: User blocked by platform billing issue on redeployment**
-     - **Description**: The user's last deployment failed. When they try to redeploy with the new fix, they are being prompted for payment again. The user is frustrated, believing a redeployment should be free.
-     - **Attempted fixes**: The agent explained the billing model and advised the user to use the Redeploy button and contact support if the issue persists.
-     - **Next debug checklist**: 
-        1.  Acknowledge the user's frustration empathetically.
-        2.  Ask the user if they have contacted support or if they would like you to do it on their behalf using the .
-        3.  Do not proceed with any coding tasks until this blocker is resolved for the user.
-     - **Why fix this issue and what will be achieved with the fix?**: This is a critical blocker preventing any new code from being deployed. Resolving it is essential to making progress and restoring user trust.
-     - **Status**: BLOCKED
-     - **Is recurring issue?**: N
-     - **Should Test frontend/backend/both after fix?**: N/A
-     - **Blocked on other issue**: This is the primary blocker.
-  - **Issue 2: Deployment failing due to health check**
-     - **Description**: The production deployment process fails because the health checker cannot find a  endpoint, resulting in  errors in the logs.
-     - **Attempted fixes**: The agent added a  endpoint to  that returns a JSON success response. The agent verified this endpoint works locally via .
-     - **Next debug checklist**: Once the user's billing issue (Issue 1) is resolved, ask the user to attempt the redeployment again. The implemented fix should resolve the health check failure.
-     - **Why fix this issue and what will be achieved with the fix?**: This fix is necessary for the application to be deployed successfully to the production environment.
-     - **Status**: USER VERIFICATION PENDING
-     - **Is recurring issue?**: N
-     - **Should Test frontend/backend/both after fix?**: N/A (Requires a successful deployment to verify)
-     - **Blocked on other issue**: Issue 1: User blocked by platform billing issue on redeployment
-  - **Issue 3: PWA Install Prompt Behavior**
-     - **Description**: The PWA install prompt doesn't reliably appear when accessing the customer portal via a direct URL.
-     - **Attempted fixes**: A fix was implemented by capturing the  event globally in  and storing it for later use. This was done in a previous session.
-     - **Next debug checklist**: After resolving the deployment blocker, gently remind the user about this pending verification and ask them to test. Advise clearing the cache or using an incognito window.
-     - **Why fix this issue and what will be achieved with the fix?**: Improves user experience by making the PWA easily installable.
-     - **Status**: USER VERIFICATION PENDING
-     - **Is recurring issue?**: N
-     - **Should Test frontend/backend/both after fix?**: frontend
-     - **Blocked on other issue**: No.
+*   None. All previously reported bugs have been resolved.
 
 **In progress Task List**:
-*   None.
+  - **Task 1: Finalize System-Wide PDF Template Application (P1)**
+     - **Description**: The agent updated most, but possibly not all, of the 20+ PDF generator files in  to use the new official company letterhead. A final verification is required to ensure 100% compliance.
+     - **Where to resume**: Review all files in  and search for any remaining instances of old header/footer drawing code. Update any files that were missed.
+     - **What will be achieved with this?**: All system-generated documents will have a consistent, professional, and officially branded design.
+     - **Status**: IN PROGRESS
+     - **Should Test frontend/backend/both after fix?**: backend (by generating one of each PDF type to confirm the new template is applied).
+     - **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks**:
-    *   **(P2) Activate Email Notifications**: The user previously decided to rely on internal notifications for now, with email as a future option.
+    *   **(P0) Conduct a Full End-to-End Workflow Test**: The user's highest priority is to test a complete workflow: creating a new request, processing it through quotes, job orders, audits, and finally generating a certificate. This will validate all recent changes.
+    *   **(P1) Get User Approval on New Certificate Design**: The new certificate design implemented in  has not been seen by the user. It needs to be presented for feedback and approval during the workflow test.
+    *   **(P2) Implement Granular Role-Based Permissions**: The backend roles are defined, but there is no logic to enforce what each of the 11 roles can see or do. This task involves implementing permission checks throughout the application.
 *   **Future Tasks**:
-    *   **(P2) Finalize Google Calendar Integration**: This is pending user-provided credentials.
+    *   **(P2) Activate Email Notifications**: A previously deferred task.
+    *   **(P2) Finalize Google Calendar Integration**: Pending user-provided credentials.
 
 **Completed work in this session**
-- **Mobile Sidebar Bug (RESOLVED)**: Fixed a critical bug on mobile devices where a dark overlay with an incorrect  was rendering on top of the sidebar, making menu items unclickable. The fix involved adjusting  values in .
-- **Deployment Health Check (FIX IMPLEMENTED)**: Added a  endpoint to  to satisfy the production environment's health check requirements, which were causing deployment failures.
+- **Resolved Disappearing Users Bug**: Confirmed it was not a data loss issue; the UI was displaying data correctly.
+- **Removed Demo Credentials**: Cleaned the login page of hardcoded test user info.
+- **De-duplicated Admin Role**: Removed the legacy  role from the user creation dropdown to prevent confusion.
+- **System-Wide RTL Table Layouts**: Fixed column order, text alignment, and avatar positioning in  and applied the same fixes to ~20 other pages with tables for a consistent Arabic UI.
+- **Implemented Official PDF Letterhead**: Created a new  and updated the majority of PDF generator files to use the official company header and footer.
+- **Database Cleanup**: Deleted all trial and test data from all relevant collections.
+- **New Certificate Design**: Implemented a new, professional, English-only certificate design in .
+- **Dashboard UI Tweak**: Reordered the main cards on  for a better RTL layout.
 
 **Earlier issues found/mentioned but not fixed**
-   - **Outdated Logo Image**: The user clarified that the logo is correct and does not need to be updated. This issue is **RESOLVED** and should be removed from the backlog.
+   - None.
 
 **Known issue recurrence from previous fork**
   - None.
@@ -80,64 +68,72 @@ A full-stack FastAPI/React application. In this session, the agent fixed a criti
 
 
 **Key Technical Concepts**
-*   **CSS Z-Index**: Understood and fixed a stacking context bug by ensuring the sidebar's  was higher than its overlay's.
-*   **FastAPI Routing**: Added a new route to the main  file to serve as a health check endpoint.
-*   **Deployment Log Analysis**: Debugged a production deployment failure by analyzing logs to find the root cause (missing health check).
+*   **RTL CSS/Layout**: Using , flexbox properties (), and Tailwind CSS classes to create a fully functional bilingual UI.
+*   **Dynamic PDF Generation**: Using the  library in Python to create complex documents with custom headers, footers, and dynamic content based on a standardized template.
+*   **Code Refactoring (DRY)**: Creating a centralized  to avoid duplicating header/footer code across more than 20 files.
+*   **Database Operations**: Using  to perform bulk deletion of documents from multiple collections to clean the environment.
 
 **key DB schema**
-*   No changes were made to the database schema in this session.
+  - **users**: 
+  - All transactional data collections were cleared (e.g., , , , , ).
 
 **changes in tech stack**
-*   No new technologies were introduced in this session.
+  - None.
 
 **All files of reference**
-*   : The file where the  endpoint was added.
-*   : The file where the mobile  bug was fixed.
+*   : Last file modified to reorder dashboard cards.
+*   : The new, centralized module for the official PDF letterhead.
+*   : The directory containing all the PDF generation modules that were updated.
+*   : The initial component where detailed RTL table layout was fixed.
+*   : A key page that required specific RTL fixes for its table layout and content alignment.
 
 **Areas that need refactoring**:
-*   None.
+*   A final pass on all files in  is needed to ensure every single one uses the new  and no old header/footer code remains.
 
 **key api endpoints**
-*    (NEW)
+*   : Modified to exclude the legacy 'admin' role.
+*   All endpoints that trigger PDF generation (e.g., ) now produce PDFs with the new official letterhead template.
 
 **Critical Info for New Agent**
-*   **USER IS BLOCKED AND FRUSTRATED**: Your absolute first priority is to address the user's issue with being charged for a redeployment. They cannot deploy your fix until this is resolved. Be empathetic and proactive. Offer to use the  to get help. Do not start any code changes.
-*   **Deployment Fix is Ready**: A fix for the deployment failure (a missing  endpoint) has been coded and tested locally. Once the user is unblocked, they need to try redeploying to verify this fix.
-*   **Logo Issue is Invalid**: The user has confirmed the logo is correct. Do not mention the outdated logo again.
+*   **Priority #1: Workflow Test**: The user's explicit next request is to test the entire application workflow from start to finish. This is the main task and will also serve to verify the PDF template changes and the new certificate design. Begin by confirming the last change (dashboard cards) and then propose the plan for the E2E test.
+*   **Bilingual UI is Key**: The user is very particular about the Arabic (RTL) layout. Any new UI element must be thoroughly checked for correct RTL display. The established pattern is to use  on containers and reverse column/element order.
+*   **PDF Template Mandate**: All system-generated documents *must* use the official letterhead defined in . The user has been clear that this is a strict requirement.
+*   **Certificate Design is a Draft**: The new certificate design has been coded but not approved. The agent should present it to the user for feedback as part of the workflow test.
 
 **documents and test reports created in this job**
-*    (was updated)
+*   : User-provided PDF that defines the official document template. Available in public artifacts.
 
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Confirmed they wanted the mobile sidebar bug fixed.
-2.  **Agent**: Acknowledged and began investigating the sidebar bug.
-3.  **Agent**: Identified the  issue in .
-4.  **Agent**: Applied the  fix.
-5.  **Agent**: Verified the fix with mobile screenshots, showing the sidebar is now clickable.
-6.  **Agent**: Finished the task and updated the PRD.
-7.  **User**: Sent deployment failure logs.
-8.  **Agent**: Identified the missing  endpoint from the logs and added it to the backend.
-9.  **User**: Complained about being charged for a redeployment. i make redeploy why i shoud pay ?
-10. **User**: Expressed more frustration: What the heck? The system is already published, so why is it asking me to pay again?
+**Last 10 User Messages and any pending HUMAN messages** 
+1.  **User**: Pointed out poor text formatting in the credit column of a table.
+2.  **Agent**: Fixed the text alignment for the accreditation badges in the table.
+3.  **User**: Stated that a provided PDF is the company's official document design and all system outputs must use it.
+4.  **User**: Clarified to just use the header/footer design from the document and to leave the certificate design for later.
+5.  **Agent**: Implemented a new PDF template and began updating all PDF generator files.
+6.  **User**: Requested to delete all trial data, test a complete workflow, and create a new, simple, professional certificate design (English only).
+7.  **Agent**: Acknowledged and completed the data deletion and certificate redesign.
+8.  **User**: Agreed to test the workflow but first requested to swap the top cards on the dashboard for better RTL layout.
+9.  **Agent**: Implemented the dashboard card swap.
+10. **User**: yes comolete - User confirming to proceed with tasks like PDF updates.
 
 **Project Health Check:**
-*   **Broken**: The codebase is stable, but the project is critically blocked. The user is unable to deploy fixes due to a platform billing issue, and their sentiment is very low.
+*   **Healthy**: The application is stable. All critical bugs are resolved, the database has been cleaned, and major UI/UX improvements (RTL layouts, PDF branding) have been implemented. The project is ready for a full end-to-end workflow test.
 
 **3rd Party Integrations**
-*   , , : Used for PDF generation.
-*   : Used for Excel export.
-*   : Used for generating QR codes.
-*   : Used for dashboard charts.
-*   **Google Calendar API**: Planned, pending user credentials.
+*   : PDF generation.
+*   , : RTL text support in PDFs.
+*   : Excel export.
+*   : QR code generation.
+*   **Google Calendar API**: Planned, but not yet integrated.
 
 **Testing status**
   - Testing agent used after significant changes: NO
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: None from the code changes. The primary regression is the inability to deploy.
+  - Known regressions: None.
 
 **Credentials to test flow:**
-*   **Admin**:  / 
+*   **Admin**:  / . Role is .
 
 **What agent forgot to execute**
-*   The agent did not use the  to help the user with the billing/platform issue, instead offering advice directly. The next agent should escalate to the  if the user is still stuck, as this is beyond the scope of a coding agent.</analysis>
+*   The agent did not take a screenshot to visually verify the dashboard card swap after implementing the change. This should be the first verification step.
+*   The agent did not perform a final, comprehensive check to confirm that *all* 20+ PDF generators were updated to the new template. This needs to be done to fully complete the task.</analysis>

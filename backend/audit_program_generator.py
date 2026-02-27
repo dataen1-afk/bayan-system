@@ -303,7 +303,7 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
         
         # Check if we need a new page
         if y < 120:
-            draw_footer(page_num)
+            draw_official_footer(page_num)
             c.showPage()
             page_num += 1
             
@@ -321,7 +321,7 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
     
     # Check if we have enough space for signature section
     if y < 150:
-        draw_footer(page_num)
+        draw_official_footer(page_num)
         c.showPage()
         page_num += 1
         c.setFillColor(primary_color)
@@ -369,7 +369,7 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
         for idx, line in enumerate(notes_lines):
             c.drawString(width/2 + 20, y - 30 - (idx * 12), line)
     
-    draw_footer(page_num)
+    draw_official_footer(page_num)
     
     # Save
     c.save()

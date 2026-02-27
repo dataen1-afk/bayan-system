@@ -251,7 +251,6 @@ class BilingualContractPDFGenerator:
         'terms': {
             'en': [
                 "Payment: 50% upon acceptance, 50% after completion of the audit.",
-                "All fees are exclusive of VAT (15%).",
                 "Travel and accommodation expenses are additional.",
                 "This agreement is valid for {validity_days} days from the date of issue.",
                 "Cancellation within 7 days of scheduled audit: 50% fee applies.",
@@ -259,7 +258,6 @@ class BilingualContractPDFGenerator:
             ],
             'ar': [
                 "الدفع: 50% عند القبول، 50% بعد اكتمال التدقيق.",
-                "جميع الرسوم لا تشمل ضريبة القيمة المضافة (15%).",
                 "مصاريف السفر والإقامة إضافية.",
                 "هذه الاتفاقية صالحة لمدة {validity_days} يوماً من تاريخ الإصدار.",
                 "الإلغاء خلال 7 أيام من موعد التدقيق: تطبق رسوم 50%.",

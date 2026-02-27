@@ -306,28 +306,28 @@ export default function ContractReviewsPage() {
               <p>No contract reviews yet</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+              <table className="w-full table-fixed">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium text-gray-600">{t('organizationName')}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('standards')}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('applicationDate')}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('status')}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('actions')}</th>
+                  <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[220px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('organizationName')}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('standards')}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[140px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('applicationDate')}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[120px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('status')}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[200px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reviews.map(review => (
                     <tr key={review.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Building className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{review.organization_name}</span>
+                      <td className="p-3 px-4">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <Building className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="font-medium truncate">{review.organization_name}</span>
                         </div>
                       </td>
-                      <td className="p-3">
-                        <div className="flex flex-wrap gap-1">
+                      <td className="p-3 px-4">
+                        <div className={`flex flex-wrap gap-1 ${isRTL ? 'justify-end' : ''}`}>
                           {(review.standards || []).map((std, idx) => (
                             <span key={idx} className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">
                               {std}
@@ -335,15 +335,15 @@ export default function ContractReviewsPage() {
                           ))}
                         </div>
                       </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          {review.application_date}
+                      <td className="p-3 px-4">
+                        <div className={`flex items-center gap-1 text-gray-600 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <Calendar className="w-4 h-4 flex-shrink-0" />
+                          <span dir="ltr">{review.application_date}</span>
                         </div>
                       </td>
-                      <td className="p-3">{getStatusBadge(review.status)}</td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(review.status)}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <Button 
                             size="sm" 
                             variant="outline"

@@ -441,51 +441,151 @@ const CreateProposalPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5" />
-                {t('serviceFees')} (SAR)
+                {isRTL ? 'رسوم الخدمات' : 'Service Fees'} (SAR)
               </CardTitle>
+              <CardDescription>
+                {isRTL ? 'ضريبة القيمة المضافة 15%' : 'VAT 15%'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('initialCertification')}</Label>
-                  <Input
-                    type="number"
-                    value={formData.service_fees.initial_certification}
-                    onChange={(e) => handleServiceFeesChange('initial_certification', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Surveillance 1</Label>
-                  <Input
-                    type="number"
-                    value={formData.service_fees.surveillance_1}
-                    onChange={(e) => handleServiceFeesChange('surveillance_1', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Surveillance 2</Label>
-                  <Input
-                    type="number"
-                    value={formData.service_fees.surveillance_2}
-                    onChange={(e) => handleServiceFeesChange('surveillance_2', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('recertification')}</Label>
-                  <Input
-                    type="number"
-                    value={formData.service_fees.recertification}
-                    onChange={(e) => handleServiceFeesChange('recertification', e.target.value)}
-                  />
-                </div>
+              {/* Fee Table with Tax */}
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className={`p-3 ${isRTL ? 'text-right' : 'text-left'} font-semibold`}>
+                        {isRTL ? 'البند' : 'Item'}
+                      </th>
+                      <th className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-semibold`}>
+                        {isRTL ? 'المبلغ' : 'Amount'}
+                      </th>
+                      <th className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-semibold`}>
+                        {isRTL ? 'الضريبة (15%)' : 'VAT (15%)'}
+                      </th>
+                      <th className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-semibold`}>
+                        {isRTL ? 'الإجمالي شامل الضريبة' : 'Total incl. VAT'}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Initial Certification */}
+                    <tr className="border-t">
+                      <td className={`p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {isRTL ? 'الشهادة الأولية' : 'Initial Certification'}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'}`}>
+                        <Input
+                          type="number"
+                          className="w-28 text-right"
+                          value={formData.service_fees.initial_certification}
+                          onChange={(e) => handleServiceFeesChange('initial_certification', e.target.value)}
+                        />
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-slate-600`}>
+                        {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(calculateTax(formData.service_fees.initial_certification))}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-medium`}>
+                        {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(formData.service_fees.initial_certification + calculateTax(formData.service_fees.initial_certification))}
+                      </td>
+                    </tr>
+                    
+                    {/* Surveillance 1 */}
+                    <tr className="border-t bg-slate-50">
+                      <td className={`p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {isRTL ? 'المراقبة 1' : 'Surveillance 1'}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'}`}>
+                        <Input
+                          type="number"
+                          className="w-28 text-right"
+                          value={formData.service_fees.surveillance_1}
+                          onChange={(e) => handleServiceFeesChange('surveillance_1', e.target.value)}
+                        />
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-slate-600`}>
+                        {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(calculateTax(formData.service_fees.surveillance_1))}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-medium`}>
+                        {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(formData.service_fees.surveillance_1 + calculateTax(formData.service_fees.surveillance_1))}
+                      </td>
+                    </tr>
+                    
+                    {/* Surveillance 2 */}
+                    <tr className="border-t">
+                      <td className={`p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {isRTL ? 'المراقبة 2' : 'Surveillance 2'}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'}`}>
+                        <Input
+                          type="number"
+                          className="w-28 text-right"
+                          value={formData.service_fees.surveillance_2}
+                          onChange={(e) => handleServiceFeesChange('surveillance_2', e.target.value)}
+                        />
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-slate-600`}>
+                        {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(calculateTax(formData.service_fees.surveillance_2))}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-medium`}>
+                        {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(formData.service_fees.surveillance_2 + calculateTax(formData.service_fees.surveillance_2))}
+                      </td>
+                    </tr>
+                    
+                    {/* Recertification */}
+                    <tr className="border-t bg-slate-50">
+                      <td className={`p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {isRTL ? 'إعادة الشهادة' : 'Recertification'}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'}`}>
+                        <Input
+                          type="number"
+                          className="w-28 text-right"
+                          value={formData.service_fees.recertification}
+                          onChange={(e) => handleServiceFeesChange('recertification', e.target.value)}
+                        />
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-slate-600`}>
+                        {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(calculateTax(formData.service_fees.recertification))}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-medium`}>
+                        {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(formData.service_fees.recertification + calculateTax(formData.service_fees.recertification))}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
               
-              {/* Total */}
-              <div className="mt-6 p-4 bg-green-50 rounded-lg flex justify-between items-center">
-                <span className="text-lg font-bold">{t('totalAmount')}</span>
-                <span className="text-2xl font-bold text-green-700">
-                  {new Intl.NumberFormat('en-US').format(calculateTotal())} SAR
-                </span>
+              {/* Totals Summary */}
+              <div className="mt-6 space-y-3">
+                {/* Subtotal (excluding tax) */}
+                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                  <span className="font-medium text-slate-700">
+                    {isRTL ? 'المجموع بدون الضريبة' : 'Subtotal (excl. VAT)'}
+                  </span>
+                  <span className="font-semibold text-slate-800">
+                    {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(calculateTotal())} SAR
+                  </span>
+                </div>
+                
+                {/* Total Tax */}
+                <div className="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                  <span className="font-medium text-amber-700">
+                    {isRTL ? 'ضريبة القيمة المضافة (15%)' : 'VAT (15%)'}
+                  </span>
+                  <span className="font-semibold text-amber-800">
+                    {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(calculateTotalTax())} SAR
+                  </span>
+                </div>
+                
+                {/* Grand Total (including tax) */}
+                <div className="flex justify-between items-center p-4 bg-green-100 rounded-lg border-2 border-green-300">
+                  <span className="text-lg font-bold text-green-800">
+                    {isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total (incl. VAT)'}
+                  </span>
+                  <span className="text-2xl font-bold text-green-700">
+                    {new Intl.NumberFormat('en-US', {minimumFractionDigits: 2}).format(calculateGrandTotal())} SAR
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>

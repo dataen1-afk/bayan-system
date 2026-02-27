@@ -99,31 +99,95 @@ def generate_stage2_audit_report_pdf(report_data: dict) -> bytes:
     # Checklist
     checklist_items = report_data.get('checklist_items', [])
     
-    def draw_arabic(text, x, y, size=10, bold=False, right_align=False):
+    def draw_arabic(text, x, y, size=10, bold=False, right_align=False, center=False):
         if arabic_font_available and text:
             try:
                 reshaped = arabic_reshaper.reshape(str(text))
                 bidi_text = get_display(reshaped)
                 font = 'Amiri-Bold' if bold and font_bold_path.exists() else 'Amiri'
                 c.setFont(font, size)
-                if right_align:
+                if center:
+                    c.drawCentredString(x, y, bidi_text)
+                elif right_align:
                     c.drawRightString(x, y, bidi_text)
                 else:
                     c.drawString(x, y, bidi_text)
             except Exception:
                 pass
-    
-    def draw_footer(page_num):
+
+    def draw_official_header(title_en="STAGE 2 AUDIT REPORT", title_ar="تقرير تدقيق المرحلة الثانية"):
+        """Draw the official BAC header"""
+        logo_x = 40
+        logo_y = height - 75
+        
+        if logo_path.exists():
+            try:
+                c.drawImage(str(logo_path), logo_x, logo_y, width=60, height=55, 
+                           preserveAspectRatio=True, mask='auto')
+            except Exception:
+                pass
+        
+        name_x = logo_x + 70
+        name_y = height - 30
         c.setFillColor(primary_color)
-        c.rect(0, 0, width, 25, fill=True, stroke=False)
-        c.setFillColor(colors.white)
+        draw_arabic("بيان للتحقق والمطابقة", name_x + 130, name_y, 13, bold=True, right_align=True)
+        c.setFont('Helvetica-Bold', 9)
+        c.drawString(name_x, name_y - 15, "BAYAN AUDITING & CONFORMITY")
+        
+        title_y = height - 95
+        c.setFont('Helvetica-Bold', 16)
+        c.setFillColor(primary_color)
+        c.drawCentredString(width / 2, title_y, title_en)
+        draw_arabic(title_ar, width / 2, title_y - 20, 14, bold=True, center=True)
+        
+        c.setFont('Helvetica', 9)
+        c.setFillColor(colors.black)
+        c.drawRightString(width - 40, height - 25, "BACF6-11")
+        
+        return height - 130
+
+    def draw_official_footer(page_num=1):
+        """Draw the official BAC footer"""
+        footer_y = 55
+        
+        c.setStrokeColor(primary_color)
+        c.setLineWidth(1)
+        c.line(40, footer_y + 25, width - 40, footer_y + 25)
+        
+        try:
+            qr = qrcode.QRCode(version=1, box_size=10, border=2)
+            qr.add_data(f"https://{COMPANY_WEBSITE}")
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            qr_buffer = BytesIO()
+            qr_img.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
+            from reportlab.lib.utils import ImageReader
+            c.drawImage(ImageReader(qr_buffer), 45, footer_y - 20, width=45, height=45)
+        except Exception:
+            pass
+        
+        info_x = 100
+        info_y = footer_y + 12
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Stage 2 Audit Report BACF6-11")
+        c.setFillColor(colors.black)
+        c.drawString(info_x, info_y, f"Tel: {COMPANY_PHONE}")
+        c.drawString(info_x, info_y - 11, f"Web: {COMPANY_WEBSITE}")
+        
+        c.setFont('Helvetica-Bold', 8)
+        c.drawRightString(width - 45, info_y, "Director")
+        c.setFont('Helvetica', 8)
+        c.drawRightString(width - 45, info_y - 11, "BAYAN AUDITING & CONFORMITY (BAC)")
+        
+        c.setFont('Helvetica', 7)
+        c.drawCentredString(width / 2, footer_y - 30, f"Page {page_num} | BACF6-11")
+        
+        return footer_y + 35
     
     def check_page_break(current_y, needed_space=100):
         nonlocal page_num
         if current_y < needed_space:
-            draw_footer(page_num)
+            draw_official_footer(page_num)
             c.showPage()
             page_num += 1
             return height - 50
@@ -132,31 +196,8 @@ def generate_stage2_audit_report_pdf(report_data: dict) -> bytes:
     # ============ PAGE 1 ============
     page_num = 1
     
-    # Header
-    c.setFillColor(primary_color)
-    c.rect(0, height - 100, width, 100, fill=True, stroke=False)
-    c.setFillColor(report_color)
-    c.rect(0, height - 105, width, 5, fill=True, stroke=False)
-    
-    if logo_path.exists():
-        try:
-            c.setFillColor(colors.white)
-            c.roundRect(25, height - 85, 65, 65, 5, fill=True, stroke=False)
-            c.drawImage(str(logo_path), 28, height - 82, width=59, height=59, preserveAspectRatio=True, mask='auto')
-        except Exception:
-            pass
-    
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 18)
-    c.drawCentredString(width/2, height - 35, "STAGE 2 AUDIT REPORT")
-    c.setFont('Helvetica', 11)
-    c.drawCentredString(width/2, height - 52, "According to the Standard/s: " + (', '.join(standards) if standards else 'ISO'))
-    draw_arabic("تقرير تدقيق المرحلة الثانية", width/2 + 80, height - 70, 12, bold=True)
-    
-    c.setFont('Helvetica', 9)
-    c.drawRightString(width - 25, height - 25, "BACF6-11")
-    
-    y = height - 125
+    # Draw official header
+    y = draw_official_header("STAGE 2 AUDIT REPORT", "تقرير تدقيق المرحلة الثانية")
     
     # Organization Details Section
     c.setFillColor(section_color)

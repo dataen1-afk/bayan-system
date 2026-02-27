@@ -258,12 +258,12 @@ ROLE_PERMISSIONS = {
 }
 
 # Get all internal staff roles (excludes client)
+# Note: ADMIN role removed from display - it's a legacy role replaced by SYSTEM_ADMIN
 STAFF_ROLES = [
     UserRole.SYSTEM_ADMIN, UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.QUALITY_MANAGER,
     UserRole.CERTIFICATION_MANAGER, UserRole.OPERATION_COORDINATOR,
     UserRole.MARKETING_MANAGER, UserRole.FINANCIAL_MANAGER, UserRole.HR_MANAGER,
-    UserRole.LEAD_AUDITOR, UserRole.AUDITOR, UserRole.TECHNICAL_EXPERT,
-    UserRole.ADMIN
+    UserRole.LEAD_AUDITOR, UserRole.AUDITOR, UserRole.TECHNICAL_EXPERT
 ]
 
 # Management roles with full access

@@ -376,31 +376,135 @@ const PublicProposalPage = () => {
             </CardContent>
           </Card>
 
-          {/* Service Fees */}
+          {/* Service Fees with Tax Breakdown */}
           <Card>
             <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5" />
                 {t('serviceFees')}
               </CardTitle>
+              <p className="text-sm text-slate-500 mt-1">
+                {isRTL ? 'شاملة ضريبة القيمة المضافة 15%' : 'Including 15% VAT'}
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span>{t('initialCertification')}</span>
-                  <span className="font-bold">{formatCurrency(proposal?.service_fees?.initial_certification || 0)}</span>
+              {/* Fee Table with Tax */}
+              <div className="border rounded-lg overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className={`p-3 ${isRTL ? 'text-right' : 'text-left'} font-semibold`}>
+                        {isRTL ? 'البند' : 'Item'}
+                      </th>
+                      <th className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-semibold`}>
+                        {isRTL ? 'المبلغ' : 'Amount'}
+                      </th>
+                      <th className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-semibold`}>
+                        {isRTL ? 'الضريبة (15%)' : 'VAT (15%)'}
+                      </th>
+                      <th className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-semibold`}>
+                        {isRTL ? 'الإجمالي' : 'Total'}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Initial Certification */}
+                    <tr className="border-t">
+                      <td className={`p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {isRTL ? 'إصدار الشهادة' : 'Initial Certification'}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'}`}>
+                        {formatCurrency(proposal?.service_fees?.initial_certification || 0)}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-slate-600`}>
+                        {formatCurrency(proposal?.service_fees?.initial_certification_tax || 0)}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-medium`}>
+                        {formatCurrency(proposal?.service_fees?.initial_certification_with_tax || 0)}
+                      </td>
+                    </tr>
+                    
+                    {/* Surveillance 1 */}
+                    <tr className="border-t bg-slate-50">
+                      <td className={`p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {isRTL ? 'المراقبة 1' : 'Surveillance 1'}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'}`}>
+                        {formatCurrency(proposal?.service_fees?.surveillance_1 || 0)}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-slate-600`}>
+                        {formatCurrency(proposal?.service_fees?.surveillance_1_tax || 0)}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-medium`}>
+                        {formatCurrency(proposal?.service_fees?.surveillance_1_with_tax || 0)}
+                      </td>
+                    </tr>
+                    
+                    {/* Surveillance 2 */}
+                    <tr className="border-t">
+                      <td className={`p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {isRTL ? 'المراقبة 2' : 'Surveillance 2'}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'}`}>
+                        {formatCurrency(proposal?.service_fees?.surveillance_2 || 0)}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-slate-600`}>
+                        {formatCurrency(proposal?.service_fees?.surveillance_2_tax || 0)}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-medium`}>
+                        {formatCurrency(proposal?.service_fees?.surveillance_2_with_tax || 0)}
+                      </td>
+                    </tr>
+                    
+                    {/* Recertification */}
+                    <tr className="border-t bg-slate-50">
+                      <td className={`p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {isRTL ? 'إعادة الشهادة' : 'Recertification'}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'}`}>
+                        {formatCurrency(proposal?.service_fees?.recertification || 0)}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-slate-600`}>
+                        {formatCurrency(proposal?.service_fees?.recertification_tax || 0)}
+                      </td>
+                      <td className={`p-3 ${isRTL ? 'text-left' : 'text-right'} font-medium`}>
+                        {formatCurrency(proposal?.service_fees?.recertification_with_tax || 0)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Totals Summary */}
+              <div className="mt-4 space-y-2">
+                {/* Subtotal (excluding tax) */}
+                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                  <span className="font-medium text-slate-700">
+                    {isRTL ? 'المجموع بدون الضريبة' : 'Subtotal (excl. VAT)'}
+                  </span>
+                  <span className="font-semibold text-slate-800">
+                    {formatCurrency(proposal?.service_fees?.subtotal || 0)}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span>Surveillance 1</span>
-                  <span className="font-bold">{formatCurrency(proposal?.service_fees?.surveillance_1 || 0)}</span>
+                
+                {/* Total Tax */}
+                <div className="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                  <span className="font-medium text-amber-700">
+                    {isRTL ? 'ضريبة القيمة المضافة (15%)' : 'VAT (15%)'}
+                  </span>
+                  <span className="font-semibold text-amber-800">
+                    {formatCurrency(proposal?.service_fees?.total_tax || 0)}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span>Surveillance 2</span>
-                  <span className="font-bold">{formatCurrency(proposal?.service_fees?.surveillance_2 || 0)}</span>
-                </div>
-                <div className="flex justify-between items-center py-3 bg-green-50 px-4 rounded-lg">
-                  <span className="font-bold text-lg">{t('totalAmount')}</span>
-                  <span className="font-bold text-xl text-green-700">{formatCurrency(proposal?.total_amount || 0)}</span>
+                
+                {/* Grand Total (including tax) */}
+                <div className="flex justify-between items-center p-4 bg-green-100 rounded-lg border-2 border-green-300">
+                  <span className="text-lg font-bold text-green-800">
+                    {isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total (incl. VAT)'}
+                  </span>
+                  <span className="text-xl font-bold text-green-700">
+                    {formatCurrency(proposal?.service_fees?.grand_total || proposal?.total_amount || 0)}
+                  </span>
                 </div>
               </div>
             </CardContent>

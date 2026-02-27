@@ -284,31 +284,31 @@ export default function AuditorNotesPage() {
           ) : notesList.length === 0 ? (
             <div className="text-center py-8 text-gray-500">{t('auditorNotes.empty')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full" data-testid="auditor-notes-table">
+            <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+              <table className="w-full table-fixed" data-testid="auditor-notes-table">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-start p-3 font-medium">{t('auditorNotes.clientName')}</th>
-                    <th className="text-start p-3 font-medium">{t('auditorNotes.auditType')}</th>
-                    <th className="text-start p-3 font-medium">{t('auditorNotes.auditor')}</th>
-                    <th className="text-start p-3 font-medium">{t('auditorNotes.date')}</th>
-                    <th className="text-start p-3 font-medium">{t('auditorNotes.statusLabel')}</th>
-                    <th className="text-start p-3 font-medium">{t('actions')}</th>
+                  <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <th className={`p-3 px-4 font-medium w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditorNotes.clientName')}</th>
+                    <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditorNotes.auditType')}</th>
+                    <th className={`p-3 px-4 font-medium w-[140px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditorNotes.auditor')}</th>
+                    <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditorNotes.date')}</th>
+                    <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('auditorNotes.statusLabel')}</th>
+                    <th className={`p-3 px-4 font-medium w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {notesList.map((notes) => (
                     <tr key={notes.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        <div className="font-medium">{notes.client_name}</div>
-                        <div className="text-sm text-gray-500">{notes.location}</div>
+                      <td className="p-3 px-4">
+                        <div className={`font-medium ${isRTL ? 'text-right' : ''}`}>{notes.client_name}</div>
+                        <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>{notes.location}</div>
                       </td>
-                      <td className="p-3">{notes.audit_type}</td>
-                      <td className="p-3">{notes.auditor_name}</td>
-                      <td className="p-3">{notes.audit_date}</td>
-                      <td className="p-3">{getStatusBadge(notes.status)}</td>
-                      <td className="p-3">
-                        <div className="flex gap-1">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{notes.audit_type}</td>
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{notes.auditor_name}</td>
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`} dir="ltr">{notes.audit_date}</td>
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(notes.status)}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <Button
                             variant="ghost"
                             size="sm"

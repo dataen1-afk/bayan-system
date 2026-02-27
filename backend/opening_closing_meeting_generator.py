@@ -279,7 +279,7 @@ def generate_opening_closing_meeting_pdf(meeting_data: dict) -> bytes:
         
         # Page break check
         if y < 150:
-            draw_footer(page_num)
+            draw_official_footer(page_num)
             c.showPage()
             page_num += 1
             y = height - 50
@@ -296,7 +296,7 @@ def generate_opening_closing_meeting_pdf(meeting_data: dict) -> bytes:
     
     # Meeting Notes Section
     if y < 200:
-        draw_footer(page_num)
+        draw_official_footer(page_num)
         c.showPage()
         page_num += 1
         y = height - 50
@@ -383,7 +383,7 @@ def generate_opening_closing_meeting_pdf(meeting_data: dict) -> bytes:
         c.drawString(40, y - 12, f"Submitted on: {submitted_date}")
         draw_arabic("تاريخ التقديم:", width - 150, y - 12, 9)
     
-    draw_footer(page_num)
+    draw_official_footer(page_num)
     
     c.save()
     

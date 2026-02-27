@@ -363,7 +363,7 @@ const UserManagementTab = () => {
                   <tr key={u.id} className="border-b hover:bg-slate-50">
                     {/* User Column */}
                     <td className="py-4">
-                      <div className={`flex items-center gap-3 ${isRTL ? '' : ''}`}>
+                      <div className={`flex items-center gap-3 ${isRTL ? 'justify-end' : ''}`}>
                         {isRTL ? (
                           <>
                             <div className="text-right">

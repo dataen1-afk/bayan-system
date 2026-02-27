@@ -46,7 +46,8 @@ const CreateProposalPage = () => {
       surveillance_1: 0,
       surveillance_2: 0,
       recertification: 0,
-      currency: 'SAR'
+      currency: 'SAR',
+      tax_rate: 15  // VAT rate in Saudi Arabia
     },
     notes: '',
     validity_days: 30,

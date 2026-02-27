@@ -214,22 +214,6 @@ const LoginPage = () => {
                 </Button>
               </form>
 
-              {/* Demo Credentials */}
-              <div className="mt-5 p-4 bg-white/5 rounded-xl border border-white/10">
-                <p className={`text-xs text-white/50 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {isRTL ? 'بيانات اختبارية' : 'Demo Credentials'}
-                </p>
-                <div className={`flex gap-6 text-sm ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                  <div>
-                    <span className="text-white/50">{t('password')}: </span>
-                    <code className="text-[#c9a55c] font-mono font-medium">admin123</code>
-                  </div>
-                  <div>
-                    <span className="text-white/50">{t('email')}: </span>
-                    <code className="text-[#c9a55c] font-mono font-medium">admin@test.com</code>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Customer Portal Link */}

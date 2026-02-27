@@ -294,28 +294,28 @@ export default function AuditProgramsPage() {
               <p className="text-sm mt-2">{t('createFromContractReview') || 'Create an audit program from a completed contract review'}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+              <table className="w-full table-fixed">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium text-gray-600">{t('organizationName') || 'Organization'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('standards') || 'Standards'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('activities') || 'Activities'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('status') || 'Status'}</th>
-                    <th className="text-left p-3 font-medium text-gray-600">{t('actions') || 'Actions'}</th>
+                  <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[220px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('organizationName') || 'Organization'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('standards') || 'Standards'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[120px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('activities') || 'Activities'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[120px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('status') || 'Status'}</th>
+                    <th className={`p-3 px-4 font-medium text-gray-600 w-[200px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('actions') || 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {programs.map(program => (
                     <tr key={program.id} className="border-b hover:bg-gray-50" data-testid={`audit-program-row-${program.id}`}>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Building className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{program.organization_name}</span>
+                      <td className="p-3 px-4">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <Building className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="font-medium truncate">{program.organization_name}</span>
                         </div>
                       </td>
-                      <td className="p-3">
-                        <div className="flex flex-wrap gap-1">
+                      <td className="p-3 px-4">
+                        <div className={`flex flex-wrap gap-1 ${isRTL ? 'justify-end' : ''}`}>
                           {(program.standards || []).map((std, idx) => (
                             <span key={idx} className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">
                               {std}
@@ -323,12 +323,12 @@ export default function AuditProgramsPage() {
                           ))}
                         </div>
                       </td>
-                      <td className="p-3">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
                         <span className="text-gray-600">{(program.activities || []).length} {t('activities') || 'activities'}</span>
                       </td>
-                      <td className="p-3">{getStatusBadge(program.status)}</td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(program.status)}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <Button 
                             size="sm" 
                             variant="outline"

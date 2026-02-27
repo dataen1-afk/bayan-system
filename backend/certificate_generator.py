@@ -307,6 +307,14 @@ def generate_certificate_pdf(certificate_data: dict) -> bytes:
     return pdf_bytes
 
 
+def get_qr_code_base64(verification_url: str) -> str:
+    """Generate QR code and return as base64 string for web display"""
+    import base64
+    qr_buffer = generate_qr_code(verification_url)
+    qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
+    return f"data:image/png;base64,{qr_base64}"
+
+
 # For testing
 if __name__ == "__main__":
     test_data = {

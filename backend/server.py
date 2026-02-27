@@ -5458,30 +5458,86 @@ async def generate_bilingual_proposal_pdf_file(proposal: dict) -> str:
     y = draw_field("Recertification", "إعادة الاعتماد", audit_duration.get('recertification', 'N/A'), y)
     y -= 10
     
-    # Section 4: Service Fees
+    # Section 4: Service Fees with Tax
     y = draw_section_header("4. SERVICE FEES", "٤. رسوم الخدمة", y)
     service_fees = proposal.get('service_fees', {})
     currency = service_fees.get('currency', 'SAR')
+    tax_rate = service_fees.get('tax_rate', 15.0)
     
     def format_fee(amount):
         return f"{currency} {amount:,.2f}" if amount else f"{currency} 0.00"
     
-    y = draw_field("Initial Certification", "الاعتماد الأولي", format_fee(service_fees.get('initial_certification', 0)), y)
-    y = draw_field("Surveillance 1 Fee", "رسوم المراقبة 1", format_fee(service_fees.get('surveillance_1', 0)), y)
-    y = draw_field("Surveillance 2 Fee", "رسوم المراقبة 2", format_fee(service_fees.get('surveillance_2', 0)), y)
-    y = draw_field("Recertification Fee", "رسوم إعادة الاعتماد", format_fee(service_fees.get('recertification', 0)), y)
+    def calc_tax(amount):
+        return (amount or 0) * (tax_rate / 100)
+    
+    # Initial Certification with tax
+    init_cert = service_fees.get('initial_certification', 0)
+    init_tax = calc_tax(init_cert)
+    y = draw_field("Initial Certification", "الشهادة الأولية", format_fee(init_cert), y)
+    y = draw_field("  VAT (15%)", "  ضريبة القيمة المضافة", format_fee(init_tax), y)
+    y = draw_field("  Subtotal incl. VAT", "  المجموع شامل الضريبة", format_fee(init_cert + init_tax), y)
     y -= 5
     
-    # Total Amount (highlighted)
-    c.setFillColor(colors.HexColor('#e8f4e8'))
+    # Surveillance 1 with tax
+    surv1 = service_fees.get('surveillance_1', 0)
+    surv1_tax = calc_tax(surv1)
+    y = draw_field("Surveillance 1 Fee", "رسوم المراقبة 1", format_fee(surv1), y)
+    y = draw_field("  VAT (15%)", "  ضريبة القيمة المضافة", format_fee(surv1_tax), y)
+    y = draw_field("  Subtotal incl. VAT", "  المجموع شامل الضريبة", format_fee(surv1 + surv1_tax), y)
+    y -= 5
+    
+    # Surveillance 2 with tax
+    surv2 = service_fees.get('surveillance_2', 0)
+    surv2_tax = calc_tax(surv2)
+    y = draw_field("Surveillance 2 Fee", "رسوم المراقبة 2", format_fee(surv2), y)
+    y = draw_field("  VAT (15%)", "  ضريبة القيمة المضافة", format_fee(surv2_tax), y)
+    y = draw_field("  Subtotal incl. VAT", "  المجموع شامل الضريبة", format_fee(surv2 + surv2_tax), y)
+    y -= 5
+    
+    # Recertification with tax
+    recert = service_fees.get('recertification', 0)
+    recert_tax = calc_tax(recert)
+    y = draw_field("Recertification Fee", "رسوم إعادة الاعتماد", format_fee(recert), y)
+    y = draw_field("  VAT (15%)", "  ضريبة القيمة المضافة", format_fee(recert_tax), y)
+    y = draw_field("  Subtotal incl. VAT", "  المجموع شامل الضريبة", format_fee(recert + recert_tax), y)
+    y -= 10
+    
+    # Calculate totals
+    subtotal = init_cert + surv1 + surv2 + recert
+    total_tax = init_tax + surv1_tax + surv2_tax + recert_tax
+    grand_total = subtotal + total_tax
+    
+    # Subtotal (excluding tax) - Light gray background
+    c.setFillColor(colors.HexColor('#f5f5f5'))
+    c.rect(50, y - 5, width - 100, 20, fill=True, stroke=False)
+    c.setFillColor(colors.black)
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(60, y + 2, "Subtotal (excl. VAT):")
+    c.drawString(200, y + 2, format_fee(subtotal))
+    draw_arabic_text(":المجموع بدون الضريبة", width - 60, y + 2, 10, bold=True)
+    y -= 25
+    
+    # Total Tax - Amber/yellow background
+    c.setFillColor(colors.HexColor('#fef3c7'))
+    c.rect(50, y - 5, width - 100, 20, fill=True, stroke=False)
+    c.setFillColor(colors.HexColor('#92400e'))
+    c.setFont('Helvetica-Bold', 10)
+    c.drawString(60, y + 2, f"VAT ({tax_rate:.0f}%):")
+    c.drawString(200, y + 2, format_fee(total_tax))
+    draw_arabic_text(f":ضريبة القيمة المضافة ({tax_rate:.0f}%)", width - 60, y + 2, 10, bold=True)
+    y -= 25
+    
+    # Grand Total (including tax) - Green background
+    c.setFillColor(colors.HexColor('#d1fae5'))
     c.rect(50, y - 5, width - 100, 25, fill=True, stroke=False)
-    c.setStrokeColor(colors.HexColor('#1e3a5f'))
+    c.setStrokeColor(colors.HexColor('#059669'))
+    c.setLineWidth(2)
     c.rect(50, y - 5, width - 100, 25, fill=False, stroke=True)
-    c.setFillColor(colors.HexColor('#1e3a5f'))
+    c.setFillColor(colors.HexColor('#065f46'))
     c.setFont('Helvetica-Bold', 12)
-    c.drawString(60, y + 3, "TOTAL AMOUNT:")
-    c.drawString(200, y + 3, format_fee(proposal.get('total_amount', 0)))
-    draw_arabic_text(":المبلغ الإجمالي", width - 60, y + 3, 12, bold=True)
+    c.drawString(60, y + 3, "GRAND TOTAL (incl. VAT):")
+    c.drawString(220, y + 3, format_fee(grand_total))
+    draw_arabic_text(":الإجمالي شامل الضريبة", width - 60, y + 3, 12, bold=True)
     y -= 35
     
     # Section 5: Validity

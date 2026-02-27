@@ -1,6 +1,7 @@
 """
 Contract Review PDF Generator (BACF6-04)
 Generates a professional bilingual PDF for Contract Reviews / Audit Programs.
+Uses the official BAC document template.
 """
 
 from reportlab.lib.pagesizes import A4
@@ -15,18 +16,19 @@ from bidi.algorithm import get_display
 from datetime import datetime
 import logging
 from io import BytesIO
+import qrcode
 
 ROOT_DIR = Path(__file__).parent
+
+# Company info
+COMPANY_PHONE = "+966 55 123 4567"
+COMPANY_WEBSITE = "www.bfrvc.sa"
+PRIMARY_COLOR = colors.HexColor('#1e3a5f')
 
 def generate_contract_review_pdf(review_data: dict) -> bytes:
     """
     Generate a professional bilingual Contract Review PDF (BACF6-04).
-    
-    Args:
-        review_data: Dictionary containing contract review data
-    
-    Returns:
-        PDF bytes
+    Uses the official BAC document template design.
     """
     
     # Register Arabic fonts
@@ -50,11 +52,11 @@ def generate_contract_review_pdf(review_data: dict) -> bytes:
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
     
-    # Colors
-    primary_color = colors.HexColor('#1e3a5f')
+    # Colors - Official BAC colors
+    primary_color = PRIMARY_COLOR
     section_color = colors.HexColor('#4a7c9b')
-    light_bg = colors.HexColor('#f0f4f8')
-    accent_color = colors.HexColor('#2563eb')
+    light_bg = colors.HexColor('#f8f9fa')
+    accent_color = colors.HexColor('#c9a55c')
     
     # Extract data
     org_name = review_data.get('organization_name', '')
@@ -91,13 +93,91 @@ def generate_contract_review_pdf(review_data: dict) -> bytes:
     reviewed_date = review_data.get('reviewed_by_date', '')
     
     # Helper function for Arabic text
-    def draw_arabic(text, x, y, size=10, bold=False, right_align=False):
+    def draw_arabic(text, x, y, size=10, bold=False, right_align=False, center=False):
         if arabic_font_available:
             try:
                 reshaped = arabic_reshaper.reshape(str(text))
                 bidi_text = get_display(reshaped)
                 font = 'Amiri-Bold' if bold and font_bold_path.exists() else 'Amiri'
                 c.setFont(font, size)
+                if center:
+                    c.drawCentredString(x, y, bidi_text)
+                elif right_align:
+                    c.drawRightString(x, y, bidi_text)
+                else:
+                    c.drawString(x, y, bidi_text)
+            except Exception:
+                pass
+
+    def draw_official_header(title_en="CONTRACT REVIEW", title_ar="مراجعة العقد"):
+        """Draw the official BAC header"""
+        logo_x = 40
+        logo_y = height - 75
+        
+        if logo_path.exists():
+            try:
+                c.drawImage(str(logo_path), logo_x, logo_y, width=60, height=55, 
+                           preserveAspectRatio=True, mask='auto')
+            except Exception:
+                pass
+        
+        name_x = logo_x + 70
+        name_y = height - 30
+        c.setFillColor(primary_color)
+        draw_arabic("بيان للتحقق والمطابقة", name_x + 130, name_y, 13, bold=True, right_align=True)
+        c.setFont('Helvetica-Bold', 9)
+        c.drawString(name_x, name_y - 15, "BAYAN AUDITING & CONFORMITY")
+        
+        title_y = height - 95
+        c.setFont('Helvetica-Bold', 16)
+        c.setFillColor(primary_color)
+        c.drawCentredString(width / 2, title_y, title_en)
+        draw_arabic(title_ar, width / 2, title_y - 20, 14, bold=True, center=True)
+        
+        c.setFont('Helvetica', 9)
+        c.setFillColor(colors.black)
+        c.drawRightString(width - 40, height - 25, "BACF6-04")
+        c.drawRightString(width - 40, height - 38, f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+        
+        return height - 130
+
+    def draw_official_footer(page_num=1):
+        """Draw the official BAC footer"""
+        footer_y = 55
+        
+        c.setStrokeColor(primary_color)
+        c.setLineWidth(1)
+        c.line(40, footer_y + 25, width - 40, footer_y + 25)
+        
+        try:
+            qr = qrcode.QRCode(version=1, box_size=10, border=2)
+            qr.add_data(f"https://{COMPANY_WEBSITE}")
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            qr_buffer = BytesIO()
+            qr_img.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
+            from reportlab.lib.utils import ImageReader
+            c.drawImage(ImageReader(qr_buffer), 45, footer_y - 20, width=45, height=45)
+        except Exception:
+            pass
+        
+        info_x = 100
+        info_y = footer_y + 12
+        c.setFont('Helvetica', 8)
+        c.setFillColor(colors.black)
+        c.drawString(info_x, info_y, f"Tel: {COMPANY_PHONE}")
+        c.drawString(info_x, info_y - 11, f"Web: {COMPANY_WEBSITE}")
+        
+        c.setFont('Helvetica-Bold', 8)
+        c.drawRightString(width - 45, info_y, "Director")
+        c.setFont('Helvetica', 8)
+        c.drawRightString(width - 45, info_y - 11, "BAYAN AUDITING & CONFORMITY (BAC)")
+        
+        c.setFont('Helvetica', 7)
+        c.drawCentredString(width / 2, footer_y - 30, f"Page {page_num} | BACF6-04")
+        
+        return footer_y + 35
                 if right_align:
                     c.drawRightString(x, y, bidi_text)
                 else:

@@ -569,7 +569,7 @@ def generate_stage2_audit_report_pdf(report_data: dict) -> bytes:
     c.drawCentredString(width/2, y - 20, "END OF REPORT")
     draw_arabic("نهاية التقرير", width/2 + 60, y - 35, 10, bold=True)
     
-    draw_footer(page_num)
+    draw_official_footer(page_num)
     
     c.save()
     

@@ -365,14 +365,14 @@ const UserManagementTab = () => {
                     <td className="py-4">
                       {isRTL ? (
                         <div className="flex items-center gap-3 justify-end">
+                          <div className="w-10 h-10 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                            {(u.name || u.email || '?').charAt(0).toUpperCase()}
+                          </div>
                           <div className="text-right">
                             <p className="font-medium text-slate-800">{u.name_ar || u.name}</p>
                             {u.phone && (
                               <p className="text-xs text-slate-500">{u.phone}</p>
                             )}
-                          </div>
-                          <div className="w-10 h-10 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-                            {(u.name || u.email || '?').charAt(0).toUpperCase()}
                           </div>
                         </div>
                       ) : (

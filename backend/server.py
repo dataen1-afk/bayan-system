@@ -9146,19 +9146,15 @@ async def download_certificate_pdf(certificate_id: str, credentials: HTTPAuthori
     if not certificate:
         raise HTTPException(status_code=404, detail="Certificate not found")
     
-    # Generate PDF
-    CERTIFICATES_DIR = ROOT_DIR / "certificates"
-    CERTIFICATES_DIR.mkdir(exist_ok=True)
+    # Generate PDF - function now returns bytes
+    pdf_bytes = generate_certificate_pdf(certificate)
     
     pdf_filename = f"certificate_{certificate['certificate_number'].replace('-', '_')}.pdf"
-    pdf_path = CERTIFICATES_DIR / pdf_filename
     
-    generate_certificate_pdf(certificate, str(pdf_path))
-    
-    return FileResponse(
-        str(pdf_path),
+    return Response(
+        content=pdf_bytes,
         media_type="application/pdf",
-        filename=pdf_filename
+        headers={"Content-Disposition": f"attachment; filename={pdf_filename}"}
     )
 
 @api_router.get("/public/verify/{certificate_number}")

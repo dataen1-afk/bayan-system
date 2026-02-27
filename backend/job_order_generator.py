@@ -427,7 +427,8 @@ def generate_job_order_pdf(job_order_data: dict) -> bytes:
     c.drawCentredString(width/2 + 10 + (width/2 - 40)/2, y - 30, status_text)
     draw_arabic(status_ar, width/2 + 10 + (width/2 - 40)/2 + 30, y - 50, 12, bold=True)
     
-    draw_footer()
+    # Draw official footer
+    draw_official_footer()
     
     # Save
     c.save()

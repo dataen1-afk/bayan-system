@@ -178,12 +178,6 @@ def generate_contract_review_pdf(review_data: dict) -> bytes:
         c.drawCentredString(width / 2, footer_y - 30, f"Page {page_num} | BACF6-04")
         
         return footer_y + 35
-                if right_align:
-                    c.drawRightString(x, y, bidi_text)
-                else:
-                    c.drawString(x, y, bidi_text)
-            except:
-                pass
     
     def new_page(page_num):
         c.showPage()
@@ -194,20 +188,6 @@ def generate_contract_review_pdf(review_data: dict) -> bytes:
     
     # Draw official header
     y = draw_official_header("CONTRACT REVIEW", "مراجعة العقد")
-    
-    # Title
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 18)
-    c.drawCentredString(width/2, height - 35, "CONTRACT REVIEW")
-    c.setFont('Helvetica', 12)
-    c.drawCentredString(width/2, height - 52, "Certification Body Application")
-    draw_arabic("مراجعة العقد", width/2 + 50, height - 70, 14, bold=True)
-    
-    # Form reference
-    c.setFont('Helvetica', 9)
-    c.drawRightString(width - 25, height - 25, "BACF6-04")
-    
-    y = height - 120
     
     # Section 1: General Application Details
     c.setFillColor(section_color)

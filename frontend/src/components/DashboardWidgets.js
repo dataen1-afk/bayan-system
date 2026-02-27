@@ -296,14 +296,14 @@ const DashboardWidgets = ({ isRTL }) => {
       </div>
 
       {/* Auditor Workload Chart */}
-      <Card className="border-slate-200 hover:shadow-lg transition-all" data-testid="auditor-workload-widget">
+      <Card className="border-slate-200 hover:shadow-lg transition-all" dir={isRTL ? 'rtl' : 'ltr'} data-testid="auditor-workload-widget">
         <CardHeader>
-          <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle className={`text-lg font-semibold text-slate-800 ${isRTL ? 'text-right' : ''}`}>
+              <CardTitle className="text-lg font-semibold text-slate-800">
                 {isRTL ? 'توزيع عبء العمل على المدققين' : 'Auditor Workload Distribution'}
               </CardTitle>
-              <CardDescription className={isRTL ? 'text-right' : ''}>
+              <CardDescription>
                 {isRTL ? 'عدد المهام المخصصة لكل مدقق' : 'Number of tasks assigned to each auditor'}
               </CardDescription>
             </div>
@@ -325,7 +325,7 @@ const DashboardWidgets = ({ isRTL }) => {
                 
                 return (
                   <div key={auditor.id || idx} className="space-y-1">
-                    <div className={`flex justify-between text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex justify-between text-sm">
                       <span className="font-medium text-slate-700">
                         {isRTL ? auditor.name_ar || auditor.name : auditor.name}
                       </span>
@@ -333,7 +333,7 @@ const DashboardWidgets = ({ isRTL }) => {
                         {auditor.total_tasks} {isRTL ? 'مهمة' : 'tasks'}
                       </span>
                     </div>
-                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div className={`h-3 bg-slate-100 rounded-full overflow-hidden ${isRTL ? 'transform scale-x-[-1]' : ''}`}>
                       <div 
                         className={`h-full ${colors[idx % colors.length]} rounded-full transition-all`}
                         style={{ width: `${percentage}%` }}

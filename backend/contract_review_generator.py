@@ -370,7 +370,7 @@ def generate_contract_review_pdf(review_data: dict) -> bytes:
     
     y -= 70
     
-    draw_footer(page_num)
+    draw_official_footer(page_num)
     
     # ============ PAGE 2 ============
     page_num += 1
@@ -534,7 +534,7 @@ def generate_contract_review_pdf(review_data: dict) -> bytes:
     c.drawString(width/2 + 25, y - 45, f"Date: {reviewed_date or '________________'}")
     c.drawString(width/2 + 25, y - 60, "Signature: ________________")
     
-    draw_footer(page_num)
+    draw_official_footer(page_num)
     
     # Save
     c.save()

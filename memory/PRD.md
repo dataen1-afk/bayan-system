@@ -1,16 +1,37 @@
 # Service Contract Management System - PRD
 
-## Latest Update: Feb 25, 2026
+## Latest Update: Feb 27, 2026
 
-### User Management Bug Investigation - RESOLVED ✅
-- **Issue**: User reported users and roles disappeared from the system
-- **Finding**: NOT REPRODUCIBLE - All data exists in database and displays correctly in UI
-- **Status**: System functioning normally - likely temporary browser/caching issue
+### RTL Layout Fix & E2E Workflow Test - COMPLETED ✅ (Feb 27, 2026)
 
-### Current System Users (as of Feb 25, 2026):
+#### RTL Layout Fixes:
+- **Fixed**: "Auditor Workload Distribution" (توزيع عبء العمل على المدققين) widget
+  - Title and description now correctly aligned on RIGHT side
+  - Icon positioned on LEFT side
+  - Uses `dir={isRTL ? 'rtl' : 'ltr'}` approach for proper RTL handling
+
+#### Bug Fix:
+- **Fixed**: `create_notification()` function in `server.py` to accept optional `title_ar` and `message_ar` parameters
+  - This was blocking proposal acceptance (TypeError: got unexpected keyword argument)
+
+#### E2E Workflow Test Progress:
+1. ✅ Create Application Form (طلبات المنح)
+2. ✅ Create Quote/Proposal (عروض الأسعار) - SAR 20,000 for ISO 27001:2022
+3. ✅ Accept Proposal (via public endpoint)
+4. ✅ Sign Certification Agreement → Contract visible in العقود page
+5. ✅ Create Contract Review (مراجعة العقود)
+6. 🔄 Remaining: Complete Contract Review → Create Audit Program → Job Order → Certificate
+
+### Current System Users (as of Feb 27, 2026):
 1. Admin User (admin@test.com) - system_admin
 2. Eslam Abdulaal (islam@ies.sa) - system_admin
 3. Test User (test@example.com) - auditor
+
+### Test Data Created (Feb 27, 2026):
+- Company: شركة العلي للتقنية (Al-Ali Technology)
+- Standard: ISO 27001:2022
+- Contract Value: SAR 20,000
+- Certification Agreement: Signed
 
 ---
 

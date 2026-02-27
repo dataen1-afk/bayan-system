@@ -230,11 +230,55 @@ const DashboardWidgets = ({ isRTL }) => {
         </Card>
       </div>
 
-      {/* Second Row - Daily Activity (Right) & Certificates Expiring (Left) for RTL */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isRTL ? 'md:flex md:flex-row-reverse' : ''}`}>
+      {/* Second Row - Certificates Expiring (Left) & Daily Activity (Right) for RTL */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        {/* Daily Activity - Should be on RIGHT for RTL */}
-        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white hover:shadow-lg transition-all flex-1" data-testid="daily-activity-widget">
+        {/* Certificates Expiring Soon - On LEFT for RTL (comes first in code) */}
+        <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white hover:shadow-lg transition-all" data-testid="certs-expiring-widget">
+          <CardHeader className="pb-2">
+            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CardTitle className="text-lg font-semibold text-amber-800">
+                {isRTL ? 'الشهادات المنتهية قريباً' : 'Certificates Expiring Soon'}
+              </CardTitle>
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className={`flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <span className={`flex items-center gap-2 text-red-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <AlertTriangle className="w-5 h-5" />
+                  {isRTL ? 'خلال 30 يوم' : 'Within 30 days'}
+                </span>
+                <span className="text-2xl font-bold text-red-700">{stats.certificates?.expiring_count?.['30_days'] || 0}</span>
+              </div>
+              <div className={`flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <span className={`flex items-center gap-2 text-amber-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Clock className="w-5 h-5" />
+                  {isRTL ? 'خلال 60 يوم' : 'Within 60 days'}
+                </span>
+                <span className="text-2xl font-bold text-amber-700">{stats.certificates?.expiring_count?.['60_days'] || 0}</span>
+              </div>
+              <div className={`flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <span className={`flex items-center gap-2 text-yellow-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Clock className="w-5 h-5" />
+                  {isRTL ? 'خلال 90 يوم' : 'Within 90 days'}
+                </span>
+                <span className="text-2xl font-bold text-yellow-700">{stats.certificates?.expiring_count?.['90_days'] || 0}</span>
+              </div>
+              <div className={`pt-3 border-t border-amber-200 ${isRTL ? 'text-right' : ''}`}>
+                <p className="text-sm text-amber-800 font-semibold">
+                  {isRTL ? `إجمالي: ${totalExpiring} شهادة` : `Total: ${totalExpiring} certificates`}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Daily Activity - On RIGHT for RTL (comes second in code) */}
+        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white hover:shadow-lg transition-all" data-testid="daily-activity-widget">
           <CardHeader className="pb-2">
             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <CardTitle className="text-lg font-semibold text-purple-800">
@@ -275,50 +319,6 @@ const DashboardWidgets = ({ isRTL }) => {
                   </div>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Certificates Expiring Soon - Should be on LEFT for RTL */}
-        <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white hover:shadow-lg transition-all flex-1" data-testid="certs-expiring-widget">
-          <CardHeader className="pb-2">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <CardTitle className="text-lg font-semibold text-amber-800">
-                {isRTL ? 'الشهادات المنتهية قريباً' : 'Certificates Expiring Soon'}
-              </CardTitle>
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className={`flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <span className={`flex items-center gap-2 text-red-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <AlertTriangle className="w-5 h-5" />
-                  {isRTL ? 'خلال 30 يوم' : 'Within 30 days'}
-                </span>
-                <span className="text-2xl font-bold text-red-700">{stats.certificates?.expiring_count?.['30_days'] || 0}</span>
-              </div>
-              <div className={`flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <span className={`flex items-center gap-2 text-amber-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Clock className="w-5 h-5" />
-                  {isRTL ? 'خلال 60 يوم' : 'Within 60 days'}
-                </span>
-                <span className="text-2xl font-bold text-amber-700">{stats.certificates?.expiring_count?.['60_days'] || 0}</span>
-              </div>
-              <div className={`flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <span className={`flex items-center gap-2 text-yellow-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Clock className="w-5 h-5" />
-                  {isRTL ? 'خلال 90 يوم' : 'Within 90 days'}
-                </span>
-                <span className="text-2xl font-bold text-yellow-700">{stats.certificates?.expiring_count?.['90_days'] || 0}</span>
-              </div>
-              <div className={`pt-3 border-t border-amber-200 ${isRTL ? 'text-right' : ''}`}>
-                <p className="text-sm text-amber-800 font-semibold">
-                  {isRTL ? `إجمالي: ${totalExpiring} شهادة` : `Total: ${totalExpiring} certificates`}
-                </p>
-              </div>
             </div>
           </CardContent>
         </Card>

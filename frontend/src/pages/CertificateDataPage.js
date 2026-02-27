@@ -343,34 +343,34 @@ export default function CertificateDataPage() {
           ) : recordsList.length === 0 ? (
             <div className="text-center py-8 text-gray-500">{t('certData.empty')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full" data-testid="cert-data-table">
+            <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+              <table className="w-full table-fixed" data-testid="cert-data-table">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-start p-3 font-medium">{t('certData.clientName')}</th>
-                    <th className="text-start p-3 font-medium">{t('certData.standards')}</th>
-                    <th className="text-start p-3 font-medium">{t('certData.auditType')}</th>
-                    <th className="text-start p-3 font-medium">{t('certData.certificateNo')}</th>
-                    <th className="text-start p-3 font-medium">{t('certData.statusLabel')}</th>
-                    <th className="text-start p-3 font-medium">{t('actions')}</th>
+                  <tr className={`border-b ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <th className={`p-3 px-4 font-medium w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('certData.clientName')}</th>
+                    <th className={`p-3 px-4 font-medium w-[140px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('certData.standards')}</th>
+                    <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('certData.auditType')}</th>
+                    <th className={`p-3 px-4 font-medium w-[120px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('certData.certificateNo')}</th>
+                    <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('certData.statusLabel')}</th>
+                    <th className={`p-3 px-4 font-medium w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recordsList.map((record) => (
                     <tr key={record.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        <div className="font-medium">{record.client_name}</div>
+                      <td className="p-3 px-4">
+                        <div className={`font-medium ${isRTL ? 'text-right' : ''}`}>{record.client_name}</div>
                       </td>
-                      <td className="p-3">{record.standards?.join(', ')}</td>
-                      <td className="p-3">{record.audit_type}</td>
-                      <td className="p-3">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{record.standards?.join(', ')}</td>
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{record.audit_type}</td>
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
                         {record.certificate_number ? (
                           <span className="text-green-600 font-medium">{record.certificate_number}</span>
                         ) : '—'}
                       </td>
-                      <td className="p-3">{getStatusBadge(record.status)}</td>
-                      <td className="p-3">
-                        <div className="flex gap-1">
+                      <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(record.status)}</td>
+                      <td className="p-3 px-4">
+                        <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                           <Button variant="ghost" size="sm" onClick={() => openViewModal(record)} title={t('view')}>
                             <Eye className="w-4 h-4" />
                           </Button>

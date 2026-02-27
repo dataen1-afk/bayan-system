@@ -356,7 +356,7 @@ def generate_stage2_audit_plan_pdf(plan_data: dict) -> bytes:
     
     # Check page break
     if y < 220:
-        draw_footer(page_num)
+        draw_official_footer(page_num)
         c.showPage()
         page_num += 1
         y = height - 50
@@ -444,7 +444,7 @@ def generate_stage2_audit_plan_pdf(plan_data: dict) -> bytes:
         y -= row_height
         
         if y < 120:
-            draw_footer(page_num)
+            draw_official_footer(page_num)
             c.showPage()
             page_num += 1
             y = height - 50
@@ -453,7 +453,7 @@ def generate_stage2_audit_plan_pdf(plan_data: dict) -> bytes:
     
     # Acceptance Statement
     if y < 130:
-        draw_footer(page_num)
+        draw_official_footer(page_num)
         c.showPage()
         page_num += 1
         y = height - 50
@@ -512,7 +512,7 @@ def generate_stage2_audit_plan_pdf(plan_data: dict) -> bytes:
     status_text = "Accepted" if client_accepted else "Pending Review"
     c.drawString(width/2 + 20, y - 27, f"Status: {status_text}")
     
-    draw_footer(page_num)
+    draw_official_footer(page_num)
     
     c.save()
     

@@ -87,9 +87,9 @@ const DashboardWidgets = ({ isRTL }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Quick Actions Widget */}
-        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white hover:shadow-lg transition-all" data-testid="quick-actions-widget">
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white hover:shadow-lg transition-all" data-testid="quick-actions-widget" dir={isRTL ? 'rtl' : 'ltr'}>
           <CardHeader className="pb-2">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-blue-800">
                 {isRTL ? 'إجراءات سريعة' : 'Quick Actions'}
               </CardTitle>
@@ -103,10 +103,10 @@ const DashboardWidgets = ({ isRTL }) => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`w-full justify-between border-blue-200 hover:bg-blue-50 ${isRTL ? 'flex-row-reverse' : ''}`}
+                className="w-full justify-between border-blue-200 hover:bg-blue-50"
                 onClick={() => navigate('/admin?tab=forms')}
               >
-                <span className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <span className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   {isRTL ? 'طلبات المنح' : 'Grant Requests'}
                 </span>
@@ -119,10 +119,10 @@ const DashboardWidgets = ({ isRTL }) => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`w-full justify-between border-blue-200 hover:bg-blue-50 ${isRTL ? 'flex-row-reverse' : ''}`}
+                className="w-full justify-between border-blue-200 hover:bg-blue-50"
                 onClick={() => navigate('/audit-programs')}
               >
-                <span className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <span className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   {isRTL ? 'برامج التدقيق' : 'Audit Programs'}
                 </span>
@@ -130,10 +130,10 @@ const DashboardWidgets = ({ isRTL }) => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`w-full justify-between border-blue-200 hover:bg-blue-50 ${isRTL ? 'flex-row-reverse' : ''}`}
+                className="w-full justify-between border-blue-200 hover:bg-blue-50"
                 onClick={() => navigate('/certificates')}
               >
-                <span className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <span className="flex items-center gap-2">
                   <Award className="w-4 h-4" />
                   {isRTL ? 'الشهادات' : 'Certificates'}
                 </span>
@@ -143,9 +143,9 @@ const DashboardWidgets = ({ isRTL }) => {
         </Card>
 
         {/* Revenue Target Progress */}
-        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-white hover:shadow-lg transition-all" data-testid="revenue-widget">
+        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-white hover:shadow-lg transition-all" data-testid="revenue-widget" dir={isRTL ? 'rtl' : 'ltr'}>
           <CardHeader className="pb-2">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-emerald-800">
                 {isRTL ? 'الإيرادات الشهرية' : 'Monthly Revenue'}
               </CardTitle>
@@ -157,7 +157,7 @@ const DashboardWidgets = ({ isRTL }) => {
           <CardContent>
             <div className="space-y-3">
               <div>
-                <div className={`flex items-baseline gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold text-emerald-700">
                     {formatCurrency(stats.revenue?.monthly)}
                   </span>
@@ -167,13 +167,13 @@ const DashboardWidgets = ({ isRTL }) => {
                 </p>
               </div>
               <div>
-                <div className={`flex justify-between text-xs mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex justify-between text-xs mb-1">
                   <span className="text-slate-600">{isRTL ? 'التقدم' : 'Progress'}</span>
                   <span className="font-semibold text-emerald-700">{Math.round(revenueProgress)}%</span>
                 </div>
                 <Progress value={revenueProgress} className="h-2 bg-emerald-100" />
               </div>
-              <div className={`flex justify-between text-sm pt-2 border-t border-emerald-100 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="flex justify-between text-sm pt-2 border-t border-emerald-100">
                 <span className="text-slate-600">{isRTL ? 'الإجمالي' : 'Total Revenue'}</span>
                 <span className="font-bold text-emerald-700">{formatCurrency(stats.revenue?.total)}</span>
               </div>
@@ -182,9 +182,9 @@ const DashboardWidgets = ({ isRTL }) => {
         </Card>
 
         {/* Active Certificates */}
-        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white hover:shadow-lg transition-all" data-testid="active-certs-widget">
+        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white hover:shadow-lg transition-all" data-testid="active-certs-widget" dir={isRTL ? 'rtl' : 'ltr'}>
           <CardHeader className="pb-2">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-green-800">
                 {isRTL ? 'الشهادات النشطة' : 'Active Certificates'}
               </CardTitle>
@@ -195,7 +195,7 @@ const DashboardWidgets = ({ isRTL }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className={`text-3xl font-bold text-green-700 ${isRTL ? 'text-right' : ''}`}>
+              <div className="text-3xl font-bold text-green-700">
                 {stats.certificates?.active || 0}
               </div>
               <p className="text-sm text-slate-600">
@@ -206,9 +206,9 @@ const DashboardWidgets = ({ isRTL }) => {
         </Card>
 
         {/* Total Clients */}
-        <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-white hover:shadow-lg transition-all" data-testid="clients-widget">
+        <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-white hover:shadow-lg transition-all" data-testid="clients-widget" dir={isRTL ? 'rtl' : 'ltr'}>
           <CardHeader className="pb-2">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-indigo-800">
                 {isRTL ? 'إجمالي العملاء' : 'Total Clients'}
               </CardTitle>
@@ -219,7 +219,7 @@ const DashboardWidgets = ({ isRTL }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className={`text-3xl font-bold text-indigo-700 ${isRTL ? 'text-right' : ''}`}>
+              <div className="text-3xl font-bold text-indigo-700">
                 {stats.clients?.total || 0}
               </div>
               <p className="text-sm text-slate-600">

@@ -1,6 +1,7 @@
 """
 Audit Program PDF Generator (BACF6-05)
 Generates a professional bilingual PDF for Audit Programs - scheduling audit stages.
+Uses the official BAC document template.
 """
 
 from reportlab.lib.pagesizes import A4, landscape
@@ -15,18 +16,19 @@ from bidi.algorithm import get_display
 from datetime import datetime
 import logging
 from io import BytesIO
+import qrcode
 
 ROOT_DIR = Path(__file__).parent
+
+# Company info for footer
+COMPANY_PHONE = "+966 55 123 4567"
+COMPANY_WEBSITE = "www.bfrvc.sa"
+PRIMARY_COLOR = colors.HexColor('#1e3a5f')
 
 def generate_audit_program_pdf(program_data: dict) -> bytes:
     """
     Generate a professional bilingual Audit Program PDF (BACF6-05).
-    
-    Args:
-        program_data: Dictionary containing audit program data
-    
-    Returns:
-        PDF bytes
+    Uses the official BAC document template design.
     """
     
     # Register Arabic fonts
@@ -45,16 +47,16 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
     
     logo_path = ROOT_DIR / "assets" / "bayan-logo.png"
     
-    # Create PDF in landscape mode for the table
+    # Create PDF
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
     
-    # Colors
-    primary_color = colors.HexColor('#1e3a5f')
+    # Colors - Official BAC colors
+    primary_color = PRIMARY_COLOR
     section_color = colors.HexColor('#4a7c9b')
-    light_bg = colors.HexColor('#f0f4f8')
-    table_header_bg = colors.HexColor('#1e3a5f')
+    light_bg = colors.HexColor('#f8f9fa')
+    table_header_bg = primary_color
     
     # Extract data
     org_name = program_data.get('organization_name', '')
@@ -65,39 +67,100 @@ def generate_audit_program_pdf(program_data: dict) -> bytes:
     approval_date = program_data.get('approval_date', '')
     
     # Helper function for Arabic text
-    def draw_arabic(text, x, y, size=10, bold=False, right_align=False):
+    def draw_arabic(text, x, y, size=10, bold=False, right_align=False, center=False):
         if arabic_font_available:
             try:
                 reshaped = arabic_reshaper.reshape(str(text))
                 bidi_text = get_display(reshaped)
                 font = 'Amiri-Bold' if bold and font_bold_path.exists() else 'Amiri'
                 c.setFont(font, size)
-                if right_align:
+                if center:
+                    c.drawCentredString(x, y, bidi_text)
+                elif right_align:
                     c.drawRightString(x, y, bidi_text)
                 else:
                     c.drawString(x, y, bidi_text)
             except Exception:
                 pass
-    
-    def draw_footer(page_num):
+
+    def draw_official_header(title_en="AUDIT PROGRAM", title_ar="برنامج التدقيق"):
+        """Draw the official BAC header"""
+        logo_x = 40
+        logo_y = height - 75
+        
+        if logo_path.exists():
+            try:
+                c.drawImage(str(logo_path), logo_x, logo_y, width=60, height=55, 
+                           preserveAspectRatio=True, mask='auto')
+            except Exception:
+                pass
+        
+        # Company name
+        name_x = logo_x + 70
+        name_y = height - 30
         c.setFillColor(primary_color)
-        c.rect(0, 0, width, 25, fill=True, stroke=False)
-        c.setFillColor(colors.white)
+        draw_arabic("بيان للتحقق والمطابقة", name_x + 130, name_y, 13, bold=True, right_align=True)
+        c.setFont('Helvetica-Bold', 9)
+        c.drawString(name_x, name_y - 15, "BAYAN AUDITING & CONFORMITY")
+        
+        # Document title
+        title_y = height - 95
+        c.setFont('Helvetica-Bold', 16)
+        c.setFillColor(primary_color)
+        c.drawCentredString(width / 2, title_y, title_en)
+        draw_arabic(title_ar, width / 2, title_y - 20, 14, bold=True, center=True)
+        
+        # Form reference
+        c.setFont('Helvetica', 9)
+        c.setFillColor(colors.black)
+        c.drawRightString(width - 40, height - 25, "BACF6-05")
+        c.drawRightString(width - 40, height - 38, f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+        
+        return height - 130
+
+    def draw_official_footer(page_num=1):
+        """Draw the official BAC footer"""
+        footer_y = 55
+        
+        c.setStrokeColor(primary_color)
+        c.setLineWidth(1)
+        c.line(40, footer_y + 25, width - 40, footer_y + 25)
+        
+        try:
+            qr = qrcode.QRCode(version=1, box_size=10, border=2)
+            qr.add_data(f"https://{COMPANY_WEBSITE}")
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            qr_buffer = BytesIO()
+            qr_img.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
+            from reportlab.lib.utils import ImageReader
+            c.drawImage(ImageReader(qr_buffer), 45, footer_y - 20, width=45, height=45)
+        except Exception:
+            pass
+        
+        info_x = 100
+        info_y = footer_y + 12
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Audit Program BACF6-05")
+        c.setFillColor(colors.black)
+        c.drawString(info_x, info_y, f"Tel: {COMPANY_PHONE}")
+        c.drawString(info_x, info_y - 11, f"Web: {COMPANY_WEBSITE}")
+        
+        c.setFont('Helvetica-Bold', 8)
+        c.drawRightString(width - 45, info_y, "Director")
+        c.setFont('Helvetica', 8)
+        c.drawRightString(width - 45, info_y - 11, "BAYAN AUDITING & CONFORMITY (BAC)")
+        
+        c.setFont('Helvetica', 7)
+        c.drawCentredString(width / 2, footer_y - 30, f"Page {page_num} | BACF6-05")
+        
+        return footer_y + 35
     
     # ============ PAGE 1 ============
     page_num = 1
     
-    # Header
-    c.setFillColor(primary_color)
-    c.rect(0, height - 100, width, 100, fill=True, stroke=False)
-    
-    # Logo
-    if logo_path.exists():
-        try:
-            c.setFillColor(colors.white)
-            c.roundRect(25, height - 85, 65, 65, 5, fill=True, stroke=False)
+    # Draw official header
+    y = draw_official_header("AUDIT PROGRAM", "برنامج التدقيق")
             c.drawImage(str(logo_path), 28, height - 82, width=59, height=59, preserveAspectRatio=True, mask='auto')
         except Exception:
             pass

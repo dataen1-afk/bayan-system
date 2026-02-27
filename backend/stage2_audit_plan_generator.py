@@ -91,44 +91,81 @@ def generate_stage2_audit_plan_pdf(plan_data: dict) -> bytes:
                     c.drawString(x, y, bidi_text)
             except Exception:
                 pass
-    
-    def draw_footer(page_num):
+
+    def draw_official_header(title_en="STAGE 2 AUDIT PLAN", title_ar="خطة تدقيق المرحلة الثانية"):
+        """Draw the official BAC header"""
+        logo_x = 40
+        logo_y = height - 75
+        
+        if logo_path.exists():
+            try:
+                c.drawImage(str(logo_path), logo_x, logo_y, width=60, height=55, 
+                           preserveAspectRatio=True, mask='auto')
+            except Exception:
+                pass
+        
+        name_x = logo_x + 70
+        name_y = height - 30
         c.setFillColor(primary_color)
-        c.rect(0, 0, width, 25, fill=True, stroke=False)
-        c.setFillColor(colors.white)
+        draw_arabic("بيان للتحقق والمطابقة", name_x + 130, name_y, 13, bold=True, right_align=True)
+        c.setFont('Helvetica-Bold', 9)
+        c.drawString(name_x, name_y - 15, "BAYAN AUDITING & CONFORMITY")
+        
+        title_y = height - 95
+        c.setFont('Helvetica-Bold', 16)
+        c.setFillColor(primary_color)
+        c.drawCentredString(width / 2, title_y, title_en)
+        draw_arabic(title_ar, width / 2, title_y - 20, 14, bold=True, center=True)
+        
+        c.setFont('Helvetica', 9)
+        c.setFillColor(colors.black)
+        c.drawRightString(width - 40, height - 25, "BACF6-08")
+        
+        return height - 130
+
+    def draw_official_footer(page_num=1):
+        """Draw the official BAC footer"""
+        footer_y = 55
+        
+        c.setStrokeColor(primary_color)
+        c.setLineWidth(1)
+        c.line(40, footer_y + 25, width - 40, footer_y + 25)
+        
+        try:
+            qr = qrcode.QRCode(version=1, box_size=10, border=2)
+            qr.add_data(f"https://{COMPANY_WEBSITE}")
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            qr_buffer = BytesIO()
+            qr_img.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
+            from reportlab.lib.utils import ImageReader
+            c.drawImage(ImageReader(qr_buffer), 45, footer_y - 20, width=45, height=45)
+        except Exception:
+            pass
+        
+        info_x = 100
+        info_y = footer_y + 12
         c.setFont('Helvetica', 8)
-        c.drawCentredString(width/2, 10, f"Page {page_num} | BAYAN for Verification and Conformity | Stage 2 Audit Plan BACF6-08")
+        c.setFillColor(colors.black)
+        c.drawString(info_x, info_y, f"Tel: {COMPANY_PHONE}")
+        c.drawString(info_x, info_y - 11, f"Web: {COMPANY_WEBSITE}")
+        
+        c.setFont('Helvetica-Bold', 8)
+        c.drawRightString(width - 45, info_y, "Director")
+        c.setFont('Helvetica', 8)
+        c.drawRightString(width - 45, info_y - 11, "BAYAN AUDITING & CONFORMITY (BAC)")
+        
+        c.setFont('Helvetica', 7)
+        c.drawCentredString(width / 2, footer_y - 30, f"Page {page_num} | BACF6-08")
+        
+        return footer_y + 35
     
     # ============ PAGE 1 ============
     page_num = 1
     
-    # Header with Stage 2 color accent
-    c.setFillColor(primary_color)
-    c.rect(0, height - 100, width, 100, fill=True, stroke=False)
-    c.setFillColor(stage2_color)
-    c.rect(0, height - 105, width, 5, fill=True, stroke=False)
-    
-    if logo_path.exists():
-        try:
-            c.setFillColor(colors.white)
-            c.roundRect(25, height - 85, 65, 65, 5, fill=True, stroke=False)
-            c.drawImage(str(logo_path), 28, height - 82, width=59, height=59, preserveAspectRatio=True, mask='auto')
-        except Exception:
-            pass
-    
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 18)
-    c.drawCentredString(width/2, height - 35, "STAGE 2 AUDIT PLAN")
-    c.setFont('Helvetica', 11)
-    
-    audit_type_display = f"Certification Audit - {audit_type}"
-    c.drawCentredString(width/2, height - 52, audit_type_display)
-    draw_arabic("خطة تدقيق المرحلة الثانية", width/2 + 80, height - 70, 12, bold=True)
-    
-    c.setFont('Helvetica', 9)
-    c.drawRightString(width - 25, height - 25, "BACF6-08")
-    
-    y = height - 125
+    # Draw official header
+    y = draw_official_header("STAGE 2 AUDIT PLAN", "خطة تدقيق المرحلة الثانية")
     
     # Client Information
     c.setFillColor(section_color)

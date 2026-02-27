@@ -69,39 +69,57 @@ def generate_technical_review_pdf(data: dict, output_path: str = None) -> str:
                 pass
         
         # Title
-        c.setFillColor(white)
+        c.setFillColor(primary_color)
         c.setFont("Helvetica-Bold", 14)
-        c.drawString(100, height - 35, "Technical Review and Certification Decision")
+        c.drawCentredString(width / 2, height - 95, "Technical Review and Certification Decision")
         
         c.setFont("Amiri-Bold", 14)
         arabic_title = reshape_arabic("المراجعة الفنية وقرار الاعتماد")
-        c.drawRightString(width - 30, height - 35, arabic_title)
+        c.drawCentredString(width / 2, height - 115, arabic_title)
         
         # Form reference
-        c.setFont("Helvetica", 10)
-        c.drawString(100, height - 55, "BAC-F6-15")
-        
-        c.setFont("Amiri", 10)
-        c.drawRightString(width - 30, height - 55, reshape_arabic("نموذج رقم BAC-F6-15"))
-        
-        # Page number
-        c.setFont("Helvetica", 8)
-        c.drawString(width - 60, height - 70, f"Page {page_num}")
+        c.setFont("Helvetica", 9)
+        c.setFillColor(black)
+        c.drawRightString(width - 40, height - 25, "BAC-F6-15")
     
     def draw_footer():
-        """Draw page footer"""
-        c.setFillColor(primary_color)
-        c.rect(0, 0, width, 30, fill=1, stroke=0)
-        c.setFillColor(white)
-        c.setFont("Helvetica", 8)
-        c.drawString(30, 12, "BAYAN for Verification and Conformity - Confidential")
-        c.drawRightString(width - 30, 12, "بيان للتحقق والمطابقة - سري")
+        """Draw official BAC footer"""
+        footer_y = 55
+        
+        c.setStrokeColor(primary_color)
+        c.setLineWidth(1)
+        c.line(40, footer_y + 25, width - 40, footer_y + 25)
+        
+        try:
+            qr = qrcode.QRCode(version=1, box_size=10, border=2)
+            qr.add_data(f"https://{COMPANY_WEBSITE}")
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            qr_buffer = BytesIO()
+            qr_img.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
+            from reportlab.lib.utils import ImageReader
+            c.drawImage(ImageReader(qr_buffer), 45, footer_y - 20, width=45, height=45)
+        except:
+            pass
+        
+        info_x = 100
+        info_y = footer_y + 12
+        c.setFont('Helvetica', 8)
+        c.setFillColor(black)
+        c.drawString(info_x, info_y, f"Tel: {COMPANY_PHONE}")
+        c.drawString(info_x, info_y - 11, f"Web: {COMPANY_WEBSITE}")
+        
+        c.setFont('Helvetica-Bold', 8)
+        c.drawRightString(width - 45, info_y, "Director")
+        c.setFont('Helvetica', 8)
+        c.drawRightString(width - 45, info_y - 11, "BAYAN AUDITING & CONFORMITY (BAC)")
     
     # Page 1
     draw_header(1)
     draw_footer()
     
-    y = height - 100
+    y = height - 140
     
     # Client Information Section
     c.setFillColor(secondary_color)

@@ -257,8 +257,8 @@ const RFQRequestsPage = () => {
 
       {/* Table */}
       <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+          <table className="w-full table-fixed">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>

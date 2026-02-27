@@ -2,6 +2,36 @@
 
 ## Latest Update: Feb 27, 2026
 
+### VAT/Tax Implementation for Price Quotes - COMPLETED ✅ (Feb 27, 2026)
+
+#### Backend Changes:
+- Updated `ServiceFees` model to include tax fields:
+  - `tax_rate`: VAT rate (default 15% for Saudi Arabia)
+  - Per-item tax amounts: `initial_certification_tax`, `surveillance_1_tax`, etc.
+  - Per-item totals with tax: `initial_certification_with_tax`, etc.
+  - Grand totals: `subtotal`, `total_tax`, `grand_total`
+- Updated proposal creation endpoint to calculate and store all tax values
+
+#### Frontend Changes (CreateProposalPage.js):
+- New table layout showing for each fee item:
+  - Amount (excl. VAT)
+  - VAT (15%)
+  - Total (incl. VAT)
+- Summary section at bottom:
+  - Subtotal (excl. VAT) - gray background
+  - VAT (15%) - amber/yellow background
+  - Grand Total (incl. VAT) - green background with border
+
+#### PDF Generator Changes:
+- Updated bilingual proposal PDF to show tax breakdown for each item
+- Added subtotal, total tax, and grand total sections with color coding
+
+#### Verification:
+- Test proposal created: شركة الحربي للمقاولات
+  - Subtotal: SAR 26,000
+  - VAT (15%): SAR 3,900
+  - Grand Total: SAR 29,900 ✅
+
 ### E2E Workflow Test - COMPLETED ✅ (Feb 27, 2026)
 
 #### Full Workflow Tested Successfully:

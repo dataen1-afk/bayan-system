@@ -376,7 +376,7 @@ def generate_stage1_audit_plan_pdf(plan_data: dict) -> bytes:
     
     # Check if we need a new page before schedule
     if y < 250:
-        draw_footer(page_num)
+        draw_official_footer(page_num)
         c.showPage()
         page_num += 1
         y = height - 50
@@ -468,7 +468,7 @@ def generate_stage1_audit_plan_pdf(plan_data: dict) -> bytes:
         
         # Check for page break
         if y < 120:
-            draw_footer(page_num)
+            draw_official_footer(page_num)
             c.showPage()
             page_num += 1
             y = height - 50
@@ -477,7 +477,7 @@ def generate_stage1_audit_plan_pdf(plan_data: dict) -> bytes:
     
     # Acceptance Statement
     if y < 150:
-        draw_footer(page_num)
+        draw_official_footer(page_num)
         c.showPage()
         page_num += 1
         y = height - 50
@@ -538,7 +538,7 @@ def generate_stage1_audit_plan_pdf(plan_data: dict) -> bytes:
     status_text = "Accepted" if client_accepted else "Pending Review"
     c.drawString(width/2 + 20, y - 30, f"Status: {status_text}")
     
-    draw_footer(page_num)
+    draw_official_footer(page_num)
     
     # Save
     c.save()

@@ -382,32 +382,32 @@ export default function CertifiedClientsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full" data-testid="certified-clients-table">
+          <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+            <table className="w-full table-fixed" data-testid="certified-clients-table">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-start p-3 font-medium">{isRTL ? 'الرقم' : 'S.No.'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'اسم العميل' : 'Client Name'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'الاعتماد' : 'Accreditation'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'رقم الشهادة' : 'Cert. No.'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'تاريخ الإصدار' : 'Issue Date'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'تاريخ الانتهاء' : 'Expiry Date'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'الحالة' : 'Status'}</th>
-                  <th className="text-start p-3 font-medium">{isRTL ? 'الإجراءات' : 'Actions'}</th>
+                <tr className={`border-b bg-gray-50 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <th className={`p-3 px-4 font-medium w-[80px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الرقم' : 'S.No.'}</th>
+                  <th className={`p-3 px-4 font-medium w-[180px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'اسم العميل' : 'Client Name'}</th>
+                  <th className={`p-3 px-4 font-medium w-[140px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الاعتماد' : 'Accreditation'}</th>
+                  <th className={`p-3 px-4 font-medium w-[120px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'رقم الشهادة' : 'Cert. No.'}</th>
+                  <th className={`p-3 px-4 font-medium w-[110px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'تاريخ الإصدار' : 'Issue Date'}</th>
+                  <th className={`p-3 px-4 font-medium w-[110px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'تاريخ الانتهاء' : 'Expiry Date'}</th>
+                  <th className={`p-3 px-4 font-medium w-[100px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الحالة' : 'Status'}</th>
+                  <th className={`p-3 px-4 font-medium w-[150px] ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الإجراءات' : 'Actions'}</th>
                 </tr>
               </thead>
               <tbody>
                 {clientsList.map((client) => (
                   <tr key={client.id} className="border-b hover:bg-gray-50" data-testid={`client-row-${client.id}`}>
-                    <td className="p-3 font-mono text-sm">{client.serial_number}</td>
-                    <td className="p-3">
-                      <div className="font-medium">{client.client_name}</div>
-                      {client.client_name_ar && (
+                    <td className={`p-3 px-4 font-mono text-sm ${isRTL ? 'text-right' : ''}`}>{client.serial_number}</td>
+                    <td className="p-3 px-4">
+                      <div className={`font-medium ${isRTL ? 'text-right' : ''}`}>{isRTL ? (client.client_name_ar || client.client_name) : client.client_name}</div>
+                      {!isRTL && client.client_name_ar && (
                         <div className="text-sm text-gray-500" dir="rtl">{client.client_name_ar}</div>
                       )}
                     </td>
-                    <td className="p-3">
-                      <div className="flex flex-wrap gap-1">
+                    <td className="p-3 px-4">
+                      <div className={`flex flex-wrap gap-1 ${isRTL ? 'justify-end' : ''}`}>
                         {(client.accreditation || []).slice(0, 2).map((std, idx) => (
                           <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
                             {std}
@@ -418,14 +418,14 @@ export default function CertifiedClientsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="p-3">
+                    <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>
                       <span className="font-mono text-sm">{client.certificate_number || '-'}</span>
                     </td>
-                    <td className="p-3 text-sm">{client.issue_date || '-'}</td>
-                    <td className="p-3 text-sm">{client.expiry_date || '-'}</td>
-                    <td className="p-3">{getStatusBadge(client.status)}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1">
+                    <td className={`p-3 px-4 text-sm ${isRTL ? 'text-right' : ''}`} dir="ltr">{client.issue_date || '-'}</td>
+                    <td className={`p-3 px-4 text-sm ${isRTL ? 'text-right' : ''}`} dir="ltr">{client.expiry_date || '-'}</td>
+                    <td className={`p-3 px-4 ${isRTL ? 'text-right' : ''}`}>{getStatusBadge(client.status)}</td>
+                    <td className="p-3 px-4">
+                      <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                         <Button
                           variant="ghost"
                           size="sm"

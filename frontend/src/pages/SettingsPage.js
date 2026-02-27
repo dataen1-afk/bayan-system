@@ -259,7 +259,7 @@ const SettingsPage = () => {
                     <Button 
                       variant="destructive" 
                       onClick={() => setShowConfirmDelete(true)}
-                      className={`gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                      className="gap-2"
                       disabled={!dataSummary || dataSummary.total_records === 0}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -277,12 +277,12 @@ const SettingsPage = () => {
                             : `${dataSummary?.total_records || 0} records will be deleted. This action cannot be undone.`}
                         </p>
                       </div>
-                      <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex gap-3">
                         <Button 
                           variant="destructive" 
                           onClick={handleClearAllData}
                           disabled={isLoading}
-                          className={`gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                          className="gap-2"
                         >
                           {isLoading ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

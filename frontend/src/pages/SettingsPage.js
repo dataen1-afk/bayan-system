@@ -180,11 +180,11 @@ const SettingsPage = () => {
         {/* Data Management Tab (System Admin Only) */}
         {isSystemAdmin && (
           <TabsContent value="data">
-            <div className="space-y-6">
+            <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
               {/* Data Summary Card */}
-              <Card>
+              <Card dir={isRTL ? 'rtl' : 'ltr'}>
                 <CardHeader>
-                  <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <CardTitle className="flex items-center gap-2">
                     <Database className="w-5 h-5" />
                     {isRTL ? 'ملخص البيانات' : 'Data Summary'}
                   </CardTitle>
@@ -207,7 +207,7 @@ const SettingsPage = () => {
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {dataSummary.collections?.map((coll) => (
-                          <div key={coll.collection} className={`p-3 border rounded-lg ${coll.count > 0 ? 'bg-slate-50' : 'bg-white'}`}>
+                          <div key={coll.collection} className={`p-3 border rounded-lg ${coll.count > 0 ? 'bg-slate-50' : 'bg-white'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                             <p className="text-sm font-medium text-slate-700">{coll.name_ar}</p>
                             <p className="text-xs text-slate-500">{coll.collection}</p>
                             <p className={`text-lg font-bold ${coll.count > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
@@ -226,9 +226,9 @@ const SettingsPage = () => {
               </Card>
 
               {/* Delete All Data Card */}
-              <Card className="border-red-200">
+              <Card className="border-red-200" dir={isRTL ? 'rtl' : 'ltr'}>
                 <CardHeader className="bg-red-50">
-                  <CardTitle className={`flex items-center gap-2 text-red-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <CardTitle className="flex items-center gap-2 text-red-700">
                     <AlertTriangle className="w-5 h-5" />
                     {isRTL ? 'حذف جميع البيانات التجريبية' : 'Delete All Test Data'}
                   </CardTitle>
@@ -241,7 +241,7 @@ const SettingsPage = () => {
                 <CardContent className="pt-6">
                   {deleteResult && (
                     <div className={`mb-4 p-4 rounded-lg ${deleteResult.error ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex items-center gap-2">
                         {deleteResult.error ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
                         <p className="font-medium">{deleteResult.message}</p>
                       </div>

@@ -3221,8 +3221,8 @@ async def get_public_bilingual_contract_pdf(access_token: str):
 # ================= NOTIFICATION HELPER =================
 # Note: Notification routes are now in routes/notifications.py
 
-async def create_notification(notification_type: str, title: str, message: str, related_id: str = None, related_type: str = None):
-    """Helper function to create a notification"""
+async def create_notification(notification_type: str, title: str, message: str, related_id: str = None, related_type: str = None, title_ar: str = None, message_ar: str = None):
+    """Helper function to create a notification. title_ar and message_ar are accepted but not used currently."""
     notification = Notification(
         type=notification_type,
         title=title,

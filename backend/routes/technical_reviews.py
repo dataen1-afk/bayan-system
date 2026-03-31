@@ -3,7 +3,7 @@ Technical Reviews Routes (BAC-F6-15)
 Technical Review and Certification Decision endpoints
 """
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -14,15 +14,18 @@ import os
 import logging
 
 # Import shared dependencies (avoiding circular imports)
+from auth import get_current_user, security
 from dependencies import (
-    db, get_current_user, create_notification, 
-    generate_certificate_number, get_qr_code_base64, Certificate,
-    security, CONTRACTS_DIR
+    db,
+    create_notification,
+    generate_certificate_number,
+    get_qr_code_base64,
+    Certificate,
+    CONTRACTS_DIR,
 )
 from technical_review_generator import generate_technical_review_pdf
 
 router = APIRouter(prefix="/technical-reviews", tags=["Technical Reviews"])
-security = HTTPBearer()
 
 # ================= MODELS =================
 

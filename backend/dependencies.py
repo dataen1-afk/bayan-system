@@ -1,16 +1,15 @@
 """
-Shared dependencies for modular routes.
-Contains database connection, authentication helpers, and common utilities.
+Shared dependencies for modular routes (DB helpers, notifications, etc.).
+
+JWT / HTTP Bearer: `security` and `get_current_user` are re-exported from `auth`
+(the only module that calls jwt.encode / jwt.decode). Import from `auth` directly
+in new code; re-exports remain for backward compatibility.
 """
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime, timezone, timedelta
-from passlib.context import CryptContext
+from datetime import datetime, timezone
 from pathlib import Path
-import jwt
 import os
 import uuid
 import qrcode
@@ -22,21 +21,8 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-
-# Security
-security = HTTPBearer()
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# JWT settings
-JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_HOURS = 24
+from database import db
+from auth import security, get_current_user
 
 # Contracts directory
 CONTRACTS_DIR = ROOT_DIR / "contracts"
@@ -82,25 +68,7 @@ class Certificate(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
-# ================= JWT HELPER FUNCTIONS =================
-
-def decode_jwt_token(token: str) -> dict:
-    """Decode and validate JWT token"""
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
 # ================= AUTHENTICATION DEPENDENCIES =================
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    """Get the current authenticated user from JWT token"""
-    token = credentials.credentials
-    payload = decode_jwt_token(token)
-    return payload
 
 async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
     """Require admin role for the current user"""

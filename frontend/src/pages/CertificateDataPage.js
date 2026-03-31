@@ -157,12 +157,19 @@ export default function CertificateDataPage() {
         {},
         { headers }
       );
-      setRecordsList(recordsList.map(r => 
-        r.id === recordId ? { ...r, status: 'sent_to_client' } : r
-      ));
-      
-      // Copy URL to clipboard
-      navigator.clipboard.writeText(response.data.public_url);
+      const prev = recordsList.find((r) => r.id === recordId);
+      const accessToken = prev?.access_token;
+      const confirmUrl = accessToken
+        ? `${window.location.origin}/certificate-data-confirm/${accessToken}`
+        : response.data.public_url;
+
+      setRecordsList(
+        recordsList.map((r) =>
+          r.id === recordId ? { ...r, status: 'sent_to_client' } : r
+        )
+      );
+
+      navigator.clipboard.writeText(confirmUrl);
       toast.success(t('certData.sentSuccess') + ' - URL copied to clipboard!');
     } catch (error) {
       console.error('Error sending to client:', error);

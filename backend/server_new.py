@@ -1,6 +1,10 @@
 """
 Service Contract Management System - FastAPI Backend
-Refactored modular architecture.
+Refactored modular architecture (subset of routes only).
+
+Deployment: do NOT point Render/production at ``server_new:app``.
+The full Bayan API (roles, users, proposals, audits, etc.) is ``server:app`` in ``server.py``.
+See repository ``render.yaml`` and ``backend/Procfile``.
 """
 from fastapi import FastAPI, APIRouter
 from dotenv import load_dotenv
@@ -69,6 +73,15 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_event():
     """Run startup tasks"""
+    from pathlib import Path
+
+    _active_path = Path(__file__).resolve()
+    _banner = (
+        f"STARTING ACTIVE APP: {_active_path} | "
+        f"ASGI entrypoint: server_new:app (DEV SUBSET — use server:app for production)"
+    )
+    print(_banner, flush=True)
+    logging.getLogger("bayan.active_app").warning(_banner)
     await seed_default_templates()
     logger.info("Server started successfully")
 

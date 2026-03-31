@@ -486,6 +486,36 @@ const resources = {
       "certData.certError": "Failed to issue certificate",
       "certData.pdfError": "Failed to generate PDF",
 
+      "certDataConfirm.pageTitle": "Confirm certificate details",
+      "certDataConfirm.pageSubtitle":
+        "Please review the information below. Sign and stamp to confirm accuracy for certificate printing.",
+      "certDataConfirm.loading": "Loading certificate data…",
+      "certDataConfirm.errorTitle": "Unable to load this form",
+      "certDataConfirm.notFound": "This confirmation link is invalid or has expired.",
+      "certDataConfirm.notAvailable":
+        "This form is not available for confirmation. It may still be a draft or not yet sent to you.",
+      "certDataConfirm.loadError": "Something went wrong while loading. Please try again later.",
+      "certDataConfirm.detailsTitle": "Certificate data",
+      "certDataConfirm.detailsHint": "Verify that all details match your organization before signing.",
+      "certDataConfirm.dateSection": "Signature date",
+      "certDataConfirm.signatureDateLabel": "Date of signature",
+      "certDataConfirm.signatureSection": "Signature & stamp",
+      "certDataConfirm.signatureHint":
+        "Draw or upload your signature and company stamp. Both are required to submit.",
+      "certDataConfirm.submit": "Confirm and submit",
+      "certDataConfirm.submitting": "Submitting…",
+      "certDataConfirm.submitSuccess": "Thank you. Your confirmation has been recorded.",
+      "certDataConfirm.submitError": "Could not submit confirmation. Please try again.",
+      "certDataConfirm.signatureRequired": "Please provide your signature.",
+      "certDataConfirm.stampRequired": "Please provide your company stamp (draw or upload).",
+      "certDataConfirm.dateRequired": "Please select the signature date.",
+      "certDataConfirm.successTitle": "Confirmation submitted",
+      "certDataConfirm.successBody":
+        "Your signature has been saved. The certification body will proceed with certificate issuance when appropriate.",
+      "certDataConfirm.alreadyConfirmedTitle": "Already confirmed",
+      "certDataConfirm.alreadyConfirmedBody":
+        "This certificate data was already confirmed. No further action is needed.",
+
       // Technical Reviews (BACF6-15)
       "technicalReviews": "Technical Reviews",
       "techReview.title": "Technical Review & Certification Decision",
@@ -2110,6 +2140,36 @@ const resources = {
       "certData.certIssued": "تم إصدار الشهادة بنجاح",
       "certData.certError": "فشل في إصدار الشهادة",
       "certData.pdfError": "فشل في إنشاء ملف PDF",
+
+      "certDataConfirm.pageTitle": "تأكيد بيانات الشهادة",
+      "certDataConfirm.pageSubtitle":
+        "يرجى مراجعة المعلومات أدناه. قم بالتوقيع والختم لتأكيد صحة البيانات لطباعة الشهادة.",
+      "certDataConfirm.loading": "جاري تحميل بيانات الشهادة…",
+      "certDataConfirm.errorTitle": "تعذر تحميل هذا النموذج",
+      "certDataConfirm.notFound": "رابط التأكيد غير صالح أو منتهي.",
+      "certDataConfirm.notAvailable":
+        "هذا النموذج غير متاح للتأكيد. قد يكون لا يزال مسودة أو لم يُرسل إليك بعد.",
+      "certDataConfirm.loadError": "حدث خطأ أثناء التحميل. حاول مرة أخرى لاحقاً.",
+      "certDataConfirm.detailsTitle": "بيانات الشهادة",
+      "certDataConfirm.detailsHint": "تأكد من تطابق جميع التفاصيل مع منشأتك قبل التوقيع.",
+      "certDataConfirm.dateSection": "تاريخ التوقيع",
+      "certDataConfirm.signatureDateLabel": "تاريخ التوقيع",
+      "certDataConfirm.signatureSection": "التوقيع والختم",
+      "certDataConfirm.signatureHint":
+        "ارسم أو حمّل توقيعك وختم منشأتك. كلاهما مطلوب للإرسال.",
+      "certDataConfirm.submit": "تأكيد وإرسال",
+      "certDataConfirm.submitting": "جاري الإرسال…",
+      "certDataConfirm.submitSuccess": "شكراً لك. تم تسجيل تأكيدك.",
+      "certDataConfirm.submitError": "تعذر إرسال التأكيد. حاول مرة أخرى.",
+      "certDataConfirm.signatureRequired": "يرجى تقديم التوقيع.",
+      "certDataConfirm.stampRequired": "يرجى تقديم ختم المنشأة (رسم أو تحميل).",
+      "certDataConfirm.dateRequired": "يرجى اختيار تاريخ التوقيع.",
+      "certDataConfirm.successTitle": "تم إرسال التأكيد",
+      "certDataConfirm.successBody":
+        "تم حفظ توقيعك. سيتابع جهة الاعتماد إصدار الشهادة عند الاقتضاء.",
+      "certDataConfirm.alreadyConfirmedTitle": "تم التأكيد مسبقاً",
+      "certDataConfirm.alreadyConfirmedBody":
+        "تم تأكيد بيانات الشهادة مسبقاً. لا يلزم أي إجراء إضافي.",
 
       // Technical Reviews (BACF6-15)
       "technicalReviews": "المراجعة الفنية",

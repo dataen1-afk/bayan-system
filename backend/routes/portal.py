@@ -9,7 +9,8 @@ from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
 
-from dependencies import db, get_current_user, create_notification, security
+from auth import get_current_user, security
+from dependencies import db, create_notification
 
 router = APIRouter(tags=["Customer Portal"])
 

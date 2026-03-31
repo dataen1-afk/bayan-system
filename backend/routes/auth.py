@@ -1,8 +1,11 @@
 """
 Authentication routes.
 """
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 from database import db
 from auth import (
@@ -56,7 +59,12 @@ async def login(credentials: UserLogin):
     
     # Create token
     token = create_jwt_token(user_doc["id"], user_doc["role"])
-    
+    logger.debug(
+        "Login OK email=%s role=%s",
+        credentials.email,
+        user_doc["role"],
+    )
+
     # Create user response (without password)
     created_at = user_doc.get("created_at")
     if isinstance(created_at, str):

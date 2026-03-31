@@ -1,18 +1,22 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
-from fastapi.responses import FileResponse, Response, RedirectResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pathlib import Path
 from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
-from pathlib import Path
+
+# Load .env before any import that reads JWT_SECRET or MONGO_URL at module level (e.g. routes → auth).
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / ".env")
+
+from auth import security, get_current_user, hash_password
+
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi.responses import FileResponse, Response, RedirectResponse
+from fastapi.security import HTTPAuthorizationCredentials
+from starlette.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone, timedelta
-from passlib.context import CryptContext
-import jwt
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch, cm
@@ -64,13 +68,9 @@ from routes.portal import router as portal_router
 from routes.approvals import router as approvals_router
 from routes.dashboard import router as dashboard_router
 
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
-
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+from database import DB_NAME, DB_NAME_SOURCE, ENV_FILE_USED, client, db
+from role_permissions import UserRole, ROLE_PERMISSIONS
+from db_startup import run_database_startup
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -78,192 +78,27 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# JWT settings
-JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_HOURS = 24
-
-# Security
-security = HTTPBearer()
-
 # Ensure contracts directory exists
 CONTRACTS_DIR = ROOT_DIR / "contracts"
 CONTRACTS_DIR.mkdir(exist_ok=True)
 
 # ================= MODELS =================
 
-class UserRole:
-    # System Administrator - Highest privilege
-    SYSTEM_ADMIN = "system_admin"
-    
-    # Management Roles
-    CEO = "ceo"
-    GENERAL_MANAGER = "general_manager"
-    
-    # Manager Roles
-    QUALITY_MANAGER = "quality_manager"
-    CERTIFICATION_MANAGER = "certification_manager"
-    MARKETING_MANAGER = "marketing_manager"
-    FINANCIAL_MANAGER = "financial_manager"
-    HR_MANAGER = "hr_manager"
-    
-    # Operations Role
-    OPERATION_COORDINATOR = "operation_coordinator"
-    
-    # Auditor Roles
-    LEAD_AUDITOR = "lead_auditor"
-    AUDITOR = "auditor"
-    TECHNICAL_EXPERT = "technical_expert"
-    
-    # Legacy roles for backward compatibility
-    ADMIN = "admin"  # Maps to CEO/General Manager access
-    CLIENT = "client"  # External customers
-
-
-# Role hierarchy and permissions
-ROLE_PERMISSIONS = {
-    UserRole.SYSTEM_ADMIN: {
-        "level": 0,
-        "name": "System Administrator",
-        "name_ar": "مدير النظام",
-        "permissions": ["all", "system_admin", "manage_all_users", "delete_users", "system_settings", "view_logs", "manage_roles"],
-        "description": "Full system control - add, modify, delete all users and system settings"
-    },
-    UserRole.CEO: {
-        "level": 1,
-        "name": "Chief Executive Officer",
-        "name_ar": "الرئيس التنفيذي",
-        "permissions": ["all"],
-        "description": "Overall strategic direction, certification approval, signing certificates"
-    },
-    UserRole.GENERAL_MANAGER: {
-        "level": 2,
-        "name": "General Manager",
-        "name_ar": "المدير العام",
-        "permissions": ["all"],
-        "description": "Branch operations, approve certifications, sign agreements"
-    },
-    UserRole.QUALITY_MANAGER: {
-        "level": 3,
-        "name": "Quality Manager",
-        "name_ar": "مدير الجودة",
-        "permissions": [
-            "manage_documents", "manage_internal_audits", "manage_complaints",
-            "manage_appeals", "technical_review", "certification_decisions",
-            "view_reports", "manage_management_review"
-        ],
-        "description": "ISO 17021 compliance, document control, internal audits, complaints/appeals"
-    },
-    UserRole.CERTIFICATION_MANAGER: {
-        "level": 3,
-        "name": "Certification Manager",
-        "name_ar": "مدير الاعتماد",
-        "permissions": [
-            "manage_auditors", "assign_auditors", "technical_review",
-            "certification_decisions", "manage_audit_programs", "view_all_audits",
-            "manage_contract_reviews", "contact_accreditation_bodies"
-        ],
-        "description": "Auditor qualification, technical review, certification decisions"
-    },
-    UserRole.OPERATION_COORDINATOR: {
-        "level": 4,
-        "name": "Operation Coordinator",
-        "name_ar": "منسق العمليات",
-        "permissions": [
-            "schedule_audits", "manage_client_files", "prepare_job_orders",
-            "communicate_customers", "update_certified_list", "view_audit_reports"
-        ],
-        "description": "Schedule audits, manage client files, prepare job orders"
-    },
-    UserRole.MARKETING_MANAGER: {
-        "level": 4,
-        "name": "Marketing Manager",
-        "name_ar": "مدير التسويق",
-        "permissions": [
-            "manage_marketing", "view_customer_feedback", "manage_proposals",
-            "view_clients", "manage_portal_content"
-        ],
-        "description": "Marketing strategy, business development"
-    },
-    UserRole.FINANCIAL_MANAGER: {
-        "level": 4,
-        "name": "Financial Manager",
-        "name_ar": "المدير المالي",
-        "permissions": [
-            "manage_invoices", "view_payments", "manage_budgets",
-            "financial_reports", "manage_expenses"
-        ],
-        "description": "Financial reporting, budgeting, invoicing"
-    },
-    UserRole.HR_MANAGER: {
-        "level": 4,
-        "name": "Admin & HR Manager",
-        "name_ar": "مدير الموارد البشرية",
-        "permissions": [
-            "manage_users", "manage_staff", "manage_training",
-            "manage_policies", "approve_leaves", "view_staff_records"
-        ],
-        "description": "Staff management, recruitment, training, policy enforcement"
-    },
-    UserRole.LEAD_AUDITOR: {
-        "level": 5,
-        "name": "Lead Auditor",
-        "name_ar": "المدقق الرئيسي",
-        "permissions": [
-            "lead_audits", "create_audit_reports", "evaluate_auditors",
-            "recommend_certification", "manage_audit_team", "follow_up_ca"
-        ],
-        "description": "Lead audits, recommend certifications, evaluate auditors"
-    },
-    UserRole.AUDITOR: {
-        "level": 6,
-        "name": "Auditor",
-        "name_ar": "مدقق",
-        "permissions": [
-            "conduct_audits", "submit_audit_findings", "view_assigned_audits",
-            "create_auditor_notes"
-        ],
-        "description": "Conduct audits per plan, report findings"
-    },
-    UserRole.TECHNICAL_EXPERT: {
-        "level": 6,
-        "name": "Technical Expert",
-        "name_ar": "خبير فني",
-        "permissions": [
-            "provide_technical_expertise", "view_assigned_audits",
-            "submit_technical_findings"
-        ],
-        "description": "Provide technical expertise during audits"
-    },
-    UserRole.ADMIN: {
-        "level": 1,
-        "name": "Administrator",
-        "name_ar": "مدير النظام",
-        "permissions": ["all"],
-        "description": "Full system access (legacy)"
-    },
-    UserRole.CLIENT: {
-        "level": 10,
-        "name": "Client",
-        "name_ar": "عميل",
-        "permissions": [
-            "view_own_data", "submit_applications", "view_proposals",
-            "sign_agreements", "submit_feedback", "view_certificates"
-        ],
-        "description": "External customer access"
-    }
-}
-
-# Get all internal staff roles (excludes client)
-# Note: ADMIN role removed from display - it's a legacy role replaced by SYSTEM_ADMIN
+# Get all internal staff roles (excludes client; legacy admin included for seeded bootstrap user)
 STAFF_ROLES = [
-    UserRole.SYSTEM_ADMIN, UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.QUALITY_MANAGER,
-    UserRole.CERTIFICATION_MANAGER, UserRole.OPERATION_COORDINATOR,
-    UserRole.MARKETING_MANAGER, UserRole.FINANCIAL_MANAGER, UserRole.HR_MANAGER,
-    UserRole.LEAD_AUDITOR, UserRole.AUDITOR, UserRole.TECHNICAL_EXPERT
+    UserRole.SYSTEM_ADMIN,
+    UserRole.ADMIN,
+    UserRole.CEO,
+    UserRole.GENERAL_MANAGER,
+    UserRole.QUALITY_MANAGER,
+    UserRole.CERTIFICATION_MANAGER,
+    UserRole.OPERATION_COORDINATOR,
+    UserRole.MARKETING_MANAGER,
+    UserRole.FINANCIAL_MANAGER,
+    UserRole.HR_MANAGER,
+    UserRole.LEAD_AUDITOR,
+    UserRole.AUDITOR,
+    UserRole.TECHNICAL_EXPERT,
 ]
 
 # Management roles with full access
@@ -1714,29 +1549,6 @@ class PublicApplicationFormResponse(BaseModel):
 
 # ================= HELPER FUNCTIONS =================
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_jwt_token(user_id: str, role: str) -> str:
-    payload = {
-        "user_id": user_id,
-        "role": role,
-        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
-    }
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-
-def decode_jwt_token(token: str) -> dict:
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
 async def send_email(to: str, subject: str, body: str):
     """Send email using SMTP (mock implementation - logs to console)"""
     # For production, configure SMTP settings
@@ -1834,11 +1646,6 @@ def calculate_audit_from_form_data(company_data: ApplicationFormData) -> Dict:
     )
     
     return result
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    token = credentials.credentials
-    payload = decode_jwt_token(token)
-    return payload
 
 async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
     """Require management-level access (CEO, General Manager, Admin, or any manager role)"""
@@ -9580,6 +9387,19 @@ async def get_data_summary(current_user: dict = Depends(require_admin)):
 @app.on_event("startup")
 async def startup_event():
     """Run startup tasks"""
+    _active_path = Path(__file__).resolve()
+    _log = logging.getLogger("bayan.active_app")
+    _log.info(
+        "Bayan API: %s | server:app | /docs /redoc",
+        _active_path,
+    )
+    _log.info(
+        "Database: %s | %s | .env: %s",
+        DB_NAME,
+        DB_NAME_SOURCE,
+        ENV_FILE_USED,
+    )
+    await run_database_startup(logging.getLogger(__name__))
     await seed_default_templates()
 
 # Include the main api_router in the app

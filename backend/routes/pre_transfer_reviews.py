@@ -12,7 +12,8 @@ from pathlib import Path
 import uuid
 import logging
 
-from dependencies import db, get_current_user, create_notification, security, CONTRACTS_DIR
+from auth import get_current_user, security
+from dependencies import db, create_notification, CONTRACTS_DIR
 from pre_transfer_review_generator import generate_pre_transfer_review_pdf
 
 router = APIRouter(prefix="/pre-transfer-reviews", tags=["Pre-Transfer Reviews"])

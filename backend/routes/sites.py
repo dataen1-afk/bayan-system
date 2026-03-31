@@ -2,17 +2,16 @@
 Site management routes.
 """
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
 
 from database import db
-from auth import get_current_user
+from auth import get_current_user, security
 
 router = APIRouter(prefix="/sites", tags=["Sites"])
-security = HTTPBearer()
 
 
 # Pydantic models (matching monolith schema)

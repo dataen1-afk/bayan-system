@@ -75,7 +75,7 @@ A full-stack application for managing service contracts, quotations, and custom 
 ### Backend Environment Variables (.env)
 ```env
 MONGO_URL="mongodb://localhost:27017"
-DB_NAME="test_database"
+DB_NAME=bayan_system
 CORS_ORIGINS="*"
 JWT_SECRET="your-secret-key-change-in-production-12345"
 
@@ -117,6 +117,101 @@ yarn install
 
 ### Running the Application
 
+**Canonical local API** (full Bayan app lives in `backend/server.py` as `server:app`):
+
+```bash
+cd backend
+uvicorn server:app --reload --port 8001
+```
+
+- **Swagger UI:** `http://127.0.0.1:8001/docs`
+- **ReDoc:** `http://127.0.0.1:8001/redoc`
+- On startup, logs under **`bayan.active_app`** show the resolved **`server.py`** path and **active database** (see below).
+- **Do not use** `server_new:app` for the full Bayan API unless you intend the smaller modular-only app.
+
+#### Deploying (Render / same as this repo)
+
+The ASGI app **must** be **`server:app`** (file `backend/server.py`). If the dashboard start command uses **`server_new:app`** or another project’s module, **`/openapi.json` will not match this repository** (e.g. missing `/api/roles`, `/api/users/create-staff`, Bayan proposals/audits, etc.).
+
+**Render settings:**
+
+| Setting | Value |
+|--------|--------|
+| Root Directory | `backend` |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `uvicorn server:app --host 0.0.0.0 --port $PORT` |
+
+The repo includes **`render.yaml`** (Blueprint) and **`backend/Procfile`** with the same start command for hosts that read it.
+
+**Verify OpenAPI matches this repo after deploy:**
+
+```bash
+cd backend
+python scripts/openapi_route_inventory.py --app server --compare-url https://YOUR_HOST
+```
+
+When the deployment matches `server:app`, the “only local” / “only remote” route lists should be empty (or only reflect intentional drift between commits).
+
+#### Local configuration (`backend/.env`)
+
+- **`MONGO_URL`**, **`JWT_SECRET`**, and **`DB_NAME`** should live in **`backend/.env`** for local work.
+- **Default database** is **`bayan_system`** if `DB_NAME` is omitted everywhere.
+- **`DB_NAME` in `backend/.env` wins** over a conflicting shell/process `DB_NAME` (so a stale `DB_NAME` in PowerShell does not override your file). To force the process environment instead (e.g. Docker/K8s), set **`BAYAN_DB_PREFER_PROCESS_ENV=1`**.
+- **`JWT_SECRET` in `backend/.env` wins** over a different process `JWT_SECRET` unless **`BAYAN_JWT_PREFER_PROCESS_ENV=1`**.
+
+**PowerShell — force `DB_NAME` for the current session** (optional; usually set it in `backend/.env` instead):
+
+```powershell
+cd backend
+$env:DB_NAME = "bayan_system"
+uvicorn server:app --reload --port 8001
+```
+
+**Bash:**
+
+```bash
+cd backend
+export DB_NAME=bayan_system
+uvicorn server:app --reload --port 8001
+```
+
+#### Automated auth check (no Swagger)
+
+With MongoDB running and `backend/.env` valid, from **`backend/`**:
+
+```bash
+python tests/check_auth_flow.py
+```
+
+or:
+
+```bash
+pytest tests/test_auth_e2e.py -v
+```
+
+**Interpretation:**
+
+- **`[PASS]`** (script exit code **0**) or **3 passed** tests: login returned a JWT, **`GET /api/roles`** returned **200**, and the body includes a non-empty **`roles`** list. Backend auth is working; Swagger is optional for regression checks.
+- **`[FAIL]`** (exit **1**) or test failures: the script/ tests print **HTTP status codes** and whether a **token** was returned—use that line to see if the failure is login, JWT, or the protected route. Typical causes: wrong `MONGO_URL`, missing `JWT_SECRET`, wrong database (no seeded admin), or MongoDB not running.
+
+Seeded admin: **`admin@bayan.com`** / **`123456`** (created on first startup if missing).
+
+#### Remote auth / user API sweep (deployed backend, no Swagger)
+
+From **`backend/`**, against your hosted API (loads **`/openapi.json`** to decide which routes exist):
+
+```bash
+python tests/verify_user_mgmt_remote.py --base-url https://your-api.example.com
+set BAYAN_VERIFY_EMAIL=you@example.com
+set BAYAN_VERIFY_PASSWORD=yourpassword
+python tests/verify_user_mgmt_remote.py
+```
+
+- **`--mutate`**: also **`POST /api/users`** with a disposable email (creates a user).
+- **`--probe-monolith-extras`**: calls **`/api/roles`**, **`/api/roles/staff`**, **`/api/users/clients`** (present on this repo’s **`server.py`** monolith; often **404** on other deployments).
+
+The printed **Working / PARTIAL / SKIP** sections map directly to regression status.
+
 Both services are managed by supervisor:
 
 ```bash
@@ -135,7 +230,11 @@ sudo supervisorctl status
 
 ### Default Users (for testing)
 
-**Admin Account:**
+**Seeded admin (auto-created on first backend startup if missing):**
+- Email: `admin@bayan.com`
+- Password: `123456`
+
+**Legacy sample admin (if you created these manually):**
 - Email: `admin@test.com`
 - Password: `admin123`
 

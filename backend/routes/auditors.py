@@ -2,16 +2,15 @@
 Auditor management routes.
 """
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 from typing import List, Optional
 from datetime import datetime, timezone
 
 from database import db
-from auth import get_current_user
+from auth import get_current_user, security
 from models.auditor import Auditor, AuditorCreate, AuditorAvailability
 
 router = APIRouter(prefix="/auditors", tags=["Auditors"])
-security = HTTPBearer()
 
 
 @router.get("")

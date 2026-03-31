@@ -1,0 +1,21 @@
+# Render Web Service — Bayan backend
+#
+# The full Bayan API (including /api/roles, monolith routes, modular routers) lives in
+# backend/server.py as `app`. Do NOT use server_new:app for production; that file is a
+# smaller subset of routes (see backend/server_new.py).
+#
+# In the Render dashboard, set:
+#   Root Directory: backend
+#   Build Command:  pip install -r requirements.txt
+#   Start Command:  uvicorn server:app --host 0.0.0.0 --port $PORT
+#
+# Or connect this repo as a Blueprint and adjust the service name/plan as needed.
+
+services:
+  - type: web
+    name: bayan-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health

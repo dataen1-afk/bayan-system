@@ -13,7 +13,8 @@ import uuid
 import logging
 from io import BytesIO
 
-from dependencies import db, get_current_user, create_notification, security, CONTRACTS_DIR
+from auth import get_current_user, security
+from dependencies import db, create_notification, CONTRACTS_DIR
 
 # Try to import openpyxl for Excel export
 try:

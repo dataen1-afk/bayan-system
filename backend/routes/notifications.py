@@ -2,16 +2,15 @@
 Notification routes.
 """
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 from typing import List, Optional
 from datetime import datetime, timezone
 
 from database import db
-from auth import get_current_user
+from auth import get_current_user, security
 from models.notification import Notification, NotificationCreate
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
-security = HTTPBearer()
 
 
 async def create_notification_helper(

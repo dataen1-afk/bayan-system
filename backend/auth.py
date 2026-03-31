@@ -244,7 +244,30 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    """
+    Return False for missing/invalid hashes instead of raising (passlib can raise
+    UnknownHashError on empty or non-bcrypt strings — that surfaced as HTTP 500 on /login).
+    """
+    if hashed_password is None or not str(hashed_password).strip():
+        return False
+    try:
+        return bool(pwd_context.verify(plain_password, str(hashed_password)))
+    except Exception as e:
+        logger.warning("Password verify failed (unusable hash): %s", type(e).__name__)
+        return False
+
+
+def resolve_user_document_id(user_doc: dict) -> str:
+    """
+    Bayan stores a string ``id`` field. Legacy or imported users may only have MongoDB ``_id``.
+    """
+    uid = user_doc.get("id")
+    if uid is not None and str(uid).strip() != "":
+        return str(uid)
+    oid = user_doc.get("_id")
+    if oid is not None:
+        return str(oid)
+    raise ValueError("user document has no id or _id")
 
 
 def create_jwt_token(user_id: str, role: str) -> str:

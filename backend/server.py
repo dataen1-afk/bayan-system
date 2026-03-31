@@ -145,6 +145,15 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+
+class SetupAdminRequest(BaseModel):
+    """Bootstrap first admin when the ``users`` collection is empty (fresh deploy)."""
+
+    name: str = Field(default="Administrator", min_length=1)
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+
+
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
@@ -1874,23 +1883,26 @@ async def create_staff_user(user_data: dict, current_user: dict = Depends(requir
     
     if not all([name, email, password]):
         raise HTTPException(status_code=400, detail="Name, email, and password are required")
-    
+
+    email_norm = str(email).lower().strip()
+
     # Validate role
     if role not in STAFF_ROLES:
         raise HTTPException(status_code=400, detail="Invalid staff role")
-    
-    # Check if email exists
-    existing = await db.users.find_one({"email": email})
+
+    existing = await db.users.find_one({"email": email_norm})
+    if not existing:
+        existing = await db.users.find_one({"email": str(email).strip()})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     # Create user
     user_id = str(uuid.uuid4())
     user_doc = {
         "id": user_id,
         "name": name,
         "name_ar": user_data.get("name_ar", ""),
-        "email": email,
+        "email": email_norm,
         "password": hash_password(password),
         "role": role,
         "phone": user_data.get("phone", ""),
@@ -1978,6 +1990,31 @@ async def delete_user(user_id: str, current_user: dict = Depends(require_system_
     await db.notifications.insert_one(notification)
     
     return {"message": "User deleted successfully"}
+
+
+@api_router.post("/setup-admin")
+async def setup_admin_bootstrap(data: SetupAdminRequest):
+    """Create the first admin when no users exist. Returns 409 if any user is already present."""
+    n = await db.users.count_documents({})
+    if n > 0:
+        raise HTTPException(
+            status_code=409,
+            detail="Setup already completed; users exist. Use /api/auth/login.",
+        )
+    uid = str(uuid.uuid4())
+    email_norm = str(data.email).lower().strip()
+    await db.users.insert_one(
+        {
+            "id": uid,
+            "name": (data.name or "Administrator").strip(),
+            "email": email_norm,
+            "role": UserRole.ADMIN,
+            "password": hash_password(data.password),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+    return {"message": "Admin user created", "email": email_norm}
+
 
 # Authentication routes are now in routes/auth.py
 

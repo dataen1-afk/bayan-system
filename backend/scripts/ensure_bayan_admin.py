@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """
-One-time / ops: list management users and ensure admin@bayan.com can log in.
+One-time / ops: list users and reset admin@bayan.com password (production from local machine).
 
-Uses backend/.env for MONGO_URL and DB_NAME (same resolution as database.py).
+**Required env (PowerShell / bash):**
+  MONGO_URL   — production Atlas URI (same as Render)
+  DB_NAME     — e.g. bayan_system
+
+**Apply guard:**
+  BAYAN_ENSURE_ADMIN=1  — required for --apply
+
+Optional: ``backend/.env`` is loaded with override=False only to fill *missing* vars
+(so explicit MONGO_URL / DB_NAME in the shell always win over .env).
 
   cd backend
   python scripts/ensure_bayan_admin.py --list
-  BAYAN_ENSURE_ADMIN=1 python scripts/ensure_bayan_admin.py --apply
-
---apply sets password for admin@bayan.com to the given --password (default: 123456),
-bcrypt-hashed like the app. Creates the user if missing; updates password + role + id if present.
+  python scripts/ensure_bayan_admin.py --apply   # needs BAYAN_ENSURE_ADMIN=1
 """
 from __future__ import annotations
 
@@ -24,14 +29,13 @@ BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 os.chdir(BACKEND)
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import dotenv_values, load_dotenv  # noqa: E402
 
 load_dotenv(BACKEND / ".env", override=False)
 
 from pymongo import MongoClient  # noqa: E402
 
 from auth import hash_password  # noqa: E402
-from database import DB_NAME  # noqa: E402
 from role_permissions import UserRole  # noqa: E402
 
 MANAGEMENT_ROLES = {
@@ -43,19 +47,50 @@ MANAGEMENT_ROLES = {
 
 DEFAULT_EMAIL = "admin@bayan.com"
 DEFAULT_PASSWORD = "123456"
+_ENV_PATH = BACKEND / ".env"
+
+
+def _resolve_db_name() -> str:
+    """Process DB_NAME wins; else .env; else bayan_system (same idea as database.py)."""
+    proc = os.environ.get("DB_NAME")
+    if proc is not None and str(proc).strip():
+        s = str(proc).strip().strip('"').strip("'")
+    else:
+        s = ""
+        if _ENV_PATH.is_file():
+            s = _normalize_db_name(dotenv_values(_ENV_PATH).get("DB_NAME"))
+    if not s:
+        s = "bayan_system"
+    if s == "test_database":
+        s = "bayan_system"
+    return s
+
+
+def _normalize_db_name(raw: str | None) -> str:
+    if raw is None:
+        return ""
+    return str(raw).strip().strip('"').strip("'")
+
+
+def _mongo_url() -> str:
+    url = os.environ.get("MONGO_URL")
+    if url and str(url).strip():
+        return str(url).strip().strip('"').strip("'")
+    print(
+        "MONGO_URL is not set. Set it in the shell to your production URI, e.g.:",
+        file=sys.stderr,
+    )
+    print('  $env:MONGO_URL = "mongodb+srv://..."', file=sys.stderr)
+    raise SystemExit(2)
 
 
 def _connect():
-    url = os.environ.get("MONGO_URL")
-    if not url:
-        print("MONGO_URL missing (set in backend/.env)", file=sys.stderr)
-        sys.exit(2)
-    return MongoClient(url, serverSelectionTimeoutMS=15000)
+    return MongoClient(_mongo_url(), serverSelectionTimeoutMS=15000)
 
 
-def cmd_list(mc: MongoClient) -> None:
-    coll = mc[DB_NAME]["users"]
-    print(f"Database: {DB_NAME}")
+def cmd_list(mc: MongoClient, db_name: str) -> None:
+    coll = mc[db_name]["users"]
+    print(f"Database: {db_name}")
     print("--- users (email, role, has_string_id, password_field) ---")
     for doc in coll.find({}, {"password": 1, "email": 1, "role": 1, "name": 1, "id": 1}):
         em = doc.get("email", "")
@@ -67,8 +102,8 @@ def cmd_list(mc: MongoClient) -> None:
         print(f"  {em!r}  role={role!r}  id_field={hid}  password={pws}{mark}")
 
 
-def cmd_apply(mc: MongoClient, email: str, password: str) -> None:
-    if os.environ.get("BAYAN_ENSURE_ADMIN", "").strip() not in ("1", "true", "yes", "on"):
+def cmd_apply(mc: MongoClient, db_name: str, email: str, password: str) -> None:
+    if os.environ.get("BAYAN_ENSURE_ADMIN", "").strip().lower() not in ("1", "true", "yes", "on"):
         print(
             "Refusing --apply without BAYAN_ENSURE_ADMIN=1 "
             "(prevents accidental production resets).",
@@ -76,7 +111,7 @@ def cmd_apply(mc: MongoClient, email: str, password: str) -> None:
         )
         sys.exit(3)
 
-    coll = mc[DB_NAME]["users"]
+    coll = mc[db_name]["users"]
     email_norm = str(email).lower().strip()
     hpw = hash_password(password)
 
@@ -124,7 +159,7 @@ def main() -> int:
     ap.add_argument(
         "--apply",
         action="store_true",
-        help=f"Set {DEFAULT_EMAIL!r} password (requires BAYAN_ENSURE_ADMIN=1)",
+        help=f"Set admin password (requires BAYAN_ENSURE_ADMIN=1)",
     )
     ap.add_argument("--email", default=DEFAULT_EMAIL)
     ap.add_argument("--password", default=DEFAULT_PASSWORD)
@@ -134,6 +169,7 @@ def main() -> int:
         ap.print_help()
         return 1
 
+    db_name = _resolve_db_name()
     mc = _connect()
     try:
         mc.admin.command("ping")
@@ -142,9 +178,9 @@ def main() -> int:
         return 2
 
     if args.list:
-        cmd_list(mc)
+        cmd_list(mc, db_name)
     if args.apply:
-        cmd_apply(mc, args.email, args.password)
+        cmd_apply(mc, db_name, args.email, args.password)
     mc.close()
     return 0
 

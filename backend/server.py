@@ -2,6 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import logging
+import secrets
 
 # Load .env before any import that reads JWT_SECRET or MONGO_URL at module level (e.g. routes → auth).
 ROOT_DIR = Path(__file__).parent
@@ -9,7 +10,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 from auth import security, get_current_user, hash_password
 
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
 from fastapi.responses import FileResponse, Response, RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
@@ -2014,6 +2015,68 @@ async def setup_admin_bootstrap(data: SetupAdminRequest):
         }
     )
     return {"message": "Admin user created", "email": email_norm}
+
+
+@api_router.post("/internal/reset-admin")
+async def internal_reset_admin(request: Request):
+    """
+    TEMPORARY: reset or create admin@bayan.com when MongoDB is unreachable from local
+    and Render has no shell. Remove this route after credentials are recovered.
+
+    Requires env BAYAN_ADMIN_RESET_TOKEN and header X-Admin-Token matching it (constant-time).
+    """
+    expected = os.environ.get("BAYAN_ADMIN_RESET_TOKEN", "").strip()
+    if not expected:
+        raise HTTPException(
+            status_code=503,
+            detail="Admin reset is not configured (set BAYAN_ADMIN_RESET_TOKEN on the server).",
+        )
+    provided = (request.headers.get("X-Admin-Token") or "").strip()
+    try:
+        ok = secrets.compare_digest(
+            provided.encode("utf-8"),
+            expected.encode("utf-8"),
+        )
+    except Exception:
+        ok = False
+    if not ok:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    email_norm = "admin@bayan.com"
+    hpw = hash_password("123456")
+    doc = await db.users.find_one({"email": email_norm})
+    now = datetime.now(timezone.utc).isoformat()
+
+    if doc:
+        oid = doc.get("_id")
+        uid = doc.get("id")
+        if uid is None or str(uid).strip() == "":
+            uid = str(uuid.uuid4())
+        await db.users.update_one(
+            {"_id": oid},
+            {
+                "$set": {
+                    "email": email_norm,
+                    "password": hpw,
+                    "role": UserRole.ADMIN,
+                    "id": uid,
+                }
+            },
+        )
+    else:
+        uid = str(uuid.uuid4())
+        await db.users.insert_one(
+            {
+                "id": uid,
+                "name": "Administrator",
+                "email": email_norm,
+                "role": UserRole.ADMIN,
+                "password": hpw,
+                "created_at": now,
+            }
+        )
+
+    return {"status": "ok", "email": email_norm}
 
 
 # Authentication routes are now in routes/auth.py
@@ -9437,7 +9500,14 @@ async def startup_event():
         ENV_FILE_USED,
     )
     await run_database_startup(logging.getLogger(__name__))
-    await seed_default_templates()
+    try:
+        await seed_default_templates()
+    except Exception as e:
+        logging.getLogger(__name__).warning(
+            "seed_default_templates skipped (database unavailable or error): %s",
+            e,
+            exc_info=True,
+        )
 
 # Include the main api_router in the app
 app.include_router(api_router)

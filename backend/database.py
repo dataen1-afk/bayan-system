@@ -226,6 +226,33 @@ CONTRACTS_INDEX_PAYLOAD_CLIENT_SQL = (
     "ON contracts ((payload->>'client_id'))"
 )
 
+APP_DOCUMENTS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS app_documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    collection TEXT NOT NULL,
+    doc_id TEXT NOT NULL,
+    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ,
+    UNIQUE (collection, doc_id)
+)
+"""
+
+APP_DOCUMENTS_INDEX_SQL = (
+    "CREATE INDEX IF NOT EXISTS ix_app_documents_collection_created "
+    "ON app_documents (collection, created_at DESC)"
+)
+
+APP_DOCUMENTS_INDEX_STATUS_SQL = (
+    "CREATE INDEX IF NOT EXISTS ix_app_documents_coll_status "
+    "ON app_documents (collection, ((payload->>'status')))"
+)
+
+APP_DOCUMENTS_INDEX_AUDITOR_SQL = (
+    "CREATE INDEX IF NOT EXISTS ix_app_documents_coll_auditor "
+    "ON app_documents (collection, ((payload->>'auditor_id')))"
+)
+
 
 async def connect_db() -> None:
     """
@@ -238,6 +265,10 @@ async def connect_db() -> None:
         await conn.execute(text(CONTRACTS_TABLE_SQL))
         await conn.execute(text(CONTRACTS_INDEX_SQL))
         await conn.execute(text(CONTRACTS_INDEX_PAYLOAD_CLIENT_SQL))
+        await conn.execute(text(APP_DOCUMENTS_TABLE_SQL))
+        await conn.execute(text(APP_DOCUMENTS_INDEX_SQL))
+        await conn.execute(text(APP_DOCUMENTS_INDEX_STATUS_SQL))
+        await conn.execute(text(APP_DOCUMENTS_INDEX_AUDITOR_SQL))
         await conn.execute(text("SELECT 1"))
 
 

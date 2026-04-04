@@ -78,7 +78,31 @@ from contracts_pg import (
     insert_contract_record,
     list_contracts_for_user,
 )
+from notifications_pg import insert_notification_document
+import app_documents_pg as doc_pg
+import auditors_pg
 from role_permissions import UserRole, ROLE_PERMISSIONS
+
+# Mongo collection names that are stored in PostgreSQL ``app_documents``
+_APP_DOCUMENTS_MONGO_ALIASES = frozenset(
+    {
+        doc_pg.C_APPLICATION_FORMS,
+        doc_pg.C_PROPOSALS,
+        doc_pg.C_CERTIFICATION_AGREEMENTS,
+        doc_pg.C_AUDIT_SCHEDULES,
+        doc_pg.C_AUDIT_ASSIGNMENTS,
+        doc_pg.C_SITES,
+        doc_pg.C_AUDITORS,
+        doc_pg.C_JOB_ORDERS,
+        doc_pg.C_STAGE1_AUDIT_PLANS,
+        doc_pg.C_STAGE1_AUDIT_REPORTS,
+        doc_pg.C_STAGE2_AUDIT_PLANS,
+        doc_pg.C_STAGE2_AUDIT_REPORTS,
+        doc_pg.C_OPENING_CLOSING_MEETINGS,
+        doc_pg.C_AUDITOR_NOTES,
+        doc_pg.C_NONCONFORMITY_REPORTS,
+    }
+)
 from db_startup import run_database_startup
 
 # Create the main app without a prefix
@@ -1878,8 +1902,11 @@ async def update_user_role(user_id: str, role_update: dict, current_user: dict =
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.notifications.insert_one(notification)
-    
+    try:
+        await insert_notification_document(notification)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
     return {"message": "Role updated successfully", "new_role": new_role}
 
 @api_router.post("/users/create-staff")
@@ -1964,8 +1991,11 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.notifications.insert_one(notification)
-    
+    try:
+        await insert_notification_document(notification)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
     return {"message": "User updated successfully"}
 
 @api_router.delete("/users/{user_id}")
@@ -1996,8 +2026,11 @@ async def delete_user(user_id: str, current_user: dict = Depends(require_system_
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.notifications.insert_one(notification)
-    
+    try:
+        await insert_notification_document(notification)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
     return {"message": "User deleted successfully"}
 
 
@@ -2307,11 +2340,9 @@ async def respond_to_quotation(quotation_id: str, response: QuotationResponse, c
 @api_router.get("/certification-agreements")
 async def get_certification_agreements(status: str = None, current_user: dict = Depends(get_current_user)):
     """Get all certification agreements (signed contracts)"""
-    query = {}
-    if status and status != 'all':
-        query['status'] = status
-    
-    agreements = await db.certification_agreements.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    agreements = await doc_pg.list_ordered(doc_pg.C_CERTIFICATION_AGREEMENTS, 1000)
+    if status and status != "all":
+        agreements = [a for a in agreements if a.get("status") == status]
     return agreements
 
 # Contract routes
@@ -2382,14 +2413,14 @@ async def create_application_form(form_data: ApplicationFormCreate, current_user
     if form_doc.get('submitted_at'):
         form_doc['submitted_at'] = form_doc['submitted_at'].isoformat()
     
-    await db.application_forms.insert_one(form_doc)
+    await doc_pg.insert_document(doc_pg.C_APPLICATION_FORMS, form_doc)
     return form
 
 @api_router.get("/application-forms", response_model=List[ApplicationForm])
 async def get_application_forms(current_user: dict = Depends(require_admin)):
     """Get all application forms (admin only) - sorted by most recent first"""
     # Only return forms that have client_info (new format), sorted by created_at descending
-    forms = await db.application_forms.find({"client_info": {"$exists": True}}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    forms = await doc_pg.list_with_client_info(doc_pg.C_APPLICATION_FORMS, 1000)
     
     for form in forms:
         if isinstance(form.get('created_at'), str):
@@ -2402,7 +2433,7 @@ async def get_application_forms(current_user: dict = Depends(require_admin)):
 @api_router.get("/application-forms/{form_id}", response_model=ApplicationForm)
 async def get_application_form(form_id: str, current_user: dict = Depends(require_admin)):
     """Get a specific application form (admin only)"""
-    form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
+    form = await doc_pg.get_by_doc_id(doc_pg.C_APPLICATION_FORMS, form_id)
     if not form:
         raise HTTPException(status_code=404, detail="Application form not found")
     
@@ -2416,7 +2447,7 @@ async def get_application_form(form_id: str, current_user: dict = Depends(requir
 @api_router.post("/application-forms/{form_id}/send-email")
 async def send_form_email(form_id: str, current_user: dict = Depends(require_admin)):
     """Send the form link to the client via email"""
-    form = await db.application_forms.find_one({"id": form_id})
+    form = await doc_pg.get_by_doc_id(doc_pg.C_APPLICATION_FORMS, form_id)
     if not form:
         raise HTTPException(status_code=404, detail="Application form not found")
     
@@ -2462,7 +2493,7 @@ Bayan for Verification and Conformity
 @api_router.get("/public/form/{access_token}", response_model=PublicApplicationFormResponse)
 async def get_public_form(access_token: str):
     """Public access to form using access token (no login required)"""
-    form = await db.application_forms.find_one({"access_token": access_token}, {"_id": 0})
+    form = await doc_pg.get_by_payload_field(doc_pg.C_APPLICATION_FORMS, "access_token", access_token)
     if not form:
         raise HTTPException(status_code=404, detail="Form not found or invalid link")
     
@@ -2476,7 +2507,7 @@ async def get_public_form(access_token: str):
 @api_router.put("/public/form/{access_token}", response_model=PublicApplicationFormResponse)
 async def update_public_form(access_token: str, update_data: ApplicationFormUpdate):
     """Public save draft (no login required)"""
-    form = await db.application_forms.find_one({"access_token": access_token})
+    form = await doc_pg.get_by_payload_field(doc_pg.C_APPLICATION_FORMS, "access_token", access_token)
     if not form:
         raise HTTPException(status_code=404, detail="Form not found or invalid link")
     
@@ -2485,12 +2516,14 @@ async def update_public_form(access_token: str, update_data: ApplicationFormUpda
         raise HTTPException(status_code=400, detail="Cannot update a submitted form")
     
     # Update form data
-    await db.application_forms.update_one(
-        {"access_token": access_token},
-        {"$set": {"company_data": update_data.company_data.model_dump()}}
+    await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_APPLICATION_FORMS,
+        "access_token",
+        access_token,
+        {"company_data": update_data.company_data.model_dump()},
     )
     
-    updated_form = await db.application_forms.find_one({"access_token": access_token}, {"_id": 0})
+    updated_form = await doc_pg.get_by_payload_field(doc_pg.C_APPLICATION_FORMS, "access_token", access_token)
     
     return PublicApplicationFormResponse(
         id=updated_form['id'],
@@ -2502,7 +2535,7 @@ async def update_public_form(access_token: str, update_data: ApplicationFormUpda
 @api_router.post("/public/form/{access_token}/submit", response_model=PublicApplicationFormResponse)
 async def submit_public_form(access_token: str, update_data: ApplicationFormUpdate):
     """Public form submission (no login required)"""
-    form = await db.application_forms.find_one({"access_token": access_token})
+    form = await doc_pg.get_by_payload_field(doc_pg.C_APPLICATION_FORMS, "access_token", access_token)
     if not form:
         raise HTTPException(status_code=404, detail="Form not found or invalid link")
     
@@ -2520,19 +2553,19 @@ async def submit_public_form(access_token: str, update_data: ApplicationFormUpda
     
     # Update and submit
     submitted_at = datetime.now(timezone.utc)
-    await db.application_forms.update_one(
-        {"access_token": access_token},
+    await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_APPLICATION_FORMS,
+        "access_token",
+        access_token,
         {
-            "$set": {
-                "company_data": company_data.model_dump(),
-                "audit_calculation": audit_calculation,
-                "status": "submitted",
-                "submitted_at": submitted_at.isoformat()
-            }
-        }
+            "company_data": company_data.model_dump(),
+            "audit_calculation": audit_calculation,
+            "status": "submitted",
+            "submitted_at": submitted_at.isoformat(),
+        },
     )
     
-    updated_form = await db.application_forms.find_one({"access_token": access_token}, {"_id": 0})
+    updated_form = await doc_pg.get_by_payload_field(doc_pg.C_APPLICATION_FORMS, "access_token", access_token)
     
     # Create notification for admin
     client_name = form.get('client_info', {}).get('company_name', 'Unknown')
@@ -2628,12 +2661,13 @@ async def create_proposal(proposal_data: ProposalCreate, current_user: dict = De
     proposal_doc['created_at'] = proposal_doc['created_at'].isoformat()
     proposal_doc['issued_date'] = proposal_doc['issued_date'].isoformat() if proposal_doc['issued_date'] else None
     
-    await db.proposals.insert_one(proposal_doc)
+    await doc_pg.insert_document(doc_pg.C_PROPOSALS, proposal_doc)
     
     # Update application form status to under_review
-    await db.application_forms.update_one(
-        {"id": proposal_data.application_form_id},
-        {"$set": {"status": "under_review"}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_APPLICATION_FORMS,
+        str(proposal_data.application_form_id),
+        {"status": "under_review"},
     )
     
     return proposal
@@ -2641,7 +2675,7 @@ async def create_proposal(proposal_data: ProposalCreate, current_user: dict = De
 @api_router.get("/proposals", response_model=List[Proposal])
 async def get_proposals(current_user: dict = Depends(require_admin)):
     """Get all proposals (admin only) - sorted by most recent first"""
-    proposals = await db.proposals.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    proposals = await doc_pg.list_ordered(doc_pg.C_PROPOSALS, 1000)
     
     for p in proposals:
         if isinstance(p.get('created_at'), str):
@@ -2656,7 +2690,7 @@ async def get_proposals(current_user: dict = Depends(require_admin)):
 @api_router.get("/proposals/{proposal_id}", response_model=Proposal)
 async def get_proposal(proposal_id: str, current_user: dict = Depends(require_admin)):
     """Get a specific proposal"""
-    proposal = await db.proposals.find_one({"id": proposal_id}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, proposal_id)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -2670,7 +2704,7 @@ async def get_proposal(proposal_id: str, current_user: dict = Depends(require_ad
 @api_router.post("/proposals/{proposal_id}/send")
 async def send_proposal(proposal_id: str, current_user: dict = Depends(require_admin)):
     """Send proposal link to client via email"""
-    proposal = await db.proposals.find_one({"id": proposal_id})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, proposal_id)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -2718,7 +2752,7 @@ Bayan for Verification and Conformity
 @api_router.get("/public/proposal/{access_token}", response_model=PublicProposalResponse)
 async def get_public_proposal(access_token: str):
     """Public access to proposal (no login required)"""
-    proposal = await db.proposals.find_one({"access_token": access_token}, {"_id": 0})
+    proposal = await doc_pg.get_by_payload_field(doc_pg.C_PROPOSALS, "access_token", access_token)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
     
@@ -2748,7 +2782,7 @@ async def get_public_proposal(access_token: str):
 @api_router.post("/public/proposal/{access_token}/respond")
 async def respond_to_proposal(access_token: str, response: ProposalResponse):
     """Client accepts or rejects proposal (no login required)"""
-    proposal = await db.proposals.find_one({"access_token": access_token})
+    proposal = await doc_pg.get_by_payload_field(doc_pg.C_PROPOSALS, "access_token", access_token)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
     
@@ -2765,9 +2799,8 @@ async def respond_to_proposal(access_token: str, response: ProposalResponse):
     if response.status == "rejected":
         update_data["rejection_reason"] = response.rejection_reason
     
-    await db.proposals.update_one(
-        {"access_token": access_token},
-        {"$set": update_data}
+    await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_PROPOSALS, "access_token", access_token, update_data
     )
     
     # Create notification for admin
@@ -2795,9 +2828,10 @@ async def respond_to_proposal(access_token: str, response: ProposalResponse):
     
     # If accepted, update application form status and create contract
     if response.status == "accepted":
-        await db.application_forms.update_one(
-            {"id": proposal['application_form_id']},
-            {"$set": {"status": "approved"}}
+        await doc_pg.merge_set_by_doc_id(
+            doc_pg.C_APPLICATION_FORMS,
+            str(proposal["application_form_id"]),
+            {"status": "approved"},
         )
         
         # TODO: Generate contract PDF
@@ -2818,7 +2852,7 @@ async def respond_to_proposal(access_token: str, response: ProposalResponse):
 @api_router.get("/public/proposals/{access_token}/bilingual_pdf")
 async def get_public_proposal_bilingual_pdf(access_token: str):
     """Public access to download bilingual proposal PDF (no login required)"""
-    proposal = await db.proposals.find_one({"access_token": access_token}, {"_id": 0})
+    proposal = await doc_pg.get_by_payload_field(doc_pg.C_PROPOSALS, "access_token", access_token)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
     
@@ -2837,7 +2871,7 @@ async def get_public_proposal_bilingual_pdf(access_token: str):
 async def submit_certification_agreement(access_token: str, agreement_data: CertificationAgreementSubmit):
     """Submit certification agreement form (no login required)"""
     # Find the proposal by access token
-    proposal = await db.proposals.find_one({"access_token": access_token})
+    proposal = await doc_pg.get_by_payload_field(doc_pg.C_PROPOSALS, "access_token", access_token)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
     
@@ -2845,8 +2879,9 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
     if proposal['status'] != 'accepted':
         raise HTTPException(status_code=400, detail="Proposal must be accepted before signing agreement")
     
-    # Check if agreement already exists
-    existing_agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token})
+    existing_agreement = await doc_pg.get_by_payload_field(
+        doc_pg.C_CERTIFICATION_AGREEMENTS, "proposal_access_token", access_token
+    )
     if existing_agreement:
         raise HTTPException(status_code=400, detail="Agreement has already been submitted")
     
@@ -2879,18 +2914,18 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
     agreement_doc = agreement.model_dump()
     agreement_doc['created_at'] = agreement_doc['created_at'].isoformat()
     
-    await db.certification_agreements.insert_one(agreement_doc)
+    await doc_pg.insert_document(doc_pg.C_CERTIFICATION_AGREEMENTS, agreement_doc)
     
     # Update proposal status to indicate agreement signed
-    await db.proposals.update_one(
-        {"access_token": access_token},
-        {"$set": {"status": "agreement_signed"}}
+    await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_PROPOSALS, "access_token", access_token, {"status": "agreement_signed"}
     )
     
     # Update application form status
-    await db.application_forms.update_one(
-        {"id": proposal['application_form_id']},
-        {"$set": {"status": "agreement_signed"}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_APPLICATION_FORMS,
+        str(proposal["application_form_id"]),
+        {"status": "agreement_signed"},
     )
     
     # Create notification for admin
@@ -2958,7 +2993,7 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
                         "auto_generated": True  # Mark as auto-generated
                     }
                     
-                    await db.audit_schedules.insert_one(audit_entry)
+                    await doc_pg.insert_document(doc_pg.C_AUDIT_SCHEDULES, audit_entry)
                     created_audits.append(audit_entry['id'])
         
         print(f"Auto-scheduled {len(created_audits)} audits for contract {proposal['id']}")
@@ -2981,12 +3016,14 @@ async def submit_certification_agreement(access_token: str, agreement_data: Cert
 @api_router.get("/public/agreement/{access_token}")
 async def get_certification_agreement(access_token: str):
     """Get certification agreement status"""
-    agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token}, {"_id": 0})
+    agreement = await doc_pg.get_by_payload_field(
+        doc_pg.C_CERTIFICATION_AGREEMENTS, "proposal_access_token", access_token
+    )
     if agreement:
         return {"status": "submitted", "agreement": agreement}
     
     # Check if proposal exists and is accepted
-    proposal = await db.proposals.find_one({"access_token": access_token}, {"_id": 0})
+    proposal = await doc_pg.get_by_payload_field(doc_pg.C_PROPOSALS, "access_token", access_token)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -3002,13 +3039,12 @@ async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAut
     """Generate PDF Grant Agreement for a signed agreement (Admin only)"""
     await get_current_user(credentials)
     
-    # Get agreement
-    agreement = await db.certification_agreements.find_one({"id": agreement_id}, {"_id": 0})
+    agreement = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATION_AGREEMENTS, agreement_id)
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
     # Get proposal for issuer details
-    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, agreement['proposal_id'])
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -3041,10 +3077,8 @@ async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAut
         with open(pdf_path, 'rb') as f:
             pdf_bytes = f.read()
         
-        # Update agreement status
-        await db.certification_agreements.update_one(
-            {"id": agreement_id},
-            {"$set": {"status": "contract_generated"}}
+        await doc_pg.merge_set_by_doc_id(
+            doc_pg.C_CERTIFICATION_AGREEMENTS, agreement_id, {"status": "contract_generated"}
         )
         
         # Return PDF
@@ -3063,13 +3097,14 @@ async def generate_contract_pdf_endpoint(agreement_id: str, credentials: HTTPAut
 async def get_public_contract_pdf(access_token: str):
     """Get PDF Grant Agreement for a signed agreement (Public - client access)
     Generates a professional bilingual PDF with all terms and conditions"""
-    # Get agreement by access token
-    agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token}, {"_id": 0})
+    agreement = await doc_pg.get_by_payload_field(
+        doc_pg.C_CERTIFICATION_AGREEMENTS, "proposal_access_token", access_token
+    )
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
     # Get proposal for issuer details
-    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, agreement['proposal_id'])
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -3110,13 +3145,12 @@ async def generate_bilingual_contract_pdf_endpoint(agreement_id: str, credential
     Generates a professional bilingual PDF with all terms and conditions"""
     await get_current_user(credentials)
     
-    # Get agreement
-    agreement = await db.certification_agreements.find_one({"id": agreement_id}, {"_id": 0})
+    agreement = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATION_AGREEMENTS, agreement_id)
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
     # Get proposal for issuer details
-    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, agreement['proposal_id'])
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -3138,10 +3172,8 @@ async def generate_bilingual_contract_pdf_endpoint(agreement_id: str, credential
     try:
         pdf_bytes = generate_grant_agreement_pdf(agreement_data)
         
-        # Update agreement status
-        await db.certification_agreements.update_one(
-            {"id": agreement_id},
-            {"$set": {"status": "contract_generated"}}
+        await doc_pg.merge_set_by_doc_id(
+            doc_pg.C_CERTIFICATION_AGREEMENTS, agreement_id, {"status": "contract_generated"}
         )
         
         return Response(
@@ -3159,13 +3191,14 @@ async def generate_bilingual_contract_pdf_endpoint(agreement_id: str, credential
 async def get_public_bilingual_contract_pdf(access_token: str):
     """Get PDF Grant Agreement for a signed agreement (Public - client access)
     Generates a professional bilingual PDF with all terms and conditions"""
-    # Get agreement by access token
-    agreement = await db.certification_agreements.find_one({"proposal_access_token": access_token}, {"_id": 0})
+    agreement = await doc_pg.get_by_payload_field(
+        doc_pg.C_CERTIFICATION_AGREEMENTS, "proposal_access_token", access_token
+    )
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
     # Get proposal for issuer details
-    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, agreement['proposal_id'])
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -3208,11 +3241,16 @@ async def create_notification(notification_type: str, title: str, message: str, 
         title=title,
         message=message,
         related_id=related_id,
-        related_type=related_type
+        related_type=related_type,
+        title_ar=title_ar or "",
+        message_ar=message_ar or "",
     )
     notification_doc = notification.model_dump()
-    notification_doc['created_at'] = notification_doc['created_at'].isoformat()
-    await db.notifications.insert_one(notification_doc)
+    notification_doc["created_at"] = notification_doc["created_at"].isoformat()
+    try:
+        await insert_notification_document(notification_doc)
+    except SQLAlchemyError:
+        raise
     return notification
 
 # ================= TEMPLATE ROUTES =================
@@ -3311,32 +3349,33 @@ async def get_submission_statistics(credentials: HTTPAuthorizationCredentials = 
     """Get submission statistics"""
     await get_current_user(credentials)
     
-    # Get counts by status
-    total_forms = await db.application_forms.count_documents({})
-    submitted_forms = await db.application_forms.count_documents({"status": {"$in": ["submitted", "under_review", "approved", "agreement_signed"]}})
-    pending_forms = await db.application_forms.count_documents({"status": "pending"})
+    total_forms = await doc_pg.count_all(doc_pg.C_APPLICATION_FORMS)
+    submitted_forms = await doc_pg.count_status_in(
+        doc_pg.C_APPLICATION_FORMS,
+        ["submitted", "under_review", "approved", "agreement_signed"],
+    )
+    pending_forms = await doc_pg.count_status(doc_pg.C_APPLICATION_FORMS, "pending")
     
-    # Get monthly statistics (last 6 months)
     from datetime import datetime, timedelta
     monthly_stats = []
     for i in range(5, -1, -1):
         start_date = datetime.now().replace(day=1) - timedelta(days=i*30)
         end_date = start_date + timedelta(days=30)
         
-        count = await db.application_forms.count_documents({
-            "created_at": {
-                "$gte": start_date.isoformat(),
-                "$lt": end_date.isoformat()
-            }
-        })
+        count = await doc_pg.count_created_between(
+            doc_pg.C_APPLICATION_FORMS,
+            start_date.isoformat(),
+            end_date.isoformat(),
+        )
         monthly_stats.append({
             "month": start_date.strftime("%b %Y"),
             "count": count
         })
     
-    # Conversion rate
-    total_proposals = await db.proposals.count_documents({})
-    accepted_proposals = await db.proposals.count_documents({"status": {"$in": ["accepted", "agreement_signed"]}})
+    total_proposals = await doc_pg.count_all(doc_pg.C_PROPOSALS)
+    accepted_proposals = await doc_pg.count_status_in(
+        doc_pg.C_PROPOSALS, ["accepted", "agreement_signed"]
+    )
     conversion_rate = (accepted_proposals / total_proposals * 100) if total_proposals > 0 else 0
     
     return {
@@ -3354,16 +3393,14 @@ async def get_revenue_statistics(credentials: HTTPAuthorizationCredentials = Dep
     """Get revenue statistics"""
     await get_current_user(credentials)
     
-    # Get all proposals
-    proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
+    proposals = await doc_pg.list_ordered(doc_pg.C_PROPOSALS, 1000)
     
     total_quoted = sum(p.get('total_amount', 0) for p in proposals)
     accepted_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') in ['accepted', 'agreement_signed'])
     pending_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') == 'sent')
     rejected_revenue = sum(p.get('total_amount', 0) for p in proposals if p.get('status') == 'rejected')
     
-    # Get agreements (contracts)
-    agreements = await db.certification_agreements.count_documents({})
+    agreements = await doc_pg.count_all(doc_pg.C_CERTIFICATION_AGREEMENTS)
     
     # Revenue by month (last 6 months)
     from datetime import datetime, timedelta
@@ -3405,39 +3442,27 @@ async def get_filtered_report(
     """Get filtered report data with comprehensive filters"""
     await get_current_user(credentials)
     
-    # Build query for forms
-    forms_query = {}
+    def _created_at_str(doc: dict) -> str:
+        return str(doc.get("created_at") or "")
+
+    forms = await doc_pg.list_ordered(doc_pg.C_APPLICATION_FORMS, 2000)
     if status and status != "all":
-        forms_query["status"] = status
+        forms = [f for f in forms if f.get("status") == status]
+    if start_date:
+        forms = [f for f in forms if _created_at_str(f) >= start_date]
+    if end_date:
+        forms = [f for f in forms if _created_at_str(f) <= end_date]
     
-    # Date filtering
-    if start_date or end_date:
-        forms_query["created_at"] = {}
-        if start_date:
-            forms_query["created_at"]["$gte"] = start_date
-        if end_date:
-            forms_query["created_at"]["$lte"] = end_date
-    
-    # Get filtered forms
-    forms = await db.application_forms.find(forms_query, {"_id": 0}).to_list(1000)
-    
-    # Filter by standard if specified
     if standard and standard != "all":
         forms = [f for f in forms if f.get('company_data') and f.get('company_data', {}).get('certificationSchemes') and standard in f.get('company_data', {}).get('certificationSchemes', [])]
     
-    # Build query for proposals
-    proposals_query = {}
+    proposals = await doc_pg.list_ordered(doc_pg.C_PROPOSALS, 2000)
     if status and status != "all":
-        proposals_query["status"] = status
-    if start_date or end_date:
-        proposals_query["created_at"] = {}
-        if start_date:
-            proposals_query["created_at"]["$gte"] = start_date
-        if end_date:
-            proposals_query["created_at"]["$lte"] = end_date
-    
-    # Get filtered proposals
-    proposals = await db.proposals.find(proposals_query, {"_id": 0}).to_list(1000)
+        proposals = [p for p in proposals if p.get("status") == status]
+    if start_date:
+        proposals = [p for p in proposals if _created_at_str(p) >= start_date]
+    if end_date:
+        proposals = [p for p in proposals if _created_at_str(p) <= end_date]
     
     # Filter proposals by standard if specified
     if standard and standard != "all":
@@ -3519,7 +3544,7 @@ async def get_filtered_report(
 @api_router.post("/public/proposal/{access_token}/request_modification")
 async def request_proposal_modification(access_token: str, request: ModificationRequest):
     """Client requests modification to a proposal (no login required)"""
-    proposal = await db.proposals.find_one({"access_token": access_token})
+    proposal = await doc_pg.get_by_payload_field(doc_pg.C_PROPOSALS, "access_token", access_token)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found or invalid link")
     
@@ -3537,9 +3562,8 @@ async def request_proposal_modification(access_token: str, request: Modification
         "modification_requested_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.proposals.update_one(
-        {"access_token": access_token},
-        {"$set": update_data}
+    await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_PROPOSALS, "access_token", access_token, update_data
     )
     
     # Create notification for admin
@@ -3561,30 +3585,41 @@ async def track_order(tracking_id: str):
     """Public endpoint to track order status by tracking ID (form ID, access token, or proposal access token)"""
     
     # Try to find by form ID first
-    form = await db.application_forms.find_one({"id": tracking_id}, {"_id": 0})
+    form = await doc_pg.get_by_doc_id(doc_pg.C_APPLICATION_FORMS, tracking_id)
     
     # If not found, try by form access token
     if not form:
-        form = await db.application_forms.find_one({"access_token": tracking_id}, {"_id": 0})
+        form = await doc_pg.get_by_payload_field(
+            doc_pg.C_APPLICATION_FORMS, "access_token", tracking_id
+        )
     
     # If still not found, try by proposal access token
     proposal_by_token = None
     if not form:
-        proposal_by_token = await db.proposals.find_one({"access_token": tracking_id}, {"_id": 0})
+        proposal_by_token = await doc_pg.get_by_payload_field(
+            doc_pg.C_PROPOSALS, "access_token", tracking_id
+        )
         if proposal_by_token:
             # Get the form linked to this proposal
-            form = await db.application_forms.find_one({"id": proposal_by_token['application_form_id']}, {"_id": 0})
+            form = await doc_pg.get_by_doc_id(
+                doc_pg.C_APPLICATION_FORMS,
+                str(proposal_by_token["application_form_id"]),
+            )
     
     if not form:
         raise HTTPException(status_code=404, detail="Order not found")
     
     # Get proposal if exists
-    proposal = await db.proposals.find_one({"application_form_id": form['id']}, {"_id": 0})
+    proposal = await doc_pg.get_by_payload_field(
+        doc_pg.C_PROPOSALS, "application_form_id", str(form["id"])
+    )
     
     # Get agreement if exists
     agreement = None
     if proposal:
-        agreement = await db.certification_agreements.find_one({"proposal_id": proposal['id']}, {"_id": 0})
+        agreement = await doc_pg.get_by_payload_field(
+            doc_pg.C_CERTIFICATION_AGREEMENTS, "proposal_id", str(proposal["id"])
+        )
     
     # Determine current status
     current_status = form.get('status', 'pending')
@@ -3722,21 +3757,23 @@ async def get_auditors(
     """Get all auditors with optional filtering"""
     await get_current_user(credentials)
     
-    query = {}
-    if status:
-        query["status"] = status
-    if specialization:
-        query["specializations"] = specialization
+    auditors = await auditors_pg.list_auditors_filtered(
+        status=status,
+        specialization=specialization,
+        sort_by_name=True,
+        max_results=100,
+    )
+    all_assignments = await doc_pg.list_ordered(doc_pg.C_AUDIT_ASSIGNMENTS, 5000)
     
-    auditors = await db.auditors.find(query, {"_id": 0}).sort("name", 1).to_list(100)
-    
-    # Calculate current assignments for each auditor
     for auditor in auditors:
-        assignments = await db.audit_assignments.count_documents({
-            "auditor_id": auditor['id'],
-            "status": {"$in": ["assigned", "confirmed"]}
-        })
-        auditor['current_assignments'] = assignments
+        aid = str(auditor["id"])
+        assignments = sum(
+            1
+            for x in all_assignments
+            if str(x.get("auditor_id", "")) == aid
+            and x.get("status") in ("assigned", "confirmed")
+        )
+        auditor["current_assignments"] = assignments
     
     return auditors
 
@@ -3749,11 +3786,14 @@ async def get_available_auditors(
     """Get auditors available on a specific date"""
     await get_current_user(credentials)
     
-    query = {"status": "active"}
-    if specialization:
-        query["specializations"] = specialization
-    
-    auditors = await db.auditors.find(query, {"_id": 0}).to_list(100)
+    auditors = await auditors_pg.list_auditors_filtered(
+        status="active",
+        specialization=specialization,
+        sort_by_name=False,
+        max_results=100,
+    )
+    audit_schedules_cache = await doc_pg.list_ordered(doc_pg.C_AUDIT_SCHEDULES, 3000)
+    all_assignments = await doc_pg.list_ordered(doc_pg.C_AUDIT_ASSIGNMENTS, 5000)
     
     available_auditors = []
     for auditor in auditors:
@@ -3765,19 +3805,19 @@ async def get_available_auditors(
                 break
         
         if is_available:
-            # Check if auditor is already assigned to an audit on this date
-            existing = await db.audit_schedules.count_documents({
-                "scheduled_date": date,
-                "auditors": {"$regex": auditor['id']}
-            })
+            aid = str(auditor["id"])
+            existing = sum(
+                1
+                for a in audit_schedules_cache
+                if a.get("scheduled_date") == date and aid in str(a.get("auditors", ""))
+            )
             
-            # Check max audits per month
-            month_start = date[:7] + "-01"
-            month_end = date[:7] + "-31"
-            monthly_count = await db.audit_assignments.count_documents({
-                "auditor_id": auditor['id'],
-                "status": {"$in": ["assigned", "confirmed", "completed"]}
-            })
+            monthly_count = sum(
+                1
+                for x in all_assignments
+                if str(x.get("auditor_id", "")) == aid
+                and x.get("status") in ("assigned", "confirmed", "completed")
+            )
             
             auditor['is_available'] = existing == 0 and monthly_count < auditor.get('max_audits_per_month', 10)
             auditor['existing_audits_today'] = existing
@@ -3792,7 +3832,9 @@ async def create_auditor(auditor_data: AuditorCreate, credentials: HTTPAuthoriza
     await get_current_user(credentials)
     
     # Check if email already exists
-    existing = await db.auditors.find_one({"email": auditor_data.email})
+    existing = await doc_pg.get_by_payload_field(
+        doc_pg.C_AUDITORS, "email", str(auditor_data.email).strip()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Auditor with this email already exists")
     
@@ -3800,7 +3842,7 @@ async def create_auditor(auditor_data: AuditorCreate, credentials: HTTPAuthoriza
     auditor_doc = auditor.model_dump()
     auditor_doc['created_at'] = auditor_doc['created_at'].isoformat()
     
-    await db.auditors.insert_one(auditor_doc)
+    await doc_pg.insert_document(doc_pg.C_AUDITORS, auditor_doc)
     
     return {"message": "Auditor created", "auditor_id": auditor.id}
 
@@ -3809,17 +3851,15 @@ async def get_auditor(auditor_id: str, credentials: HTTPAuthorizationCredentials
     """Get auditor details"""
     await get_current_user(credentials)
     
-    auditor = await db.auditors.find_one({"id": auditor_id}, {"_id": 0})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
-    # Get recent assignments
-    assignments = await db.audit_assignments.find(
-        {"auditor_id": auditor_id},
-        {"_id": 0}
-    ).sort("assigned_at", -1).to_list(20)
-    
-    auditor['recent_assignments'] = assignments
+    candidates = await doc_pg.list_by_payload_field(
+        doc_pg.C_AUDIT_ASSIGNMENTS, "auditor_id", auditor_id, 100
+    )
+    candidates.sort(key=lambda x: str(x.get("assigned_at", "")), reverse=True)
+    auditor["recent_assignments"] = candidates[:20]
     
     return auditor
 
@@ -3828,12 +3868,12 @@ async def update_auditor(auditor_id: str, updates: dict, credentials: HTTPAuthor
     """Update auditor details"""
     await get_current_user(credentials)
     
-    auditor = await db.auditors.find_one({"id": auditor_id})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
-    updates['updated_at'] = datetime.now(timezone.utc).isoformat()
-    await db.auditors.update_one({"id": auditor_id}, {"$set": updates})
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await doc_pg.merge_set_by_doc_id(doc_pg.C_AUDITORS, auditor_id, updates)
     
     return {"message": "Auditor updated"}
 
@@ -3842,23 +3882,25 @@ async def delete_auditor(auditor_id: str, credentials: HTTPAuthorizationCredenti
     """Delete an auditor (soft delete - sets status to inactive)"""
     await get_current_user(credentials)
     
-    auditor = await db.auditors.find_one({"id": auditor_id})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
-    # Check for active assignments
-    active_assignments = await db.audit_assignments.count_documents({
-        "auditor_id": auditor_id,
-        "status": {"$in": ["assigned", "confirmed"]}
-    })
+    all_assignments = await doc_pg.list_ordered(doc_pg.C_AUDIT_ASSIGNMENTS, 5000)
+    active_assignments = sum(
+        1
+        for x in all_assignments
+        if str(x.get("auditor_id", "")) == str(auditor_id)
+        and x.get("status") in ("assigned", "confirmed")
+    )
     
     if active_assignments > 0:
         raise HTTPException(status_code=400, detail=f"Cannot delete auditor with {active_assignments} active assignments")
     
-    # Soft delete
-    await db.auditors.update_one(
-        {"id": auditor_id},
-        {"$set": {"status": "inactive", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDITORS,
+        auditor_id,
+        {"status": "inactive", "updated_at": datetime.now(timezone.utc).isoformat()},
     )
     
     return {"message": "Auditor deactivated"}
@@ -3872,7 +3914,7 @@ async def set_auditor_availability(
     """Set auditor availability for specific dates"""
     await get_current_user(credentials)
     
-    auditor = await db.auditors.find_one({"id": auditor_id})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
@@ -3890,12 +3932,13 @@ async def set_auditor_availability(
         "reason": availability_data.get('reason', '')
     })
     
-    await db.auditors.update_one(
-        {"id": auditor_id},
-        {"$set": {
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDITORS,
+        auditor_id,
+        {
             "availability": current_availability,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
     )
     
     return {"message": "Availability updated"}
@@ -3911,23 +3954,28 @@ async def assign_auditor_to_audit(
     """Assign an auditor to an audit"""
     await get_current_user(credentials)
     
-    # Verify audit exists
-    audit = await db.audit_schedules.find_one({"id": audit_id})
+    audit = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_SCHEDULES, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
     
     # Verify auditor exists
     auditor_id = assignment_data.get('auditor_id')
-    auditor = await db.auditors.find_one({"id": auditor_id})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
-    # Check if already assigned
-    existing = await db.audit_assignments.find_one({
-        "audit_id": audit_id,
-        "auditor_id": auditor_id,
-        "status": {"$ne": "cancelled"}
-    })
+    by_audit = await doc_pg.list_by_payload_field(
+        doc_pg.C_AUDIT_ASSIGNMENTS, "audit_id", audit_id, 200
+    )
+    existing = next(
+        (
+            x
+            for x in by_audit
+            if str(x.get("auditor_id", "")) == str(auditor_id)
+            and x.get("status") != "cancelled"
+        ),
+        None,
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Auditor already assigned to this audit")
     
@@ -3941,7 +3989,7 @@ async def assign_auditor_to_audit(
     
     assignment_doc = assignment.model_dump()
     assignment_doc['assigned_at'] = assignment_doc['assigned_at'].isoformat()
-    await db.audit_assignments.insert_one(assignment_doc)
+    await doc_pg.insert_document(doc_pg.C_AUDIT_ASSIGNMENTS, assignment_doc)
     
     # Update audit with auditor name
     current_auditors = audit.get('auditors', '')
@@ -3951,9 +3999,8 @@ async def assign_auditor_to_audit(
     else:
         current_auditors = auditor_name
     
-    await db.audit_schedules.update_one(
-        {"id": audit_id},
-        {"$set": {"auditors": current_auditors}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDIT_SCHEDULES, audit_id, {"auditors": current_auditors}
     )
     
     return {"message": "Auditor assigned", "assignment_id": assignment.id}
@@ -3963,14 +4010,14 @@ async def get_audit_assignments(audit_id: str, credentials: HTTPAuthorizationCre
     """Get all auditor assignments for an audit"""
     await get_current_user(credentials)
     
-    assignments = await db.audit_assignments.find(
-        {"audit_id": audit_id, "status": {"$ne": "cancelled"}},
-        {"_id": 0}
-    ).to_list(20)
+    by_audit = await doc_pg.list_by_payload_field(
+        doc_pg.C_AUDIT_ASSIGNMENTS, "audit_id", audit_id, 200
+    )
+    assignments = [a for a in by_audit if a.get("status") != "cancelled"][:20]
     
     # Enrich with auditor details
     for assignment in assignments:
-        auditor = await db.auditors.find_one({"id": assignment['auditor_id']}, {"_id": 0})
+        auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, assignment["auditor_id"])
         if auditor:
             assignment['auditor'] = {
                 "id": auditor['id'],
@@ -3988,28 +4035,26 @@ async def remove_auditor_assignment(assignment_id: str, credentials: HTTPAuthori
     """Remove an auditor from an audit"""
     await get_current_user(credentials)
     
-    assignment = await db.audit_assignments.find_one({"id": assignment_id})
+    assignment = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_ASSIGNMENTS, assignment_id)
     if not assignment:
         raise HTTPException(status_code=404, detail="Assignment not found")
     
-    # Cancel assignment
-    await db.audit_assignments.update_one(
-        {"id": assignment_id},
-        {"$set": {"status": "cancelled"}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDIT_ASSIGNMENTS, assignment_id, {"status": "cancelled"}
     )
     
-    # Update audit auditors list
-    audit = await db.audit_schedules.find_one({"id": assignment['audit_id']})
+    audit = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_SCHEDULES, assignment["audit_id"])
     if audit:
-        auditor = await db.auditors.find_one({"id": assignment['auditor_id']})
+        auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, assignment["auditor_id"])
         if auditor:
             current_auditors = audit.get('auditors', '')
             auditor_name = auditor.get('name', '')
             # Remove auditor name from list
             auditor_list = [a.strip() for a in current_auditors.split(',') if a.strip() != auditor_name]
-            await db.audit_schedules.update_one(
-                {"id": assignment['audit_id']},
-                {"$set": {"auditors": ', '.join(auditor_list)}}
+            await doc_pg.merge_set_by_doc_id(
+                doc_pg.C_AUDIT_SCHEDULES,
+                assignment["audit_id"],
+                {"auditors": ", ".join(auditor_list)},
             )
     
     return {"message": "Assignment removed"}
@@ -4020,16 +4065,16 @@ async def remove_auditor_assignment(assignment_id: str, credentials: HTTPAuthori
 async def get_audit_schedules(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get all audit schedules"""
     await get_current_user(credentials)
-    audits = await db.audit_schedules.find({}, {"_id": 0}).to_list(1000)
+    audits = await doc_pg.list_ordered(doc_pg.C_AUDIT_SCHEDULES, 1000)
     
     # Enrich with organization names
     for audit in audits:
         if audit.get('contract_id'):
-            proposal = await db.proposals.find_one({"id": audit['contract_id']}, {"_id": 0})
+            proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, audit['contract_id'])
             if proposal:
                 audit['organization_name'] = proposal.get('organization_name', '')
         if audit.get('site_id'):
-            site = await db.sites.find_one({"id": audit['site_id']}, {"_id": 0})
+            site = await doc_pg.get_by_doc_id(doc_pg.C_SITES, audit["site_id"])
             if site:
                 audit['site_name'] = site.get('name', '')
     
@@ -4045,7 +4090,7 @@ async def create_audit_schedule(audit_data: AuditScheduleCreate, credentials: HT
     contact_phone = ""
     contact_email = ""
     if audit_data.contract_id:
-        proposal = await db.proposals.find_one({"id": audit_data.contract_id}, {"_id": 0})
+        proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, audit_data.contract_id)
         if proposal:
             organization_name = proposal.get('organization_name', '')
             contact_phone = proposal.get('contact_phone', '')
@@ -4054,7 +4099,7 @@ async def create_audit_schedule(audit_data: AuditScheduleCreate, credentials: HT
     # Get site name if provided
     site_name = ""
     if audit_data.site_id:
-        site = await db.sites.find_one({"id": audit_data.site_id}, {"_id": 0})
+        site = await doc_pg.get_by_doc_id(doc_pg.C_SITES, audit_data.site_id)
         if site:
             site_name = site.get('name', '')
     
@@ -4078,7 +4123,7 @@ async def create_audit_schedule(audit_data: AuditScheduleCreate, credentials: HT
     audit_doc = audit.model_dump()
     audit_doc['created_at'] = audit_doc['created_at'].isoformat()
     
-    await db.audit_schedules.insert_one(audit_doc)
+    await doc_pg.insert_document(doc_pg.C_AUDIT_SCHEDULES, audit_doc)
     
     created_audits = [audit.id]
     
@@ -4095,7 +4140,7 @@ async def create_audit_schedule(audit_data: AuditScheduleCreate, credentials: HT
         for recurring_audit in recurring_audits:
             recurring_doc = recurring_audit.model_dump()
             recurring_doc['created_at'] = recurring_doc['created_at'].isoformat()
-            await db.audit_schedules.insert_one(recurring_doc)
+            await doc_pg.insert_document(doc_pg.C_AUDIT_SCHEDULES, recurring_doc)
             created_audits.append(recurring_audit.id)
     
     return {"message": "Audit scheduled", "id": audit.id, "total_created": len(created_audits)}
@@ -4166,17 +4211,14 @@ async def update_audit_schedule(audit_id: str, audit_data: AuditScheduleCreate, 
         "notes": audit_data.notes
     }
     
-    await db.audit_schedules.update_one(
-        {"id": audit_id},
-        {"$set": update_data}
-    )
+    await doc_pg.merge_set_by_doc_id(doc_pg.C_AUDIT_SCHEDULES, audit_id, update_data)
     return {"message": "Audit updated", "id": audit_id}
 
 @api_router.delete("/audit-schedules/{audit_id}")
 async def delete_audit_schedule(audit_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Delete an audit schedule"""
     await get_current_user(credentials)
-    await db.audit_schedules.delete_one({"id": audit_id})
+    await doc_pg.delete_by_doc_id(doc_pg.C_AUDIT_SCHEDULES, audit_id)
     return {"message": "Audit deleted"}
 
 # ================= CUSTOMER CONTACT HISTORY =================
@@ -4279,8 +4321,7 @@ async def create_invoice(invoice_data: InvoiceCreate, credentials: HTTPAuthoriza
     """Create a new invoice from a contract/proposal"""
     await get_current_user(credentials)
     
-    # Get contract/proposal details
-    proposal = await db.proposals.find_one({"id": invoice_data.contract_id}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, invoice_data.contract_id)
     if not proposal:
         raise HTTPException(status_code=404, detail="Contract not found")
     
@@ -4529,20 +4570,18 @@ async def export_report(
     """Export reports to Excel or PDF"""
     await get_current_user(credentials)
     
-    # Build query for forms
-    forms_query = {}
+    def _export_created_at_str(doc: dict) -> str:
+        return str(doc.get("created_at") or "")
+
+    forms = await doc_pg.list_ordered(doc_pg.C_APPLICATION_FORMS, 1000)
     if status and status != "all":
-        forms_query["status"] = status
-    if start_date or end_date:
-        forms_query["created_at"] = {}
-        if start_date:
-            forms_query["created_at"]["$gte"] = start_date
-        if end_date:
-            forms_query["created_at"]["$lte"] = end_date
+        forms = [f for f in forms if f.get("status") == status]
+    if start_date:
+        forms = [f for f in forms if _export_created_at_str(f) >= start_date]
+    if end_date:
+        forms = [f for f in forms if _export_created_at_str(f) <= end_date]
     
-    # Get data
-    forms = await db.application_forms.find(forms_query, {"_id": 0}).to_list(1000)
-    proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
+    proposals = await doc_pg.list_ordered(doc_pg.C_PROPOSALS, 1000)
     
     # Filter by standard if specified
     if standard and standard != "all":
@@ -4989,13 +5028,13 @@ async def sync_audit_to_calendar(
     
     tokens = user['google_tokens']
     
-    # Get audit schedule
-    audit = await db.audit_schedules.find_one({"id": audit_id}, {"_id": 0})
+    audit = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_SCHEDULES, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Audit schedule not found")
     
-    # Get contract details for more info
-    contract = await db.proposals.find_one({"id": audit.get('contract_id')}, {"_id": 0})
+    contract = None
+    if audit.get("contract_id"):
+        contract = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, audit["contract_id"])
     org_name = contract.get('organization_name', 'Client') if contract else 'Client'
     
     # Create calendar event
@@ -5039,10 +5078,10 @@ async def sync_audit_to_calendar(
     
     event_data = response.json()
     
-    # Save calendar event ID to audit
-    await db.audit_schedules.update_one(
-        {"id": audit_id},
-        {"$set": {"calendar_event_id": event_data.get('id')}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDIT_SCHEDULES,
+        audit_id,
+        {"calendar_event_id": event_data.get("id") or ""},
     )
     
     return {"message": "Audit synced to Google Calendar", "event_id": event_data.get('id')}
@@ -5160,13 +5199,13 @@ async def send_audit_reminder(audit_id: str, credentials: HTTPAuthorizationCrede
     """Send SMS reminder for an upcoming audit"""
     await get_current_user(credentials)
     
-    # Get audit details
-    audit = await db.audit_schedules.find_one({"id": audit_id}, {"_id": 0})
+    audit = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_SCHEDULES, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
     
-    # Get contract/proposal for contact info
-    proposal = await db.proposals.find_one({"id": audit.get('contract_id')}, {"_id": 0})
+    proposal = None
+    if audit.get("contract_id"):
+        proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, audit["contract_id"])
     if not proposal:
         raise HTTPException(status_code=404, detail="Contract not found")
     
@@ -5189,10 +5228,13 @@ async def send_audit_reminder(audit_id: str, credentials: HTTPAuthorizationCrede
     
     result = await send_sms(sms_request, credentials)
     
-    # Mark audit as reminder sent
-    await db.audit_schedules.update_one(
-        {"id": audit_id},
-        {"$set": {"sms_reminder_sent": True, "sms_reminder_sent_at": datetime.now(timezone.utc).isoformat()}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDIT_SCHEDULES,
+        audit_id,
+        {
+            "sms_reminder_sent": True,
+            "sms_reminder_sent_at": datetime.now(timezone.utc).isoformat(),
+        },
     )
     
     return result
@@ -5205,7 +5247,7 @@ async def generate_bilingual_proposal_pdf(proposal_id: str, credentials: HTTPAut
     """Generate bilingual (Arabic + English) PDF for a proposal/quotation"""
     await get_current_user(credentials)
     
-    proposal = await db.proposals.find_one({"id": proposal_id}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, proposal_id)
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -5542,7 +5584,7 @@ async def generate_bilingual_form_pdf(form_id: str, credentials: HTTPAuthorizati
     """Generate bilingual (Arabic + English) PDF for a submitted form"""
     await get_current_user(credentials)
     
-    form = await db.application_forms.find_one({"id": form_id}, {"_id": 0})
+    form = await doc_pg.get_by_doc_id(doc_pg.C_APPLICATION_FORMS, form_id)
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
     
@@ -6097,9 +6139,9 @@ async def generate_bilingual_report_pdf(
     # Get data based on report type
     if report_type == "summary":
         # Get all relevant data
-        forms = await db.application_forms.find({}, {"_id": 0}).to_list(1000)
-        proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
-        agreements = await db.certification_agreements.find({}, {"_id": 0}).to_list(1000)
+        forms = await doc_pg.list_ordered(doc_pg.C_APPLICATION_FORMS, 1000)
+        proposals = await doc_pg.list_ordered(doc_pg.C_PROPOSALS, 1000)
+        agreements = await doc_pg.list_ordered(doc_pg.C_CERTIFICATION_AGREEMENTS, 1000)
         
         report_data = {
             "total_forms": len(forms),
@@ -6221,13 +6263,12 @@ async def create_contract_review(data: ContractReviewCreate, credentials: HTTPAu
     """Create a new Contract Review from a signed agreement (Admin only)"""
     await get_current_user(credentials)
     
-    # Get the agreement
-    agreement = await db.certification_agreements.find_one({"id": data.agreement_id}, {"_id": 0})
+    agreement = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATION_AGREEMENTS, data.agreement_id)
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
     # Get the proposal for additional details
-    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, agreement['proposal_id'])
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -6426,11 +6467,11 @@ async def send_contract_review_link(review_id: str, credentials: HTTPAuthorizati
         raise HTTPException(status_code=404, detail="Contract review not found")
     
     # Get agreement and proposal for contact email
-    agreement = await db.certification_agreements.find_one({"id": review['agreement_id']}, {"_id": 0})
+    agreement = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATION_AGREEMENTS, review['agreement_id'])
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
-    proposal = await db.proposals.find_one({"id": agreement['proposal_id']}, {"_id": 0})
+    proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, agreement['proposal_id'])
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -6621,7 +6662,7 @@ async def create_job_order(data: JobOrderCreate, credentials: HTTPAuthorizationC
         raise HTTPException(status_code=404, detail="Audit program not found")
     
     # Get the auditor
-    auditor = await db.auditors.find_one({"id": data.auditor_id}, {"_id": 0})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, data.auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
@@ -6655,13 +6696,14 @@ async def create_job_order(data: JobOrderCreate, credentials: HTTPAuthorizationC
         client_ref=contract_review.get('client_ref', '') if contract_review else program.get('id', '')[:8],
     )
     
-    await db.job_orders.insert_one(job_order.dict())
+    jo_doc = job_order.model_dump()
+    jo_doc["created_at"] = jo_doc["created_at"].isoformat()
+    if jo_doc.get("updated_at") is not None:
+        u = jo_doc["updated_at"]
+        jo_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_JOB_ORDERS, jo_doc)
     
-    # Update auditor's current assignments
-    await db.auditors.update_one(
-        {"id": data.auditor_id},
-        {"$inc": {"current_assignments": 1}}
-    )
+    await auditors_pg.adjust_current_assignments_delta(data.auditor_id, 1)
     
     # Create notification
     await create_notification(
@@ -6683,15 +6725,14 @@ async def get_job_orders(credentials: HTTPAuthorizationCredentials = Depends(sec
     """Get all job orders (Admin only)"""
     await get_current_user(credentials)
     
-    orders = await db.job_orders.find({}, {"_id": 0}).to_list(1000)
-    return orders
+    return await doc_pg.list_ordered(doc_pg.C_JOB_ORDERS, 1000)
 
 @api_router.get("/job-orders/{order_id}")
 async def get_job_order(order_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get a specific job order (Admin only)"""
     await get_current_user(credentials)
     
-    order = await db.job_orders.find_one({"id": order_id}, {"_id": 0})
+    order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
@@ -6702,17 +6743,14 @@ async def update_job_order(order_id: str, data: JobOrderUpdate, credentials: HTT
     """Update job order (Admin only)"""
     await get_current_user(credentials)
     
-    order = await db.job_orders.find_one({"id": order_id})
+    order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
-    update_data = data.dict()
-    update_data['updated_at'] = datetime.now(timezone.utc)
+    update_data = data.model_dump()
+    update_data["updated_at"] = datetime.now(timezone.utc)
     
-    await db.job_orders.update_one(
-        {"id": order_id},
-        {"$set": update_data}
-    )
+    await doc_pg.merge_set_by_doc_id(doc_pg.C_JOB_ORDERS, order_id, update_data)
     
     return {"message": "Job order updated successfully"}
 
@@ -6721,18 +6759,14 @@ async def delete_job_order(order_id: str, credentials: HTTPAuthorizationCredenti
     """Delete a job order (Admin only)"""
     await get_current_user(credentials)
     
-    order = await db.job_orders.find_one({"id": order_id})
+    order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
-    # Decrease auditor's current assignments
-    if order.get('auditor_id'):
-        await db.auditors.update_one(
-            {"id": order['auditor_id']},
-            {"$inc": {"current_assignments": -1}}
-        )
+    if order.get("auditor_id"):
+        await auditors_pg.adjust_current_assignments_delta(order["auditor_id"], -1)
     
-    await db.job_orders.delete_one({"id": order_id})
+    await doc_pg.delete_by_doc_id(doc_pg.C_JOB_ORDERS, order_id)
     
     return {"message": "Job order deleted successfully"}
 
@@ -6741,19 +6775,20 @@ async def approve_job_order(order_id: str, credentials: HTTPAuthorizationCredent
     """Certification Manager approves job order (Admin only)"""
     current_user = await get_current_user(credentials)
     
-    order = await db.job_orders.find_one({"id": order_id})
+    order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
-    await db.job_orders.update_one(
-        {"id": order_id},
-        {"$set": {
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_JOB_ORDERS,
+        order_id,
+        {
             "manager_approved": True,
-            "certification_manager": current_user.get('name', 'Admin'),
-            "manager_approval_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+            "certification_manager": current_user.get("name", "Admin"),
+            "manager_approval_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
             "status": "pending_auditor",
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
     
     # Create notification
@@ -6772,7 +6807,7 @@ async def get_job_order_pdf(order_id: str, credentials: HTTPAuthorizationCredent
     """Generate PDF for job order (Admin only)"""
     await get_current_user(credentials)
     
-    order = await db.job_orders.find_one({"id": order_id}, {"_id": 0})
+    order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
@@ -6794,7 +6829,7 @@ async def send_job_order_to_auditor(order_id: str, credentials: HTTPAuthorizatio
     """Send job order confirmation link to auditor (Admin only)"""
     await get_current_user(credentials)
     
-    order = await db.job_orders.find_one({"id": order_id}, {"_id": 0})
+    order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
@@ -6819,7 +6854,9 @@ async def send_job_order_to_auditor(order_id: str, credentials: HTTPAuthorizatio
 @api_router.get("/public/job-orders/{access_token}")
 async def get_public_job_order(access_token: str):
     """Get job order for auditor confirmation (public access with token)"""
-    order = await db.job_orders.find_one({"access_token": access_token}, {"_id": 0})
+    order = await doc_pg.get_by_payload_field(
+        doc_pg.C_JOB_ORDERS, "access_token", access_token
+    )
     if not order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
@@ -6846,7 +6883,9 @@ async def get_public_job_order(access_token: str):
 @api_router.post("/public/job-orders/{access_token}/confirm")
 async def confirm_job_order(access_token: str, data: JobOrderAuditorConfirmation):
     """Auditor confirms or rejects job order (public access with token)"""
-    order = await db.job_orders.find_one({"access_token": access_token})
+    order = await doc_pg.get_by_payload_field(
+        doc_pg.C_JOB_ORDERS, "access_token", access_token
+    )
     if not order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
@@ -6867,16 +6906,11 @@ async def confirm_job_order(access_token: str, data: JobOrderAuditorConfirmation
     else:
         update_data["status"] = "rejected"
         update_data["unable_reason"] = data.unable_reason
-        # Decrease auditor's current assignments if rejected
-        if order.get('auditor_id'):
-            await db.auditors.update_one(
-                {"id": order['auditor_id']},
-                {"$inc": {"current_assignments": -1}}
-            )
+        if order.get("auditor_id"):
+            await auditors_pg.adjust_current_assignments_delta(order["auditor_id"], -1)
     
-    await db.job_orders.update_one(
-        {"access_token": access_token},
-        {"$set": update_data}
+    await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_JOB_ORDERS, "access_token", access_token, update_data
     )
     
     # Create notification
@@ -6899,7 +6933,7 @@ async def create_stage1_audit_plan(data: Stage1AuditPlanCreate, credentials: HTT
     await get_current_user(credentials)
     
     # Get the job order
-    job_order = await db.job_orders.find_one({"id": data.job_order_id}, {"_id": 0})
+    job_order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, data.job_order_id)
     if not job_order:
         raise HTTPException(status_code=404, detail="Job order not found")
     
@@ -6907,7 +6941,9 @@ async def create_stage1_audit_plan(data: Stage1AuditPlanCreate, credentials: HTT
         raise HTTPException(status_code=400, detail="Job order must be confirmed by auditor first")
     
     # Check if plan already exists for this job order
-    existing = await db.stage1_audit_plans.find_one({"job_order_id": data.job_order_id})
+    existing = await doc_pg.get_by_payload_field(
+        doc_pg.C_STAGE1_AUDIT_PLANS, "job_order_id", data.job_order_id
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Stage 1 Audit Plan already exists for this job order")
     
@@ -6954,7 +6990,12 @@ async def create_stage1_audit_plan(data: Stage1AuditPlanCreate, credentials: HTT
         ]
     )
     
-    await db.stage1_audit_plans.insert_one(plan.dict())
+    plan_doc = plan.model_dump()
+    plan_doc["created_at"] = plan_doc["created_at"].isoformat()
+    if plan_doc.get("updated_at") is not None:
+        u = plan_doc["updated_at"]
+        plan_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_STAGE1_AUDIT_PLANS, plan_doc)
     
     # Create notification
     await create_notification(
@@ -6976,7 +7017,7 @@ async def get_stage1_audit_plans(credentials: HTTPAuthorizationCredentials = Dep
     """Get all Stage 1 Audit Plans (Admin only)"""
     await get_current_user(credentials)
     
-    plans = await db.stage1_audit_plans.find({}, {"_id": 0}).to_list(1000)
+    plans = await doc_pg.list_ordered(doc_pg.C_STAGE1_AUDIT_PLANS, 1000)
     return plans
 
 @api_router.get("/stage1-audit-plans/{plan_id}")
@@ -6984,7 +7025,7 @@ async def get_stage1_audit_plan(plan_id: str, credentials: HTTPAuthorizationCred
     """Get a specific Stage 1 Audit Plan (Admin only)"""
     await get_current_user(credentials)
     
-    plan = await db.stage1_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
@@ -6995,26 +7036,31 @@ async def update_stage1_audit_plan(plan_id: str, data: Stage1AuditPlanUpdate, cr
     """Update Stage 1 Audit Plan (Admin only)"""
     await get_current_user(credentials)
     
-    plan = await db.stage1_audit_plans.find_one({"id": plan_id})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
     update_data = {}
-    for field, value in data.dict().items():
+    for field, value in data.model_dump().items():
         if value is not None:
             if field == 'team_members':
-                update_data[field] = [m.dict() if hasattr(m, 'dict') else m for m in value]
+                update_data[field] = [
+                    m.model_dump() if hasattr(m, "model_dump") else (m.dict() if hasattr(m, "dict") else m)
+                    for m in value
+                ]
             elif field == 'schedule_entries':
-                update_data[field] = [e.dict() if hasattr(e, 'dict') else e for e in value]
+                update_data[field] = [
+                    e.model_dump() if hasattr(e, "model_dump") else (e.dict() if hasattr(e, "dict") else e)
+                    for e in value
+                ]
             else:
                 update_data[field] = value
     
     update_data['updated_at'] = datetime.now(timezone.utc)
     
-    await db.stage1_audit_plans.update_one(
-        {"id": plan_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_STAGE1_AUDIT_PLANS, plan_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
     return {"message": "Stage 1 Audit Plan updated successfully"}
 
@@ -7023,8 +7069,8 @@ async def delete_stage1_audit_plan(plan_id: str, credentials: HTTPAuthorizationC
     """Delete a Stage 1 Audit Plan (Admin only)"""
     await get_current_user(credentials)
     
-    result = await db.stage1_audit_plans.delete_one({"id": plan_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_STAGE1_AUDIT_PLANS, plan_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
     return {"message": "Stage 1 Audit Plan deleted successfully"}
@@ -7034,20 +7080,23 @@ async def manager_approve_stage1_plan(plan_id: str, credentials: HTTPAuthorizati
     """Manager internal approval of Stage 1 Audit Plan (Admin only)"""
     current_user = await get_current_user(credentials)
     
-    plan = await db.stage1_audit_plans.find_one({"id": plan_id})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
-    await db.stage1_audit_plans.update_one(
-        {"id": plan_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_STAGE1_AUDIT_PLANS,
+        plan_id,
+        {
             "manager_approved": True,
             "manager_name": current_user.get('name', 'Admin'),
             "manager_approval_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
             "status": "manager_approved",
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
     # Create notification
     await create_notification(
@@ -7065,7 +7114,7 @@ async def send_stage1_plan_to_client(plan_id: str, credentials: HTTPAuthorizatio
     """Send Stage 1 Audit Plan to client for acceptance (Admin only)"""
     await get_current_user(credentials)
     
-    plan = await db.stage1_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
@@ -7073,14 +7122,17 @@ async def send_stage1_plan_to_client(plan_id: str, credentials: HTTPAuthorizatio
         raise HTTPException(status_code=400, detail="Plan must be approved by manager first")
     
     # Update status
-    await db.stage1_audit_plans.update_one(
-        {"id": plan_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_STAGE1_AUDIT_PLANS,
+        plan_id,
+        {
             "sent_to_client": True,
             "status": "pending_client",
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
     # Generate client review link
     frontend_url = os.environ.get('REACT_APP_FRONTEND_URL', 'https://contract-audit-flow.preview.emergentagent.com')
@@ -7098,7 +7150,7 @@ async def get_stage1_audit_plan_pdf(plan_id: str, credentials: HTTPAuthorization
     """Generate PDF for Stage 1 Audit Plan (Admin only)"""
     await get_current_user(credentials)
     
-    plan = await db.stage1_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
@@ -7120,7 +7172,9 @@ async def get_stage1_audit_plan_pdf(plan_id: str, credentials: HTTPAuthorization
 @api_router.get("/public/stage1-audit-plans/{access_token}")
 async def get_public_stage1_audit_plan(access_token: str):
     """Get Stage 1 Audit Plan for client review (public access with token)"""
-    plan = await db.stage1_audit_plans.find_one({"access_token": access_token}, {"_id": 0})
+    plan = await doc_pg.get_by_payload_field(
+        doc_pg.C_STAGE1_AUDIT_PLANS, "access_token", access_token
+    )
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
@@ -7149,7 +7203,9 @@ async def get_public_stage1_audit_plan(access_token: str):
 @api_router.post("/public/stage1-audit-plans/{access_token}/respond")
 async def client_respond_to_stage1_plan(access_token: str, data: Stage1AuditPlanClientResponse):
     """Client accepts or requests changes to Stage 1 Audit Plan (public access with token)"""
-    plan = await db.stage1_audit_plans.find_one({"access_token": access_token})
+    plan = await doc_pg.get_by_payload_field(
+        doc_pg.C_STAGE1_AUDIT_PLANS, "access_token", access_token
+    )
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
@@ -7173,10 +7229,11 @@ async def client_respond_to_stage1_plan(access_token: str, data: Stage1AuditPlan
         update_data["status"] = "changes_requested"
         status_text = "requested changes"
     
-    await db.stage1_audit_plans.update_one(
-        {"access_token": access_token},
-        {"$set": update_data}
+    ok = await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_STAGE1_AUDIT_PLANS, "access_token", access_token, update_data
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
     
     # Create notification
     await create_notification(
@@ -7207,14 +7264,18 @@ async def create_stage2_audit_plan(data: Stage2AuditPlanCreate, credentials: HTT
     # Determine source
     if data.stage1_plan_id:
         # Create from Stage 1 plan
-        stage1_plan = await db.stage1_audit_plans.find_one({"id": data.stage1_plan_id}, {"_id": 0})
+        stage1_plan = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE1_AUDIT_PLANS, data.stage1_plan_id
+        )
         if not stage1_plan:
             raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
         if stage1_plan.get('status') != 'client_accepted':
             raise HTTPException(status_code=400, detail="Stage 1 plan must be accepted by client first")
         
         # Check if Stage 2 already exists for this Stage 1
-        existing = await db.stage2_audit_plans.find_one({"stage1_plan_id": data.stage1_plan_id})
+        existing = await doc_pg.get_by_payload_field(
+            doc_pg.C_STAGE2_AUDIT_PLANS, "stage1_plan_id", data.stage1_plan_id
+        )
         if existing:
             raise HTTPException(status_code=400, detail="Stage 2 Audit Plan already exists for this Stage 1 plan")
         
@@ -7223,7 +7284,7 @@ async def create_stage2_audit_plan(data: Stage2AuditPlanCreate, credentials: HTT
         
     elif data.job_order_id:
         # Create directly from Job Order
-        job_order = await db.job_orders.find_one({"id": data.job_order_id}, {"_id": 0})
+        job_order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, data.job_order_id)
         if not job_order:
             raise HTTPException(status_code=404, detail="Job order not found")
         if job_order.get('status') != 'confirmed':
@@ -7279,7 +7340,12 @@ async def create_stage2_audit_plan(data: Stage2AuditPlanCreate, credentials: HTT
         ]
     )
     
-    await db.stage2_audit_plans.insert_one(plan.dict())
+    plan_doc = plan.model_dump()
+    plan_doc["created_at"] = plan_doc["created_at"].isoformat()
+    if plan_doc.get("updated_at") is not None:
+        u = plan_doc["updated_at"]
+        plan_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_STAGE2_AUDIT_PLANS, plan_doc)
     
     # Create notification
     await create_notification(
@@ -7301,7 +7367,7 @@ async def get_stage2_audit_plans(credentials: HTTPAuthorizationCredentials = Dep
     """Get all Stage 2 Audit Plans (Admin only)"""
     await get_current_user(credentials)
     
-    plans = await db.stage2_audit_plans.find({}, {"_id": 0}).to_list(1000)
+    plans = await doc_pg.list_ordered(doc_pg.C_STAGE2_AUDIT_PLANS, 1000)
     return plans
 
 @api_router.get("/stage2-audit-plans/{plan_id}")
@@ -7309,7 +7375,7 @@ async def get_stage2_audit_plan(plan_id: str, credentials: HTTPAuthorizationCred
     """Get a specific Stage 2 Audit Plan (Admin only)"""
     await get_current_user(credentials)
     
-    plan = await db.stage2_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
@@ -7320,15 +7386,18 @@ async def update_stage2_audit_plan(plan_id: str, data: Stage2AuditPlanUpdate, cr
     """Update Stage 2 Audit Plan (Admin only)"""
     await get_current_user(credentials)
     
-    plan = await db.stage2_audit_plans.find_one({"id": plan_id})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
     update_data = {}
-    for field, value in data.dict().items():
+    for field, value in data.model_dump().items():
         if value is not None:
             if isinstance(value, list):
-                update_data[field] = [item.dict() if hasattr(item, 'dict') else item for item in value]
+                update_data[field] = [
+                    item.model_dump() if hasattr(item, "model_dump") else (item.dict() if hasattr(item, "dict") else item)
+                    for item in value
+                ]
             else:
                 update_data[field] = value
     
@@ -7338,10 +7407,9 @@ async def update_stage2_audit_plan(plan_id: str, data: Stage2AuditPlanUpdate, cr
     if not plan.get('manager_approved'):
         update_data["status"] = "pending_manager"
     
-    await db.stage2_audit_plans.update_one(
-        {"id": plan_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_STAGE2_AUDIT_PLANS, plan_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
     return {"message": "Stage 2 Audit Plan updated successfully"}
 
@@ -7350,8 +7418,8 @@ async def delete_stage2_audit_plan(plan_id: str, credentials: HTTPAuthorizationC
     """Delete Stage 2 Audit Plan (Admin only)"""
     await get_current_user(credentials)
     
-    result = await db.stage2_audit_plans.delete_one({"id": plan_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_STAGE2_AUDIT_PLANS, plan_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
     return {"message": "Stage 2 Audit Plan deleted successfully"}
@@ -7361,20 +7429,23 @@ async def manager_approve_stage2_plan(plan_id: str, credentials: HTTPAuthorizati
     """Manager approval for Stage 2 Audit Plan (Admin only)"""
     user = await get_current_user(credentials)
     
-    plan = await db.stage2_audit_plans.find_one({"id": plan_id})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
-    await db.stage2_audit_plans.update_one(
-        {"id": plan_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_STAGE2_AUDIT_PLANS,
+        plan_id,
+        {
             "manager_approved": True,
             "manager_name": user.get('email', 'Admin'),
             "manager_approval_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
             "status": "manager_approved",
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
     return {"message": "Stage 2 Audit Plan approved by manager"}
 
@@ -7383,7 +7454,7 @@ async def send_stage2_plan_to_client(plan_id: str, credentials: HTTPAuthorizatio
     """Send Stage 2 Audit Plan to client for acceptance (Admin only)"""
     await get_current_user(credentials)
     
-    plan = await db.stage2_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
@@ -7391,14 +7462,17 @@ async def send_stage2_plan_to_client(plan_id: str, credentials: HTTPAuthorizatio
         raise HTTPException(status_code=400, detail="Plan must be approved by manager first")
     
     # Update status
-    await db.stage2_audit_plans.update_one(
-        {"id": plan_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_STAGE2_AUDIT_PLANS,
+        plan_id,
+        {
             "sent_to_client": True,
             "status": "pending_client",
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
     # Generate client review link
     frontend_url = os.environ.get('REACT_APP_FRONTEND_URL', os.environ.get('FRONTEND_URL', 'http://localhost:3000'))
@@ -7416,7 +7490,7 @@ async def get_stage2_audit_plan_pdf(plan_id: str, credentials: HTTPAuthorization
     """Generate PDF for Stage 2 Audit Plan (Admin only)"""
     await get_current_user(credentials)
     
-    plan = await db.stage2_audit_plans.find_one({"id": plan_id}, {"_id": 0})
+    plan = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_PLANS, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
@@ -7438,7 +7512,9 @@ async def get_stage2_audit_plan_pdf(plan_id: str, credentials: HTTPAuthorization
 @api_router.get("/public/stage2-audit-plans/{access_token}")
 async def get_public_stage2_audit_plan(access_token: str):
     """Get Stage 2 Audit Plan for client review (public access with token)"""
-    plan = await db.stage2_audit_plans.find_one({"access_token": access_token}, {"_id": 0})
+    plan = await doc_pg.get_by_payload_field(
+        doc_pg.C_STAGE2_AUDIT_PLANS, "access_token", access_token
+    )
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
@@ -7467,7 +7543,9 @@ async def get_public_stage2_audit_plan(access_token: str):
 @api_router.post("/public/stage2-audit-plans/{access_token}/respond")
 async def client_respond_to_stage2_plan(access_token: str, data: Stage2AuditPlanClientResponse):
     """Client accepts or requests changes to Stage 2 Audit Plan (public access with token)"""
-    plan = await db.stage2_audit_plans.find_one({"access_token": access_token})
+    plan = await doc_pg.get_by_payload_field(
+        doc_pg.C_STAGE2_AUDIT_PLANS, "access_token", access_token
+    )
     if not plan:
         raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
@@ -7491,10 +7569,11 @@ async def client_respond_to_stage2_plan(access_token: str, data: Stage2AuditPlan
         update_data["status"] = "changes_requested"
         status_text = "requested changes"
     
-    await db.stage2_audit_plans.update_one(
-        {"access_token": access_token},
-        {"$set": update_data}
+    ok = await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_STAGE2_AUDIT_PLANS, "access_token", access_token, update_data
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
     
     # Create notification
     await create_notification(
@@ -7519,13 +7598,15 @@ async def create_opening_closing_meeting(data: OpeningClosingMeetingCreate, cred
     
     # Get source data from Stage 1 plan or Job Order
     if data.stage1_plan_id:
-        stage1_plan = await db.stage1_audit_plans.find_one({"id": data.stage1_plan_id}, {"_id": 0})
+        stage1_plan = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE1_AUDIT_PLANS, data.stage1_plan_id
+        )
         if not stage1_plan:
             raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
         source_data = stage1_plan
         job_order_id = stage1_plan.get('job_order_id', '')
     elif data.job_order_id:
-        job_order = await db.job_orders.find_one({"id": data.job_order_id}, {"_id": 0})
+        job_order = await doc_pg.get_by_doc_id(doc_pg.C_JOB_ORDERS, data.job_order_id)
         if not job_order:
             raise HTTPException(status_code=404, detail="Job order not found")
         source_data = job_order
@@ -7533,13 +7614,16 @@ async def create_opening_closing_meeting(data: OpeningClosingMeetingCreate, cred
     else:
         raise HTTPException(status_code=400, detail="Either stage1_plan_id or job_order_id is required")
     
-    # Check if meeting form already exists
-    existing = await db.opening_closing_meetings.find_one({
-        "$or": [
-            {"stage1_plan_id": data.stage1_plan_id} if data.stage1_plan_id else {"_id": None},
-            {"job_order_id": job_order_id}
-        ]
-    })
+    # Check if meeting form already exists (same as Mongo $or: stage1_plan_id or job_order_id)
+    existing = None
+    if data.stage1_plan_id:
+        existing = await doc_pg.get_by_payload_field(
+            doc_pg.C_OPENING_CLOSING_MEETINGS, "stage1_plan_id", data.stage1_plan_id
+        )
+    if not existing and job_order_id:
+        existing = await doc_pg.get_by_payload_field(
+            doc_pg.C_OPENING_CLOSING_MEETINGS, "job_order_id", job_order_id
+        )
     if existing:
         raise HTTPException(status_code=400, detail="Meeting form already exists for this audit")
     
@@ -7561,7 +7645,12 @@ async def create_opening_closing_meeting(data: OpeningClosingMeetingCreate, cred
         ]
     )
     
-    await db.opening_closing_meetings.insert_one(meeting.dict())
+    meeting_doc = meeting.model_dump()
+    meeting_doc["created_at"] = meeting_doc["created_at"].isoformat()
+    if meeting_doc.get("updated_at") is not None:
+        u = meeting_doc["updated_at"]
+        meeting_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_OPENING_CLOSING_MEETINGS, meeting_doc)
     
     # Create notification
     await create_notification(
@@ -7583,7 +7672,7 @@ async def get_opening_closing_meetings(credentials: HTTPAuthorizationCredentials
     """Get all Opening & Closing Meeting forms (Admin only)"""
     await get_current_user(credentials)
     
-    meetings = await db.opening_closing_meetings.find({}, {"_id": 0}).to_list(1000)
+    meetings = await doc_pg.list_ordered(doc_pg.C_OPENING_CLOSING_MEETINGS, 1000)
     return meetings
 
 @api_router.get("/opening-closing-meetings/{meeting_id}")
@@ -7591,7 +7680,7 @@ async def get_opening_closing_meeting(meeting_id: str, credentials: HTTPAuthoriz
     """Get a specific Opening & Closing Meeting form (Admin only)"""
     await get_current_user(credentials)
     
-    meeting = await db.opening_closing_meetings.find_one({"id": meeting_id}, {"_id": 0})
+    meeting = await doc_pg.get_by_doc_id(doc_pg.C_OPENING_CLOSING_MEETINGS, meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting form not found")
     
@@ -7602,8 +7691,8 @@ async def delete_opening_closing_meeting(meeting_id: str, credentials: HTTPAutho
     """Delete Opening & Closing Meeting form (Admin only)"""
     await get_current_user(credentials)
     
-    result = await db.opening_closing_meetings.delete_one({"id": meeting_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_OPENING_CLOSING_MEETINGS, meeting_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Meeting form not found")
     
     return {"message": "Meeting form deleted successfully"}
@@ -7613,18 +7702,21 @@ async def send_meeting_to_client(meeting_id: str, credentials: HTTPAuthorization
     """Send Meeting form to client for filling (Admin only)"""
     await get_current_user(credentials)
     
-    meeting = await db.opening_closing_meetings.find_one({"id": meeting_id}, {"_id": 0})
+    meeting = await doc_pg.get_by_doc_id(doc_pg.C_OPENING_CLOSING_MEETINGS, meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting form not found")
     
     # Update status
-    await db.opening_closing_meetings.update_one(
-        {"id": meeting_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_OPENING_CLOSING_MEETINGS,
+        meeting_id,
+        {
             "sent_to_client": True,
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Meeting form not found")
     
     # Generate client link
     frontend_url = os.environ.get('REACT_APP_FRONTEND_URL', os.environ.get('FRONTEND_URL', 'http://localhost:3000'))
@@ -7641,7 +7733,7 @@ async def get_meeting_pdf(meeting_id: str, credentials: HTTPAuthorizationCredent
     """Generate PDF for Opening & Closing Meeting form (Admin only)"""
     await get_current_user(credentials)
     
-    meeting = await db.opening_closing_meetings.find_one({"id": meeting_id}, {"_id": 0})
+    meeting = await doc_pg.get_by_doc_id(doc_pg.C_OPENING_CLOSING_MEETINGS, meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting form not found")
     
@@ -7663,7 +7755,9 @@ async def get_meeting_pdf(meeting_id: str, credentials: HTTPAuthorizationCredent
 @api_router.get("/public/opening-closing-meetings/{access_token}")
 async def get_public_meeting(access_token: str):
     """Get Meeting form for client to fill (public access with token)"""
-    meeting = await db.opening_closing_meetings.find_one({"access_token": access_token}, {"_id": 0})
+    meeting = await doc_pg.get_by_payload_field(
+        doc_pg.C_OPENING_CLOSING_MEETINGS, "access_token", access_token
+    )
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting form not found")
     
@@ -7686,7 +7780,9 @@ async def get_public_meeting(access_token: str):
 @api_router.post("/public/opening-closing-meetings/{access_token}/submit")
 async def submit_meeting_form(access_token: str, data: OpeningClosingMeetingSubmit):
     """Client submits the meeting attendance form (public access with token)"""
-    meeting = await db.opening_closing_meetings.find_one({"access_token": access_token})
+    meeting = await doc_pg.get_by_payload_field(
+        doc_pg.C_OPENING_CLOSING_MEETINGS, "access_token", access_token
+    )
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting form not found")
     
@@ -7698,7 +7794,10 @@ async def submit_meeting_form(access_token: str, data: OpeningClosingMeetingSubm
     
     # Update with submitted data
     update_data = {
-        "attendees": [att.dict() for att in data.attendees],
+        "attendees": [
+            att.model_dump() if hasattr(att, "model_dump") else att.dict()
+            for att in data.attendees
+        ],
         "opening_meeting_notes": data.opening_meeting_notes,
         "closing_meeting_notes": data.closing_meeting_notes,
         "status": "submitted",
@@ -7706,10 +7805,11 @@ async def submit_meeting_form(access_token: str, data: OpeningClosingMeetingSubm
         "updated_at": datetime.now(timezone.utc)
     }
     
-    await db.opening_closing_meetings.update_one(
-        {"access_token": access_token},
-        {"$set": update_data}
+    ok = await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_OPENING_CLOSING_MEETINGS, "access_token", access_token, update_data
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Meeting form not found")
     
     # Create notification
     await create_notification(
@@ -7736,20 +7836,26 @@ async def create_stage1_audit_report(data: Stage1AuditReportCreate, credentials:
     
     # Get source data
     if data.stage1_plan_id:
-        stage1_plan = await db.stage1_audit_plans.find_one({"id": data.stage1_plan_id}, {"_id": 0})
+        stage1_plan = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE1_AUDIT_PLANS, data.stage1_plan_id
+        )
         if not stage1_plan:
             raise HTTPException(status_code=404, detail="Stage 1 Audit Plan not found")
         source_data = stage1_plan
         job_order_id = stage1_plan.get('job_order_id', '')
     
     if data.meeting_id:
-        meeting = await db.opening_closing_meetings.find_one({"id": data.meeting_id}, {"_id": 0})
+        meeting = await doc_pg.get_by_doc_id(
+            doc_pg.C_OPENING_CLOSING_MEETINGS, data.meeting_id
+        )
     
     if not source_data:
         raise HTTPException(status_code=400, detail="stage1_plan_id is required")
     
     # Check if report already exists
-    existing = await db.stage1_audit_reports.find_one({"stage1_plan_id": data.stage1_plan_id})
+    existing = await doc_pg.get_by_payload_field(
+        doc_pg.C_STAGE1_AUDIT_REPORTS, "stage1_plan_id", data.stage1_plan_id
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Audit report already exists for this Stage 1 plan")
     
@@ -7822,7 +7928,12 @@ async def create_stage1_audit_report(data: Stage1AuditReportCreate, credentials:
         }
     )
     
-    await db.stage1_audit_reports.insert_one(report.dict())
+    report_doc = report.model_dump()
+    report_doc["created_at"] = report_doc["created_at"].isoformat()
+    if report_doc.get("updated_at") is not None:
+        u = report_doc["updated_at"]
+        report_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_STAGE1_AUDIT_REPORTS, report_doc)
     
     # Create notification
     await create_notification(
@@ -7843,7 +7954,7 @@ async def get_stage1_audit_reports(credentials: HTTPAuthorizationCredentials = D
     """Get all Stage 1 Audit Reports (Admin only)"""
     await get_current_user(credentials)
     
-    reports = await db.stage1_audit_reports.find({}, {"_id": 0}).to_list(1000)
+    reports = await doc_pg.list_ordered(doc_pg.C_STAGE1_AUDIT_REPORTS, 1000)
     return reports
 
 @api_router.get("/stage1-audit-reports/{report_id}")
@@ -7851,7 +7962,7 @@ async def get_stage1_audit_report(report_id: str, credentials: HTTPAuthorization
     """Get a specific Stage 1 Audit Report (Admin only)"""
     await get_current_user(credentials)
     
-    report = await db.stage1_audit_reports.find_one({"id": report_id}, {"_id": 0})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
@@ -7862,21 +7973,20 @@ async def update_stage1_audit_report(report_id: str, data: Stage1AuditReportUpda
     """Update Stage 1 Audit Report (Admin only)"""
     await get_current_user(credentials)
     
-    report = await db.stage1_audit_reports.find_one({"id": report_id})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
     update_data = {}
-    for field, value in data.dict().items():
+    for field, value in data.model_dump().items():
         if value is not None:
             update_data[field] = value
     
     update_data["updated_at"] = datetime.now(timezone.utc)
     
-    await db.stage1_audit_reports.update_one(
-        {"id": report_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_STAGE1_AUDIT_REPORTS, report_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Audit report not found")
     
     return {"message": "Audit report updated successfully"}
 
@@ -7885,8 +7995,8 @@ async def delete_stage1_audit_report(report_id: str, credentials: HTTPAuthorizat
     """Delete Stage 1 Audit Report (Admin only)"""
     await get_current_user(credentials)
     
-    result = await db.stage1_audit_reports.delete_one({"id": report_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_STAGE1_AUDIT_REPORTS, report_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
     return {"message": "Audit report deleted successfully"}
@@ -7896,7 +8006,7 @@ async def complete_stage1_audit_report(report_id: str, credentials: HTTPAuthoriz
     """Mark Stage 1 Audit Report as completed (Admin only)"""
     await get_current_user(credentials)
     
-    report = await db.stage1_audit_reports.find_one({"id": report_id})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
@@ -7904,14 +8014,17 @@ async def complete_stage1_audit_report(report_id: str, credentials: HTTPAuthoriz
     if not report.get('recommendation'):
         raise HTTPException(status_code=400, detail="Recommendation is required to complete the report")
     
-    await db.stage1_audit_reports.update_one(
-        {"id": report_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_STAGE1_AUDIT_REPORTS,
+        report_id,
+        {
             "status": "completed",
             "completed_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Audit report not found")
     
     return {"message": "Audit report marked as completed"}
 
@@ -7920,22 +8033,25 @@ async def approve_stage1_audit_report(report_id: str, credentials: HTTPAuthoriza
     """Approve Stage 1 Audit Report (Admin only)"""
     user = await get_current_user(credentials)
     
-    report = await db.stage1_audit_reports.find_one({"id": report_id})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
     if report.get('status') != 'completed':
         raise HTTPException(status_code=400, detail="Report must be completed before approval")
     
-    await db.stage1_audit_reports.update_one(
-        {"id": report_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_STAGE1_AUDIT_REPORTS,
+        report_id,
+        {
             "status": "approved",
             "approved_by": user.get('email', 'Admin'),
             "approved_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Audit report not found")
     
     return {"message": "Audit report approved"}
 
@@ -7944,7 +8060,7 @@ async def get_stage1_audit_report_pdf(report_id: str, credentials: HTTPAuthoriza
     """Generate PDF for Stage 1 Audit Report (Admin only)"""
     await get_current_user(credentials)
     
-    report = await db.stage1_audit_reports.find_one({"id": report_id}, {"_id": 0})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
@@ -7975,7 +8091,9 @@ async def create_stage2_audit_report(data: Stage2AuditReportCreate, credentials:
     
     # Get source data from Stage 2 plan
     if data.stage2_plan_id:
-        stage2_plan = await db.stage2_audit_plans.find_one({"id": data.stage2_plan_id}, {"_id": 0})
+        stage2_plan = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE2_AUDIT_PLANS, data.stage2_plan_id
+        )
         if not stage2_plan:
             raise HTTPException(status_code=404, detail="Stage 2 Audit Plan not found")
         source_data = stage2_plan
@@ -7983,13 +8101,17 @@ async def create_stage2_audit_report(data: Stage2AuditReportCreate, credentials:
     
     # Get Stage 1 report if provided
     if data.stage1_report_id:
-        stage1_report = await db.stage1_audit_reports.find_one({"id": data.stage1_report_id}, {"_id": 0})
+        stage1_report = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE1_AUDIT_REPORTS, data.stage1_report_id
+        )
     
     if not source_data:
         raise HTTPException(status_code=400, detail="stage2_plan_id is required")
     
     # Check if report already exists
-    existing = await db.stage2_audit_reports.find_one({"stage2_plan_id": data.stage2_plan_id})
+    existing = await doc_pg.get_by_payload_field(
+        doc_pg.C_STAGE2_AUDIT_REPORTS, "stage2_plan_id", data.stage2_plan_id
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Audit report already exists for this Stage 2 plan")
     
@@ -8072,7 +8194,12 @@ async def create_stage2_audit_report(data: Stage2AuditReportCreate, credentials:
         }
     )
     
-    await db.stage2_audit_reports.insert_one(report.dict())
+    report_doc = report.model_dump()
+    report_doc["created_at"] = report_doc["created_at"].isoformat()
+    if report_doc.get("updated_at") is not None:
+        u = report_doc["updated_at"]
+        report_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_STAGE2_AUDIT_REPORTS, report_doc)
     
     # Create notification
     await create_notification(
@@ -8093,7 +8220,7 @@ async def get_stage2_audit_reports(credentials: HTTPAuthorizationCredentials = D
     """Get all Stage 2 Audit Reports (Admin only)"""
     await get_current_user(credentials)
     
-    reports = await db.stage2_audit_reports.find({}, {"_id": 0}).to_list(1000)
+    reports = await doc_pg.list_ordered(doc_pg.C_STAGE2_AUDIT_REPORTS, 1000)
     return reports
 
 @api_router.get("/stage2-audit-reports/{report_id}")
@@ -8101,7 +8228,7 @@ async def get_stage2_audit_report(report_id: str, credentials: HTTPAuthorization
     """Get a specific Stage 2 Audit Report (Admin only)"""
     await get_current_user(credentials)
     
-    report = await db.stage2_audit_reports.find_one({"id": report_id}, {"_id": 0})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
@@ -8112,21 +8239,20 @@ async def update_stage2_audit_report(report_id: str, data: Stage2AuditReportUpda
     """Update Stage 2 Audit Report (Admin only)"""
     await get_current_user(credentials)
     
-    report = await db.stage2_audit_reports.find_one({"id": report_id})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
     update_data = {}
-    for field, value in data.dict().items():
+    for field, value in data.model_dump().items():
         if value is not None:
             update_data[field] = value
     
     update_data["updated_at"] = datetime.now(timezone.utc)
     
-    await db.stage2_audit_reports.update_one(
-        {"id": report_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_STAGE2_AUDIT_REPORTS, report_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Audit report not found")
     
     return {"message": "Audit report updated successfully"}
 
@@ -8135,8 +8261,8 @@ async def delete_stage2_audit_report(report_id: str, credentials: HTTPAuthorizat
     """Delete Stage 2 Audit Report (Admin only)"""
     await get_current_user(credentials)
     
-    result = await db.stage2_audit_reports.delete_one({"id": report_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_STAGE2_AUDIT_REPORTS, report_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
     return {"message": "Audit report deleted successfully"}
@@ -8146,21 +8272,24 @@ async def complete_stage2_audit_report(report_id: str, credentials: HTTPAuthoriz
     """Mark Stage 2 Audit Report as completed (Admin only)"""
     await get_current_user(credentials)
     
-    report = await db.stage2_audit_reports.find_one({"id": report_id})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
     if not report.get('overall_recommendation'):
         raise HTTPException(status_code=400, detail="Overall recommendation is required to complete the report")
     
-    await db.stage2_audit_reports.update_one(
-        {"id": report_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_STAGE2_AUDIT_REPORTS,
+        report_id,
+        {
             "status": "completed",
             "completed_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Audit report not found")
     
     return {"message": "Audit report marked as completed"}
 
@@ -8169,22 +8298,25 @@ async def approve_stage2_audit_report(report_id: str, credentials: HTTPAuthoriza
     """Approve Stage 2 Audit Report (Admin only)"""
     user = await get_current_user(credentials)
     
-    report = await db.stage2_audit_reports.find_one({"id": report_id})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
     if report.get('status') != 'completed':
         raise HTTPException(status_code=400, detail="Report must be completed before approval")
     
-    await db.stage2_audit_reports.update_one(
-        {"id": report_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_STAGE2_AUDIT_REPORTS,
+        report_id,
+        {
             "status": "approved",
             "approved_by": user.get('email', 'Admin'),
             "approved_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Audit report not found")
     
     return {"message": "Audit report approved"}
 
@@ -8193,7 +8325,7 @@ async def get_stage2_audit_report_pdf(report_id: str, credentials: HTTPAuthoriza
     """Generate PDF for Stage 2 Audit Report (Admin only)"""
     await get_current_user(credentials)
     
-    report = await db.stage2_audit_reports.find_one({"id": report_id}, {"_id": 0})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Audit report not found")
     
@@ -8225,7 +8357,9 @@ async def create_auditor_notes(
     
     # If creating from Stage 2 report, pull data from there
     if data.stage2_report_id:
-        report = await db.stage2_audit_reports.find_one({"id": data.stage2_report_id}, {"_id": 0})
+        report = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE2_AUDIT_REPORTS, data.stage2_report_id
+        )
         if not report:
             raise HTTPException(status_code=404, detail="Stage 2 Audit Report not found")
         
@@ -8255,7 +8389,15 @@ async def create_auditor_notes(
         notes.department = data.department
     
     # Save to database
-    await db.auditor_notes.insert_one(notes.model_dump())
+    notes_doc = notes.model_dump()
+    notes_doc["created_at"] = notes_doc["created_at"].isoformat()
+    if notes_doc.get("completed_at") is not None:
+        c = notes_doc["completed_at"]
+        notes_doc["completed_at"] = c.isoformat() if isinstance(c, datetime) else c
+    if notes_doc.get("updated_at") is not None:
+        u = notes_doc["updated_at"]
+        notes_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_AUDITOR_NOTES, notes_doc)
     
     return notes.model_dump()
 
@@ -8266,7 +8408,7 @@ async def get_auditor_notes_list(
     """Get all auditor notes"""
     await get_current_user(credentials)
     
-    notes_list = await db.auditor_notes.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    notes_list = await doc_pg.list_ordered(doc_pg.C_AUDITOR_NOTES, 1000)
     return notes_list
 
 @api_router.get("/auditor-notes/{notes_id}")
@@ -8277,7 +8419,7 @@ async def get_auditor_notes(
     """Get specific auditor notes by ID"""
     await get_current_user(credentials)
     
-    notes = await db.auditor_notes.find_one({"id": notes_id}, {"_id": 0})
+    notes = await doc_pg.get_by_doc_id(doc_pg.C_AUDITOR_NOTES, notes_id)
     if not notes:
         raise HTTPException(status_code=404, detail="Auditor Notes not found")
     
@@ -8292,7 +8434,7 @@ async def update_auditor_notes(
     """Update auditor notes"""
     await get_current_user(credentials)
     
-    existing = await db.auditor_notes.find_one({"id": notes_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_AUDITOR_NOTES, notes_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Auditor Notes not found")
     
@@ -8318,12 +8460,14 @@ async def update_auditor_notes(
     if data.notes_ar is not None:
         update_data["notes_ar"] = data.notes_ar
     
-    await db.auditor_notes.update_one(
-        {"id": notes_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_AUDITOR_NOTES, notes_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Auditor Notes not found")
     
-    return await db.auditor_notes.find_one({"id": notes_id}, {"_id": 0})
+    out = await doc_pg.get_by_doc_id(doc_pg.C_AUDITOR_NOTES, notes_id)
+    if not out:
+        raise HTTPException(status_code=404, detail="Auditor Notes not found")
+    return out
 
 @api_router.delete("/auditor-notes/{notes_id}")
 async def delete_auditor_notes(
@@ -8333,8 +8477,8 @@ async def delete_auditor_notes(
     """Delete auditor notes"""
     await get_current_user(credentials)
     
-    result = await db.auditor_notes.delete_one({"id": notes_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_AUDITOR_NOTES, notes_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Auditor Notes not found")
     
     return {"message": "Auditor Notes deleted"}
@@ -8347,18 +8491,21 @@ async def complete_auditor_notes(
     """Mark auditor notes as completed"""
     await get_current_user(credentials)
     
-    existing = await db.auditor_notes.find_one({"id": notes_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_AUDITOR_NOTES, notes_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Auditor Notes not found")
     
-    await db.auditor_notes.update_one(
-        {"id": notes_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDITOR_NOTES,
+        notes_id,
+        {
             "status": "completed",
             "completed_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Auditor Notes not found")
     
     return {"message": "Auditor Notes marked as completed"}
 
@@ -8370,7 +8517,7 @@ async def get_auditor_notes_pdf(
     """Generate PDF for Auditor Notes"""
     await get_current_user(credentials)
     
-    notes = await db.auditor_notes.find_one({"id": notes_id}, {"_id": 0})
+    notes = await doc_pg.get_by_doc_id(doc_pg.C_AUDITOR_NOTES, notes_id)
     if not notes:
         raise HTTPException(status_code=404, detail="Auditor Notes not found")
     
@@ -8399,7 +8546,9 @@ async def create_nonconformity_report(
     
     # If creating from Stage 2 report, pull data from there
     if data.stage2_report_id:
-        stage2_report = await db.stage2_audit_reports.find_one({"id": data.stage2_report_id}, {"_id": 0})
+        stage2_report = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE2_AUDIT_REPORTS, data.stage2_report_id
+        )
         if not stage2_report:
             raise HTTPException(status_code=404, detail="Stage 2 Audit Report not found")
         
@@ -8449,7 +8598,12 @@ async def create_nonconformity_report(
         "re_audit_performed": False
     }
     
-    await db.nonconformity_reports.insert_one(report.model_dump())
+    report_doc = report.model_dump()
+    report_doc["created_at"] = report_doc["created_at"].isoformat()
+    if report_doc.get("updated_at") is not None:
+        u = report_doc["updated_at"]
+        report_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_NONCONFORMITY_REPORTS, report_doc)
     
     return report.model_dump()
 
@@ -8460,7 +8614,7 @@ async def get_nonconformity_reports(
     """Get all nonconformity reports"""
     await get_current_user(credentials)
     
-    reports = await db.nonconformity_reports.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    reports = await doc_pg.list_ordered(doc_pg.C_NONCONFORMITY_REPORTS, 1000)
     return reports
 
 @api_router.get("/nonconformity-reports/{report_id}")
@@ -8471,7 +8625,7 @@ async def get_nonconformity_report(
     """Get specific nonconformity report by ID"""
     await get_current_user(credentials)
     
-    report = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
@@ -8486,7 +8640,7 @@ async def update_nonconformity_report(
     """Update nonconformity report"""
     await get_current_user(credentials)
     
-    existing = await db.nonconformity_reports.find_one({"id": report_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
@@ -8525,12 +8679,14 @@ async def update_nonconformity_report(
     if data.final_date is not None:
         update_data["final_date"] = data.final_date
     
-    await db.nonconformity_reports.update_one(
-        {"id": report_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
-    return await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    out = await doc_pg.get_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
+    if not out:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
+    return out
 
 @api_router.delete("/nonconformity-reports/{report_id}")
 async def delete_nonconformity_report(
@@ -8540,8 +8696,8 @@ async def delete_nonconformity_report(
     """Delete nonconformity report"""
     await get_current_user(credentials)
     
-    result = await db.nonconformity_reports.delete_one({"id": report_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
     return {"message": "Nonconformity Report deleted"}
@@ -8555,7 +8711,7 @@ async def add_nonconformity(
     """Add a new nonconformity to the report"""
     await get_current_user(credentials)
     
-    existing = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
@@ -8568,16 +8724,19 @@ async def add_nonconformity(
     total_minor = len([n for n in ncs if n.get("nc_type") == "minor"])
     closed_count = len([n for n in ncs if n.get("status") == "closed"])
     
-    await db.nonconformity_reports.update_one(
-        {"id": report_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_NONCONFORMITY_REPORTS,
+        report_id,
+        {
             "nonconformities": ncs,
             "total_major": total_major,
             "total_minor": total_minor,
             "closed_count": closed_count,
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
     return {"message": "Nonconformity added", "nc_id": nc_dict["id"]}
 
@@ -8591,7 +8750,7 @@ async def update_nonconformity(
     """Update a specific nonconformity in the report"""
     await get_current_user(credentials)
     
-    existing = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
@@ -8614,16 +8773,19 @@ async def update_nonconformity(
     total_minor = len([n for n in ncs if n.get("nc_type") == "minor"])
     closed_count = len([n for n in ncs if n.get("status") == "closed"])
     
-    await db.nonconformity_reports.update_one(
-        {"id": report_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_NONCONFORMITY_REPORTS,
+        report_id,
+        {
             "nonconformities": ncs,
             "total_major": total_major,
             "total_minor": total_minor,
             "closed_count": closed_count,
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
     return {"message": "Nonconformity updated"}
 
@@ -8636,7 +8798,7 @@ async def delete_nonconformity(
     """Delete a specific nonconformity from the report"""
     await get_current_user(credentials)
     
-    existing = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
@@ -8652,16 +8814,19 @@ async def delete_nonconformity(
     total_minor = len([n for n in ncs if n.get("nc_type") == "minor"])
     closed_count = len([n for n in ncs if n.get("status") == "closed"])
     
-    await db.nonconformity_reports.update_one(
-        {"id": report_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_NONCONFORMITY_REPORTS,
+        report_id,
+        {
             "nonconformities": ncs,
             "total_major": total_major,
             "total_minor": total_minor,
             "closed_count": closed_count,
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
     return {"message": "Nonconformity deleted"}
 
@@ -8673,18 +8838,21 @@ async def close_nonconformity_report(
     """Close the nonconformity report"""
     await get_current_user(credentials)
     
-    existing = await db.nonconformity_reports.find_one({"id": report_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
-    await db.nonconformity_reports.update_one(
-        {"id": report_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_NONCONFORMITY_REPORTS,
+        report_id,
+        {
             "status": "closed",
             "final_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
     return {"message": "Nonconformity Report closed"}
 
@@ -8696,7 +8864,7 @@ async def get_nonconformity_report_pdf(
     """Generate PDF for Nonconformity Report"""
     await get_current_user(credentials)
     
-    report = await db.nonconformity_reports.find_one({"id": report_id}, {"_id": 0})
+    report = await doc_pg.get_by_doc_id(doc_pg.C_NONCONFORMITY_REPORTS, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Nonconformity Report not found")
     
@@ -8727,7 +8895,9 @@ async def create_certificate_data(
     
     # If creating from NC report, pull data from there
     if data.nc_report_id:
-        nc_report = await db.nonconformity_reports.find_one({"id": data.nc_report_id}, {"_id": 0})
+        nc_report = await doc_pg.get_by_doc_id(
+            doc_pg.C_NONCONFORMITY_REPORTS, data.nc_report_id
+        )
         if not nc_report:
             raise HTTPException(status_code=404, detail="NC Report not found")
         
@@ -8741,7 +8911,9 @@ async def create_certificate_data(
     
     # If creating from Stage 2 report
     elif data.stage2_report_id:
-        report = await db.stage2_audit_reports.find_one({"id": data.stage2_report_id}, {"_id": 0})
+        report = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE2_AUDIT_REPORTS, data.stage2_report_id
+        )
         if not report:
             raise HTTPException(status_code=404, detail="Stage 2 Report not found")
         
@@ -9069,13 +9241,14 @@ async def create_certificate(cert_data: CertificateCreate, credentials: HTTPAuth
     """Create a new certificate after successful audit"""
     await get_current_user(credentials)
     
-    # Get contract/agreement data
-    agreement = await db.certification_agreements.find_one({"id": cert_data.contract_id}, {"_id": 0})
+    agreement = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATION_AGREEMENTS, cert_data.contract_id)
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     
-    # Get proposal data for organization info
-    proposal = await db.proposals.find_one({"id": agreement.get('proposal_id')}, {"_id": 0})
+    proposal = None
+    _pid = agreement.get("proposal_id")
+    if _pid:
+        proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, str(_pid))
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
@@ -9270,11 +9443,14 @@ async def get_expiring_items(
         else:
             alerts["info"].append(alert_item)
     
-    # Get upcoming surveillance audits
-    upcoming_audits = await db.audit_schedules.find({
-        "status": {"$ne": "completed"},
-        "scheduled_date": {"$gte": today_str, "$lte": expiry_date}
-    }, {"_id": 0}).to_list(100)
+    all_sched = await doc_pg.list_ordered(doc_pg.C_AUDIT_SCHEDULES, 2000)
+    upcoming_audits = [
+        a
+        for a in all_sched
+        if a.get("status") != "completed"
+        and a.get("scheduled_date")
+        and today_str <= str(a["scheduled_date"]) <= expiry_date
+    ][:100]
     
     for audit in upcoming_audits:
         audit_date = datetime.strptime(audit['scheduled_date'], "%Y-%m-%d")
@@ -9314,11 +9490,11 @@ async def get_dashboard_analytics(credentials: HTTPAuthorizationCredentials = De
     
     # Get all data
     forms = await db.forms.find({}, {"_id": 0}).to_list(1000)
-    proposals = await db.proposals.find({}, {"_id": 0}).to_list(1000)
-    agreements = await db.certification_agreements.find({}, {"_id": 0}).to_list(1000)
+    proposals = await doc_pg.list_ordered(doc_pg.C_PROPOSALS, 1000)
+    agreements = await doc_pg.list_ordered(doc_pg.C_CERTIFICATION_AGREEMENTS, 1000)
     invoices = await db.invoices.find({}, {"_id": 0}).to_list(1000)
     certificates = await db.certificates.find({}, {"_id": 0}).to_list(1000)
-    audits = await db.audit_schedules.find({}, {"_id": 0}).to_list(1000)
+    audits = await doc_pg.list_ordered(doc_pg.C_AUDIT_SCHEDULES, 1000)
     
     # Calculate conversion rates
     total_forms = len(forms)
@@ -9434,6 +9610,7 @@ async def clear_all_test_data(current_user: dict = Depends(require_admin)):
         'auditors',
         'audit_schedules',
         'audit_assignments',
+        'sites',
         'client_feedback',
         'technical_reviews',
         'pre_transfer_reviews'
@@ -9444,6 +9621,12 @@ async def clear_all_test_data(current_user: dict = Depends(require_admin)):
     
     for collection_name in collections_to_clear:
         try:
+            if collection_name in _APP_DOCUMENTS_MONGO_ALIASES:
+                n = await doc_pg.delete_all_in_collection(collection_name)
+                if n > 0:
+                    deleted_counts[collection_name] = n
+                    total_deleted += n
+                continue
             collection = db[collection_name]
             count = await collection.count_documents({})
             if count > 0:
@@ -9482,14 +9665,17 @@ async def get_data_summary(current_user: dict = Depends(require_admin)):
     
     for collection_name, arabic_name in collections_to_check:
         try:
-            count = await db[collection_name].count_documents({})
+            if collection_name in _APP_DOCUMENTS_MONGO_ALIASES:
+                count = await doc_pg.count_all(collection_name)
+            else:
+                count = await db[collection_name].count_documents({})
             summary.append({
                 "collection": collection_name,
                 "name_ar": arabic_name,
                 "count": count
             })
             total_records += count
-        except:
+        except Exception:
             summary.append({
                 "collection": collection_name,
                 "name_ar": arabic_name,

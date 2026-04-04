@@ -3,10 +3,11 @@ Auditor management routes.
 """
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPAuthorizationCredentials
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime, timezone
 
-from database import db
+import app_documents_pg as doc_pg
+import auditors_pg
 from auth import get_current_user, security
 from models.auditor import Auditor, AuditorCreate, AuditorAvailability
 
@@ -22,21 +23,23 @@ async def get_auditors(
     """Get all auditors with optional filtering"""
     await get_current_user(credentials)
     
-    query = {}
-    if status:
-        query["status"] = status
-    if specialization:
-        query["specializations"] = specialization
+    auditors = await auditors_pg.list_auditors_filtered(
+        status=status,
+        specialization=specialization,
+        sort_by_name=True,
+        max_results=100,
+    )
+    all_assignments = await doc_pg.list_ordered(doc_pg.C_AUDIT_ASSIGNMENTS, 5000)
     
-    auditors = await db.auditors.find(query, {"_id": 0}).sort("name", 1).to_list(100)
-    
-    # Calculate current assignments for each auditor
     for auditor in auditors:
-        assignments = await db.audit_assignments.count_documents({
-            "auditor_id": auditor['id'],
-            "status": {"$in": ["assigned", "confirmed"]}
-        })
-        auditor['current_assignments'] = assignments
+        aid = str(auditor["id"])
+        assignments = sum(
+            1
+            for x in all_assignments
+            if str(x.get("auditor_id", "")) == aid
+            and x.get("status") in ("assigned", "confirmed")
+        )
+        auditor["current_assignments"] = assignments
     
     return auditors
 
@@ -50,11 +53,14 @@ async def get_available_auditors(
     """Get auditors available on a specific date"""
     await get_current_user(credentials)
     
-    query = {"status": "active"}
-    if specialization:
-        query["specializations"] = specialization
-    
-    auditors = await db.auditors.find(query, {"_id": 0}).to_list(100)
+    auditors = await auditors_pg.list_auditors_filtered(
+        status="active",
+        specialization=specialization,
+        sort_by_name=False,
+        max_results=100,
+    )
+    audit_schedules_cache = await doc_pg.list_ordered(doc_pg.C_AUDIT_SCHEDULES, 3000)
+    all_assignments = await doc_pg.list_ordered(doc_pg.C_AUDIT_ASSIGNMENTS, 5000)
     
     available_auditors = []
     for auditor in auditors:
@@ -66,17 +72,19 @@ async def get_available_auditors(
                 break
         
         if is_available:
-            # Check if auditor is already assigned to an audit on this date
-            existing = await db.audit_schedules.count_documents({
-                "scheduled_date": date,
-                "auditors": {"$regex": auditor['id']}
-            })
+            aid = str(auditor["id"])
+            existing = sum(
+                1
+                for a in audit_schedules_cache
+                if a.get("scheduled_date") == date and aid in str(a.get("auditors", ""))
+            )
             
-            # Check max audits per month
-            monthly_count = await db.audit_assignments.count_documents({
-                "auditor_id": auditor['id'],
-                "status": {"$in": ["assigned", "confirmed", "completed"]}
-            })
+            monthly_count = sum(
+                1
+                for x in all_assignments
+                if str(x.get("auditor_id", "")) == aid
+                and x.get("status") in ("assigned", "confirmed", "completed")
+            )
             
             auditor['is_available'] = existing == 0 and monthly_count < auditor.get('max_audits_per_month', 10)
             auditor['existing_audits_today'] = existing
@@ -96,7 +104,9 @@ async def create_auditor(
     
     # Check if email already exists
     if auditor_data.email:
-        existing = await db.auditors.find_one({"email": auditor_data.email})
+        existing = await doc_pg.get_by_payload_field(
+            doc_pg.C_AUDITORS, "email", str(auditor_data.email).strip()
+        )
         if existing:
             raise HTTPException(status_code=400, detail="Auditor with this email already exists")
     
@@ -104,7 +114,7 @@ async def create_auditor(
     auditor_doc = auditor.model_dump()
     auditor_doc['created_at'] = auditor_doc['created_at'].isoformat()
     
-    await db.auditors.insert_one(auditor_doc)
+    await doc_pg.insert_document(doc_pg.C_AUDITORS, auditor_doc)
     
     return {"message": "Auditor created", "auditor_id": auditor.id}
 
@@ -117,17 +127,15 @@ async def get_auditor(
     """Get auditor details"""
     await get_current_user(credentials)
     
-    auditor = await db.auditors.find_one({"id": auditor_id}, {"_id": 0})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
-    # Get recent assignments
-    assignments = await db.audit_assignments.find(
-        {"auditor_id": auditor_id},
-        {"_id": 0}
-    ).sort("assigned_at", -1).to_list(20)
-    
-    auditor['recent_assignments'] = assignments
+    candidates = await doc_pg.list_by_payload_field(
+        doc_pg.C_AUDIT_ASSIGNMENTS, "auditor_id", auditor_id, 100
+    )
+    candidates.sort(key=lambda x: str(x.get("assigned_at", "")), reverse=True)
+    auditor["recent_assignments"] = candidates[:20]
     
     return auditor
 
@@ -141,12 +149,12 @@ async def update_auditor(
     """Update auditor details"""
     await get_current_user(credentials)
     
-    auditor = await db.auditors.find_one({"id": auditor_id})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
-    updates['updated_at'] = datetime.now(timezone.utc).isoformat()
-    await db.auditors.update_one({"id": auditor_id}, {"$set": updates})
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await doc_pg.merge_set_by_doc_id(doc_pg.C_AUDITORS, auditor_id, updates)
     
     return {"message": "Auditor updated"}
 
@@ -159,15 +167,17 @@ async def delete_auditor(
     """Delete an auditor (soft delete - sets status to inactive)"""
     await get_current_user(credentials)
     
-    auditor = await db.auditors.find_one({"id": auditor_id})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
-    # Check for active assignments
-    active_assignments = await db.audit_assignments.count_documents({
-        "auditor_id": auditor_id,
-        "status": {"$in": ["assigned", "confirmed"]}
-    })
+    all_assignments = await doc_pg.list_ordered(doc_pg.C_AUDIT_ASSIGNMENTS, 5000)
+    active_assignments = sum(
+        1
+        for x in all_assignments
+        if str(x.get("auditor_id", "")) == str(auditor_id)
+        and x.get("status") in ("assigned", "confirmed")
+    )
     
     if active_assignments > 0:
         raise HTTPException(
@@ -175,10 +185,10 @@ async def delete_auditor(
             detail=f"Cannot delete auditor with {active_assignments} active assignments"
         )
     
-    # Soft delete
-    await db.auditors.update_one(
-        {"id": auditor_id},
-        {"$set": {"status": "inactive", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDITORS,
+        auditor_id,
+        {"status": "inactive", "updated_at": datetime.now(timezone.utc).isoformat()},
     )
     
     return {"message": "Auditor deactivated"}
@@ -193,7 +203,7 @@ async def set_auditor_availability(
     """Set auditor availability for specific dates"""
     await get_current_user(credentials)
     
-    auditor = await db.auditors.find_one({"id": auditor_id})
+    auditor = await doc_pg.get_by_doc_id(doc_pg.C_AUDITORS, auditor_id)
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditor not found")
     
@@ -211,12 +221,13 @@ async def set_auditor_availability(
         "reason": availability_data.get('reason', '')
     })
     
-    await db.auditors.update_one(
-        {"id": auditor_id},
-        {"$set": {
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDITORS,
+        auditor_id,
+        {
             "availability": current_availability,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
     )
     
     return {"message": "Availability updated"}

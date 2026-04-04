@@ -11,7 +11,9 @@ class Notification(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: str  # form_submitted, proposal_sent, proposal_accepted, proposal_rejected, agreement_signed
     title: str
+    title_ar: str = ""
     message: str
+    message_ar: str = ""
     related_id: Optional[str] = None  # ID of related form/proposal/agreement
     related_type: Optional[str] = None  # form, proposal, agreement
     is_read: bool = False

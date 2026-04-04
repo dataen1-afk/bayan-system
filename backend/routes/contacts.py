@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 import uuid
 
 from database import db
+import app_documents_pg as doc_pg
 from auth import get_current_user, security
 
 router = APIRouter(prefix="/contacts", tags=["Contacts"])
@@ -64,11 +65,11 @@ async def create_contact_record(
     
     # Get customer name from form or proposal
     customer_name = ""
-    form = await db.application_forms.find_one({"id": contact_data.customer_id}, {"_id": 0})
+    form = await doc_pg.get_by_doc_id(doc_pg.C_APPLICATION_FORMS, contact_data.customer_id)
     if form:
         customer_name = form.get('client_info', {}).get('company_name', '')
     else:
-        proposal = await db.proposals.find_one({"id": contact_data.customer_id}, {"_id": 0})
+        proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, contact_data.customer_id)
         if proposal:
             customer_name = proposal.get('organization_name', '')
     

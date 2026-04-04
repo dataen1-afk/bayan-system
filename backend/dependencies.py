@@ -22,6 +22,8 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 from database import db
+from sqlalchemy.exc import SQLAlchemyError
+from notifications_pg import insert_notification_document
 from auth import security, get_current_user
 
 # Contracts directory
@@ -90,8 +92,11 @@ async def create_notification(notification_type: str, title: str, message: str, 
         related_type=related_type
     )
     notification_doc = notification.model_dump()
-    notification_doc['created_at'] = notification_doc['created_at'].isoformat()
-    await db.notifications.insert_one(notification_doc)
+    notification_doc["created_at"] = notification_doc["created_at"].isoformat()
+    try:
+        await insert_notification_document(notification_doc)
+    except SQLAlchemyError:
+        raise
     return notification
 
 # ================= CERTIFICATE HELPERS =================

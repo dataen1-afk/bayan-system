@@ -1,14 +1,13 @@
 """
 Site management routes.
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
-from typing import Optional
 from datetime import datetime, timezone
 import uuid
 
-from database import db
+import app_documents_pg as doc_pg
 from auth import get_current_user, security
 
 router = APIRouter(prefix="/sites", tags=["Sites"])
@@ -45,8 +44,7 @@ class SiteCreate(BaseModel):
 async def get_sites(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get all sites"""
     await get_current_user(credentials)
-    sites = await db.sites.find({}, {"_id": 0}).to_list(1000)
-    return sites
+    return await doc_pg.list_ordered(doc_pg.C_SITES, 1000)
 
 
 @router.post("")
@@ -72,7 +70,7 @@ async def create_site(
     site_doc = site.model_dump()
     site_doc['created_at'] = site_doc['created_at'].isoformat()
     
-    await db.sites.insert_one(site_doc)
+    await doc_pg.insert_document(doc_pg.C_SITES, site_doc)
     return {"message": "Site created", "id": site.id}
 
 
@@ -83,5 +81,5 @@ async def delete_site(
 ):
     """Delete a site"""
     await get_current_user(credentials)
-    await db.sites.delete_one({"id": site_id})
+    await doc_pg.delete_by_doc_id(doc_pg.C_SITES, site_id)
     return {"message": "Site deleted"}

@@ -23,6 +23,7 @@ from dependencies import (
     Certificate,
     CONTRACTS_DIR,
 )
+import app_documents_pg as doc_pg
 from technical_review_generator import generate_technical_review_pdf
 
 router = APIRouter(prefix="/technical-reviews", tags=["Technical Reviews"])
@@ -174,7 +175,9 @@ async def create_technical_review(
     )
     
     if data.stage2_report_id:
-        stage2_report = await db.stage2_audit_reports.find_one({"id": data.stage2_report_id}, {"_id": 0})
+        stage2_report = await doc_pg.get_by_doc_id(
+            doc_pg.C_STAGE2_AUDIT_REPORTS, data.stage2_report_id
+        )
         if stage2_report:
             review.job_order_id = stage2_report.get('job_order_id', '')
             review.audit_program_id = stage2_report.get('audit_program_id', '')

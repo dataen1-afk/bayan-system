@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 import os
 
 from database import db, CERTIFICATES_DIR
+import app_documents_pg as doc_pg
 from auth import require_admin
 from models.certificate import Certificate, CertificateCreate
 from certificate_generator import generate_certificate_pdf, get_qr_code_base64
@@ -85,7 +86,9 @@ async def create_certificate(
 ):
     """Create a new certificate"""
     # Get agreement info
-    agreement = await db.certification_agreements.find_one({"id": cert_data.contract_id})
+    agreement = await doc_pg.get_by_doc_id(
+        doc_pg.C_CERTIFICATION_AGREEMENTS, cert_data.contract_id
+    )
     if not agreement:
         raise HTTPException(status_code=404, detail="Agreement not found")
     

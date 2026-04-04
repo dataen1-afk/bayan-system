@@ -89,6 +89,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
-    from database import client
-    client.close()
+    from database import close_db
+
+    await close_db()
     logger.info("Server shutdown complete")

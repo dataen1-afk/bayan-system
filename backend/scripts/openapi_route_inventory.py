@@ -8,7 +8,7 @@ Usage (from repo root or backend/):
   python scripts/openapi_route_inventory.py --app server_new
   python scripts/openapi_route_inventory.py --compare-url https://bayan-backend-4zn3.onrender.com
 
-Requires backend/.env or minimal env (MONGO_URL, JWT_SECRET) for importing server.py.
+Requires backend/.env or minimal env (DATABASE_URL, JWT_SECRET) for importing server.py.
 """
 from __future__ import annotations
 
@@ -28,8 +28,8 @@ def _ensure_min_env() -> None:
     from dotenv import load_dotenv
 
     load_dotenv(BACKEND / ".env", override=False)
-    if not os.environ.get("MONGO_URL"):
-        os.environ["MONGO_URL"] = "mongodb://127.0.0.1:27017"
+    if not os.environ.get("DATABASE_URL"):
+        os.environ["DATABASE_URL"] = "postgresql://postgres:postgres@127.0.0.1:5432/postgres"
     if not os.environ.get("JWT_SECRET"):
         os.environ["JWT_SECRET"] = "local-openapi-inventory-placeholder-min-32-chars"
 

@@ -8,6 +8,7 @@
 #   Root Directory: backend
 #   Build Command:  pip install -r requirements.txt
 #   Start Command:  uvicorn server:app --host 0.0.0.0 --port $PORT
+#   Environment:    DATABASE_URL=postgresql://...  JWT_SECRET=...  CORS_ORIGINS=...
 #
 # Or connect this repo as a Blueprint and adjust the service name/plan as needed.
 

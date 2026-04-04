@@ -5,7 +5,7 @@ End-to-end local auth check: login -> JWT -> GET /api/roles (no Swagger).
 Run from the backend directory:
     python tests/check_auth_flow.py
 
-Exit code 0 on PASS, 1 on FAIL. Requires MongoDB reachable per backend/.env and seeded admin.
+Exit code 0 on PASS, 1 on FAIL. Requires PostgreSQL reachable per backend/.env (DATABASE_URL) and seeded admin.
 """
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ def main() -> int:
             if r_login.status_code != 200:
                 print(f"[FAIL] Login error body: {r_login.text[:800]}")
                 print(
-                    "\nHint: ensure MongoDB is running, DB_NAME matches DB with users, "
+                    "\nHint: ensure PostgreSQL is running, DATABASE_URL is correct, "
                     f"and user {LOGIN_EMAIL} exists (seeded on server startup)."
                 )
                 return 1

@@ -68,8 +68,16 @@ from routes.suspended_clients import router as suspended_clients_router
 from routes.portal import router as portal_router
 from routes.approvals import router as approvals_router
 from routes.dashboard import router as dashboard_router
+from routes.clients import router as clients_router
 
-from database import DB_NAME, DB_NAME_SOURCE, ENV_FILE_USED, client, db
+from database import DB_NAME, DB_NAME_SOURCE, ENV_FILE_USED, close_db, db
+from sqlalchemy.exc import SQLAlchemyError
+from contracts_pg import (
+    DB_UNAVAILABLE,
+    get_contract_by_id,
+    insert_contract_record,
+    list_contracts_for_user,
+)
 from role_permissions import UserRole, ROLE_PERMISSIONS
 from db_startup import run_database_startup
 
@@ -2276,21 +2284,21 @@ async def respond_to_quotation(quotation_id: str, response: QuotationResponse, c
         })
         
         pdf_path = generate_contract_pdf(quotation_obj, current_user)
-        
-        contract = Contract(
-            quotation_id=quotation_id,
-            client_id=quotation_doc['client_id'],
-            pdf_path=pdf_path
-        )
-        
-        contract_doc = contract.model_dump()
-        contract_doc['created_at'] = contract_doc['created_at'].isoformat()
-        
-        await db.contracts.insert_one(contract_doc)
-        
+
+        try:
+            api_contract = await insert_contract_record(
+                quotation_id=quotation_id,
+                proposal_id="",
+                client_id=str(quotation_doc["client_id"]),
+                pdf_path=str(pdf_path),
+            )
+            contract = Contract(**api_contract)
+        except SQLAlchemyError:
+            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
         return {
             "message": "Quotation approved and contract generated",
-            "contract": contract
+            "contract": contract,
         }
     
     return {"message": f"Quotation {response.status}"}
@@ -2309,31 +2317,40 @@ async def get_certification_agreements(status: str = None, current_user: dict = 
 # Contract routes
 @api_router.get("/contracts", response_model=List[Contract])
 async def get_contracts(current_user: dict = Depends(get_current_user)):
-    query = {}
-    # If client, only show their contracts
-    if current_user['role'] == UserRole.CLIENT:
-        query = {"client_id": current_user['user_id']}
-    
-    # Sort by most recent first
-    contracts = await db.contracts.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
-    
-    for contract in contracts:
-        if isinstance(contract['created_at'], str):
-            contract['created_at'] = datetime.fromisoformat(contract['created_at'])
-    
-    return contracts
+    is_client = current_user["role"] == UserRole.CLIENT
+    try:
+        rows = await list_contracts_for_user(
+            is_client=is_client,
+            user_id=str(current_user["user_id"]),
+        )
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
+    out: List[Contract] = []
+    for c in rows:
+        if isinstance(c.get("created_at"), str):
+            c["created_at"] = datetime.fromisoformat(
+                c["created_at"].replace("Z", "+00:00")
+            )
+        out.append(Contract(**c))
+    return out
 
 @api_router.get("/contracts/{contract_id}/download")
 async def download_contract(contract_id: str, current_user: dict = Depends(get_current_user)):
-    contract = await db.contracts.find_one({"id": contract_id})
+    try:
+        contract = await get_contract_by_id(contract_id)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found")
-    
+
     # Check access
-    if current_user['role'] == UserRole.CLIENT and contract['client_id'] != current_user['user_id']:
+    if current_user["role"] == UserRole.CLIENT and contract["client_id"] != str(
+        current_user["user_id"]
+    ):
         raise HTTPException(status_code=403, detail="Access denied")
-    
-    pdf_path = Path(contract['pdf_path'])
+
+    pdf_path = Path(contract["pdf_path"])
     if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="Contract file not found")
     
@@ -2784,15 +2801,15 @@ async def respond_to_proposal(access_token: str, response: ProposalResponse):
         )
         
         # TODO: Generate contract PDF
-        contract = Contract(
-            quotation_id="",
-            proposal_id=proposal['id'],
-            client_id=proposal['organization_name'],
-            pdf_path=""  # Will be generated
-        )
-        contract_doc = contract.model_dump()
-        contract_doc['created_at'] = contract_doc['created_at'].isoformat()
-        await db.contracts.insert_one(contract_doc)
+        try:
+            await insert_contract_record(
+                quotation_id="",
+                proposal_id=str(proposal["id"]),
+                client_id=str(proposal.get("organization_name", "")),
+                pdf_path="",
+            )
+        except SQLAlchemyError:
+            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     
     return {"message": f"Proposal {response.status} successfully"}
 
@@ -9527,6 +9544,7 @@ app.include_router(suspended_clients_router, prefix="/api")
 app.include_router(portal_router, prefix="/api")
 app.include_router(approvals_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
+app.include_router(clients_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -9556,4 +9574,4 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    await close_db()

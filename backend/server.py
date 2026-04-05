@@ -72,7 +72,7 @@ from routes.dashboard import router as dashboard_router
 from routes.clients import router as clients_router
 
 from database import DB_NAME, DB_NAME_SOURCE, ENV_FILE_USED, close_db
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import users_pg
 from contracts_pg import (
     DB_UNAVAILABLE,
@@ -2106,32 +2106,86 @@ async def delete_user(user_id: str, current_user: dict = Depends(require_system_
 @api_router.post("/setup-admin")
 async def setup_admin_bootstrap(data: SetupAdminRequest):
     """Create the first admin when no users exist. Returns 409 if any user is already present."""
-    try:
-        n = await users_pg.count_users()
-    except SQLAlchemyError:
-        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
-    if n > 0:
-        raise HTTPException(
-            status_code=409,
-            detail="Setup already completed; users exist. Use /api/auth/login.",
-        )
-    uid = str(uuid.uuid4())
+    _setup_log = logging.getLogger("bayan.setup_admin")
     email_norm = str(data.email).lower().strip()
+
     try:
-        await users_pg.insert_user_legacy(
-            {
-                "id": uid,
-                "name": (data.name or "Administrator").strip(),
-                "email": email_norm,
-                "role": UserRole.ADMIN,
-                "password": hash_password(data.password),
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "active": True,
-            }
+        try:
+            n = await users_pg.count_users()
+        except SQLAlchemyError as e:
+            _setup_log.warning(
+                "setup-admin: count_users failed (database): %s",
+                e,
+                exc_info=True,
+            )
+            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
+        if n > 0:
+            raise HTTPException(
+                status_code=409,
+                detail="Setup already completed; users exist. Use /api/auth/login.",
+            )
+
+        uid = str(uuid.uuid4())
+        try:
+            password_hash = hash_password(data.password)
+        except Exception as e:
+            _setup_log.exception(
+                "setup-admin: hash_password failed email=%s err=%s",
+                email_norm,
+                e,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="Setup failed: password hashing error",
+            )
+
+        try:
+            await users_pg.insert_user_legacy(
+                {
+                    "id": uid,
+                    "name": (data.name or "Administrator").strip(),
+                    "email": email_norm,
+                    "role": UserRole.ADMIN,
+                    "password": password_hash,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "active": True,
+                }
+            )
+        except IntegrityError as e:
+            _setup_log.warning(
+                "setup-admin: insert conflict (duplicate email or id) email=%s: %s",
+                email_norm,
+                e,
+                exc_info=True,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail="Setup conflict: user may already exist. Use /api/auth/login.",
+            )
+        except SQLAlchemyError as e:
+            _setup_log.warning(
+                "setup-admin: insert_user_legacy failed (database) email=%s: %s",
+                email_norm,
+                e,
+                exc_info=True,
+            )
+            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
+        _setup_log.info("setup-admin: created first admin email=%s id=%s", email_norm, uid)
+        return {"message": "Admin user created", "email": email_norm}
+    except HTTPException:
+        raise
+    except Exception as e:
+        _setup_log.exception(
+            "setup-admin: unexpected error email=%s: %s",
+            email_norm,
+            e,
         )
-    except SQLAlchemyError:
-        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
-    return {"message": "Admin user created", "email": email_norm}
+        raise HTTPException(
+            status_code=500,
+            detail="Setup failed (SETUP_500)",
+        )
 
 
 @api_router.post("/internal/reset-admin")

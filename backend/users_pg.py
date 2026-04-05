@@ -6,6 +6,7 @@ Legacy Mongo user documents map to columns plus JSONB ``extra`` for profile/cale
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -14,6 +15,8 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from database import AsyncSessionLocal
+
+logger = logging.getLogger(__name__)
 
 SQL_SELECT_BY_ID = text(
     """
@@ -303,6 +306,12 @@ async def insert_user_legacy(doc: dict[str, Any]) -> None:
             )
             await session.commit()
     except SQLAlchemyError:
+        logger.warning(
+            "users_pg.insert_user_legacy failed id=%s email=%s",
+            uid,
+            doc.get("email"),
+            exc_info=True,
+        )
         raise
 
 

@@ -9880,6 +9880,22 @@ async def startup_event():
     )
     await run_database_startup(logging.getLogger(__name__))
     try:
+        from auth import get_jwt_secret, jwt_secret_source
+
+        _jwt = get_jwt_secret()
+        _log.info(
+            "JWT: signing secret ready | source=%s | len=%d",
+            jwt_secret_source(),
+            len(_jwt),
+        )
+    except Exception as e:
+        _log.critical(
+            "JWT: failed to resolve JWT_SECRET — POST /api/auth/login will return 500 until "
+            "JWT_SECRET is set in the process environment (e.g. Render dashboard). Error: %s",
+            e,
+            exc_info=True,
+        )
+    try:
         await seed_default_templates()
     except Exception as e:
         logging.getLogger(__name__).warning(

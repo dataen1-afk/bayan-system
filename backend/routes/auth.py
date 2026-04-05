@@ -74,6 +74,7 @@ async def register_user(user_data: UserRegister):
         active=True,
         created_at=now,
         updated_at=now,
+        extra={},
     )
 
     try:
@@ -103,60 +104,74 @@ async def login(credentials: UserLogin):
     email_norm = email_raw.lower()
 
     try:
-        async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                select(UserRow).where(
-                    or_(UserRow.email == email_norm, UserRow.email == email_raw)
+        try:
+            async with AsyncSessionLocal() as session:
+                result = await session.execute(
+                    select(UserRow).where(
+                        or_(UserRow.email == email_norm, UserRow.email == email_raw)
+                    )
                 )
-            )
-            row = result.scalar_one_or_none()
-    except SQLAlchemyError as e:
-        logger.warning("login: database error: %s", e)
-        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
+                row = result.scalar_one_or_none()
+        except SQLAlchemyError as e:
+            logger.warning("login: database error: %s", e)
+            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
 
-    if not row:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not row:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    if not row.active:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not row.active:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    if not verify_password(credentials.password, row.password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not verify_password(credentials.password, row.password):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    user_doc = _row_to_user_doc(row)
+        user_doc = _row_to_user_doc(row)
 
-    try:
-        uid = resolve_user_document_id(user_doc)
-    except ValueError:
-        logger.error("Login: user record missing id for email=%s", email_norm)
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        try:
+            uid = resolve_user_document_id(user_doc)
+        except ValueError:
+            logger.error("Login: user record missing id for email=%s", email_norm)
+            raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    role_raw = user_doc.get("role")
-    role = str(role_raw).strip().lower() if role_raw is not None else UserRole.CLIENT
+        role_raw = user_doc.get("role")
+        role = str(role_raw).strip().lower() if role_raw is not None else UserRole.CLIENT
 
-    token = create_jwt_token(uid, role)
+        token = create_jwt_token(uid, role)
 
-    logger.debug(
-        "Login OK email=%s role=%s",
-        credentials.email,
-        user_doc["role"],
-    )
+        logger.debug(
+            "Login OK email=%s role=%s",
+            credentials.email,
+            user_doc["role"],
+        )
 
-    created_at = user_doc.get("created_at")
-    if isinstance(created_at, str):
-        created_at = datetime.fromisoformat(created_at)
-    elif created_at is None:
-        created_at = datetime.now(timezone.utc)
+        created_at = user_doc.get("created_at")
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at)
+        elif created_at is None:
+            created_at = datetime.now(timezone.utc)
 
-    user = User(
-        id=uid,
-        name=user_doc.get("name") or "",
-        email=str(user_doc.get("email", email_norm)),
-        role=role,
-        created_at=created_at,
-    )
+        user = User(
+            id=uid,
+            name=user_doc.get("name") or "",
+            email=str(user_doc.get("email", email_norm)),
+            role=role,
+            created_at=created_at,
+        )
 
-    return TokenResponse(token=token, user=user)
+        return TokenResponse(token=token, user=user)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(
+            "login: unexpected failure (email=%s): %s: %s",
+            email_norm,
+            type(e).__name__,
+            e,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Authentication service error (AUTH_500)",
+        )
 
 
 @router.get("/me", response_model=User)

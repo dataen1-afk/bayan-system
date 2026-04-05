@@ -65,6 +65,7 @@ async def run_database_startup(app_logger: Optional[logging.Logger] = None) -> N
                         active=True,
                         created_at=now,
                         updated_at=now,
+                        extra={},
                     )
                 )
                 await session.commit()

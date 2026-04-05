@@ -69,6 +69,17 @@ def _prefer_process_jwt_secret() -> bool:
     return str(v).strip().lower() in ("1", "true", "yes", "on")
 
 
+def _is_cloud_managed_deploy() -> bool:
+    """
+    True when running on a platform that injects secrets via process env (e.g. Render).
+
+    On these hosts, a committed or baked ``backend/.env`` must NOT override the dashboard
+    ``JWT_SECRET``, or login fails with 500 (RuntimeError) or tokens become inconsistent.
+    """
+    r = str(os.environ.get("RENDER", "")).strip().lower()
+    return r in ("true", "1", "yes", "on")
+
+
 def _resolve_jwt_secret_once() -> tuple[str, str]:
     """
     Pick exactly one secret for the lifetime of this process.
@@ -90,6 +101,19 @@ def _resolve_jwt_secret_once() -> tuple[str, str]:
         file_val = _normalize_secret(vals.get("JWT_SECRET"))
 
     prefer_proc = _prefer_process_jwt_secret()
+
+    # Cloud: always use non-empty process JWT_SECRET when the platform sets RENDER=true.
+    if _is_cloud_managed_deploy() and env_val:
+        _jwt_resolution_meta = (
+            f"cloud_managed_deploy (RENDER) | process JWT_SECRET len={len(env_val)} | "
+            f"env_file={env_path_resolved}"
+        )
+        if file_val and file_val != env_val:
+            logger.info(
+                "JWT_SECRET: RENDER deploy — using process JWT_SECRET from platform; "
+                "backend/.env value differs and is ignored for signing."
+            )
+        return env_val, "process_environment (Render / cloud deploy)"
 
     if prefer_proc:
         if env_val:

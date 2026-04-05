@@ -11,6 +11,7 @@ import uuid
 
 from auth import get_current_user, security
 from dependencies import db, create_notification
+import app_documents_pg as doc_pg
 
 router = APIRouter(prefix="/approvals", tags=["Approvals"])
 
@@ -475,11 +476,17 @@ async def update_source_document_status(document_type: str, document_id: str, st
     
     collection_name = collection_map.get(document_type)
     if collection_name:
-        collection = db[collection_name]
-        await collection.update_one(
-            {"id": document_id},
-            {"$set": {
-                "approval_status": status,
-                "approval_completed_at": datetime.now(timezone.utc).isoformat()
-            }}
-        )
+        patch = {
+            "approval_status": status,
+            "approval_completed_at": datetime.now(timezone.utc).isoformat(),
+        }
+        if collection_name == doc_pg.C_CONTRACT_REVIEWS:
+            await doc_pg.merge_set_by_doc_id(
+                doc_pg.C_CONTRACT_REVIEWS, document_id, patch
+            )
+        else:
+            collection = db[collection_name]
+            await collection.update_one(
+                {"id": document_id},
+                {"$set": patch},
+            )

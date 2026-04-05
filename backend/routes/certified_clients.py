@@ -15,6 +15,7 @@ from io import BytesIO
 
 from auth import get_current_user, security
 from dependencies import db, create_notification, CONTRACTS_DIR
+import app_documents_pg as doc_pg
 
 # Try to import openpyxl for Excel export
 try:
@@ -256,7 +257,8 @@ async def sync_certified_clients_from_certificates(
     """Sync certified clients from active certificates"""
     await get_current_user(credentials)
     
-    certificates = await db.certificates.find({"status": "active"}, {"_id": 0}).to_list(1000)
+    all_c = await doc_pg.list_ordered(doc_pg.C_CERTIFICATES, 1000)
+    certificates = [c for c in all_c if c.get("status") == "active"]
     
     synced_count = 0
     for cert in certificates:

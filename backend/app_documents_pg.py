@@ -45,6 +45,12 @@ _PAYLOAD_FIELD_WHITELIST = frozenset(
         "job_order_id",
         "stage1_plan_id",
         "stage2_plan_id",
+        "certificate_number",
+        "contract_review_id",
+        "agreement_id",
+        "contract_id",
+        "invoice_id",
+        "status",
     }
 )
 
@@ -118,6 +124,39 @@ SQL_DELETE_BY_DOC_ID = text(
     """
     DELETE FROM app_documents
     WHERE collection = :collection AND doc_id = :doc_id
+    """
+)
+
+SQL_CERT_NUMBER_LATEST_PLAIN = text(
+    """
+    SELECT doc_id, payload, created_at
+    FROM app_documents
+    WHERE collection = :collection
+      AND (payload->>'certificate_number') LIKE :pattern
+    ORDER BY (payload->>'certificate_number') DESC
+    LIMIT 1
+    """
+)
+
+SQL_CERT_NUMBER_LATEST_ESC = text(
+    """
+    SELECT doc_id, payload, created_at
+    FROM app_documents
+    WHERE collection = :collection
+      AND (payload->>'certificate_number') LIKE :pattern ESCAPE '\\'
+    ORDER BY (payload->>'certificate_number') DESC
+    LIMIT 1
+    """
+)
+
+SQL_INVOICE_NUMBER_LATEST = text(
+    """
+    SELECT doc_id, payload, created_at
+    FROM app_documents
+    WHERE collection = :collection
+      AND (payload->>'invoice_number') LIKE :pattern
+    ORDER BY (payload->>'invoice_number') DESC
+    LIMIT 1
     """
 )
 
@@ -392,6 +431,51 @@ async def count_created_between(
     return int(n)
 
 
+async def get_latest_by_certificate_number_like(
+    collection: str, pattern: str, *, escape_underscore: bool = False
+) -> dict[str, Any] | None:
+    """
+    Row with greatest ``certificate_number`` (lexicographic) among payloads
+    matching LIKE ``pattern``. Use ``escape_underscore=True`` when the pattern
+    contains literal underscores (SQL LIKE treats ``_`` as wildcard).
+    """
+    q = SQL_CERT_NUMBER_LATEST_ESC if escape_underscore else SQL_CERT_NUMBER_LATEST_PLAIN
+    try:
+        async with AsyncSessionLocal() as session:
+            r = await session.execute(
+                q, {"collection": collection, "pattern": pattern}
+            )
+            row = r.mappings().first()
+    except SQLAlchemyError as e:
+        logger.warning("app_documents cert_number latest %s: %s", collection, e)
+        raise
+    if not row:
+        return None
+    return row_to_doc(dict(row))
+
+
+async def get_latest_invoice_by_number_prefix(
+    collection: str, pattern: str
+) -> dict[str, Any] | None:
+    """
+    Row with greatest ``invoice_number`` (lexicographic) among payloads
+    where ``invoice_number`` matches SQL ``LIKE`` ``pattern`` (e.g. ``INV-2026-%``).
+    """
+    try:
+        async with AsyncSessionLocal() as session:
+            r = await session.execute(
+                SQL_INVOICE_NUMBER_LATEST,
+                {"collection": collection, "pattern": pattern},
+            )
+            row = r.mappings().first()
+    except SQLAlchemyError as e:
+        logger.warning("app_documents invoice_number latest %s: %s", collection, e)
+        raise
+    if not row:
+        return None
+    return row_to_doc(dict(row))
+
+
 # Collection name constants
 C_APPLICATION_FORMS = "application_forms"
 C_PROPOSALS = "proposals"
@@ -408,3 +492,9 @@ C_STAGE2_AUDIT_REPORTS = "stage2_audit_reports"
 C_OPENING_CLOSING_MEETINGS = "opening_closing_meetings"
 C_AUDITOR_NOTES = "auditor_notes"
 C_NONCONFORMITY_REPORTS = "nonconformity_reports"
+C_CERTIFICATE_DATA = "certificate_data"
+C_CERTIFICATES = "certificates"
+C_AUDIT_PROGRAMS = "audit_programs"
+C_CONTRACT_REVIEWS = "contract_reviews"
+C_INVOICES = "invoices"
+C_PAYMENTS = "payments"

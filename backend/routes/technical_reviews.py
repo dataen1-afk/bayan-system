@@ -390,7 +390,7 @@ async def approve_technical_review(
         cert_doc = certificate.model_dump()
         cert_doc['created_at'] = cert_doc['created_at'].isoformat()
         
-        await db.certificates.insert_one(cert_doc)
+        await doc_pg.insert_document(doc_pg.C_CERTIFICATES, cert_doc)
         
         update_data['certificate_id'] = certificate.id
         update_data['certificate_number'] = cert_number

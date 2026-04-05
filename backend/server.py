@@ -36,6 +36,7 @@ from audit_calculator import calculate_total_audit_time
 from pdf_generator import generate_contract_pdf
 from bilingual_pdf_generator import generate_bilingual_contract_pdf
 from certificate_generator import generate_certificate_pdf, get_qr_code_base64
+from dependencies import generate_certificate_number
 from grant_agreement_generator import generate_grant_agreement_pdf
 from contract_review_generator import generate_contract_review_pdf
 from audit_program_generator import generate_audit_program_pdf
@@ -101,6 +102,12 @@ _APP_DOCUMENTS_MONGO_ALIASES = frozenset(
         doc_pg.C_OPENING_CLOSING_MEETINGS,
         doc_pg.C_AUDITOR_NOTES,
         doc_pg.C_NONCONFORMITY_REPORTS,
+        doc_pg.C_CERTIFICATE_DATA,
+        doc_pg.C_CERTIFICATES,
+        doc_pg.C_AUDIT_PROGRAMS,
+        doc_pg.C_CONTRACT_REVIEWS,
+        doc_pg.C_INVOICES,
+        doc_pg.C_PAYMENTS,
     }
 )
 from db_startup import run_database_startup
@@ -4250,14 +4257,16 @@ class ContactRecordCreate(BaseModel):
 async def generate_invoice_number():
     """Generate unique invoice number: INV-YYYY-XXXX"""
     year = datetime.now().year
-    # Find the last invoice number for this year
-    last_invoice = await db.invoices.find_one(
-        {"invoice_number": {"$regex": f"^INV-{year}-"}},
-        sort=[("invoice_number", -1)]
+    pattern = f"INV-{year}-%"
+    last_invoice = await doc_pg.get_latest_invoice_by_number_prefix(
+        doc_pg.C_INVOICES, pattern
     )
-    if last_invoice:
-        last_num = int(last_invoice['invoice_number'].split('-')[-1])
-        new_num = last_num + 1
+    if last_invoice and last_invoice.get("invoice_number"):
+        try:
+            last_num = int(str(last_invoice["invoice_number"]).split("-")[-1])
+            new_num = last_num + 1
+        except (ValueError, IndexError):
+            new_num = 1
     else:
         new_num = 1
     return f"INV-{year}-{new_num:04d}"
@@ -4271,21 +4280,18 @@ async def get_invoices(
     """Get all invoices with optional filtering"""
     await get_current_user(credentials)
     
-    query = {}
+    invoices = await doc_pg.list_ordered(doc_pg.C_INVOICES, 1000)
     if status:
-        query["status"] = status
+        invoices = [i for i in invoices if i.get("status") == status]
     if contract_id:
-        query["contract_id"] = contract_id
-    
-    invoices = await db.invoices.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+        invoices = [i for i in invoices if i.get("contract_id") == contract_id]
     
     # Check for overdue invoices and update status
     today = datetime.now().strftime("%Y-%m-%d")
     for invoice in invoices:
         if invoice.get('status') == 'sent' and invoice.get('due_date') and invoice.get('due_date') < today:
-            await db.invoices.update_one(
-                {"id": invoice['id']},
-                {"$set": {"status": "overdue"}}
+            await doc_pg.merge_set_by_doc_id(
+                doc_pg.C_INVOICES, invoice["id"], {"status": "overdue"}
             )
             invoice['status'] = 'overdue'
     
@@ -4296,7 +4302,7 @@ async def get_invoice_stats(credentials: HTTPAuthorizationCredentials = Depends(
     """Get invoice statistics"""
     await get_current_user(credentials)
     
-    invoices = await db.invoices.find({}, {"_id": 0}).to_list(1000)
+    invoices = await doc_pg.list_ordered(doc_pg.C_INVOICES, 1000)
     today = datetime.now().strftime("%Y-%m-%d")
     
     total_invoiced = sum(inv.get('total_amount', 0) for inv in invoices)
@@ -4406,8 +4412,14 @@ async def create_invoice(invoice_data: InvoiceCreate, credentials: HTTPAuthoriza
     
     invoice_doc = invoice.model_dump()
     invoice_doc['created_at'] = invoice_doc['created_at'].isoformat()
+    if invoice_doc.get("updated_at") is not None:
+        u = invoice_doc["updated_at"]
+        invoice_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    if invoice_doc.get("sent_at") is not None:
+        s = invoice_doc["sent_at"]
+        invoice_doc["sent_at"] = s.isoformat() if isinstance(s, datetime) else s
     
-    await db.invoices.insert_one(invoice_doc)
+    await doc_pg.insert_document(doc_pg.C_INVOICES, invoice_doc)
     
     return {"message": "Invoice created", "invoice_id": invoice.id, "invoice_number": invoice_number}
 
@@ -4416,7 +4428,7 @@ async def get_invoice(invoice_id: str, credentials: HTTPAuthorizationCredentials
     """Get invoice details"""
     await get_current_user(credentials)
     
-    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    invoice = await doc_pg.get_by_doc_id(doc_pg.C_INVOICES, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
@@ -4427,7 +4439,7 @@ async def update_invoice(invoice_id: str, updates: dict, credentials: HTTPAuthor
     """Update invoice details"""
     await get_current_user(credentials)
     
-    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    invoice = await doc_pg.get_by_doc_id(doc_pg.C_INVOICES, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
@@ -4446,7 +4458,9 @@ async def update_invoice(invoice_id: str, updates: dict, credentials: HTTPAuthor
         updates['tax_amount'] = tax_amount
         updates['total_amount'] = subtotal + tax_amount
     
-    await db.invoices.update_one({"id": invoice_id}, {"$set": updates})
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_INVOICES, invoice_id, updates)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Invoice not found")
     
     return {"message": "Invoice updated"}
 
@@ -4455,17 +4469,20 @@ async def send_invoice(invoice_id: str, credentials: HTTPAuthorizationCredential
     """Mark invoice as sent (would send email in production)"""
     await get_current_user(credentials)
     
-    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    invoice = await doc_pg.get_by_doc_id(doc_pg.C_INVOICES, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
-    await db.invoices.update_one(
-        {"id": invoice_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_INVOICES,
+        invoice_id,
+        {
             "status": "sent",
-            "sent_at": datetime.now(timezone.utc).isoformat()
-        }}
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Invoice not found")
     
     # Create notification
     await create_notification(
@@ -4483,7 +4500,7 @@ async def record_payment(invoice_id: str, payment_data: dict, credentials: HTTPA
     """Record a payment against an invoice"""
     current_user = await get_current_user(credentials)
     
-    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    invoice = await doc_pg.get_by_doc_id(doc_pg.C_INVOICES, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
@@ -4504,23 +4521,23 @@ async def record_payment(invoice_id: str, payment_data: dict, credentials: HTTPA
     
     payment_doc = payment.model_dump()
     payment_doc['created_at'] = payment_doc['created_at'].isoformat()
-    await db.payments.insert_one(payment_doc)
+    await doc_pg.insert_document(doc_pg.C_PAYMENTS, payment_doc)
     
     # Update invoice
     new_paid_amount = invoice.get('paid_amount', 0) + amount
     new_status = 'paid' if new_paid_amount >= invoice.get('total_amount', 0) else invoice.get('status')
     
-    await db.invoices.update_one(
-        {"id": invoice_id},
-        {"$set": {
-            "paid_amount": new_paid_amount,
-            "status": new_status,
-            "paid_date": payment_data.get('payment_date') if new_status == 'paid' else None,
-            "payment_method": payment_data.get('payment_method', ''),
-            "payment_reference": payment_data.get('reference', ''),
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
+    inv_patch = {
+        "paid_amount": new_paid_amount,
+        "status": new_status,
+        "paid_date": payment_data.get('payment_date') if new_status == 'paid' else None,
+        "payment_method": payment_data.get('payment_method', ''),
+        "payment_reference": payment_data.get('reference', ''),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_INVOICES, invoice_id, inv_patch)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Invoice not found")
     
     # Create notification
     await create_notification(
@@ -4538,22 +4555,27 @@ async def get_invoice_payments(invoice_id: str, credentials: HTTPAuthorizationCr
     """Get all payments for an invoice"""
     await get_current_user(credentials)
     
-    payments = await db.payments.find({"invoice_id": invoice_id}, {"_id": 0}).sort("payment_date", -1).to_list(100)
-    return payments
+    payments = await doc_pg.list_by_payload_field(
+        doc_pg.C_PAYMENTS, "invoice_id", invoice_id, 500
+    )
+    payments.sort(key=lambda p: p.get("payment_date") or "", reverse=True)
+    return payments[:100]
 
 @api_router.delete("/invoices/{invoice_id}")
 async def delete_invoice(invoice_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Delete a draft invoice"""
     await get_current_user(credentials)
     
-    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    invoice = await doc_pg.get_by_doc_id(doc_pg.C_INVOICES, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
     if invoice.get('status') != 'draft':
         raise HTTPException(status_code=400, detail="Only draft invoices can be deleted")
     
-    await db.invoices.delete_one({"id": invoice_id})
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_INVOICES, invoice_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Invoice not found")
     return {"message": "Invoice deleted"}
 
 # ================= REPORT EXPORT ROUTES =================
@@ -6273,7 +6295,9 @@ async def create_contract_review(data: ContractReviewCreate, credentials: HTTPAu
         raise HTTPException(status_code=404, detail="Proposal not found")
     
     # Check if contract review already exists for this agreement
-    existing = await db.contract_reviews.find_one({"agreement_id": data.agreement_id})
+    existing = await doc_pg.get_by_payload_field(
+        doc_pg.C_CONTRACT_REVIEWS, "agreement_id", data.agreement_id
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Contract review already exists for this agreement")
     
@@ -6288,7 +6312,15 @@ async def create_contract_review(data: ContractReviewCreate, credentials: HTTPAu
         client_id=proposal.get('id', '')[:8]
     )
     
-    await db.contract_reviews.insert_one(contract_review.dict())
+    cr_doc = contract_review.model_dump()
+    cr_doc["created_at"] = cr_doc["created_at"].isoformat()
+    if cr_doc.get("updated_at") is not None:
+        u = cr_doc["updated_at"]
+        cr_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    if cr_doc.get("client_submitted_at") is not None:
+        c = cr_doc["client_submitted_at"]
+        cr_doc["client_submitted_at"] = c.isoformat() if isinstance(c, datetime) else c
+    await doc_pg.insert_document(doc_pg.C_CONTRACT_REVIEWS, cr_doc)
     
     # Create notification
     await create_notification(
@@ -6306,7 +6338,7 @@ async def get_contract_reviews(credentials: HTTPAuthorizationCredentials = Depen
     """Get all contract reviews (Admin only)"""
     await get_current_user(credentials)
     
-    reviews = await db.contract_reviews.find({}, {"_id": 0}).to_list(1000)
+    reviews = await doc_pg.list_ordered(doc_pg.C_CONTRACT_REVIEWS, 1000)
     return reviews
 
 @api_router.get("/contract-reviews/{review_id}")
@@ -6314,7 +6346,7 @@ async def get_contract_review(review_id: str, credentials: HTTPAuthorizationCred
     """Get a specific contract review (Admin only)"""
     await get_current_user(credentials)
     
-    review = await db.contract_reviews.find_one({"id": review_id}, {"_id": 0})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_CONTRACT_REVIEWS, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
@@ -6325,11 +6357,11 @@ async def update_contract_review_admin(review_id: str, data: ContractReviewAdmin
     """Update contract review with admin/auditor data"""
     await get_current_user(credentials)
     
-    review = await db.contract_reviews.find_one({"id": review_id})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_CONTRACT_REVIEWS, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
-    update_data = data.dict()
+    update_data = data.model_dump()
     update_data['updated_at'] = datetime.now(timezone.utc)
     
     # Update status based on completion
@@ -6338,10 +6370,9 @@ async def update_contract_review_admin(review_id: str, data: ContractReviewAdmin
     elif data.prepared_by_name:
         update_data['status'] = 'pending_review'
     
-    await db.contract_reviews.update_one(
-        {"id": review_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_CONTRACT_REVIEWS, review_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Contract review not found")
     
     return {"message": "Contract review updated successfully"}
 
@@ -6350,8 +6381,8 @@ async def delete_contract_review(review_id: str, credentials: HTTPAuthorizationC
     """Delete a contract review (Admin only)"""
     await get_current_user(credentials)
     
-    result = await db.contract_reviews.delete_one({"id": review_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_CONTRACT_REVIEWS, review_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
     return {"message": "Contract review deleted successfully"}
@@ -6361,7 +6392,9 @@ async def delete_contract_review(review_id: str, credentials: HTTPAuthorizationC
 @api_router.get("/public/contract-reviews/{access_token}")
 async def get_public_contract_review(access_token: str):
     """Get contract review for client (Public access with token)"""
-    review = await db.contract_reviews.find_one({"access_token": access_token}, {"_id": 0})
+    review = await doc_pg.get_by_payload_field(
+        doc_pg.C_CONTRACT_REVIEWS, "access_token", access_token
+    )
     if not review:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
@@ -6386,23 +6419,26 @@ async def get_public_contract_review(access_token: str):
 @api_router.put("/public/contract-reviews/{access_token}")
 async def submit_contract_review_client(access_token: str, data: ContractReviewClientSubmit):
     """Submit client data for contract review (Public access with token)"""
-    review = await db.contract_reviews.find_one({"access_token": access_token})
+    review = await doc_pg.get_by_payload_field(
+        doc_pg.C_CONTRACT_REVIEWS, "access_token", access_token
+    )
     if not review:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
     if review.get('client_submitted'):
         raise HTTPException(status_code=400, detail="Client data already submitted")
     
-    update_data = data.dict()
+    update_data = data.model_dump()
     update_data['client_submitted'] = True
     update_data['client_submitted_at'] = datetime.now(timezone.utc)
     update_data['status'] = 'pending_review'
     update_data['updated_at'] = datetime.now(timezone.utc)
     
-    await db.contract_reviews.update_one(
-        {"access_token": access_token},
-        {"$set": update_data}
+    ok = await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_CONTRACT_REVIEWS, "access_token", access_token, update_data
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Contract review not found")
     
     # Create notification
     await create_notification(
@@ -6418,7 +6454,9 @@ async def submit_contract_review_client(access_token: str, data: ContractReviewC
 @api_router.get("/public/contract-reviews/{access_token}/pdf")
 async def get_contract_review_pdf(access_token: str):
     """Generate PDF for contract review (Public access)"""
-    review = await db.contract_reviews.find_one({"access_token": access_token}, {"_id": 0})
+    review = await doc_pg.get_by_payload_field(
+        doc_pg.C_CONTRACT_REVIEWS, "access_token", access_token
+    )
     if not review:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
@@ -6440,7 +6478,7 @@ async def get_contract_review_pdf_admin(review_id: str, credentials: HTTPAuthori
     """Generate PDF for contract review (Admin only)"""
     await get_current_user(credentials)
     
-    review = await db.contract_reviews.find_one({"id": review_id}, {"_id": 0})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_CONTRACT_REVIEWS, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
@@ -6462,7 +6500,7 @@ async def send_contract_review_link(review_id: str, credentials: HTTPAuthorizati
     """Send contract review link to client (Admin only)"""
     await get_current_user(credentials)
     
-    review = await db.contract_reviews.find_one({"id": review_id}, {"_id": 0})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_CONTRACT_REVIEWS, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
@@ -6503,12 +6541,14 @@ async def create_audit_program(data: AuditProgramCreate, credentials: HTTPAuthor
     await get_current_user(credentials)
     
     # Get the contract review
-    review = await db.contract_reviews.find_one({"id": data.contract_review_id}, {"_id": 0})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_CONTRACT_REVIEWS, data.contract_review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Contract review not found")
     
     # Check if audit program already exists for this contract review
-    existing = await db.audit_programs.find_one({"contract_review_id": data.contract_review_id})
+    existing = await doc_pg.get_by_payload_field(
+        doc_pg.C_AUDIT_PROGRAMS, "contract_review_id", data.contract_review_id
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Audit program already exists for this contract review")
     
@@ -6531,7 +6571,12 @@ async def create_audit_program(data: AuditProgramCreate, credentials: HTTPAuthor
         ]
     )
     
-    await db.audit_programs.insert_one(audit_program.dict())
+    ap_doc = audit_program.model_dump()
+    ap_doc["created_at"] = ap_doc["created_at"].isoformat()
+    if ap_doc.get("updated_at") is not None:
+        u = ap_doc["updated_at"]
+        ap_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_AUDIT_PROGRAMS, ap_doc)
     
     # Create notification
     await create_notification(
@@ -6549,7 +6594,7 @@ async def get_audit_programs(credentials: HTTPAuthorizationCredentials = Depends
     """Get all audit programs (Admin only)"""
     await get_current_user(credentials)
     
-    programs = await db.audit_programs.find({}, {"_id": 0}).to_list(1000)
+    programs = await doc_pg.list_ordered(doc_pg.C_AUDIT_PROGRAMS, 1000)
     return programs
 
 @api_router.get("/audit-programs/{program_id}")
@@ -6557,7 +6602,7 @@ async def get_audit_program(program_id: str, credentials: HTTPAuthorizationCrede
     """Get a specific audit program (Admin only)"""
     await get_current_user(credentials)
     
-    program = await db.audit_programs.find_one({"id": program_id}, {"_id": 0})
+    program = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_PROGRAMS, program_id)
     if not program:
         raise HTTPException(status_code=404, detail="Audit program not found")
     
@@ -6568,21 +6613,20 @@ async def update_audit_program(program_id: str, data: AuditProgramUpdate, creden
     """Update audit program (Admin only)"""
     await get_current_user(credentials)
     
-    program = await db.audit_programs.find_one({"id": program_id})
+    program = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_PROGRAMS, program_id)
     if not program:
         raise HTTPException(status_code=404, detail="Audit program not found")
     
-    update_data = data.dict()
+    update_data = data.model_dump()
     update_data['updated_at'] = datetime.now(timezone.utc)
     
     # Update status based on approval
     if data.certification_manager and data.approval_date:
         update_data['status'] = 'approved'
     
-    await db.audit_programs.update_one(
-        {"id": program_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_AUDIT_PROGRAMS, program_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Audit program not found")
     
     return {"message": "Audit program updated successfully"}
 
@@ -6591,8 +6635,8 @@ async def delete_audit_program(program_id: str, credentials: HTTPAuthorizationCr
     """Delete an audit program (Admin only)"""
     await get_current_user(credentials)
     
-    result = await db.audit_programs.delete_one({"id": program_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_AUDIT_PROGRAMS, program_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Audit program not found")
     
     return {"message": "Audit program deleted successfully"}
@@ -6602,7 +6646,7 @@ async def get_audit_program_pdf(program_id: str, credentials: HTTPAuthorizationC
     """Generate PDF for audit program (Admin only)"""
     await get_current_user(credentials)
     
-    program = await db.audit_programs.find_one({"id": program_id}, {"_id": 0})
+    program = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_PROGRAMS, program_id)
     if not program:
         raise HTTPException(status_code=404, detail="Audit program not found")
     
@@ -6624,19 +6668,22 @@ async def approve_audit_program(program_id: str, credentials: HTTPAuthorizationC
     """Approve an audit program (Admin only)"""
     current_user = await get_current_user(credentials)
     
-    program = await db.audit_programs.find_one({"id": program_id})
+    program = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_PROGRAMS, program_id)
     if not program:
         raise HTTPException(status_code=404, detail="Audit program not found")
     
-    await db.audit_programs.update_one(
-        {"id": program_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_AUDIT_PROGRAMS,
+        program_id,
+        {
             "status": "approved",
             "certification_manager": current_user.get('name', ''),
             "approval_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Audit program not found")
     
     # Create notification
     await create_notification(
@@ -6657,7 +6704,7 @@ async def create_job_order(data: JobOrderCreate, credentials: HTTPAuthorizationC
     await get_current_user(credentials)
     
     # Get the audit program
-    program = await db.audit_programs.find_one({"id": data.audit_program_id}, {"_id": 0})
+    program = await doc_pg.get_by_doc_id(doc_pg.C_AUDIT_PROGRAMS, data.audit_program_id)
     if not program:
         raise HTTPException(status_code=404, detail="Audit program not found")
     
@@ -6669,8 +6716,8 @@ async def create_job_order(data: JobOrderCreate, credentials: HTTPAuthorizationC
     # Get contract review for additional details
     contract_review = None
     if program.get('contract_review_id'):
-        contract_review = await db.contract_reviews.find_one(
-            {"id": program['contract_review_id']}, {"_id": 0}
+        contract_review = await doc_pg.get_by_doc_id(
+            doc_pg.C_CONTRACT_REVIEWS, program['contract_review_id']
         )
     
     # Create job order with auto-populated data
@@ -6950,8 +6997,8 @@ async def create_stage1_audit_plan(data: Stage1AuditPlanCreate, credentials: HTT
     # Get contract review for additional client details
     contract_review = None
     if job_order.get('contract_review_id'):
-        contract_review = await db.contract_reviews.find_one(
-            {"id": job_order['contract_review_id']}, {"_id": 0}
+        contract_review = await doc_pg.get_by_doc_id(
+            doc_pg.C_CONTRACT_REVIEWS, job_order['contract_review_id']
         )
     
     # Create plan with auto-populated data
@@ -7299,7 +7346,9 @@ async def create_stage2_audit_plan(data: Stage2AuditPlanCreate, credentials: HTT
     contract_review = None
     contract_review_id = source_data.get('contract_review_id', '')
     if contract_review_id:
-        contract_review = await db.contract_reviews.find_one({"id": contract_review_id}, {"_id": 0})
+        contract_review = await doc_pg.get_by_doc_id(
+            doc_pg.C_CONTRACT_REVIEWS, contract_review_id
+        )
     
     # Create Stage 2 plan
     plan = Stage2AuditPlan(
@@ -7863,7 +7912,9 @@ async def create_stage1_audit_report(data: Stage1AuditReportCreate, credentials:
     contract_review = None
     contract_review_id = source_data.get('contract_review_id', '')
     if contract_review_id:
-        contract_review = await db.contract_reviews.find_one({"id": contract_review_id}, {"_id": 0})
+        contract_review = await doc_pg.get_by_doc_id(
+            doc_pg.C_CONTRACT_REVIEWS, contract_review_id
+        )
     
     # Default checklist items
     default_checklist = [
@@ -8119,7 +8170,9 @@ async def create_stage2_audit_report(data: Stage2AuditReportCreate, credentials:
     contract_review = None
     contract_review_id = source_data.get('contract_review_id', '')
     if contract_review_id:
-        contract_review = await db.contract_reviews.find_one({"id": contract_review_id}, {"_id": 0})
+        contract_review = await doc_pg.get_by_doc_id(
+            doc_pg.C_CONTRACT_REVIEWS, contract_review_id
+        )
     
     # Default checklist items for Stage 2 (ISO clause based)
     default_checklist = [
@@ -8927,7 +8980,9 @@ async def create_certificate_data(
         
         # Try to get scope from related agreement
         if report.get("audit_program_id"):
-            program = await db.audit_programs.find_one({"id": report.get("audit_program_id")}, {"_id": 0})
+            program = await doc_pg.get_by_doc_id(
+                doc_pg.C_AUDIT_PROGRAMS, report.get("audit_program_id")
+            )
             if program:
                 cert_data.agreed_certification_scope = program.get("scope_of_services", "")
     else:
@@ -8938,7 +8993,15 @@ async def create_certificate_data(
         cert_data.audit_type = data.audit_type
         cert_data.audit_date = data.audit_date
     
-    await db.certificate_data.insert_one(cert_data.model_dump())
+    cert_doc = cert_data.model_dump()
+    cert_doc["created_at"] = cert_doc["created_at"].isoformat()
+    if cert_doc.get("updated_at") is not None:
+        u = cert_doc["updated_at"]
+        cert_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    if cert_doc.get("client_confirmed_at") is not None:
+        c = cert_doc["client_confirmed_at"]
+        cert_doc["client_confirmed_at"] = c.isoformat() if isinstance(c, datetime) else c
+    await doc_pg.insert_document(doc_pg.C_CERTIFICATE_DATA, cert_doc)
     
     return cert_data.model_dump()
 
@@ -8949,7 +9012,7 @@ async def get_certificate_data_list(
     """Get all certificate data records"""
     await get_current_user(credentials)
     
-    records = await db.certificate_data.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    records = await doc_pg.list_ordered(doc_pg.C_CERTIFICATE_DATA, 1000)
     return records
 
 @api_router.get("/certificate-data/{record_id}")
@@ -8960,7 +9023,7 @@ async def get_certificate_data(
     """Get specific certificate data by ID"""
     await get_current_user(credentials)
     
-    record = await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    record = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATE_DATA, record_id)
     if not record:
         raise HTTPException(status_code=404, detail="Certificate Data not found")
     
@@ -8975,7 +9038,7 @@ async def update_certificate_data(
     """Update certificate data"""
     await get_current_user(credentials)
     
-    existing = await db.certificate_data.find_one({"id": record_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATE_DATA, record_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Certificate Data not found")
     
@@ -8989,12 +9052,14 @@ async def update_certificate_data(
         if value is not None:
             update_data[field] = value
     
-    await db.certificate_data.update_one(
-        {"id": record_id},
-        {"$set": update_data}
-    )
+    ok = await doc_pg.merge_set_by_doc_id(doc_pg.C_CERTIFICATE_DATA, record_id, update_data)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
     
-    return await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    out = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATE_DATA, record_id)
+    if not out:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
+    return out
 
 @api_router.delete("/certificate-data/{record_id}")
 async def delete_certificate_data(
@@ -9004,8 +9069,8 @@ async def delete_certificate_data(
     """Delete certificate data"""
     await get_current_user(credentials)
     
-    result = await db.certificate_data.delete_one({"id": record_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_CERTIFICATE_DATA, record_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Certificate Data not found")
     
     return {"message": "Certificate Data deleted"}
@@ -9018,17 +9083,20 @@ async def send_certificate_data_to_client(
     """Send certificate data form to client for confirmation"""
     await get_current_user(credentials)
     
-    existing = await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATE_DATA, record_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Certificate Data not found")
     
-    await db.certificate_data.update_one(
-        {"id": record_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_CERTIFICATE_DATA,
+        record_id,
+        {
             "status": "sent_to_client",
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
     
     # Generate public link
     base_url = os.environ.get("REACT_APP_BACKEND_URL", "")
@@ -9040,9 +9108,8 @@ async def send_certificate_data_to_client(
 @api_router.get("/public/certificate-data/{access_token}")
 async def get_public_certificate_data(access_token: str):
     """Get certificate data via public access token"""
-    record = await db.certificate_data.find_one(
-        {"access_token": access_token},
-        {"_id": 0, "client_signature": 0, "client_stamp": 0}  # Exclude large data
+    record = await doc_pg.get_by_payload_field(
+        doc_pg.C_CERTIFICATE_DATA, "access_token", access_token
     )
     
     if not record:
@@ -9051,7 +9118,8 @@ async def get_public_certificate_data(access_token: str):
     if record.get("status") not in ["sent_to_client", "client_confirmed"]:
         raise HTTPException(status_code=400, detail="Form not available for confirmation")
     
-    return record
+    # Match Mongo projection: omit signature/stamp from public payload
+    return {k: v for k, v in record.items() if k not in ("client_signature", "client_stamp")}
 
 @api_router.post("/public/certificate-data/{access_token}/confirm")
 async def confirm_certificate_data(
@@ -9059,7 +9127,9 @@ async def confirm_certificate_data(
     data: CertificateDataClientConfirm
 ):
     """Client confirms certificate data"""
-    existing = await db.certificate_data.find_one({"access_token": access_token})
+    existing = await doc_pg.get_by_payload_field(
+        doc_pg.C_CERTIFICATE_DATA, "access_token", access_token
+    )
     
     if not existing:
         raise HTTPException(status_code=404, detail="Certificate Data not found")
@@ -9067,18 +9137,22 @@ async def confirm_certificate_data(
     if existing.get("status") != "sent_to_client":
         raise HTTPException(status_code=400, detail="Form already confirmed or not available")
     
-    await db.certificate_data.update_one(
-        {"access_token": access_token},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_payload_field(
+        doc_pg.C_CERTIFICATE_DATA,
+        "access_token",
+        access_token,
+        {
             "client_signature": data.client_signature,
             "client_stamp": data.client_stamp,
             "client_signature_date": data.signature_date,
             "client_confirmed": True,
             "client_confirmed_at": datetime.now(timezone.utc),
             "status": "client_confirmed",
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
     
     return {"message": "Certificate data confirmed successfully"}
 
@@ -9090,7 +9164,7 @@ async def issue_certificate_from_data(
     """Generate certificate from confirmed certificate data"""
     await get_current_user(credentials)
     
-    record = await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    record = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATE_DATA, record_id)
     if not record:
         raise HTTPException(status_code=404, detail="Certificate Data not found")
     
@@ -9103,17 +9177,20 @@ async def issue_certificate_from_data(
     expiry_date = (datetime.now() + timedelta(days=3*365)).strftime("%Y-%m-%d")  # 3 year validity
     
     # Update certificate data record
-    await db.certificate_data.update_one(
-        {"id": record_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_CERTIFICATE_DATA,
+        record_id,
+        {
             "certificate_number": cert_number,
             "issue_date": issue_date,
             "expiry_date": expiry_date,
             "certificate_generated": True,
             "status": "certificate_issued",
-            "updated_at": datetime.now(timezone.utc)
-        }}
+            "updated_at": datetime.now(timezone.utc),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Certificate Data not found")
     
     # Create certificate record
     certificate = {
@@ -9132,7 +9209,9 @@ async def issue_certificate_from_data(
         "created_at": datetime.now(timezone.utc)
     }
     
-    await db.certificates.insert_one(certificate)
+    cert_ins = dict(certificate)
+    cert_ins["created_at"] = cert_ins["created_at"].isoformat()
+    await doc_pg.insert_document(doc_pg.C_CERTIFICATES, cert_ins)
     
     return {
         "message": "Certificate issued successfully",
@@ -9148,7 +9227,7 @@ async def get_certificate_data_pdf(
     """Generate PDF for Certificate Data"""
     await get_current_user(credentials)
     
-    record = await db.certificate_data.find_one({"id": record_id}, {"_id": 0})
+    record = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATE_DATA, record_id)
     if not record:
         raise HTTPException(status_code=404, detail="Certificate Data not found")
     
@@ -9177,20 +9256,6 @@ async def get_certificate_data_pdf(
 
 # ================= CERTIFICATE ENDPOINTS =================
 
-async def generate_certificate_number():
-    """Generate unique certificate number: CERT-YYYY-XXXX"""
-    year = datetime.now().year
-    last_cert = await db.certificates.find_one(
-        {"certificate_number": {"$regex": f"^CERT-{year}-"}},
-        sort=[("certificate_number", -1)]
-    )
-    if last_cert:
-        last_num = int(last_cert['certificate_number'].split('-')[-1])
-        new_num = last_num + 1
-    else:
-        new_num = 1
-    return f"CERT-{year}-{new_num:04d}"
-
 @api_router.get("/certificates")
 async def get_certificates(
     status: str = None,
@@ -9199,21 +9264,19 @@ async def get_certificates(
     """Get all certificates with optional status filtering"""
     await get_current_user(credentials)
     
-    query = {}
-    if status and status != 'all':
-        query['status'] = status
-    
-    certificates = await db.certificates.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    certificates = await doc_pg.list_ordered(doc_pg.C_CERTIFICATES, 1000)
+    if status and status != "all":
+        certificates = [c for c in certificates if c.get("status") == status]
     
     # Check for expired certificates and update status
     today = datetime.now().strftime("%Y-%m-%d")
     for cert in certificates:
         if cert.get('status') == 'active' and cert.get('expiry_date') and cert.get('expiry_date') < today:
-            await db.certificates.update_one(
-                {"id": cert['id']},
-                {"$set": {"status": "expired"}}
+            ok = await doc_pg.merge_set_by_doc_id(
+                doc_pg.C_CERTIFICATES, cert["id"], {"status": "expired"}
             )
-            cert['status'] = 'expired'
+            if ok:
+                cert['status'] = 'expired'
     
     return certificates
 
@@ -9222,7 +9285,7 @@ async def get_certificate_stats(credentials: HTTPAuthorizationCredentials = Depe
     """Get certificate statistics"""
     await get_current_user(credentials)
     
-    certificates = await db.certificates.find({}, {"_id": 0}).to_list(1000)
+    certificates = await doc_pg.list_ordered(doc_pg.C_CERTIFICATES, 1000)
     today = datetime.now().strftime("%Y-%m-%d")
     
     # Calculate expiring soon (within 90 days)
@@ -9297,8 +9360,11 @@ async def create_certificate(cert_data: CertificateCreate, credentials: HTTPAuth
     
     cert_doc = certificate.model_dump()
     cert_doc['created_at'] = cert_doc['created_at'].isoformat()
+    if cert_doc.get("updated_at") is not None:
+        u = cert_doc["updated_at"]
+        cert_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
     
-    await db.certificates.insert_one(cert_doc)
+    await doc_pg.insert_document(doc_pg.C_CERTIFICATES, cert_doc)
     
     # Create notification
     await create_notification(
@@ -9316,7 +9382,7 @@ async def get_certificate(certificate_id: str, credentials: HTTPAuthorizationCre
     """Get certificate details"""
     await get_current_user(credentials)
     
-    certificate = await db.certificates.find_one({"id": certificate_id}, {"_id": 0})
+    certificate = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATES, certificate_id)
     if not certificate:
         raise HTTPException(status_code=404, detail="Certificate not found")
     
@@ -9327,7 +9393,7 @@ async def update_certificate_status(certificate_id: str, status_data: dict, cred
     """Update certificate status (suspend, withdraw, reactivate)"""
     await get_current_user(credentials)
     
-    certificate = await db.certificates.find_one({"id": certificate_id})
+    certificate = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATES, certificate_id)
     if not certificate:
         raise HTTPException(status_code=404, detail="Certificate not found")
     
@@ -9336,13 +9402,16 @@ async def update_certificate_status(certificate_id: str, status_data: dict, cred
     if new_status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {valid_statuses}")
     
-    await db.certificates.update_one(
-        {"id": certificate_id},
-        {"$set": {
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_CERTIFICATES,
+        certificate_id,
+        {
             "status": new_status,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Certificate not found")
     
     return {"message": f"Certificate status updated to {new_status}"}
 
@@ -9351,7 +9420,7 @@ async def download_certificate_pdf(certificate_id: str, credentials: HTTPAuthori
     """Generate and download certificate PDF"""
     await get_current_user(credentials)
     
-    certificate = await db.certificates.find_one({"id": certificate_id}, {"_id": 0})
+    certificate = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATES, certificate_id)
     if not certificate:
         raise HTTPException(status_code=404, detail="Certificate not found")
     
@@ -9369,9 +9438,8 @@ async def download_certificate_pdf(certificate_id: str, credentials: HTTPAuthori
 @api_router.get("/public/verify/{certificate_number}")
 async def verify_certificate_public(certificate_number: str):
     """Public endpoint to verify a certificate via QR code scan"""
-    certificate = await db.certificates.find_one(
-        {"certificate_number": certificate_number},
-        {"_id": 0, "qr_code_data": 0}  # Exclude QR code data for public
+    certificate = await doc_pg.get_by_payload_field(
+        doc_pg.C_CERTIFICATES, "certificate_number", certificate_number
     )
     
     if not certificate:
@@ -9410,10 +9478,14 @@ async def get_expiring_items(
     today_str = today.strftime("%Y-%m-%d")
     
     # Get expiring certificates
-    expiring_certs = await db.certificates.find({
-        "status": "active",
-        "expiry_date": {"$gte": today_str, "$lte": expiry_date}
-    }, {"_id": 0}).to_list(100)
+    all_certs = await doc_pg.list_ordered(doc_pg.C_CERTIFICATES, 1000)
+    expiring_certs = [
+        c
+        for c in all_certs
+        if c.get("status") == "active"
+        and c.get("expiry_date")
+        and today_str <= str(c["expiry_date"]) <= expiry_date
+    ][:100]
     
     # Categorize by urgency
     alerts = {
@@ -9492,8 +9564,8 @@ async def get_dashboard_analytics(credentials: HTTPAuthorizationCredentials = De
     forms = await db.forms.find({}, {"_id": 0}).to_list(1000)
     proposals = await doc_pg.list_ordered(doc_pg.C_PROPOSALS, 1000)
     agreements = await doc_pg.list_ordered(doc_pg.C_CERTIFICATION_AGREEMENTS, 1000)
-    invoices = await db.invoices.find({}, {"_id": 0}).to_list(1000)
-    certificates = await db.certificates.find({}, {"_id": 0}).to_list(1000)
+    invoices = await doc_pg.list_ordered(doc_pg.C_INVOICES, 1000)
+    certificates = await doc_pg.list_ordered(doc_pg.C_CERTIFICATES, 1000)
     audits = await doc_pg.list_ordered(doc_pg.C_AUDIT_SCHEDULES, 1000)
     
     # Calculate conversion rates

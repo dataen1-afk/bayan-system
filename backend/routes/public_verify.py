@@ -3,7 +3,7 @@ Public certificate verification route.
 """
 from fastapi import APIRouter, HTTPException
 
-from database import db
+import app_documents_pg as doc_pg
 
 router = APIRouter(prefix="/public", tags=["Public"])
 
@@ -11,9 +11,8 @@ router = APIRouter(prefix="/public", tags=["Public"])
 @router.get("/verify/{certificate_number}")
 async def verify_certificate(certificate_number: str):
     """Public endpoint to verify a certificate by its number"""
-    cert = await db.certificates.find_one(
-        {"certificate_number": certificate_number},
-        {"_id": 0, "qr_code_data": 0}  # Exclude large QR data
+    cert = await doc_pg.get_by_payload_field(
+        doc_pg.C_CERTIFICATES, "certificate_number", certificate_number
     )
     
     if not cert:

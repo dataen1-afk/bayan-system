@@ -2,12 +2,11 @@
 Certificate management routes.
 """
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import os
 
-from database import db, CERTIFICATES_DIR
 import app_documents_pg as doc_pg
 from auth import require_admin
 from models.certificate import Certificate, CertificateCreate
@@ -17,21 +16,17 @@ router = APIRouter(prefix="/certificates", tags=["Certificates"])
 
 
 async def generate_certificate_number():
-    """Generate unique certificate number: CERT-YYYY-XXXX"""
+    """Generate unique certificate number: CERT_YYYY_XXXX (underscore form for this router)."""
     year = datetime.now().year
-    
-    # Find last certificate number for this year
-    last_cert = await db.certificates.find_one(
-        {"certificate_number": {"$regex": f"^CERT_{year}_"}},
-        sort=[("certificate_number", -1)]
+    pattern = f"CERT\\_{year}\\_%"
+    last_cert = await doc_pg.get_latest_by_certificate_number_like(
+        doc_pg.C_CERTIFICATES, pattern, escape_underscore=True
     )
-    
     if last_cert:
         last_num = int(last_cert["certificate_number"].split("_")[-1])
         new_num = last_num + 1
     else:
         new_num = 1
-    
     return f"CERT_{year}_{new_num:04d}"
 
 
@@ -42,20 +37,18 @@ async def get_certificates(
     current_user: dict = Depends(require_admin)
 ):
     """Get all certificates with optional filtering"""
-    query = {}
+    certificates = await doc_pg.list_ordered(doc_pg.C_CERTIFICATES, 1000)
     if status:
-        query["status"] = status
+        certificates = [c for c in certificates if c.get("status") == status]
     if standard:
-        query["standards"] = standard
-    
-    certificates = await db.certificates.find(query, {"_id": 0}).to_list(1000)
+        certificates = [c for c in certificates if standard in c.get("standards", [])]
     return certificates
 
 
 @router.get("/stats")
 async def get_certificate_stats(current_user: dict = Depends(require_admin)):
     """Get certificate statistics"""
-    all_certs = await db.certificates.find({}, {"_id": 0}).to_list(1000)
+    all_certs = await doc_pg.list_ordered(doc_pg.C_CERTIFICATES, 1000)
     
     total = len(all_certs)
     active = len([c for c in all_certs if c.get("status") == "active"])
@@ -122,7 +115,12 @@ async def create_certificate(
         audit_team=cert_data.audit_team
     )
     
-    await db.certificates.insert_one(certificate.model_dump())
+    cert_doc = certificate.model_dump()
+    cert_doc["created_at"] = cert_doc["created_at"].isoformat()
+    if cert_doc.get("updated_at") is not None:
+        u = cert_doc["updated_at"]
+        cert_doc["updated_at"] = u.isoformat() if isinstance(u, datetime) else u
+    await doc_pg.insert_document(doc_pg.C_CERTIFICATES, cert_doc)
     return certificate.model_dump()
 
 
@@ -132,7 +130,7 @@ async def get_certificate(
     current_user: dict = Depends(require_admin)
 ):
     """Get a specific certificate"""
-    cert = await db.certificates.find_one({"id": certificate_id}, {"_id": 0})
+    cert = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATES, certificate_id)
     if not cert:
         raise HTTPException(status_code=404, detail="Certificate not found")
     return cert
@@ -149,12 +147,12 @@ async def update_certificate_status(
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
     
-    result = await db.certificates.update_one(
-        {"id": certificate_id},
-        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc)}}
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_CERTIFICATES,
+        certificate_id,
+        {"status": status, "updated_at": datetime.now(timezone.utc)},
     )
-    
-    if result.matched_count == 0:
+    if not ok:
         raise HTTPException(status_code=404, detail="Certificate not found")
     
     return {"status": "success"}
@@ -166,15 +164,16 @@ async def download_certificate_pdf(
     current_user: dict = Depends(require_admin)
 ):
     """Generate and download certificate PDF"""
-    cert = await db.certificates.find_one({"id": certificate_id}, {"_id": 0})
+    cert = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATES, certificate_id)
     if not cert:
         raise HTTPException(status_code=404, detail="Certificate not found")
     
-    # Generate PDF
-    pdf_path = generate_certificate_pdf(cert)
-    
-    return FileResponse(
-        pdf_path,
+    pdf_bytes = generate_certificate_pdf(cert)
+    safe_name = str(cert.get("certificate_number", "cert")).replace("/", "_")
+    return Response(
+        content=pdf_bytes,
         media_type="application/pdf",
-        filename=f"certificate_{cert['certificate_number']}.pdf"
+        headers={
+            "Content-Disposition": f'attachment; filename="certificate_{safe_name}.pdf"'
+        },
     )

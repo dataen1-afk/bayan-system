@@ -23,6 +23,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 from database import db
 from sqlalchemy.exc import SQLAlchemyError
+import app_documents_pg as doc_pg
 from notifications_pg import insert_notification_document
 from auth import security, get_current_user
 
@@ -104,12 +105,12 @@ async def create_notification(notification_type: str, title: str, message: str, 
 async def generate_certificate_number():
     """Generate unique certificate number: CERT-YYYY-XXXX"""
     year = datetime.now().year
-    last_cert = await db.certificates.find_one(
-        {"certificate_number": {"$regex": f"^CERT-{year}-"}},
-        sort=[("certificate_number", -1)]
+    pattern = f"CERT-{year}-%"
+    last_cert = await doc_pg.get_latest_by_certificate_number_like(
+        doc_pg.C_CERTIFICATES, pattern, escape_underscore=False
     )
     if last_cert:
-        last_num = int(last_cert['certificate_number'].split('-')[-1])
+        last_num = int(last_cert["certificate_number"].split("-")[-1])
         new_num = last_num + 1
     else:
         new_num = 1

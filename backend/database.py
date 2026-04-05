@@ -16,7 +16,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import Boolean, DateTime, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -99,6 +99,9 @@ class UserRow(Base):
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    extra: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
 
 
 # --- Legacy Mongo ``db`` stub (monolith + unmigrated routes) -----------------
@@ -253,6 +256,10 @@ APP_DOCUMENTS_INDEX_AUDITOR_SQL = (
     "ON app_documents (collection, ((payload->>'auditor_id')))"
 )
 
+USERS_EXTRA_COLUMN_SQL = (
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS extra JSONB NOT NULL DEFAULT '{}'::jsonb"
+)
+
 
 async def connect_db() -> None:
     """
@@ -260,6 +267,7 @@ async def connect_db() -> None:
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text(USERS_EXTRA_COLUMN_SQL))
         await conn.execute(text(CLIENTS_TABLE_SQL))
         await conn.execute(text(CLIENTS_INDEX_SQL))
         await conn.execute(text(CONTRACTS_TABLE_SQL))

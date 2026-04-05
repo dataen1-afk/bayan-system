@@ -8,13 +8,13 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
-from pathlib import Path
 import uuid
 import logging
 from io import BytesIO
+from collections import Counter
 
 from auth import get_current_user, security
-from dependencies import db, create_notification, CONTRACTS_DIR
+from dependencies import create_notification, CONTRACTS_DIR
 import app_documents_pg as doc_pg
 
 # Try to import openpyxl for Excel export
@@ -33,6 +33,19 @@ except ImportError:
     PDF_GENERATOR_AVAILABLE = False
 
 router = APIRouter(prefix="/certified-clients", tags=["Certified Clients"])
+
+
+async def _next_certified_serial() -> int:
+    clients = await doc_pg.list_ordered(doc_pg.C_CERTIFIED_CLIENTS, 2000)
+    if not clients:
+        return 1
+    m = max((int(c.get("serial_number") or 0) for c in clients), default=0)
+    return m + 1
+
+
+def _sort_by_serial(clients: list) -> list:
+    return sorted(clients, key=lambda c: int(c.get("serial_number") or 0))
+
 
 # ================= MODELS =================
 
@@ -110,12 +123,10 @@ async def get_certified_clients(
     """Get all certified clients"""
     await get_current_user(credentials)
     
-    query = {}
-    if status and status != 'all':
-        query['status'] = status
-    
-    clients = await db.certified_clients.find(query, {"_id": 0}).sort("serial_number", 1).to_list(1000)
-    return clients
+    clients = await doc_pg.list_ordered(doc_pg.C_CERTIFIED_CLIENTS, 1000)
+    if status and status != "all":
+        clients = [c for c in clients if c.get("status") == status]
+    return _sort_by_serial(clients)
 
 @router.post("")
 async def create_certified_client(
@@ -125,13 +136,8 @@ async def create_certified_client(
     """Create a new certified client record"""
     await get_current_user(credentials)
     
-    # Get next serial number
-    last_client = await db.certified_clients.find_one(
-        {},
-        sort=[("serial_number", -1)]
-    )
-    next_serial = (last_client.get('serial_number', 0) + 1) if last_client else 1
-    
+    next_serial = await _next_certified_serial()
+
     client = CertifiedClient(
         serial_number=next_serial,
         client_name=data.client_name,
@@ -157,7 +163,7 @@ async def create_certified_client(
     client_doc = client.model_dump()
     client_doc['created_at'] = client_doc['created_at'].isoformat()
     
-    await db.certified_clients.insert_one(client_doc)
+    await doc_pg.insert_document(doc_pg.C_CERTIFIED_CLIENTS, client_doc)
     
     await create_notification(
         notification_type="certified_client_added",
@@ -178,19 +184,19 @@ async def get_certified_clients_stats(
     """Get statistics overview for certified clients"""
     await get_current_user(credentials)
     
-    total = await db.certified_clients.count_documents({})
-    active = await db.certified_clients.count_documents({"status": "active"})
-    suspended = await db.certified_clients.count_documents({"status": "suspended"})
-    expired = await db.certified_clients.count_documents({"status": "expired"})
-    withdrawn = await db.certified_clients.count_documents({"status": "withdrawn"})
-    
-    # Count by standard
-    pipeline = [
-        {"$unwind": "$accreditation"},
-        {"$group": {"_id": "$accreditation", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}}
-    ]
-    by_standard = await db.certified_clients.aggregate(pipeline).to_list(100)
+    total = await doc_pg.count_all(doc_pg.C_CERTIFIED_CLIENTS)
+    active = await doc_pg.count_status(doc_pg.C_CERTIFIED_CLIENTS, "active")
+    suspended = await doc_pg.count_status(doc_pg.C_CERTIFIED_CLIENTS, "suspended")
+    expired = await doc_pg.count_status(doc_pg.C_CERTIFIED_CLIENTS, "expired")
+    withdrawn = await doc_pg.count_status(doc_pg.C_CERTIFIED_CLIENTS, "withdrawn")
+
+    all_clients = await doc_pg.list_ordered(doc_pg.C_CERTIFIED_CLIENTS, 2000)
+    ctr: Counter[str] = Counter()
+    for c in all_clients:
+        for acc in c.get("accreditation") or []:
+            if acc:
+                ctr[str(acc)] += 1
+    by_standard = [{"_id": k, "count": v} for k, v in ctr.most_common(100)]
     
     return {
         "total": total,
@@ -209,10 +215,10 @@ async def get_certified_client(
     """Get a specific certified client"""
     await get_current_user(credentials)
     
-    client = await db.certified_clients.find_one({"id": client_id}, {"_id": 0})
+    client = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFIED_CLIENTS, client_id)
     if not client:
         raise HTTPException(status_code=404, detail="Certified client not found")
-    
+
     return client
 
 @router.put("/{client_id}")
@@ -224,15 +230,17 @@ async def update_certified_client(
     """Update a certified client record"""
     await get_current_user(credentials)
     
-    existing = await db.certified_clients.find_one({"id": client_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFIED_CLIENTS, client_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Certified client not found")
-    
+
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
-    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
-    
-    await db.certified_clients.update_one({"id": client_id}, {"$set": update_data})
-    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    merged = {**existing, **update_data}
+    await doc_pg.replace_payload(
+        doc_pg.C_CERTIFIED_CLIENTS, client_id, merged
+    )
+
     return {"message": "Certified client updated"}
 
 @router.delete("/{client_id}")
@@ -243,11 +251,11 @@ async def delete_certified_client(
     """Delete a certified client record"""
     await get_current_user(credentials)
     
-    existing = await db.certified_clients.find_one({"id": client_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFIED_CLIENTS, client_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Certified client not found")
-    
-    await db.certified_clients.delete_one({"id": client_id})
+
+    await doc_pg.delete_by_doc_id(doc_pg.C_CERTIFIED_CLIENTS, client_id)
     return {"message": "Certified client deleted"}
 
 @router.post("/sync-from-certificates")
@@ -262,14 +270,15 @@ async def sync_certified_clients_from_certificates(
     
     synced_count = 0
     for cert in certificates:
-        existing = await db.certified_clients.find_one({
-            "linked_certificate_id": cert['id']
-        })
-        
+        existing = await doc_pg.get_by_payload_field(
+            doc_pg.C_CERTIFIED_CLIENTS,
+            "linked_certificate_id",
+            str(cert["id"]),
+        )
+
         if not existing:
-            last_client = await db.certified_clients.find_one({}, sort=[("serial_number", -1)])
-            next_serial = (last_client.get('serial_number', 0) + 1) if last_client else 1
-            
+            next_serial = await _next_certified_serial()
+
             new_client = {
                 "id": str(uuid.uuid4()),
                 "serial_number": next_serial,
@@ -285,8 +294,8 @@ async def sync_certified_clients_from_certificates(
                 "linked_certificate_id": cert['id'],
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
-            
-            await db.certified_clients.insert_one(new_client)
+
+            await doc_pg.insert_document(doc_pg.C_CERTIFIED_CLIENTS, new_client)
             synced_count += 1
     
     return {"message": f"Synced {synced_count} new certified clients from certificates"}
@@ -301,7 +310,8 @@ async def export_certified_clients_excel(
     if not OPENPYXL_AVAILABLE:
         raise HTTPException(status_code=500, detail="Excel export not available - openpyxl not installed")
     
-    clients = await db.certified_clients.find({"status": "active"}, {"_id": 0}).sort("serial_number", 1).to_list(1000)
+    all_c = await doc_pg.list_ordered(doc_pg.C_CERTIFIED_CLIENTS, 1000)
+    clients = _sort_by_serial([c for c in all_c if c.get("status") == "active"])
     
     wb = Workbook()
     ws = wb.active
@@ -374,10 +384,10 @@ async def get_certified_client_pdf(
     """Generate PDF for a certified client"""
     await get_current_user(credentials)
     
-    client = await db.certified_clients.find_one({"id": client_id}, {"_id": 0})
+    client = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFIED_CLIENTS, client_id)
     if not client:
         raise HTTPException(status_code=404, detail="Certified client not found")
-    
+
     if not PDF_GENERATOR_AVAILABLE:
         raise HTTPException(status_code=500, detail="PDF generator not available")
     

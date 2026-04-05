@@ -69,6 +69,10 @@ SQL_GET_BY_ID = text(
     """
 )
 
+SQL_DELETE_ALL = text("DELETE FROM contracts")
+
+SQL_COUNT_ALL = text("SELECT COUNT(*)::bigint AS n FROM contracts")
+
 
 def _normalize_payload(raw: Any) -> dict[str, Any]:
     if raw is None:
@@ -167,6 +171,29 @@ async def list_contracts_for_user(*, is_client: bool, user_id: str) -> list[dict
         logger.warning("contracts list: %s", e)
         raise
     return [row_to_contract_api(dict(r)) for r in rows]
+
+
+async def delete_all_contracts() -> int:
+    try:
+        async with AsyncSessionLocal() as session:
+            r = await session.execute(SQL_DELETE_ALL)
+            await session.commit()
+            n = r.rowcount
+    except SQLAlchemyError as e:
+        logger.warning("contracts delete_all: %s", e)
+        raise
+    return int(n) if n is not None and n >= 0 else 0
+
+
+async def count_contracts() -> int:
+    try:
+        async with AsyncSessionLocal() as session:
+            r = await session.execute(SQL_COUNT_ALL)
+            n = r.mappings().one()["n"]
+    except SQLAlchemyError as e:
+        logger.warning("contracts count: %s", e)
+        raise
+    return int(n)
 
 
 async def get_contract_by_id(contract_id: str) -> dict[str, Any] | None:

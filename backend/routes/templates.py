@@ -4,7 +4,7 @@ Template routes (Certification Packages and Proposal Templates).
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 
-from database import db
+import app_documents_pg as doc_pg
 from auth import require_admin
 from models.template import CertificationPackage, ProposalTemplate
 
@@ -16,8 +16,7 @@ router = APIRouter(prefix="/templates", tags=["Templates"])
 @router.get("/packages", response_model=List[dict])
 async def get_certification_packages(current_user: dict = Depends(require_admin)):
     """Get all certification packages"""
-    packages = await db.certification_packages.find({}, {"_id": 0}).to_list(100)
-    return packages
+    return await doc_pg.list_ordered(doc_pg.C_CERTIFICATION_PACKAGES, 100)
 
 
 @router.post("/packages", response_model=dict)
@@ -26,8 +25,13 @@ async def create_certification_package(
     current_user: dict = Depends(require_admin)
 ):
     """Create a new certification package"""
-    await db.certification_packages.insert_one(package.model_dump())
-    return package.model_dump()
+    doc = package.model_dump()
+    doc.setdefault("is_active", True)
+    doc["created_at"] = doc["created_at"].isoformat()
+    await doc_pg.insert_document(doc_pg.C_CERTIFICATION_PACKAGES, doc)
+    out = package.model_dump()
+    out.setdefault("is_active", True)
+    return out
 
 
 @router.put("/packages/{package_id}", response_model=dict)
@@ -38,16 +42,24 @@ async def update_certification_package(
 ):
     """Update a certification package"""
     update_data = package.model_dump()
+    update_data.setdefault("is_active", True)
     update_data["id"] = package_id  # Preserve ID
-    
-    result = await db.certification_packages.update_one(
-        {"id": package_id},
-        {"$set": update_data}
+    update_data["created_at"] = (
+        update_data["created_at"].isoformat()
+        if hasattr(update_data["created_at"], "isoformat")
+        else update_data["created_at"]
     )
-    
-    if result.matched_count == 0:
+
+    cur = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFICATION_PACKAGES, package_id)
+    if not cur:
         raise HTTPException(status_code=404, detail="Package not found")
-    
+
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_CERTIFICATION_PACKAGES, package_id, update_data
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Package not found")
+
     return update_data
 
 
@@ -57,8 +69,10 @@ async def delete_certification_package(
     current_user: dict = Depends(require_admin)
 ):
     """Delete a certification package"""
-    result = await db.certification_packages.delete_one({"id": package_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(
+        doc_pg.C_CERTIFICATION_PACKAGES, package_id
+    )
+    if not deleted:
         raise HTTPException(status_code=404, detail="Package not found")
     return {"status": "success"}
 
@@ -68,8 +82,7 @@ async def delete_certification_package(
 @router.get("/proposals", response_model=List[dict])
 async def get_proposal_templates(current_user: dict = Depends(require_admin)):
     """Get all proposal templates"""
-    templates = await db.proposal_templates.find({}, {"_id": 0}).to_list(100)
-    return templates
+    return await doc_pg.list_ordered(doc_pg.C_PROPOSAL_TEMPLATES, 100)
 
 
 @router.post("/proposals", response_model=dict)
@@ -78,8 +91,13 @@ async def create_proposal_template(
     current_user: dict = Depends(require_admin)
 ):
     """Create a new proposal template"""
-    await db.proposal_templates.insert_one(template.model_dump())
-    return template.model_dump()
+    doc = template.model_dump()
+    doc.setdefault("is_active", True)
+    doc["created_at"] = doc["created_at"].isoformat()
+    await doc_pg.insert_document(doc_pg.C_PROPOSAL_TEMPLATES, doc)
+    out = template.model_dump()
+    out.setdefault("is_active", True)
+    return out
 
 
 @router.put("/proposals/{template_id}", response_model=dict)
@@ -90,16 +108,24 @@ async def update_proposal_template(
 ):
     """Update a proposal template"""
     update_data = template.model_dump()
+    update_data.setdefault("is_active", True)
     update_data["id"] = template_id  # Preserve ID
-    
-    result = await db.proposal_templates.update_one(
-        {"id": template_id},
-        {"$set": update_data}
+    update_data["created_at"] = (
+        update_data["created_at"].isoformat()
+        if hasattr(update_data["created_at"], "isoformat")
+        else update_data["created_at"]
     )
-    
-    if result.matched_count == 0:
+
+    cur = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSAL_TEMPLATES, template_id)
+    if not cur:
         raise HTTPException(status_code=404, detail="Template not found")
-    
+
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_PROPOSAL_TEMPLATES, template_id, update_data
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Template not found")
+
     return update_data
 
 
@@ -109,8 +135,10 @@ async def delete_proposal_template(
     current_user: dict = Depends(require_admin)
 ):
     """Delete a proposal template"""
-    result = await db.proposal_templates.delete_one({"id": template_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(
+        doc_pg.C_PROPOSAL_TEMPLATES, template_id
+    )
+    if not deleted:
         raise HTTPException(status_code=404, detail="Template not found")
     return {"status": "success"}
 
@@ -120,8 +148,7 @@ async def delete_proposal_template(
 async def seed_default_templates():
     """Seed default certification packages and proposal templates"""
     # Check if packages exist
-    existing_packages = await db.certification_packages.count_documents({})
-    if existing_packages == 0:
+    if await doc_pg.count_all(doc_pg.C_CERTIFICATION_PACKAGES) == 0:
         default_packages = [
             CertificationPackage(
                 name="Quality Management",
@@ -150,11 +177,13 @@ async def seed_default_templates():
             )
         ]
         for pkg in default_packages:
-            await db.certification_packages.insert_one(pkg.model_dump())
-    
+            d = pkg.model_dump()
+            d.setdefault("is_active", True)
+            d["created_at"] = d["created_at"].isoformat()
+            await doc_pg.insert_document(doc_pg.C_CERTIFICATION_PACKAGES, d)
+
     # Check if templates exist
-    existing_templates = await db.proposal_templates.count_documents({})
-    if existing_templates == 0:
+    if await doc_pg.count_all(doc_pg.C_PROPOSAL_TEMPLATES) == 0:
         default_templates = [
             ProposalTemplate(
                 name="Standard Package",
@@ -186,4 +215,7 @@ async def seed_default_templates():
             )
         ]
         for tmpl in default_templates:
-            await db.proposal_templates.insert_one(tmpl.model_dump())
+            d = tmpl.model_dump()
+            d.setdefault("is_active", True)
+            d["created_at"] = d["created_at"].isoformat()
+            await doc_pg.insert_document(doc_pg.C_PROPOSAL_TEMPLATES, d)

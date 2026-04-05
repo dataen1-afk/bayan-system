@@ -8,13 +8,13 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
-from pathlib import Path
 import uuid
 import logging
 from io import BytesIO
 
 from auth import get_current_user, security
-from dependencies import db, create_notification, CONTRACTS_DIR
+from dependencies import create_notification, CONTRACTS_DIR
+import app_documents_pg as doc_pg
 
 # Try to import openpyxl for Excel export
 try:
@@ -32,6 +32,28 @@ except ImportError:
     PDF_GENERATOR_AVAILABLE = False
 
 router = APIRouter(prefix="/suspended-clients", tags=["Suspended Clients"])
+
+
+async def _next_suspended_serial() -> int:
+    clients = await doc_pg.list_ordered(doc_pg.C_SUSPENDED_CLIENTS, 2000)
+    if not clients:
+        return 1
+    m = max((int(c.get("serial_number") or 0) for c in clients), default=0)
+    return m + 1
+
+
+def _sort_suspended_by_serial(clients: list) -> list:
+    return sorted(clients, key=lambda c: int(c.get("serial_number") or 0))
+
+
+async def _set_certified_status(certified_id: str, status: str) -> None:
+    cur = await doc_pg.get_by_doc_id(doc_pg.C_CERTIFIED_CLIENTS, certified_id)
+    if not cur:
+        return
+    cur["status"] = status
+    cur["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await doc_pg.replace_payload(doc_pg.C_CERTIFIED_CLIENTS, certified_id, cur)
+
 
 # ================= MODELS =================
 
@@ -96,12 +118,10 @@ async def get_suspended_clients(
     """Get all suspended clients"""
     await get_current_user(credentials)
     
-    query = {}
-    if status and status != 'all':
-        query['status'] = status
-    
-    clients = await db.suspended_clients.find(query, {"_id": 0}).sort("serial_number", 1).to_list(1000)
-    return clients
+    clients = await doc_pg.list_ordered(doc_pg.C_SUSPENDED_CLIENTS, 1000)
+    if status and status != "all":
+        clients = [c for c in clients if c.get("status") == status]
+    return _sort_suspended_by_serial(clients)
 
 @router.post("")
 async def create_suspended_client(
@@ -111,10 +131,8 @@ async def create_suspended_client(
     """Create a new suspended client record"""
     await get_current_user(credentials)
     
-    # Get next serial number
-    last_client = await db.suspended_clients.find_one({}, sort=[("serial_number", -1)])
-    next_serial = (last_client.get('serial_number', 0) + 1) if last_client else 1
-    
+    next_serial = await _next_suspended_serial()
+
     client = SuspendedClient(
         serial_number=next_serial,
         client_id=data.client_id,
@@ -135,13 +153,12 @@ async def create_suspended_client(
     client_doc = client.model_dump()
     client_doc['created_at'] = client_doc['created_at'].isoformat()
     
-    await db.suspended_clients.insert_one(client_doc)
-    
+    await doc_pg.insert_document(doc_pg.C_SUSPENDED_CLIENTS, client_doc)
+
     # If linked to a certified client, update its status
     if data.linked_certified_client_id:
-        await db.certified_clients.update_one(
-            {"id": data.linked_certified_client_id},
-            {"$set": {"status": "suspended", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        await _set_certified_status(
+            data.linked_certified_client_id, "suspended"
         )
     
     await create_notification(
@@ -163,17 +180,14 @@ async def get_suspended_clients_stats(
     """Get statistics overview for suspended clients"""
     await get_current_user(credentials)
     
-    total = await db.suspended_clients.count_documents({})
-    suspended = await db.suspended_clients.count_documents({"status": "suspended"})
-    reinstated = await db.suspended_clients.count_documents({"status": "reinstated"})
-    withdrawn = await db.suspended_clients.count_documents({"status": "withdrawn"})
-    
-    # Count by future action
-    pipeline = [
-        {"$group": {"_id": "$future_action", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}}
-    ]
-    by_action = await db.suspended_clients.aggregate(pipeline).to_list(100)
+    total = await doc_pg.count_all(doc_pg.C_SUSPENDED_CLIENTS)
+    suspended = await doc_pg.count_status(doc_pg.C_SUSPENDED_CLIENTS, "suspended")
+    reinstated = await doc_pg.count_status(doc_pg.C_SUSPENDED_CLIENTS, "reinstated")
+    withdrawn = await doc_pg.count_status(doc_pg.C_SUSPENDED_CLIENTS, "withdrawn")
+
+    by_action = await doc_pg.count_group_by_payload_text_field(
+        doc_pg.C_SUSPENDED_CLIENTS, "future_action", limit=100
+    )
     
     return {
         "total": total,
@@ -191,10 +205,10 @@ async def get_suspended_client(
     """Get a specific suspended client"""
     await get_current_user(credentials)
     
-    client = await db.suspended_clients.find_one({"id": client_id}, {"_id": 0})
+    client = await doc_pg.get_by_doc_id(doc_pg.C_SUSPENDED_CLIENTS, client_id)
     if not client:
         raise HTTPException(status_code=404, detail="Suspended client not found")
-    
+
     return client
 
 @router.put("/{client_id}")
@@ -206,15 +220,17 @@ async def update_suspended_client(
     """Update a suspended client record"""
     await get_current_user(credentials)
     
-    existing = await db.suspended_clients.find_one({"id": client_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_SUSPENDED_CLIENTS, client_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Suspended client not found")
-    
+
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
-    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
-    
-    await db.suspended_clients.update_one({"id": client_id}, {"$set": update_data})
-    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    merged = {**existing, **update_data}
+    await doc_pg.replace_payload(
+        doc_pg.C_SUSPENDED_CLIENTS, client_id, merged
+    )
+
     return {"message": "Suspended client updated"}
 
 @router.delete("/{client_id}")
@@ -225,11 +241,11 @@ async def delete_suspended_client(
     """Delete a suspended client record"""
     await get_current_user(credentials)
     
-    existing = await db.suspended_clients.find_one({"id": client_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_SUSPENDED_CLIENTS, client_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Suspended client not found")
-    
-    await db.suspended_clients.delete_one({"id": client_id})
+
+    await doc_pg.delete_by_doc_id(doc_pg.C_SUSPENDED_CLIENTS, client_id)
     return {"message": "Suspended client deleted"}
 
 @router.post("/{client_id}/lift-suspension")
@@ -241,29 +257,31 @@ async def lift_suspension(
     """Lift suspension and optionally reinstate the client"""
     await get_current_user(credentials)
     
-    existing = await db.suspended_clients.find_one({"id": client_id}, {"_id": 0})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_SUSPENDED_CLIENTS, client_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Suspended client not found")
-    
+
     new_status = data.get('new_status', 'reinstated')
     if new_status not in ['reinstated', 'withdrawn']:
         raise HTTPException(status_code=400, detail="Invalid status. Use 'reinstated' or 'withdrawn'")
-    
+
     update_data = {
         "status": new_status,
         "lifted_on": data.get('lifted_on', datetime.now().strftime("%Y-%m-%d")),
         "lifted_reason": data.get('lifted_reason', ''),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
-    
-    await db.suspended_clients.update_one({"id": client_id}, {"$set": update_data})
-    
+
+    merged = {**existing, **update_data}
+    await doc_pg.replace_payload(
+        doc_pg.C_SUSPENDED_CLIENTS, client_id, merged
+    )
+
     # Update linked certified client status
     if existing.get('linked_certified_client_id'):
         certified_status = "active" if new_status == "reinstated" else "withdrawn"
-        await db.certified_clients.update_one(
-            {"id": existing['linked_certified_client_id']},
-            {"$set": {"status": certified_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        await _set_certified_status(
+            existing['linked_certified_client_id'], certified_status
         )
     
     status_ar = {'reinstated': 'تم إعادة التفعيل', 'withdrawn': 'تم السحب'}.get(new_status, new_status)
@@ -287,18 +305,20 @@ async def sync_suspended_from_certified(
     """Sync suspended clients from certified clients with suspended status"""
     await get_current_user(credentials)
     
-    suspended_certified = await db.certified_clients.find({"status": "suspended"}, {"_id": 0}).to_list(1000)
-    
+    all_cert = await doc_pg.list_ordered(doc_pg.C_CERTIFIED_CLIENTS, 2000)
+    suspended_certified = [c for c in all_cert if c.get("status") == "suspended"]
+
     synced_count = 0
     for cert_client in suspended_certified:
-        existing = await db.suspended_clients.find_one({
-            "linked_certified_client_id": cert_client['id']
-        })
-        
+        existing = await doc_pg.get_by_payload_field(
+            doc_pg.C_SUSPENDED_CLIENTS,
+            "linked_certified_client_id",
+            str(cert_client["id"]),
+        )
+
         if not existing:
-            last_client = await db.suspended_clients.find_one({}, sort=[("serial_number", -1)])
-            next_serial = (last_client.get('serial_number', 0) + 1) if last_client else 1
-            
+            next_serial = await _next_suspended_serial()
+
             new_suspended = {
                 "id": str(uuid.uuid4()),
                 "serial_number": next_serial,
@@ -314,8 +334,8 @@ async def sync_suspended_from_certified(
                 "linked_certified_client_id": cert_client['id'],
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
-            
-            await db.suspended_clients.insert_one(new_suspended)
+
+            await doc_pg.insert_document(doc_pg.C_SUSPENDED_CLIENTS, new_suspended)
             synced_count += 1
     
     return {"message": f"Synced {synced_count} suspended clients from certified clients"}
@@ -330,7 +350,9 @@ async def export_suspended_clients_excel(
     if not OPENPYXL_AVAILABLE:
         raise HTTPException(status_code=500, detail="Excel export not available - openpyxl not installed")
     
-    clients = await db.suspended_clients.find({}, {"_id": 0}).sort("serial_number", 1).to_list(1000)
+    clients = _sort_suspended_by_serial(
+        await doc_pg.list_ordered(doc_pg.C_SUSPENDED_CLIENTS, 1000)
+    )
     
     wb = Workbook()
     ws = wb.active
@@ -402,10 +424,10 @@ async def get_suspended_client_pdf(
     """Generate PDF for a suspended client"""
     await get_current_user(credentials)
     
-    client = await db.suspended_clients.find_one({"id": client_id}, {"_id": 0})
+    client = await doc_pg.get_by_doc_id(doc_pg.C_SUSPENDED_CLIENTS, client_id)
     if not client:
         raise HTTPException(status_code=404, detail="Suspended client not found")
-    
+
     if not PDF_GENERATOR_AVAILABLE:
         raise HTTPException(status_code=500, detail="PDF generator not available")
     

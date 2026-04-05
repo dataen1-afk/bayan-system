@@ -21,7 +21,6 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-from database import db
 from sqlalchemy.exc import SQLAlchemyError
 import app_documents_pg as doc_pg
 from notifications_pg import insert_notification_document

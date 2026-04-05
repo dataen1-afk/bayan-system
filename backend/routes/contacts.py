@@ -4,11 +4,10 @@ Contact history/CRM routes.
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime, timezone
 import uuid
 
-from database import db
 import app_documents_pg as doc_pg
 from auth import get_current_user, security
 
@@ -41,28 +40,33 @@ class ContactRecordCreate(BaseModel):
 
 @router.get("")
 async def get_contact_records(
-    credentials: HTTPAuthorizationCredentials = Depends(security), 
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     customer_id: Optional[str] = None
 ):
     """Get all contact records or filtered by customer"""
     await get_current_user(credentials)
-    
-    query = {}
+
     if customer_id:
-        query["customer_id"] = customer_id
-    
-    contacts = await db.contact_records.find(query, {"_id": 0}).sort("contact_date", -1).to_list(1000)
+        contacts = await doc_pg.list_by_payload_field(
+            doc_pg.C_CONTACT_RECORDS, "customer_id", str(customer_id), limit=1000
+        )
+    else:
+        contacts = await doc_pg.list_ordered(doc_pg.C_CONTACT_RECORDS, 1000)
+    contacts.sort(
+        key=lambda x: str(x.get("contact_date") or ""),
+        reverse=True,
+    )
     return contacts
 
 
 @router.post("")
 async def create_contact_record(
-    contact_data: ContactRecordCreate, 
+    contact_data: ContactRecordCreate,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Create a new contact record"""
     current_user = await get_current_user(credentials)
-    
+
     # Get customer name from form or proposal
     customer_name = ""
     form = await doc_pg.get_by_doc_id(doc_pg.C_APPLICATION_FORMS, contact_data.customer_id)
@@ -72,7 +76,7 @@ async def create_contact_record(
         proposal = await doc_pg.get_by_doc_id(doc_pg.C_PROPOSALS, contact_data.customer_id)
         if proposal:
             customer_name = proposal.get('organization_name', '')
-    
+
     contact = ContactRecord(
         customer_id=contact_data.customer_id,
         customer_name=customer_name,
@@ -83,35 +87,40 @@ async def create_contact_record(
         follow_up_date=contact_data.follow_up_date,
         created_by=current_user.get('user_id', '')
     )
-    
+
     contact_doc = contact.model_dump()
     contact_doc['created_at'] = contact_doc['created_at'].isoformat()
-    
-    await db.contact_records.insert_one(contact_doc)
+
+    await doc_pg.insert_document(doc_pg.C_CONTACT_RECORDS, contact_doc)
     return {"message": "Contact record created", "id": contact.id}
 
 
 @router.put("/{contact_id}/follow-up")
 async def mark_follow_up_completed(
-    contact_id: str, 
+    contact_id: str,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Mark a follow-up as completed"""
     await get_current_user(credentials)
-    
-    await db.contact_records.update_one(
-        {"id": contact_id},
-        {"$set": {"follow_up_completed": True}}
+
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_CONTACT_RECORDS,
+        contact_id,
+        {"follow_up_completed": True},
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Contact record not found")
     return {"message": "Follow-up marked as completed"}
 
 
 @router.delete("/{contact_id}")
 async def delete_contact_record(
-    contact_id: str, 
+    contact_id: str,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Delete a contact record"""
     await get_current_user(credentials)
-    await db.contact_records.delete_one({"id": contact_id})
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_CONTACT_RECORDS, contact_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Contact record not found")
     return {"message": "Contact record deleted"}

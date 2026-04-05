@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 import uuid
 
 from auth import get_current_user, security
-from dependencies import db, create_notification
+from dependencies import create_notification
 import app_documents_pg as doc_pg
 
 router = APIRouter(prefix="/approvals", tags=["Approvals"])
@@ -120,28 +120,29 @@ DEFAULT_APPROVAL_CONFIGS = {
 
 async def get_pending_approvals_for_user(user_id: str, role: str) -> List[dict]:
     """Get all pending approvals for a user based on their role"""
-    query = {
-        "status": "in_progress",
-        "levels": {
-            "$elemMatch": {
-                "status": "pending",
-                "role": role
-            }
-        }
-    }
-    
-    # Find workflows where current level matches user's role
-    workflows = await db.approval_workflows.find(query, {"_id": 0}).to_list(100)
-    
+    raw = await doc_pg.list_ordered(doc_pg.C_APPROVAL_WORKFLOWS, 500)
+    workflows = [
+        w
+        for w in raw
+        if w.get("status") == "in_progress"
+        and any(
+            lev.get("status") == "pending" and lev.get("role") == role
+            for lev in (w.get("levels") or [])
+        )
+    ]
+
     pending = []
     for wf in workflows:
-        current_level = wf.get('current_level', 1)
-        for level in wf.get('levels', []):
-            if level.get('level') == current_level and level.get('status') == 'pending':
-                if level.get('role') == role or level.get('approver_id') == user_id:
+        current_level = wf.get("current_level", 1)
+        for level in wf.get("levels", []):
+            if (
+                level.get("level") == current_level
+                and level.get("status") == "pending"
+            ):
+                if level.get("role") == role or level.get("approver_id") == user_id:
                     pending.append(wf)
                     break
-    
+
     return pending
 
 # ================= ENDPOINTS =================
@@ -155,13 +156,13 @@ async def get_approval_workflows(
     """Get all approval workflows"""
     await get_current_user(credentials)
     
-    query = {}
-    if status and status != 'all':
-        query['status'] = status
-    if document_type and document_type != 'all':
-        query['document_type'] = document_type
-    
-    workflows = await db.approval_workflows.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    workflows = await doc_pg.list_ordered(doc_pg.C_APPROVAL_WORKFLOWS, 1000)
+    if status and status != "all":
+        workflows = [w for w in workflows if w.get("status") == status]
+    if document_type and document_type != "all":
+        workflows = [
+            w for w in workflows if w.get("document_type") == document_type
+        ]
     return workflows
 
 @router.get("/pending")
@@ -172,11 +173,9 @@ async def get_pending_approvals(
     user = await get_current_user(credentials)
     
     # For admin users, return all pending approvals
-    if user.get('role') == 'admin':
-        workflows = await db.approval_workflows.find(
-            {"status": "in_progress"},
-            {"_id": 0}
-        ).sort("created_at", -1).to_list(100)
+    if user.get("role") == "admin":
+        raw = await doc_pg.list_ordered(doc_pg.C_APPROVAL_WORKFLOWS, 1000)
+        workflows = [w for w in raw if w.get("status") == "in_progress"][:100]
         return workflows
     
     # For other users, filter by their role
@@ -189,24 +188,24 @@ async def get_approval_stats(
 ):
     """Get approval workflow statistics"""
     await get_current_user(credentials)
-    
-    total = await db.approval_workflows.count_documents({})
-    in_progress = await db.approval_workflows.count_documents({"status": "in_progress"})
-    approved = await db.approval_workflows.count_documents({"status": "approved"})
-    rejected = await db.approval_workflows.count_documents({"status": "rejected"})
-    
-    # Count by document type
-    pipeline = [
-        {"$group": {"_id": "$document_type", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}}
-    ]
-    by_type = await db.approval_workflows.aggregate(pipeline).to_list(20)
-    
-    # Average approval time (in days) for completed workflows
-    completed_workflows = await db.approval_workflows.find(
-        {"status": {"$in": ["approved", "rejected"]}},
-        {"created_at": 1, "completed_at": 1}
-    ).to_list(100)
+
+    total = await doc_pg.count_all(doc_pg.C_APPROVAL_WORKFLOWS)
+    in_progress = await doc_pg.count_status(
+        doc_pg.C_APPROVAL_WORKFLOWS, "in_progress"
+    )
+    approved = await doc_pg.count_status(doc_pg.C_APPROVAL_WORKFLOWS, "approved")
+    rejected = await doc_pg.count_status(doc_pg.C_APPROVAL_WORKFLOWS, "rejected")
+
+    by_type = await doc_pg.count_group_by_payload_text_field(
+        doc_pg.C_APPROVAL_WORKFLOWS, "document_type", limit=20
+    )
+
+    raw_completed = await doc_pg.list_ordered(doc_pg.C_APPROVAL_WORKFLOWS, 500)
+    completed_workflows = [
+        w
+        for w in raw_completed
+        if w.get("status") in ("approved", "rejected")
+    ][:100]
     
     avg_time = 0
     if completed_workflows:
@@ -283,9 +282,19 @@ async def create_approval_workflow(
     )
     
     workflow_doc = workflow.model_dump()
-    workflow_doc['created_at'] = workflow_doc['created_at'].isoformat()
-    
-    await db.approval_workflows.insert_one(workflow_doc)
+    workflow_doc["created_at"] = workflow_doc["created_at"].isoformat()
+    if workflow_doc.get("updated_at") is not None:
+        u = workflow_doc["updated_at"]
+        workflow_doc["updated_at"] = (
+            u.isoformat() if hasattr(u, "isoformat") else u
+        )
+    if workflow_doc.get("completed_at") is not None:
+        c = workflow_doc["completed_at"]
+        workflow_doc["completed_at"] = (
+            c.isoformat() if hasattr(c, "isoformat") else c
+        )
+
+    await doc_pg.insert_document(doc_pg.C_APPROVAL_WORKFLOWS, workflow_doc)
     
     # Notify first level approvers
     first_level = levels[0] if levels else None
@@ -310,10 +319,12 @@ async def get_approval_workflow(
     """Get a specific approval workflow"""
     await get_current_user(credentials)
     
-    workflow = await db.approval_workflows.find_one({"id": workflow_id}, {"_id": 0})
+    workflow = await doc_pg.get_by_doc_id(
+        doc_pg.C_APPROVAL_WORKFLOWS, workflow_id
+    )
     if not workflow:
         raise HTTPException(status_code=404, detail="Approval workflow not found")
-    
+
     return workflow
 
 @router.post("/{workflow_id}/decide")
@@ -325,11 +336,13 @@ async def submit_approval_decision(
     """Submit an approval decision for the current level"""
     user = await get_current_user(credentials)
     
-    workflow = await db.approval_workflows.find_one({"id": workflow_id}, {"_id": 0})
+    workflow = await doc_pg.get_by_doc_id(
+        doc_pg.C_APPROVAL_WORKFLOWS, workflow_id
+    )
     if not workflow:
         raise HTTPException(status_code=404, detail="Approval workflow not found")
-    
-    if workflow['status'] != 'in_progress':
+
+    if workflow["status"] != "in_progress":
         raise HTTPException(status_code=400, detail="This workflow is no longer active")
     
     if decision.status not in ['approved', 'rejected']:
@@ -414,8 +427,12 @@ async def submit_approval_decision(
             related_type="approval_workflow"
         )
     
-    await db.approval_workflows.update_one({"id": workflow_id}, {"$set": update_data})
-    
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_APPROVAL_WORKFLOWS, workflow_id, update_data
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Approval workflow not found")
+
     return {
         "message": f"Decision recorded: {decision.status}",
         "workflow_status": update_data.get('status', 'in_progress'),
@@ -430,20 +447,27 @@ async def cancel_approval_workflow(
     """Cancel an approval workflow"""
     await get_current_user(credentials)
     
-    workflow = await db.approval_workflows.find_one({"id": workflow_id})
+    workflow = await doc_pg.get_by_doc_id(
+        doc_pg.C_APPROVAL_WORKFLOWS, workflow_id
+    )
     if not workflow:
         raise HTTPException(status_code=404, detail="Approval workflow not found")
-    
-    if workflow['status'] != 'in_progress':
-        raise HTTPException(status_code=400, detail="Only in-progress workflows can be cancelled")
-    
-    await db.approval_workflows.update_one(
-        {"id": workflow_id},
-        {"$set": {
+
+    if workflow["status"] != "in_progress":
+        raise HTTPException(
+            status_code=400, detail="Only in-progress workflows can be cancelled"
+        )
+
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_APPROVAL_WORKFLOWS,
+        workflow_id,
+        {
             "status": "cancelled",
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Approval workflow not found")
     
     return {"message": "Approval workflow cancelled"}
 
@@ -455,8 +479,10 @@ async def delete_approval_workflow(
     """Delete an approval workflow"""
     await get_current_user(credentials)
     
-    result = await db.approval_workflows.delete_one({"id": workflow_id})
-    if result.deleted_count == 0:
+    deleted = await doc_pg.delete_by_doc_id(
+        doc_pg.C_APPROVAL_WORKFLOWS, workflow_id
+    )
+    if not deleted:
         raise HTTPException(status_code=404, detail="Approval workflow not found")
     
     return {"message": "Approval workflow deleted"}
@@ -465,28 +491,35 @@ async def delete_approval_workflow(
 
 async def update_source_document_status(document_type: str, document_id: str, status: str):
     """Update the status of the source document when workflow is completed"""
-    collection_map = {
-        "contract_review": "contract_reviews",
-        "job_order": "job_orders",
-        "audit_plan": "audit_plans",
-        "technical_review": "technical_reviews",
-        "certificate": "certificates",
-        "pre_transfer": "pre_transfer_reviews"
+    patch = {
+        "approval_status": status,
+        "approval_completed_at": datetime.now(timezone.utc).isoformat(),
     }
-    
-    collection_name = collection_map.get(document_type)
-    if collection_name:
-        patch = {
-            "approval_status": status,
-            "approval_completed_at": datetime.now(timezone.utc).isoformat(),
-        }
-        if collection_name == doc_pg.C_CONTRACT_REVIEWS:
+
+    # Audit plans live under stage1/stage2 collections; legacy rows may use ``audit_plans``.
+    if document_type == "audit_plan":
+        if await doc_pg.get_by_doc_id(doc_pg.C_STAGE1_AUDIT_PLANS, document_id):
             await doc_pg.merge_set_by_doc_id(
-                doc_pg.C_CONTRACT_REVIEWS, document_id, patch
+                doc_pg.C_STAGE1_AUDIT_PLANS, document_id, patch
+            )
+        elif await doc_pg.get_by_doc_id(doc_pg.C_STAGE2_AUDIT_PLANS, document_id):
+            await doc_pg.merge_set_by_doc_id(
+                doc_pg.C_STAGE2_AUDIT_PLANS, document_id, patch
             )
         else:
-            collection = db[collection_name]
-            await collection.update_one(
-                {"id": document_id},
-                {"$set": patch},
+            await doc_pg.merge_set_by_doc_id(
+                doc_pg.C_AUDIT_PLANS, document_id, patch
             )
+        return
+
+    collection_map = {
+        "contract_review": doc_pg.C_CONTRACT_REVIEWS,
+        "job_order": doc_pg.C_JOB_ORDERS,
+        "technical_review": doc_pg.C_TECHNICAL_REVIEWS,
+        "certificate": doc_pg.C_CERTIFICATES,
+        "pre_transfer": doc_pg.C_PRE_TRANSFER_REVIEWS,
+    }
+
+    col = collection_map.get(document_type)
+    if col:
+        await doc_pg.merge_set_by_doc_id(col, document_id, patch)

@@ -30,7 +30,9 @@ async def get_dashboard_stats(current_user: dict = Depends(require_admin)):
         all_forms = await list_by_collection("application_forms", 1000)
         all_proposals = await list_by_collection("proposals", 1000)
         all_auditors = await list_by_collection("auditors", 100)
-        pending_approvals = await count_by_status("approvals", "pending")
+        pending_approvals = await count_by_status(
+            "approval_workflows", "in_progress"
+        )
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         recent_notifications = await list_notifications_since(today_start, 20)
     except SQLAlchemyError:
@@ -195,7 +197,9 @@ async def get_quick_actions(current_user: dict = Depends(require_admin)):
     """Get counts for quick action badges"""
     try:
         pending_forms = await count_by_status("application_forms", "submitted")
-        pending_approvals = await count_by_status("approvals", "pending")
+        pending_approvals = await count_by_status(
+            "approval_workflows", "in_progress"
+        )
         pending_reviews = await count_by_status("technical_reviews", "pending")
     except SQLAlchemyError:
         raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)

@@ -16,7 +16,6 @@ import logging
 # Import shared dependencies (avoiding circular imports)
 from auth import get_current_user, security
 from dependencies import (
-    db,
     create_notification,
     generate_certificate_number,
     get_qr_code_base64,
@@ -141,11 +140,9 @@ async def get_technical_reviews(
     """Get all technical reviews"""
     await get_current_user(credentials)
     
-    query = {}
-    if status and status != 'all':
-        query['status'] = status
-    
-    reviews = await db.technical_reviews.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    reviews = await doc_pg.list_ordered(doc_pg.C_TECHNICAL_REVIEWS, 1000)
+    if status and status != "all":
+        reviews = [r for r in reviews if r.get("status") == status]
     return reviews
 
 @router.post("")
@@ -200,9 +197,12 @@ async def create_technical_review(
                 review.audit_team_members = team
     
     review_doc = review.model_dump()
-    review_doc['created_at'] = review_doc['created_at'].isoformat()
-    
-    await db.technical_reviews.insert_one(review_doc)
+    review_doc["created_at"] = review_doc["created_at"].isoformat()
+    if review_doc.get("updated_at") is not None:
+        u = review_doc["updated_at"]
+        review_doc["updated_at"] = u.isoformat() if hasattr(u, "isoformat") else u
+
+    await doc_pg.insert_document(doc_pg.C_TECHNICAL_REVIEWS, review_doc)
     
     await create_notification(
         notification_type="technical_review_created",
@@ -224,10 +224,10 @@ async def get_technical_review(
     """Get a specific technical review"""
     await get_current_user(credentials)
     
-    review = await db.technical_reviews.find_one({"id": review_id}, {"_id": 0})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_TECHNICAL_REVIEWS, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Technical review not found")
-    
+
     return review
 
 @router.put("/{review_id}")
@@ -239,18 +239,19 @@ async def update_technical_review(
     """Update a technical review"""
     await get_current_user(credentials)
     
-    existing = await db.technical_reviews.find_one({"id": review_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_TECHNICAL_REVIEWS, review_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Technical review not found")
-    
+
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
-    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
-    
-    await db.technical_reviews.update_one(
-        {"id": review_id},
-        {"$set": update_data}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_TECHNICAL_REVIEWS, review_id, update_data
     )
-    
+    if not ok:
+        raise HTTPException(status_code=404, detail="Technical review not found")
+
     return {"message": "Technical review updated"}
 
 @router.delete("/{review_id}")
@@ -261,11 +262,13 @@ async def delete_technical_review(
     """Delete a technical review"""
     await get_current_user(credentials)
     
-    existing = await db.technical_reviews.find_one({"id": review_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_TECHNICAL_REVIEWS, review_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Technical review not found")
-    
-    await db.technical_reviews.delete_one({"id": review_id})
+
+    deleted = await doc_pg.delete_by_doc_id(doc_pg.C_TECHNICAL_REVIEWS, review_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Technical review not found")
     return {"message": "Technical review deleted"}
 
 @router.post("/{review_id}/submit-review")
@@ -277,21 +280,26 @@ async def submit_technical_review(
     """Submit technical review"""
     await get_current_user(credentials)
     
-    existing = await db.technical_reviews.find_one({"id": review_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_TECHNICAL_REVIEWS, review_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Technical review not found")
-    
-    await db.technical_reviews.update_one(
-        {"id": review_id},
-        {"$set": {
-            "technical_reviewer": data.get('technical_reviewer', ''),
-            "review_date": data.get('review_date', datetime.now().strftime("%Y-%m-%d")),
-            "review_comments": data.get('review_comments', ''),
+
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_TECHNICAL_REVIEWS,
+        review_id,
+        {
+            "technical_reviewer": data.get("technical_reviewer", ""),
+            "review_date": data.get(
+                "review_date", datetime.now().strftime("%Y-%m-%d")
+            ),
+            "review_comments": data.get("review_comments", ""),
             "status": "under_review",
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
     )
-    
+    if not ok:
+        raise HTTPException(status_code=404, detail="Technical review not found")
+
     return {"message": "Technical review submitted"}
 
 @router.post("/{review_id}/make-decision")
@@ -303,11 +311,11 @@ async def make_certification_decision(
     """Make certification decision"""
     await get_current_user(credentials)
     
-    existing = await db.technical_reviews.find_one({"id": review_id}, {"_id": 0})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_TECHNICAL_REVIEWS, review_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Technical review not found")
-    
-    decision = data.get('certification_decision', '')
+
+    decision = data.get("certification_decision", "")
     if decision not in ['issue_certificate', 'reject_certificate', 'needs_review']:
         raise HTTPException(status_code=400, detail="Invalid certification decision")
     
@@ -318,8 +326,12 @@ async def make_certification_decision(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.technical_reviews.update_one({"id": review_id}, {"$set": update_data})
-    
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_TECHNICAL_REVIEWS, review_id, update_data
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Technical review not found")
+
     decision_ar = {
         'issue_certificate': 'إصدار الشهادة',
         'reject_certificate': 'رفض الشهادة',
@@ -347,15 +359,17 @@ async def approve_technical_review(
     """Approve technical review and optionally issue certificate"""
     await get_current_user(credentials)
     
-    existing = await db.technical_reviews.find_one({"id": review_id}, {"_id": 0})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_TECHNICAL_REVIEWS, review_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Technical review not found")
-    
+
     update_data = {
-        "approved_by": data.get('approved_by', ''),
-        "approval_date": data.get('approval_date', datetime.now().strftime("%Y-%m-%d")),
+        "approved_by": data.get("approved_by", ""),
+        "approval_date": data.get(
+            "approval_date", datetime.now().strftime("%Y-%m-%d")
+        ),
         "status": "approved",
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     
     certificate_result = None
@@ -411,9 +425,14 @@ async def approve_technical_review(
             "certificate_number": cert_number
         }
     
-    await db.technical_reviews.update_one({"id": review_id}, {"$set": update_data})
-    
-    response = {"message": "Technical review approved", "status": update_data['status']}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_TECHNICAL_REVIEWS, review_id, update_data
+    )
+
+    response = {
+        "message": "Technical review approved",
+        "status": update_data["status"],
+    }
     if certificate_result:
         response["certificate"] = certificate_result
     
@@ -427,10 +446,10 @@ async def get_technical_review_pdf(
     """Generate PDF for Technical Review"""
     await get_current_user(credentials)
     
-    review = await db.technical_reviews.find_one({"id": review_id}, {"_id": 0})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_TECHNICAL_REVIEWS, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Technical review not found")
-    
+
     try:
         pdf_path = str(CONTRACTS_DIR / f"technical_review_{review_id[:8]}.pdf")
         

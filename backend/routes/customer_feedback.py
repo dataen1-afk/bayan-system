@@ -8,12 +8,12 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
-from pathlib import Path
 import uuid
 import logging
 
 from auth import get_current_user, security
-from dependencies import db, create_notification, CONTRACTS_DIR
+from dependencies import create_notification, CONTRACTS_DIR
+import app_documents_pg as doc_pg
 from customer_feedback_generator import generate_customer_feedback_pdf
 
 router = APIRouter(prefix="/customer-feedback", tags=["Customer Feedback"])
@@ -102,7 +102,7 @@ def calculate_feedback_score(questions: List[dict]) -> tuple:
                 if 1 <= rating_int <= 5:
                     total_score += rating_int
                     rated_count += 1
-            except:
+            except Exception:
                 pass
     
     if rated_count == 0:
@@ -130,12 +130,14 @@ async def get_customer_feedback_list(
 ):
     """Get all customer feedback forms"""
     await get_current_user(credentials)
-    
-    query = {}
-    if status and status != 'all':
-        query['status'] = status
-    
-    feedbacks = await db.customer_feedback.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+
+    feedbacks = await doc_pg.list_ordered(doc_pg.C_CUSTOMER_FEEDBACK, 1000)
+    if status and status != "all":
+        feedbacks = [f for f in feedbacks if f.get("status") == status]
+    feedbacks.sort(
+        key=lambda x: str(x.get("created_at") or ""),
+        reverse=True,
+    )
     return feedbacks
 
 @router.post("")
@@ -165,7 +167,7 @@ async def create_customer_feedback(
     feedback_doc = feedback.model_dump()
     feedback_doc['created_at'] = feedback_doc['created_at'].isoformat()
     
-    await db.customer_feedback.insert_one(feedback_doc)
+    await doc_pg.insert_document(doc_pg.C_CUSTOMER_FEEDBACK, feedback_doc)
     
     await create_notification(
         notification_type="feedback_created",
@@ -192,10 +194,10 @@ async def get_customer_feedback(
     """Get a specific customer feedback"""
     await get_current_user(credentials)
     
-    feedback = await db.customer_feedback.find_one({"id": feedback_id}, {"_id": 0})
+    feedback = await doc_pg.get_by_doc_id(doc_pg.C_CUSTOMER_FEEDBACK, feedback_id)
     if not feedback:
         raise HTTPException(status_code=404, detail="Customer feedback not found")
-    
+
     return feedback
 
 @router.put("/{feedback_id}")
@@ -207,17 +209,20 @@ async def update_customer_feedback(
     """Update a customer feedback (admin only)"""
     await get_current_user(credentials)
     
-    existing = await db.customer_feedback.find_one({"id": feedback_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_CUSTOMER_FEEDBACK, feedback_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Customer feedback not found")
-    
-    if 'questions' in data:
-        score, evaluation = calculate_feedback_score(data['questions'])
-        data['overall_score'] = score
-        data['evaluation_result'] = evaluation
-    
-    await db.customer_feedback.update_one({"id": feedback_id}, {"$set": data})
-    
+
+    merged = {**existing, **data}
+    if "questions" in data:
+        score, evaluation = calculate_feedback_score(data["questions"])
+        merged["overall_score"] = score
+        merged["evaluation_result"] = evaluation
+
+    await doc_pg.replace_payload(
+        doc_pg.C_CUSTOMER_FEEDBACK, feedback_id, merged
+    )
+
     return {"message": "Customer feedback updated"}
 
 @router.delete("/{feedback_id}")
@@ -228,11 +233,11 @@ async def delete_customer_feedback(
     """Delete a customer feedback"""
     await get_current_user(credentials)
     
-    existing = await db.customer_feedback.find_one({"id": feedback_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_CUSTOMER_FEEDBACK, feedback_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Customer feedback not found")
-    
-    await db.customer_feedback.delete_one({"id": feedback_id})
+
+    await doc_pg.delete_by_doc_id(doc_pg.C_CUSTOMER_FEEDBACK, feedback_id)
     return {"message": "Customer feedback deleted"}
 
 @router.post("/{feedback_id}/review")
@@ -244,20 +249,23 @@ async def review_customer_feedback(
     """Mark feedback as reviewed by admin"""
     await get_current_user(credentials)
     
-    existing = await db.customer_feedback.find_one({"id": feedback_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_CUSTOMER_FEEDBACK, feedback_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Customer feedback not found")
-    
-    await db.customer_feedback.update_one(
-        {"id": feedback_id},
-        {"$set": {
-            "reviewed_by": data.get('reviewed_by', ''),
-            "review_date": data.get('review_date', datetime.now().strftime("%Y-%m-%d")),
-            "review_comments": data.get('review_comments', ''),
-            "status": "reviewed"
-        }}
+
+    merged = {
+        **existing,
+        "reviewed_by": data.get("reviewed_by", ""),
+        "review_date": data.get(
+            "review_date", datetime.now().strftime("%Y-%m-%d")
+        ),
+        "review_comments": data.get("review_comments", ""),
+        "status": "reviewed",
+    }
+    await doc_pg.replace_payload(
+        doc_pg.C_CUSTOMER_FEEDBACK, feedback_id, merged
     )
-    
+
     return {"message": "Feedback marked as reviewed"}
 
 @router.get("/{feedback_id}/pdf")
@@ -268,7 +276,7 @@ async def get_customer_feedback_pdf(
     """Generate PDF for Customer Feedback"""
     await get_current_user(credentials)
     
-    feedback = await db.customer_feedback.find_one({"id": feedback_id}, {"_id": 0})
+    feedback = await doc_pg.get_by_doc_id(doc_pg.C_CUSTOMER_FEEDBACK, feedback_id)
     if not feedback:
         raise HTTPException(status_code=404, detail="Customer feedback not found")
     

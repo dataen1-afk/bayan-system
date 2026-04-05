@@ -71,10 +71,13 @@ from routes.approvals import router as approvals_router
 from routes.dashboard import router as dashboard_router
 from routes.clients import router as clients_router
 
-from database import DB_NAME, DB_NAME_SOURCE, ENV_FILE_USED, close_db, db
+from database import DB_NAME, DB_NAME_SOURCE, ENV_FILE_USED, close_db
 from sqlalchemy.exc import SQLAlchemyError
+import users_pg
 from contracts_pg import (
     DB_UNAVAILABLE,
+    count_contracts,
+    delete_all_contracts,
     get_contract_by_id,
     insert_contract_record,
     list_contracts_for_user,
@@ -97,6 +100,7 @@ _APP_DOCUMENTS_MONGO_ALIASES = frozenset(
         doc_pg.C_JOB_ORDERS,
         doc_pg.C_STAGE1_AUDIT_PLANS,
         doc_pg.C_STAGE1_AUDIT_REPORTS,
+        doc_pg.C_AUDIT_PLANS,
         doc_pg.C_STAGE2_AUDIT_PLANS,
         doc_pg.C_STAGE2_AUDIT_REPORTS,
         doc_pg.C_OPENING_CLOSING_MEETINGS,
@@ -108,6 +112,23 @@ _APP_DOCUMENTS_MONGO_ALIASES = frozenset(
         doc_pg.C_CONTRACT_REVIEWS,
         doc_pg.C_INVOICES,
         doc_pg.C_PAYMENTS,
+        doc_pg.C_FORMS,
+        doc_pg.C_QUOTATIONS,
+        doc_pg.C_CERTIFICATION_PACKAGES,
+        doc_pg.C_PROPOSAL_TEMPLATES,
+        doc_pg.C_SMS_LOGS,
+        doc_pg.C_APPROVAL_WORKFLOWS,
+        doc_pg.C_TECHNICAL_REVIEWS,
+        doc_pg.C_PRE_TRANSFER_REVIEWS,
+        doc_pg.C_NOTIFICATIONS,
+        doc_pg.C_RFQ_REQUESTS,
+        doc_pg.C_CONTACT_MESSAGES,
+        doc_pg.C_CONTACT_RECORDS,
+        doc_pg.C_DOCUMENTS,
+        doc_pg.C_CUSTOMER_FEEDBACK,
+        doc_pg.C_CERTIFIED_CLIENTS,
+        doc_pg.C_SUSPENDED_CLIENTS,
+        doc_pg.C_CLIENT_FEEDBACK,
     }
 )
 from db_startup import run_database_startup
@@ -1869,15 +1890,18 @@ async def get_staff_roles(current_user: dict = Depends(require_management)):
 @api_router.get("/users")
 async def get_all_users(current_user: dict = Depends(require_management)):
     """Get all users with their roles"""
-    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
-    
+    try:
+        users = await users_pg.list_users(include_password=False)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
     # Add role display names
     for user in users:
         role = user.get("role", "client")
         role_info = ROLE_PERMISSIONS.get(role, {})
         user["role_name"] = role_info.get("name", role)
         user["role_name_ar"] = role_info.get("name_ar", "")
-    
+
     return {"users": users}
 
 @api_router.put("/users/{user_id}/role")
@@ -1890,15 +1914,19 @@ async def update_user_role(user_id: str, role_update: dict, current_user: dict =
         raise HTTPException(status_code=400, detail=f"Invalid role: {new_role}")
     
     # Check user exists
-    user = await db.users.find_one({"id": user_id})
+    try:
+        user = await users_pg.get_by_id(user_id, include_password=False)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    # Update role
-    await db.users.update_one(
-        {"id": user_id},
-        {"$set": {"role": new_role, "updated_at": datetime.now(timezone.utc).isoformat()}}
-    )
+
+    try:
+        ok = await users_pg.update_role(user_id, new_role)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+    if not ok:
+        raise HTTPException(status_code=404, detail="User not found")
     
     # Create notification
     notification = {
@@ -1933,10 +1961,13 @@ async def create_staff_user(user_data: dict, current_user: dict = Depends(requir
     if role not in STAFF_ROLES:
         raise HTTPException(status_code=400, detail="Invalid staff role")
 
-    existing = await db.users.find_one({"email": email_norm})
-    if not existing:
-        existing = await db.users.find_one({"email": str(email).strip()})
-    if existing:
+    try:
+        exists = await users_pg.email_exists(email_norm) or await users_pg.email_exists(
+            str(email).strip()
+        )
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+    if exists:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     # Create user
@@ -1951,10 +1982,14 @@ async def create_staff_user(user_data: dict, current_user: dict = Depends(requir
         "phone": user_data.get("phone", ""),
         "department": user_data.get("department", ""),
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "created_by": current_user.get("user_id")
+        "created_by": current_user.get("user_id"),
+        "active": True,
     }
-    
-    await db.users.insert_one(user_doc)
+
+    try:
+        await users_pg.insert_user_legacy(user_doc)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     
     # Return user without password and _id
     user_doc.pop("password", None)
@@ -1967,27 +2002,48 @@ async def create_staff_user(user_data: dict, current_user: dict = Depends(requir
 @api_router.put("/users/{user_id}")
 async def update_user(user_id: str, user_data: dict, current_user: dict = Depends(require_system_admin)):
     """Update a user's information (System Admin only)"""
-    # Check user exists
-    user = await db.users.find_one({"id": user_id})
+    try:
+        user = await users_pg.get_by_id(user_id, include_password=True)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    # Prepare update data
-    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
-    
-    # Update allowed fields
+
+    top_updates: dict = {}
+    extra_updates: dict = {}
     allowed_fields = ["name", "name_ar", "email", "phone", "department", "role"]
     for field in allowed_fields:
         if field in user_data and user_data[field] is not None:
             if field == "role" and user_data[field] not in ROLE_PERMISSIONS:
                 raise HTTPException(status_code=400, detail=f"Invalid role: {user_data[field]}")
-            update_data[field] = user_data[field]
-    
-    # Update password if provided
-    if "password" in user_data and user_data["password"]:
-        update_data["password"] = hash_password(user_data["password"])
-    
-    await db.users.update_one({"id": user_id}, {"$set": update_data})
+            if field in ("name_ar", "phone", "department"):
+                extra_updates[field] = user_data[field]
+            else:
+                top_updates[field] = user_data[field]
+
+    if "email" in top_updates:
+        try:
+            other = await users_pg.get_by_email(str(top_updates["email"]), include_password=False)
+        except SQLAlchemyError:
+            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+        if other and str(other.get("id")) != str(user_id):
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+    new_password_hash = None
+    if user_data.get("password"):
+        new_password_hash = hash_password(user_data["password"])
+
+    try:
+        ok = await users_pg.update_user_merged(
+            user_id,
+            top_updates=top_updates,
+            extra_updates=extra_updates,
+            new_password_hash=new_password_hash,
+        )
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+    if not ok:
+        raise HTTPException(status_code=404, detail="User not found")
     
     # Create notification
     notification = {
@@ -2008,8 +2064,10 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, current_user: dict = Depends(require_system_admin)):
     """Delete a user (System Admin only)"""
-    # Check user exists
-    user = await db.users.find_one({"id": user_id})
+    try:
+        user = await users_pg.get_by_id(user_id, include_password=False)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -2021,8 +2079,12 @@ async def delete_user(user_id: str, current_user: dict = Depends(require_system_
     if user.get("role") == UserRole.SYSTEM_ADMIN and current_user.get("role") != UserRole.SYSTEM_ADMIN:
         raise HTTPException(status_code=403, detail="Cannot delete System Administrator")
     
-    # Delete user
-    await db.users.delete_one({"id": user_id})
+    try:
+        deleted = await users_pg.delete_user(user_id)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="User not found")
     
     # Create notification
     notification = {
@@ -2044,7 +2106,10 @@ async def delete_user(user_id: str, current_user: dict = Depends(require_system_
 @api_router.post("/setup-admin")
 async def setup_admin_bootstrap(data: SetupAdminRequest):
     """Create the first admin when no users exist. Returns 409 if any user is already present."""
-    n = await db.users.count_documents({})
+    try:
+        n = await users_pg.count_users()
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     if n > 0:
         raise HTTPException(
             status_code=409,
@@ -2052,16 +2117,20 @@ async def setup_admin_bootstrap(data: SetupAdminRequest):
         )
     uid = str(uuid.uuid4())
     email_norm = str(data.email).lower().strip()
-    await db.users.insert_one(
-        {
-            "id": uid,
-            "name": (data.name or "Administrator").strip(),
-            "email": email_norm,
-            "role": UserRole.ADMIN,
-            "password": hash_password(data.password),
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-    )
+    try:
+        await users_pg.insert_user_legacy(
+            {
+                "id": uid,
+                "name": (data.name or "Administrator").strip(),
+                "email": email_norm,
+                "role": UserRole.ADMIN,
+                "password": hash_password(data.password),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "active": True,
+            }
+        )
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     return {"message": "Admin user created", "email": email_norm}
 
 
@@ -2092,37 +2161,12 @@ async def internal_reset_admin(request: Request):
 
     email_norm = "admin@bayan.com"
     hpw = hash_password("123456")
-    doc = await db.users.find_one({"email": email_norm})
-    now = datetime.now(timezone.utc).isoformat()
-
-    if doc:
-        oid = doc.get("_id")
-        uid = doc.get("id")
-        if uid is None or str(uid).strip() == "":
-            uid = str(uuid.uuid4())
-        await db.users.update_one(
-            {"_id": oid},
-            {
-                "$set": {
-                    "email": email_norm,
-                    "password": hpw,
-                    "role": UserRole.ADMIN,
-                    "id": uid,
-                }
-            },
+    try:
+        await users_pg.upsert_reset_admin(
+            email=email_norm, password_hash=hpw, role=UserRole.ADMIN
         )
-    else:
-        uid = str(uuid.uuid4())
-        await db.users.insert_one(
-            {
-                "id": uid,
-                "name": "Administrator",
-                "email": email_norm,
-                "role": UserRole.ADMIN,
-                "password": hpw,
-                "created_at": now,
-            }
-        )
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
 
     return {"status": "ok", "email": email_norm}
 
@@ -2187,17 +2231,16 @@ async def create_form(form_data: FormCreate, current_user: dict = Depends(requir
     form_doc = form.model_dump()
     form_doc['created_at'] = form_doc['created_at'].isoformat()
     
-    await db.forms.insert_one(form_doc)
+    await doc_pg.insert_document(doc_pg.C_FORMS, form_doc)
     return form
 
 @api_router.get("/forms", response_model=List[Form])
 async def get_forms(current_user: dict = Depends(get_current_user)):
-    query = {}
+    forms = await doc_pg.list_ordered(doc_pg.C_FORMS, 1000)
     # If client, only show their forms
     if current_user['role'] == UserRole.CLIENT:
-        query = {"client_id": current_user['user_id']}
-    
-    forms = await db.forms.find(query, {"_id": 0}).to_list(1000)
+        uid = str(current_user['user_id'])
+        forms = [f for f in forms if str(f.get('client_id', '')) == uid]
     
     for form in forms:
         if isinstance(form['created_at'], str):
@@ -2207,12 +2250,12 @@ async def get_forms(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/forms/{form_id}", response_model=Form)
 async def get_form(form_id: str, current_user: dict = Depends(get_current_user)):
-    form = await db.forms.find_one({"id": form_id}, {"_id": 0})
+    form = await doc_pg.get_by_doc_id(doc_pg.C_FORMS, form_id)
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
     
     # Check access
-    if current_user['role'] == UserRole.CLIENT and form['client_id'] != current_user['user_id']:
+    if current_user['role'] == UserRole.CLIENT and str(form['client_id']) != str(current_user['user_id']):
         raise HTTPException(status_code=403, detail="Access denied")
     
     if isinstance(form['created_at'], str):
@@ -2222,21 +2265,24 @@ async def get_form(form_id: str, current_user: dict = Depends(get_current_user))
 
 @api_router.post("/forms/{form_id}/submit", response_model=Form)
 async def submit_form(form_id: str, submission: FormSubmission, current_user: dict = Depends(get_current_user)):
-    form = await db.forms.find_one({"id": form_id})
+    form = await doc_pg.get_by_doc_id(doc_pg.C_FORMS, form_id)
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
     
     # Check access
-    if current_user['role'] == UserRole.CLIENT and form['client_id'] != current_user['user_id']:
+    if current_user['role'] == UserRole.CLIENT and str(form['client_id']) != str(current_user['user_id']):
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Update form
-    await db.forms.update_one(
-        {"id": form_id},
-        {"$set": {"responses": submission.responses, "status": "submitted"}}
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_FORMS,
+        form_id,
+        {"responses": submission.responses, "status": "submitted"},
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Form not found")
     
-    updated_form = await db.forms.find_one({"id": form_id}, {"_id": 0})
+    updated_form = await doc_pg.get_by_doc_id(doc_pg.C_FORMS, form_id)
     if isinstance(updated_form['created_at'], str):
         updated_form['created_at'] = datetime.fromisoformat(updated_form['created_at'])
     
@@ -2255,7 +2301,7 @@ async def create_quotation(quotation_data: QuotationCreate, current_user: dict =
     quotation_doc = quotation.model_dump()
     quotation_doc['created_at'] = quotation_doc['created_at'].isoformat()
     
-    await db.quotations.insert_one(quotation_doc)
+    await doc_pg.insert_document(doc_pg.C_QUOTATIONS, quotation_doc)
     
     # Send email notification
     await send_email(
@@ -2268,12 +2314,11 @@ async def create_quotation(quotation_data: QuotationCreate, current_user: dict =
 
 @api_router.get("/quotations", response_model=List[Quotation])
 async def get_quotations(current_user: dict = Depends(get_current_user)):
-    query = {}
+    quotations = await doc_pg.list_ordered(doc_pg.C_QUOTATIONS, 1000)
     # If client, only show their quotations
     if current_user['role'] == UserRole.CLIENT:
-        query = {"client_id": current_user['user_id']}
-    
-    quotations = await db.quotations.find(query, {"_id": 0}).to_list(1000)
+        uid = str(current_user['user_id'])
+        quotations = [q for q in quotations if str(q.get('client_id', '')) == uid]
     
     for quotation in quotations:
         if isinstance(quotation['created_at'], str):
@@ -2283,12 +2328,12 @@ async def get_quotations(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/quotations/{quotation_id}", response_model=Quotation)
 async def get_quotation(quotation_id: str, current_user: dict = Depends(get_current_user)):
-    quotation = await db.quotations.find_one({"id": quotation_id}, {"_id": 0})
+    quotation = await doc_pg.get_by_doc_id(doc_pg.C_QUOTATIONS, quotation_id)
     if not quotation:
         raise HTTPException(status_code=404, detail="Quotation not found")
     
     # Check access
-    if current_user['role'] == UserRole.CLIENT and quotation['client_id'] != current_user['user_id']:
+    if current_user['role'] == UserRole.CLIENT and str(quotation['client_id']) != str(current_user['user_id']):
         raise HTTPException(status_code=403, detail="Access denied")
     
     if isinstance(quotation['created_at'], str):
@@ -2298,12 +2343,12 @@ async def get_quotation(quotation_id: str, current_user: dict = Depends(get_curr
 
 @api_router.post("/quotations/{quotation_id}/respond")
 async def respond_to_quotation(quotation_id: str, response: QuotationResponse, current_user: dict = Depends(get_current_user)):
-    quotation_doc = await db.quotations.find_one({"id": quotation_id})
+    quotation_doc = await doc_pg.get_by_doc_id(doc_pg.C_QUOTATIONS, quotation_id)
     if not quotation_doc:
         raise HTTPException(status_code=404, detail="Quotation not found")
     
     # Check access
-    if current_user['role'] == UserRole.CLIENT and quotation_doc['client_id'] != current_user['user_id']:
+    if current_user['role'] == UserRole.CLIENT and str(quotation_doc['client_id']) != str(current_user['user_id']):
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Validate status
@@ -2311,10 +2356,11 @@ async def respond_to_quotation(quotation_id: str, response: QuotationResponse, c
         raise HTTPException(status_code=400, detail="Invalid status")
     
     # Update quotation
-    await db.quotations.update_one(
-        {"id": quotation_id},
-        {"$set": {"status": response.status}}
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_QUOTATIONS, quotation_id, {"status": response.status}
     )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Quotation not found")
     
     # If approved, generate contract
     if response.status == "approved":
@@ -2403,8 +2449,12 @@ async def download_contract(contract_id: str, current_user: dict = Depends(get_c
 @api_router.get("/users/clients")
 async def get_clients(current_user: dict = Depends(require_admin)):
     """Get all client users (admin only)"""
-    clients = await db.users.find({"role": UserRole.CLIENT}, {"_id": 0, "password": 0}).to_list(1000)
-    return clients
+    try:
+        return await users_pg.list_users_by_role(
+            UserRole.CLIENT, include_password=False
+        )
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
 
 # ================= APPLICATION FORM ROUTES =================
 
@@ -3266,8 +3316,8 @@ async def create_notification(notification_type: str, title: str, message: str, 
 async def get_certification_packages(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get all certification packages"""
     await get_current_user(credentials)
-    packages = await db.certification_packages.find({"is_active": True}, {"_id": 0}).to_list(100)
-    return packages
+    packages = await doc_pg.list_ordered(doc_pg.C_CERTIFICATION_PACKAGES, 100)
+    return [p for p in packages if p.get("is_active") is True]
 
 @api_router.post("/templates/packages")
 async def create_certification_package(package: CertificationPackage, credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -3275,16 +3325,15 @@ async def create_certification_package(package: CertificationPackage, credential
     await get_current_user(credentials)
     package_doc = package.model_dump()
     package_doc['created_at'] = package_doc['created_at'].isoformat()
-    await db.certification_packages.insert_one(package_doc)
+    await doc_pg.insert_document(doc_pg.C_CERTIFICATION_PACKAGES, package_doc)
     return {"message": "Package created", "id": package.id}
 
 @api_router.delete("/templates/packages/{package_id}")
 async def delete_certification_package(package_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Delete a certification package"""
     await get_current_user(credentials)
-    await db.certification_packages.update_one(
-        {"id": package_id},
-        {"$set": {"is_active": False}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_CERTIFICATION_PACKAGES, package_id, {"is_active": False}
     )
     return {"message": "Package deleted"}
 
@@ -3299,9 +3348,8 @@ async def update_certification_package(package_id: str, package: CertificationPa
         "description_ar": package.description_ar,
         "standards": package.standards
     }
-    await db.certification_packages.update_one(
-        {"id": package_id},
-        {"$set": update_data}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_CERTIFICATION_PACKAGES, package_id, update_data
     )
     return {"message": "Package updated", "id": package_id}
 
@@ -3309,8 +3357,8 @@ async def update_certification_package(package_id: str, package: CertificationPa
 async def get_proposal_templates(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get all proposal templates"""
     await get_current_user(credentials)
-    templates = await db.proposal_templates.find({"is_active": True}, {"_id": 0}).to_list(100)
-    return templates
+    templates = await doc_pg.list_ordered(doc_pg.C_PROPOSAL_TEMPLATES, 100)
+    return [t for t in templates if t.get("is_active") is True]
 
 @api_router.post("/templates/proposals")
 async def create_proposal_template(template: ProposalTemplate, credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -3318,16 +3366,15 @@ async def create_proposal_template(template: ProposalTemplate, credentials: HTTP
     await get_current_user(credentials)
     template_doc = template.model_dump()
     template_doc['created_at'] = template_doc['created_at'].isoformat()
-    await db.proposal_templates.insert_one(template_doc)
+    await doc_pg.insert_document(doc_pg.C_PROPOSAL_TEMPLATES, template_doc)
     return {"message": "Template created", "id": template.id}
 
 @api_router.delete("/templates/proposals/{template_id}")
 async def delete_proposal_template(template_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Delete a proposal template"""
     await get_current_user(credentials)
-    await db.proposal_templates.update_one(
-        {"id": template_id},
-        {"$set": {"is_active": False}}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_PROPOSAL_TEMPLATES, template_id, {"is_active": False}
     )
     return {"message": "Template deleted"}
 
@@ -3343,9 +3390,8 @@ async def update_proposal_template(template_id: str, template: ProposalTemplate,
         "default_notes": template.default_notes,
         "default_validity_days": template.default_validity_days
     }
-    await db.proposal_templates.update_one(
-        {"id": template_id},
-        {"$set": update_data}
+    await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_PROPOSAL_TEMPLATES, template_id, update_data
     )
     return {"message": "Template updated", "id": template_id}
 
@@ -4824,8 +4870,7 @@ async def seed_default_templates():
     """Seed default certification packages and proposal templates"""
     
     # Check if already seeded
-    existing_packages = await db.certification_packages.count_documents({})
-    if existing_packages > 0:
+    if await doc_pg.count_all(doc_pg.C_CERTIFICATION_PACKAGES) > 0:
         return
     
     # Default certification packages
@@ -4877,7 +4922,7 @@ async def seed_default_templates():
     for pkg in packages:
         pkg_doc = pkg.model_dump()
         pkg_doc['created_at'] = pkg_doc['created_at'].isoformat()
-        await db.certification_packages.insert_one(pkg_doc)
+        await doc_pg.insert_document(doc_pg.C_CERTIFICATION_PACKAGES, pkg_doc)
     
     # Default proposal templates
     templates = [
@@ -4925,7 +4970,7 @@ async def seed_default_templates():
     for tmpl in templates:
         tmpl_doc = tmpl.model_dump()
         tmpl_doc['created_at'] = tmpl_doc['created_at'].isoformat()
-        await db.proposal_templates.insert_one(tmpl_doc)
+        await doc_pg.insert_document(doc_pg.C_PROPOSAL_TEMPLATES, tmpl_doc)
     
     logger.info("Default templates seeded successfully")
 
@@ -4953,9 +4998,13 @@ async def get_calendar_status(credentials: HTTPAuthorizationCredentials = Depend
             "message": "Google Calendar integration not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to environment."
         }
     
-    # Check if user has connected their calendar
-    user = await db.users.find_one({"email": current_user['email']}, {"_id": 0})
-    has_tokens = bool(user and user.get('google_tokens'))
+    try:
+        user = await users_pg.get_by_email(
+            current_user["email"], include_password=False
+        )
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+    has_tokens = bool(user and user.get("google_tokens"))
     
     return {
         "enabled": True,
@@ -5019,12 +5068,10 @@ async def calendar_oauth_callback(code: str):
     
     user_info = user_response.json()
     
-    # Save tokens to user record
-    await db.users.update_one(
-        {"email": user_info['email']},
-        {"$set": {"google_tokens": tokens}},
-        upsert=False
-    )
+    try:
+        await users_pg.set_google_tokens_by_email(user_info["email"], tokens)
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
     
     # Redirect back to dashboard
     frontend_url = os.environ.get('FRONTEND_URL', '')
@@ -5043,9 +5090,13 @@ async def sync_audit_to_calendar(
     if not GOOGLE_CALENDAR_ENABLED:
         raise HTTPException(status_code=400, detail="Google Calendar integration not configured")
     
-    # Get user tokens
-    user = await db.users.find_one({"email": current_user['email']}, {"_id": 0})
-    if not user or not user.get('google_tokens'):
+    try:
+        user = await users_pg.get_by_email(
+            current_user["email"], include_password=False
+        )
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+    if not user or not user.get("google_tokens"):
         raise HTTPException(status_code=400, detail="Google Calendar not connected")
     
     tokens = user['google_tokens']
@@ -5112,12 +5163,12 @@ async def sync_audit_to_calendar(
 async def disconnect_calendar(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Disconnect Google Calendar"""
     current_user = await get_current_user(credentials)
-    
-    await db.users.update_one(
-        {"email": current_user['email']},
-        {"$unset": {"google_tokens": ""}}
-    )
-    
+
+    try:
+        await users_pg.clear_google_tokens_by_email(current_user["email"])
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
     return {"message": "Google Calendar disconnected"}
 
 
@@ -5180,7 +5231,7 @@ async def send_sms(sms_data: SMSRequest, credentials: HTTPAuthorizationCredentia
                 "twilio_sid": message.sid,
                 "sent_at": datetime.now(timezone.utc).isoformat()
             }
-            await db.sms_logs.insert_one(sms_log)
+            await doc_pg.insert_document(doc_pg.C_SMS_LOGS, sms_log)
             
             return {"success": True, "message": "SMS sent successfully", "sid": message.sid}
             
@@ -5197,7 +5248,7 @@ async def send_sms(sms_data: SMSRequest, credentials: HTTPAuthorizationCredentia
             "status": "simulated",
             "sent_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.sms_logs.insert_one(sms_log)
+        await doc_pg.insert_document(doc_pg.C_SMS_LOGS, sms_log)
         
         logging.info(f"[SIMULATED SMS] To: {sms_data.to_phone}, Message: {sms_data.message}")
         
@@ -5213,8 +5264,10 @@ async def get_sms_logs(credentials: HTTPAuthorizationCredentials = Depends(secur
     """Get SMS notification logs"""
     await get_current_user(credentials)
     
-    logs = await db.sms_logs.find({}, {"_id": 0}).sort("sent_at", -1).limit(limit).to_list(limit)
-    return logs
+    lim = max(1, min(int(limit), 5000))
+    return await doc_pg.list_desc_by_payload_text_field(
+        doc_pg.C_SMS_LOGS, "sent_at", lim
+    )
 
 @api_router.post("/sms/send-audit-reminder")
 async def send_audit_reminder(audit_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -9315,8 +9368,11 @@ async def create_certificate(cert_data: CertificateCreate, credentials: HTTPAuth
     if not proposal:
         raise HTTPException(status_code=404, detail="Proposal not found")
     
-    # Get form data for detailed info
-    form = await db.forms.find_one({"id": proposal.get('form_id')}, {"_id": 0})
+    # Get form data for detailed info (legacy CRM form linked by proposal.form_id)
+    form = None
+    _legacy_form_id = proposal.get("form_id")
+    if _legacy_form_id:
+        form = await doc_pg.get_by_doc_id(doc_pg.C_FORMS, str(_legacy_form_id))
     
     # Generate certificate number
     cert_number = await generate_certificate_number()
@@ -9555,13 +9611,44 @@ async def get_expiring_items(
         "alerts": alerts
     }
 
+def _merge_forms_and_application_forms_for_analytics(
+    forms_legacy: list, application_forms: list
+) -> list:
+    """
+    Combine ``forms`` and ``application_forms`` (up to list_ordered limits each).
+    Dedupe by document ``id``; on collision prefer ``application_forms`` (primary flow).
+    Rows without ``id`` are kept under synthetic keys so they are not dropped silently.
+    """
+    by_key: dict[str, dict] = {}
+    anon = 0
+    for f in forms_legacy:
+        fid = str(f.get("id") or "").strip()
+        if fid:
+            by_key[fid] = f
+        else:
+            anon += 1
+            by_key[f"__no_id_forms_{anon}"] = f
+    for f in application_forms:
+        fid = str(f.get("id") or "").strip()
+        if fid:
+            by_key[fid] = f
+        else:
+            anon += 1
+            by_key[f"__no_id_app_{anon}"] = f
+    return list(by_key.values())
+
+
 @api_router.get("/dashboard/analytics")
 async def get_dashboard_analytics(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get comprehensive analytics for the dashboard"""
     await get_current_user(credentials)
     
-    # Get all data
-    forms = await db.forms.find({}, {"_id": 0}).to_list(1000)
+    # Get all data (forms + application_forms — primary enrollment uses application_forms)
+    forms_legacy = await doc_pg.list_ordered(doc_pg.C_FORMS, 1000)
+    application_forms = await doc_pg.list_ordered(doc_pg.C_APPLICATION_FORMS, 1000)
+    forms = _merge_forms_and_application_forms_for_analytics(
+        forms_legacy, application_forms
+    )
     proposals = await doc_pg.list_ordered(doc_pg.C_PROPOSALS, 1000)
     agreements = await doc_pg.list_ordered(doc_pg.C_CERTIFICATION_AGREEMENTS, 1000)
     invoices = await doc_pg.list_ordered(doc_pg.C_INVOICES, 1000)
@@ -9668,6 +9755,7 @@ async def clear_all_test_data(current_user: dict = Depends(require_admin)):
         'audit_programs',
         'job_orders',
         'stage1_audit_plans',
+        'audit_plans',
         'stage2_audit_plans',
         'stage1_audit_reports',
         'stage2_audit_reports',
@@ -9678,6 +9766,12 @@ async def clear_all_test_data(current_user: dict = Depends(require_admin)):
         'certificate_data',
         'invoices',
         'payments',
+        'forms',
+        'quotations',
+        'certification_packages',
+        'proposal_templates',
+        'sms_logs',
+        'approval_workflows',
         'notifications',
         'auditors',
         'audit_schedules',
@@ -9685,26 +9779,30 @@ async def clear_all_test_data(current_user: dict = Depends(require_admin)):
         'sites',
         'client_feedback',
         'technical_reviews',
-        'pre_transfer_reviews'
+        'pre_transfer_reviews',
+        'rfq_requests',
+        'contact_messages',
+        'contact_records',
+        'documents',
+        'customer_feedback',
+        'certified_clients',
+        'suspended_clients',
     ]
-    
+
     deleted_counts = {}
     total_deleted = 0
-    
+
     for collection_name in collections_to_clear:
         try:
-            if collection_name in _APP_DOCUMENTS_MONGO_ALIASES:
+            if collection_name == "contracts":
+                n = await delete_all_contracts()
+            elif collection_name in _APP_DOCUMENTS_MONGO_ALIASES:
                 n = await doc_pg.delete_all_in_collection(collection_name)
-                if n > 0:
-                    deleted_counts[collection_name] = n
-                    total_deleted += n
-                continue
-            collection = db[collection_name]
-            count = await collection.count_documents({})
-            if count > 0:
-                result = await collection.delete_many({})
-                deleted_counts[collection_name] = result.deleted_count
-                total_deleted += result.deleted_count
+            else:
+                n = 0
+            if n > 0:
+                deleted_counts[collection_name] = n
+                total_deleted += n
         except Exception as e:
             deleted_counts[collection_name] = f"Error: {str(e)}"
     
@@ -9737,22 +9835,28 @@ async def get_data_summary(current_user: dict = Depends(require_admin)):
     
     for collection_name, arabic_name in collections_to_check:
         try:
-            if collection_name in _APP_DOCUMENTS_MONGO_ALIASES:
+            if collection_name == "contracts":
+                count = await count_contracts()
+            elif collection_name in _APP_DOCUMENTS_MONGO_ALIASES:
                 count = await doc_pg.count_all(collection_name)
             else:
-                count = await db[collection_name].count_documents({})
-            summary.append({
-                "collection": collection_name,
-                "name_ar": arabic_name,
-                "count": count
-            })
+                count = 0
+            summary.append(
+                {
+                    "collection": collection_name,
+                    "name_ar": arabic_name,
+                    "count": count,
+                }
+            )
             total_records += count
         except Exception:
-            summary.append({
-                "collection": collection_name,
-                "name_ar": arabic_name,
-                "count": 0
-            })
+            summary.append(
+                {
+                    "collection": collection_name,
+                    "name_ar": arabic_name,
+                    "count": 0,
+                }
+            )
     
     return {
         "total_records": total_records,

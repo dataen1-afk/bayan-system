@@ -13,7 +13,8 @@ import uuid
 import logging
 
 from auth import get_current_user, security
-from dependencies import db, create_notification, CONTRACTS_DIR
+from dependencies import create_notification, CONTRACTS_DIR
+import app_documents_pg as doc_pg
 from pre_transfer_review_generator import generate_pre_transfer_review_pdf
 
 router = APIRouter(prefix="/pre-transfer-reviews", tags=["Pre-Transfer Reviews"])
@@ -121,11 +122,9 @@ async def get_pre_transfer_reviews(
     """Get all pre-transfer reviews"""
     await get_current_user(credentials)
     
-    query = {}
-    if status and status != 'all':
-        query['status'] = status
-    
-    reviews = await db.pre_transfer_reviews.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    reviews = await doc_pg.list_ordered(doc_pg.C_PRE_TRANSFER_REVIEWS, 1000)
+    if status and status != "all":
+        reviews = [r for r in reviews if r.get("status") == status]
     return reviews
 
 @router.post("")
@@ -155,9 +154,12 @@ async def create_pre_transfer_review(
     )
     
     review_doc = review.model_dump()
-    review_doc['created_at'] = review_doc['created_at'].isoformat()
-    
-    await db.pre_transfer_reviews.insert_one(review_doc)
+    review_doc["created_at"] = review_doc["created_at"].isoformat()
+    if review_doc.get("updated_at") is not None:
+        u = review_doc["updated_at"]
+        review_doc["updated_at"] = u.isoformat() if hasattr(u, "isoformat") else u
+
+    await doc_pg.insert_document(doc_pg.C_PRE_TRANSFER_REVIEWS, review_doc)
     
     await create_notification(
         notification_type="pre_transfer_created",
@@ -179,10 +181,10 @@ async def get_pre_transfer_review(
     """Get a specific pre-transfer review"""
     await get_current_user(credentials)
     
-    review = await db.pre_transfer_reviews.find_one({"id": review_id}, {"_id": 0})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_PRE_TRANSFER_REVIEWS, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Pre-transfer review not found")
-    
+
     return review
 
 @router.put("/{review_id}")
@@ -194,15 +196,19 @@ async def update_pre_transfer_review(
     """Update a pre-transfer review"""
     await get_current_user(credentials)
     
-    existing = await db.pre_transfer_reviews.find_one({"id": review_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_PRE_TRANSFER_REVIEWS, review_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Pre-transfer review not found")
-    
+
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
-    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
-    
-    await db.pre_transfer_reviews.update_one({"id": review_id}, {"$set": update_data})
-    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_PRE_TRANSFER_REVIEWS, review_id, update_data
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Pre-transfer review not found")
+
     return {"message": "Pre-transfer review updated"}
 
 @router.delete("/{review_id}")
@@ -213,11 +219,15 @@ async def delete_pre_transfer_review(
     """Delete a pre-transfer review"""
     await get_current_user(credentials)
     
-    existing = await db.pre_transfer_reviews.find_one({"id": review_id})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_PRE_TRANSFER_REVIEWS, review_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Pre-transfer review not found")
-    
-    await db.pre_transfer_reviews.delete_one({"id": review_id})
+
+    deleted = await doc_pg.delete_by_doc_id(
+        doc_pg.C_PRE_TRANSFER_REVIEWS, review_id
+    )
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Pre-transfer review not found")
     return {"message": "Pre-transfer review deleted"}
 
 @router.post("/{review_id}/make-decision")
@@ -229,11 +239,11 @@ async def make_transfer_decision(
     """Make transfer decision"""
     await get_current_user(credentials)
     
-    existing = await db.pre_transfer_reviews.find_one({"id": review_id}, {"_id": 0})
+    existing = await doc_pg.get_by_doc_id(doc_pg.C_PRE_TRANSFER_REVIEWS, review_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Pre-transfer review not found")
-    
-    decision = data.get('transfer_decision', '')
+
+    decision = data.get("transfer_decision", "")
     if decision not in ['approved', 'rejected', 'pending']:
         raise HTTPException(status_code=400, detail="Invalid transfer decision")
     
@@ -248,9 +258,17 @@ async def make_transfer_decision(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.pre_transfer_reviews.update_one({"id": review_id}, {"$set": update_data})
-    
-    decision_ar = {'approved': 'تمت الموافقة', 'rejected': 'مرفوض', 'pending': 'قيد الانتظار'}.get(decision, decision)
+    ok = await doc_pg.merge_set_by_doc_id(
+        doc_pg.C_PRE_TRANSFER_REVIEWS, review_id, update_data
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Pre-transfer review not found")
+
+    decision_ar = {
+        "approved": "تمت الموافقة",
+        "rejected": "مرفوض",
+        "pending": "قيد الانتظار",
+    }.get(decision, decision)
     
     await create_notification(
         notification_type="transfer_decision",
@@ -272,10 +290,10 @@ async def get_pre_transfer_review_pdf(
     """Generate PDF for Pre-Transfer Review"""
     await get_current_user(credentials)
     
-    review = await db.pre_transfer_reviews.find_one({"id": review_id}, {"_id": 0})
+    review = await doc_pg.get_by_doc_id(doc_pg.C_PRE_TRANSFER_REVIEWS, review_id)
     if not review:
         raise HTTPException(status_code=404, detail="Pre-transfer review not found")
-    
+
     try:
         pdf_path = str(CONTRACTS_DIR / f"pre_transfer_review_{review_id[:8]}.pdf")
         generate_pre_transfer_review_pdf(review, pdf_path)

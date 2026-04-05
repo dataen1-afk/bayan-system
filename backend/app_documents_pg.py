@@ -51,6 +51,14 @@ _PAYLOAD_FIELD_WHITELIST = frozenset(
         "contract_id",
         "invoice_id",
         "status",
+        "sent_at",
+        "document_type",
+        "related_id",
+        "related_type",
+        "customer_id",
+        "linked_certificate_id",
+        "linked_certified_client_id",
+        "future_action",
     }
 )
 
@@ -278,6 +286,33 @@ async def list_by_payload_field(
     return [row_to_doc(dict(x)) for x in rows]
 
 
+async def list_desc_by_payload_text_field(
+    collection: str, field: str, limit: int
+) -> list[dict[str, Any]]:
+    """List rows ordered by ``payload->>field`` descending (lexicographic; ISO-8601 datetimes sort correctly)."""
+    f = _sql_payload_field(field)
+    lim = max(1, min(int(limit), 5000))
+    q = text(
+        f"""
+        SELECT doc_id, payload, created_at
+        FROM app_documents
+        WHERE collection = :collection
+        ORDER BY (payload->>'{f}') DESC NULLS LAST
+        LIMIT :limit
+        """
+    )
+    try:
+        async with AsyncSessionLocal() as session:
+            r = await session.execute(
+                q, {"collection": collection, "limit": lim}
+            )
+            rows = r.mappings().all()
+    except SQLAlchemyError as e:
+        logger.warning("app_documents list_desc %s %s: %s", collection, field, e)
+        raise
+    return [row_to_doc(dict(x)) for x in rows]
+
+
 async def list_ordered(collection: str, limit: int = 1000) -> list[dict[str, Any]]:
     try:
         async with AsyncSessionLocal() as session:
@@ -380,6 +415,36 @@ async def count_status_in(collection: str, statuses: list[str]) -> int:
     for s in statuses:
         total += await count_status(collection, s)
     return total
+
+
+async def count_group_by_payload_text_field(
+    collection: str, field: str, *, limit: int = 20
+) -> list[dict[str, Any]]:
+    """
+    Mongo-compatible aggregate: ``[{ "_id": <value>, "count": n }, ...]``
+    ordered by count descending.
+    """
+    f = _sql_payload_field(field)
+    lim = max(1, min(int(limit), 100))
+    q = text(
+        f"""
+        SELECT COALESCE(NULLIF(trim(payload->>'{f}'), ''), '(none)') AS v,
+               COUNT(*)::bigint AS n
+        FROM app_documents
+        WHERE collection = :collection
+        GROUP BY 1
+        ORDER BY n DESC
+        LIMIT :limit
+        """
+    )
+    try:
+        async with AsyncSessionLocal() as session:
+            r = await session.execute(q, {"collection": collection, "limit": lim})
+            rows = r.mappings().all()
+    except SQLAlchemyError as e:
+        logger.warning("app_documents group_by %s: %s", collection, e)
+        raise
+    return [{"_id": str(row["v"]), "count": int(row["n"])} for row in rows]
 
 
 async def delete_by_doc_id(collection: str, doc_id: str) -> bool:
@@ -487,6 +552,7 @@ C_AUDITORS = "auditors"
 C_JOB_ORDERS = "job_orders"
 C_STAGE1_AUDIT_PLANS = "stage1_audit_plans"
 C_STAGE1_AUDIT_REPORTS = "stage1_audit_reports"
+C_AUDIT_PLANS = "audit_plans"
 C_STAGE2_AUDIT_PLANS = "stage2_audit_plans"
 C_STAGE2_AUDIT_REPORTS = "stage2_audit_reports"
 C_OPENING_CLOSING_MEETINGS = "opening_closing_meetings"
@@ -498,3 +564,20 @@ C_AUDIT_PROGRAMS = "audit_programs"
 C_CONTRACT_REVIEWS = "contract_reviews"
 C_INVOICES = "invoices"
 C_PAYMENTS = "payments"
+C_FORMS = "forms"
+C_QUOTATIONS = "quotations"
+C_CERTIFICATION_PACKAGES = "certification_packages"
+C_PROPOSAL_TEMPLATES = "proposal_templates"
+C_SMS_LOGS = "sms_logs"
+C_APPROVAL_WORKFLOWS = "approval_workflows"
+C_TECHNICAL_REVIEWS = "technical_reviews"
+C_PRE_TRANSFER_REVIEWS = "pre_transfer_reviews"
+C_NOTIFICATIONS = "notifications"
+C_RFQ_REQUESTS = "rfq_requests"
+C_CONTACT_MESSAGES = "contact_messages"
+C_CONTACT_RECORDS = "contact_records"
+C_DOCUMENTS = "documents"
+C_CUSTOMER_FEEDBACK = "customer_feedback"
+C_CERTIFIED_CLIENTS = "certified_clients"
+C_SUSPENDED_CLIENTS = "suspended_clients"
+C_CLIENT_FEEDBACK = "client_feedback"

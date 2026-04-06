@@ -11,6 +11,7 @@ return stubs that raise until each area is migrated.
 """
 from __future__ import annotations
 
+import logging
 import os
 import uuid
 from datetime import datetime
@@ -31,6 +32,35 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 ROOT_DIR = Path(__file__).parent
 _ENV_PATH = ROOT_DIR / ".env"
 load_dotenv(_ENV_PATH)
+
+_schema_bootstrap_log = logging.getLogger("bayan.schema_bootstrap")
+_db_diag_log = logging.getLogger("bayan.database")
+
+
+def describe_database_url_sanitized() -> str:
+    """
+    Log-safe summary of ``DATABASE_URL`` (scheme, host, port, database, query keys).
+    Never includes password or username.
+    """
+    try:
+        from sqlalchemy.engine import make_url
+
+        parsed = DATABASE_URL_RAW.strip()
+        if parsed.startswith("postgres://"):
+            parsed = "postgresql://" + parsed[len("postgres://") :]
+        sync_form = parsed.replace("postgresql+asyncpg://", "postgresql://")
+        u = make_url(sync_form)
+        qkeys = sorted(u.query.keys()) if u.query else []
+        sslmode_repr = None
+        if "sslmode" in u.query:
+            v = u.query["sslmode"]
+            sslmode_repr = v[0] if isinstance(v, (list, tuple)) else v
+        return (
+            f"driver=postgresql+asyncpg host={u.host!r} port={u.port} database={u.database!r} "
+            f"sslmode_param={sslmode_repr!r} query_param_keys={qkeys}"
+        )
+    except Exception as ex:
+        return f"sanitize_error={type(ex).__name__}:{ex}"
 
 
 def _resolve_db_display_name() -> tuple[str, str]:
@@ -211,21 +241,31 @@ async def bootstrap_postgresql_schema() -> None:
     Safe to re-run: uses ``IF NOT EXISTS`` / ``create_all`` with checkfirst. Does not
     drop data. Run after ``DATABASE_URL`` points at the target database (e.g. Supabase).
     """
-    import_all_declarative_models()
-    await validate_public_users_table_or_raise()
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(text(USERS_EXTRA_COLUMN_SQL))
-        await conn.execute(text(CLIENTS_TABLE_SQL))
-        await conn.execute(text(CLIENTS_INDEX_SQL))
-        await conn.execute(text(CONTRACTS_TABLE_SQL))
-        await conn.execute(text(CONTRACTS_INDEX_SQL))
-        await conn.execute(text(CONTRACTS_INDEX_PAYLOAD_CLIENT_SQL))
-        await conn.execute(text(APP_DOCUMENTS_TABLE_SQL))
-        await conn.execute(text(APP_DOCUMENTS_INDEX_SQL))
-        await conn.execute(text(APP_DOCUMENTS_INDEX_STATUS_SQL))
-        await conn.execute(text(APP_DOCUMENTS_INDEX_AUDITOR_SQL))
-        await conn.execute(text("SELECT 1"))
+    _schema_bootstrap_log.info(
+        "schema_bootstrap: starting (validate public.users if present, ORM create_all, DDL)"
+    )
+    try:
+        import_all_declarative_models()
+        await validate_public_users_table_or_raise()
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            await conn.execute(text(USERS_EXTRA_COLUMN_SQL))
+            await conn.execute(text(CLIENTS_TABLE_SQL))
+            await conn.execute(text(CLIENTS_INDEX_SQL))
+            await conn.execute(text(CONTRACTS_TABLE_SQL))
+            await conn.execute(text(CONTRACTS_INDEX_SQL))
+            await conn.execute(text(CONTRACTS_INDEX_PAYLOAD_CLIENT_SQL))
+            await conn.execute(text(APP_DOCUMENTS_TABLE_SQL))
+            await conn.execute(text(APP_DOCUMENTS_INDEX_SQL))
+            await conn.execute(text(APP_DOCUMENTS_INDEX_STATUS_SQL))
+            await conn.execute(text(APP_DOCUMENTS_INDEX_AUDITOR_SQL))
+            await conn.execute(text("SELECT 1"))
+    except Exception:
+        _schema_bootstrap_log.exception("schema_bootstrap: failed")
+        raise
+    _schema_bootstrap_log.info(
+        "schema_bootstrap: finished successfully (users, clients, contracts, app_documents)"
+    )
 
 
 class UserRow(Base):
@@ -411,16 +451,41 @@ async def connect_db() -> None:
     ``bootstrap_postgresql_schema()`` — run ``python scripts/bootstrap_postgres_schema.py``
     once per new database (e.g. Supabase).
 
-    For local development against an empty database, set:
-    ``BAYAN_SCHEMA_BOOTSTRAP_ON_CONNECT=1`` to run bootstrap automatically on each
-    process start (not recommended for production).
+    Set ``BAYAN_SCHEMA_BOOTSTRAP_ON_CONNECT=1`` (e.g. on Render for one deploy) to run
+    ``bootstrap_postgresql_schema()`` on startup when local CLI bootstrap is unavailable.
+    Remove the variable after tables exist.
     """
-    boot = os.environ.get("BAYAN_SCHEMA_BOOTSTRAP_ON_CONNECT", "").strip().lower()
-    if boot in ("1", "true", "yes", "on"):
-        await bootstrap_postgresql_schema()
-        return
-    async with engine.begin() as conn:
-        await conn.execute(text("SELECT 1"))
+    _db_diag_log.info("connect_db: entering | %s", describe_database_url_sanitized())
+    try:
+        boot = os.environ.get("BAYAN_SCHEMA_BOOTSTRAP_ON_CONNECT", "").strip().lower()
+        if boot in ("1", "true", "yes", "on"):
+            _schema_bootstrap_log.warning(
+                "BAYAN_SCHEMA_BOOTSTRAP_ON_CONNECT is enabled — running full schema bootstrap "
+                "on this startup; unset after success"
+            )
+            await bootstrap_postgresql_schema()
+            _schema_bootstrap_log.info(
+                "connect_db: schema bootstrap on connect complete; continuing startup"
+            )
+            _db_diag_log.info(
+                "connect_db: SUCCEEDED (schema bootstrap path) | %s",
+                describe_database_url_sanitized(),
+            )
+            return
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+        _db_diag_log.info(
+            "connect_db: SUCCEEDED (SELECT 1) | %s",
+            describe_database_url_sanitized(),
+        )
+    except Exception as e:
+        _db_diag_log.error(
+            "connect_db: FAILED | exc_type=%s exc_msg=%s | %s",
+            type(e).__name__,
+            str(e),
+            describe_database_url_sanitized(),
+        )
+        raise
 
 
 async def close_db() -> None:
@@ -444,4 +509,5 @@ __all__ = [
     "engine",
     "import_all_declarative_models",
     "validate_public_users_table_or_raise",
+    "describe_database_url_sanitized",
 ]

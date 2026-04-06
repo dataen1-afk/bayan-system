@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 DB_UNAVAILABLE_DETAIL = "Database temporarily unavailable. Please try again shortly."
 
-from database import AsyncSessionLocal, UserRow
+from database import AsyncSessionLocal, UserRow, describe_database_url_sanitized
 from auth import (
     hash_password,
     verify_password,
@@ -106,19 +106,67 @@ async def login(credentials: UserLogin):
     _login_log.info("login: entered email=%s", email_norm)
 
     try:
-        _login_log.info("login: opening database session")
+        _login_log.info(
+            "login: acquiring AsyncSessionLocal (same engine/pool as db_startup.connect_db)"
+        )
+        _session_opened = False
         try:
             async with AsyncSessionLocal() as session:
-                _login_log.info("login: session opened")
+                _session_opened = True
+                _login_log.info("login: AsyncSessionLocal acquired successfully")
                 result = await session.execute(
                     select(UserRow).where(
                         or_(UserRow.email == email_norm, UserRow.email == email_raw)
                     )
                 )
                 row = result.scalar_one_or_none()
-        except SQLAlchemyError:
-            _login_log.exception("login: database error email=%s", email_norm)
+        except SQLAlchemyError as e:
+            phase = "query_or_orm" if _session_opened else "session_acquire"
+            _login_log.error(
+                "bayan.login: OUTCOME=DB_FAILURE | async_session_opened=%s | failure_phase=%s | "
+                "exc_type=%s | exc_msg=%s | errno=n/a | winerror=n/a | %s",
+                _session_opened,
+                phase,
+                type(e).__name__,
+                str(e),
+                describe_database_url_sanitized(),
+            )
+            _login_log.exception("bayan.login: traceback email=%s", email_norm)
             raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
+        except OSError as e:
+            phase = "query_or_orm" if _session_opened else "session_acquire"
+            _login_log.error(
+                "bayan.login: OUTCOME=DB_FAILURE | async_session_opened=%s | failure_phase=%s | "
+                "exc_type=%s | exc_msg=%s | errno=%s | winerror=%s | %s",
+                _session_opened,
+                phase,
+                type(e).__name__,
+                str(e),
+                getattr(e, "errno", None),
+                getattr(e, "winerror", None),
+                describe_database_url_sanitized(),
+            )
+            _login_log.exception("bayan.login: traceback email=%s", email_norm)
+            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
+        except TimeoutError as e:
+            phase = "query_or_orm" if _session_opened else "session_acquire"
+            _login_log.error(
+                "bayan.login: OUTCOME=DB_FAILURE | async_session_opened=%s | failure_phase=%s | "
+                "exc_type=%s | exc_msg=%s | errno=n/a | winerror=n/a | %s",
+                _session_opened,
+                phase,
+                type(e).__name__,
+                str(e),
+                describe_database_url_sanitized(),
+            )
+            _login_log.exception("bayan.login: traceback email=%s", email_norm)
+            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
+
+        _login_log.info(
+            "bayan.login: OUTCOME=DB_QUERY_OK | async_session_opened=true | failure_phase=n/a | "
+            "exc_type=n/a | exc_msg=n/a | errno=n/a | winerror=n/a | %s",
+            describe_database_url_sanitized(),
+        )
 
         if not row:
             _login_log.info("login: user not found email=%s", email_norm)

@@ -20,7 +20,7 @@ from typing import Optional
 from sqlalchemy import select
 
 from auth import hash_password
-from database import AsyncSessionLocal, UserRow, connect_db
+from database import AsyncSessionLocal, UserRow, connect_db, describe_database_url_sanitized
 
 logger = logging.getLogger(__name__)
 
@@ -40,16 +40,35 @@ async def run_database_startup(app_logger: Optional[logging.Logger] = None) -> N
     database_startup_succeeded = False
     mongodb_startup_succeeded = False
 
+    log.info(
+        "bayan.db_startup: begin | %s",
+        describe_database_url_sanitized(),
+    )
+
     try:
         await connect_db()
     except Exception as e:
         log.error(
-            "PostgreSQL unreachable or connect_db failed at startup. "
-            "API will start without DB init; fix DATABASE_URL or network then retry. Error: %s",
-            e,
+            "bayan.db_startup: connect_db FAILED (API will start without DB; auth may 503) | "
+            "exc_type=%s exc_msg=%s | %s",
+            type(e).__name__,
+            str(e),
+            describe_database_url_sanitized(),
             exc_info=True,
         )
+        log.warning(
+            "bayan.db_startup: SUMMARY | database_startup_succeeded=False | "
+            "seed_ran=False | reason=connect_db_failed | exc_type=%s | exc_msg=%s | %s",
+            type(e).__name__,
+            str(e),
+            describe_database_url_sanitized(),
+        )
         return
+
+    log.info(
+        "bayan.db_startup: connect_db OK | %s",
+        describe_database_url_sanitized(),
+    )
 
     try:
         log.info("PostgreSQL OK | seeding default admin if missing (%s)", DEFAULT_ADMIN_EMAIL)
@@ -82,10 +101,28 @@ async def run_database_startup(app_logger: Optional[logging.Logger] = None) -> N
 
         database_startup_succeeded = True
         mongodb_startup_succeeded = True
+        log.info(
+            "bayan.db_startup: admin seed phase OK | database_startup_succeeded=True | %s",
+            describe_database_url_sanitized(),
+        )
+        log.info(
+            "bayan.db_startup: SUMMARY | database_startup_succeeded=True | seed_ran=True | "
+            "reason=admin_seed_ok | exc_type=n/a | exc_msg=n/a | %s",
+            describe_database_url_sanitized(),
+        )
     except Exception as e:
         log.error(
-            "PostgreSQL connect OK but startup seed failed. "
-            "API continues; inspect DB permissions/schema. Error: %s",
-            e,
+            "bayan.db_startup: admin seed FAILED (connect_db had succeeded; inspect schema/permissions) | "
+            "exc_type=%s exc_msg=%s | %s",
+            type(e).__name__,
+            str(e),
+            describe_database_url_sanitized(),
             exc_info=True,
+        )
+        log.error(
+            "bayan.db_startup: SUMMARY | database_startup_succeeded=False | seed_ran=attempted | "
+            "reason=admin_seed_failed | exc_type=%s | exc_msg=%s | %s",
+            type(e).__name__,
+            str(e),
+            describe_database_url_sanitized(),
         )

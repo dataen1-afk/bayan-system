@@ -50,7 +50,8 @@ import ApprovalsPage from '@/pages/ApprovalsPage';
 import SettingsPage from '@/pages/SettingsPage';
 import AdminLayout from '@/components/AdminLayout';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// No trailing slash; no /api suffix (added below).
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/+$/, '');
 export const API = `${BACKEND_URL}/api`;
 
 // Set up axios defaults

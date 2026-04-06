@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '@/App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
+import { Toaster } from 'sonner';
 import '@/i18n'; // Initialize i18n
 import { useTranslation } from 'react-i18next';
 import LoginPage from '@/pages/LoginPage';
@@ -127,6 +128,7 @@ function App() {
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
       <div className="App">
+        <Toaster richColors closeButton position="top-center" />
         <BrowserRouter>
           <Routes>
             {/* Public routes - no authentication required */}

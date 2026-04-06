@@ -22,6 +22,19 @@ import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
+function formatApiErrorDetail(detail, fallback) {
+  if (detail == null || detail === '') return fallback;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    const parts = detail.map((e) =>
+      e && typeof e === 'object' && e.msg != null ? String(e.msg) : JSON.stringify(e)
+    );
+    return parts.join('; ') || fallback;
+  }
+  if (typeof detail === 'object') return JSON.stringify(detail);
+  return String(detail);
+}
+
 const UserManagementTab = () => {
   const { t, i18n } = useTranslation();
   const { user } = useContext(AuthContext);
@@ -126,7 +139,11 @@ const UserManagementTab = () => {
 
   const handleEditUser = async () => {
     if (!selectedUser) return;
-    
+    if (!selectedUser.id) {
+      toast.error(isRTL ? 'معرّف المستخدم غير صالح' : 'Cannot save: user id is missing');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       const updateData = {
@@ -137,23 +154,27 @@ const UserManagementTab = () => {
         department: selectedUser.department,
         role: selectedUser.role
       };
-      
-      // Only include password if it was changed
+
       if (selectedUser.newPassword) {
         updateData.password = selectedUser.newPassword;
       }
-      
+
       await axios.put(`${API}/users/${selectedUser.id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast.success(isRTL ? 'تم تحديث المستخدم بنجاح' : 'User updated successfully');
       setShowEditUserModal(false);
       setSelectedUser(null);
       loadData();
     } catch (error) {
       console.error('Error updating user:', error);
-      toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في تحديث المستخدم' : 'Error updating user'));
+      const fallback = isRTL ? 'خطأ في تحديث المستخدم' : 'Error updating user';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fallback) ||
+          error.message ||
+          fallback
+      );
     }
   };
 
@@ -750,10 +771,11 @@ const UserManagementTab = () => {
           )}
           
           <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
-            <Button variant="outline" onClick={() => setShowEditUserModal(false)}>
+            <Button type="button" variant="outline" onClick={() => setShowEditUserModal(false)}>
               {isRTL ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button 
+            <Button
+              type="button"
               onClick={handleEditUser}
               className="bg-[#1e3a5f] hover:bg-[#152a45]"
             >

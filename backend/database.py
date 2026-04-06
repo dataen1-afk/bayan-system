@@ -3,8 +3,8 @@ PostgreSQL via SQLAlchemy 2.x async + asyncpg.
 
 ``DATABASE_URL`` must be set (e.g. postgresql://… or postgres://… from Supabase).
 ``postgres://`` is normalized to ``postgresql://``, then to ``postgresql+asyncpg://``
-for asyncpg. ``connect_args={"statement_cache_size": 0}`` matches IES Portal /
-Supabase pooler (PgBouncer) expectations.
+for asyncpg. ``connect_args`` include ``statement_cache_size: 0`` (IES / Supabase pooler) and
+optional ``timeout`` from env ``DB_CONNECT_TIMEOUT`` (seconds for asyncpg connect).
 
 Legacy code still imports ``db`` for Mongo-style collections; those attributes
 return stubs that raise until each area is migrated.
@@ -107,14 +107,41 @@ if not DATABASE_URL_RAW:
 
 DATABASE_URL = _async_url(DATABASE_URL_RAW)
 
+
+def _asyncpg_connect_args() -> dict:
+    """
+    Pass-through to asyncpg ``connect()`` (via SQLAlchemy).
+
+    ``DB_CONNECT_TIMEOUT``: seconds to wait when opening a connection (asyncpg
+    ``timeout``). If unset or invalid, asyncpg's default (60s) applies by omitting
+    the argument.
+    """
+    args: dict = {"statement_cache_size": 0}
+    raw = os.environ.get("DB_CONNECT_TIMEOUT", "").strip()
+    if not raw:
+        return args
+    try:
+        sec = float(raw)
+    except ValueError:
+        _db_diag_log.warning(
+            "DB_CONNECT_TIMEOUT ignored (not a number): %r",
+            raw[:80],
+        )
+        return args
+    if sec <= 0:
+        _db_diag_log.warning("DB_CONNECT_TIMEOUT ignored (must be > 0): %r", raw[:80])
+        return args
+    args["timeout"] = sec
+    return args
+
+
 engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=300,
     pool_size=5,
     max_overflow=10,
-    # asyncpg + pgBouncer (e.g. Supabase pooler): disable server-side prepared statement cache.
-    connect_args={"statement_cache_size": 0},
+    connect_args=_asyncpg_connect_args(),
 )
 
 AsyncSessionLocal = async_sessionmaker(

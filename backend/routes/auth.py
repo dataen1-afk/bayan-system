@@ -100,29 +100,39 @@ async def register_user(user_data: UserRegister):
 @router.post("/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
     """Authenticate user and return JWT token"""
+    _login_log = logging.getLogger("bayan.login")
     email_raw = str(credentials.email).strip()
     email_norm = email_raw.lower()
+    _login_log.info("login: entered email=%s", email_norm)
 
     try:
+        _login_log.info("login: opening database session")
         try:
             async with AsyncSessionLocal() as session:
+                _login_log.info("login: session opened")
                 result = await session.execute(
                     select(UserRow).where(
                         or_(UserRow.email == email_norm, UserRow.email == email_raw)
                     )
                 )
                 row = result.scalar_one_or_none()
-        except SQLAlchemyError as e:
-            logger.warning("login: database error: %s", e)
+        except SQLAlchemyError:
+            _login_log.exception("login: database error email=%s", email_norm)
             raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
 
         if not row:
+            _login_log.info("login: user not found email=%s", email_norm)
             raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        _login_log.info("login: user found id=%s", row.id)
 
         if not row.active:
+            _login_log.info("login: user inactive id=%s", row.id)
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
-        if not verify_password(credentials.password, row.password):
+        pwd_ok = verify_password(credentials.password, row.password)
+        _login_log.info("login: password verification finished success=%s", pwd_ok)
+        if not pwd_ok:
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         user_doc = _row_to_user_doc(row)
@@ -130,13 +140,18 @@ async def login(credentials: UserLogin):
         try:
             uid = resolve_user_document_id(user_doc)
         except ValueError:
-            logger.error("Login: user record missing id for email=%s", email_norm)
+            _login_log.exception(
+                "login: user record missing resolvable id email=%s",
+                email_norm,
+            )
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         role_raw = user_doc.get("role")
         role = str(role_raw).strip().lower() if role_raw is not None else UserRole.CLIENT
 
+        _login_log.info("login: creating token")
         token = create_jwt_token(uid, role)
+        _login_log.info("login: token created successfully")
 
         logger.debug(
             "Login OK email=%s role=%s",
@@ -161,13 +176,8 @@ async def login(credentials: UserLogin):
         return TokenResponse(token=token, user=user)
     except HTTPException:
         raise
-    except Exception as e:
-        logger.exception(
-            "login: unexpected failure (email=%s): %s: %s",
-            email_norm,
-            type(e).__name__,
-            e,
-        )
+    except Exception:
+        _login_log.exception("login: unexpected failure email=%s", email_norm)
         raise HTTPException(
             status_code=500,
             detail="Authentication service error (AUTH_500)",

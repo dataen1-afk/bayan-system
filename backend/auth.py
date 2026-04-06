@@ -295,6 +295,7 @@ def resolve_user_document_id(user_doc: dict) -> str:
 
 
 def create_jwt_token(user_id: str, role: str) -> str:
+    # Signing key is always JWT_SECRET via get_jwt_secret() (no SECRET_KEY or other fallback).
     secret = get_jwt_secret()
     fp = jwt_secret_fingerprint(secret)
     exp = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)

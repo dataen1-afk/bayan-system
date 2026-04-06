@@ -2108,17 +2108,20 @@ async def setup_admin_bootstrap(data: SetupAdminRequest):
     """Create the first admin when no users exist. Returns 409 if any user is already present."""
     _setup_log = logging.getLogger("bayan.setup_admin")
     email_norm = str(data.email).lower().strip()
+    _setup_log.info("setup-admin: entered email=%s", email_norm)
 
     try:
+        _setup_log.info("setup-admin: session opened")
         try:
             n = await users_pg.count_users()
         except SQLAlchemyError as e:
-            _setup_log.warning(
-                "setup-admin: count_users failed (database): %s",
-                e,
-                exc_info=True,
+            _setup_log.exception(
+                "setup-admin: count_users failed (database) email=%s",
+                email_norm,
             )
             raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
+
+        _setup_log.info("setup-admin: users_count=%s", n)
 
         if n > 0:
             raise HTTPException(
@@ -2127,19 +2130,24 @@ async def setup_admin_bootstrap(data: SetupAdminRequest):
             )
 
         uid = str(uuid.uuid4())
+        _setup_log.info("setup-admin: hashing password")
         try:
             password_hash = hash_password(data.password)
         except Exception as e:
             _setup_log.exception(
-                "setup-admin: hash_password failed email=%s err=%s",
+                "setup-admin: hash_password failed email=%s",
                 email_norm,
-                e,
             )
             raise HTTPException(
                 status_code=500,
                 detail="Setup failed: password hashing error",
             )
+        _setup_log.info("setup-admin: password hashed OK")
 
+        _setup_log.info(
+            "setup-admin: admin added to session (users_pg.insert_user_legacy id=%s)",
+            uid,
+        )
         try:
             await users_pg.insert_user_legacy(
                 {
@@ -2153,34 +2161,31 @@ async def setup_admin_bootstrap(data: SetupAdminRequest):
                 }
             )
         except IntegrityError as e:
-            _setup_log.warning(
-                "setup-admin: insert conflict (duplicate email or id) email=%s: %s",
+            _setup_log.exception(
+                "setup-admin: insert conflict (duplicate email or id) email=%s",
                 email_norm,
-                e,
-                exc_info=True,
             )
             raise HTTPException(
                 status_code=409,
                 detail="Setup conflict: user may already exist. Use /api/auth/login.",
             )
         except SQLAlchemyError as e:
-            _setup_log.warning(
-                "setup-admin: insert_user_legacy failed (database) email=%s: %s",
+            _setup_log.exception(
+                "setup-admin: insert_user_legacy failed (database) email=%s",
                 email_norm,
-                e,
-                exc_info=True,
             )
             raise HTTPException(status_code=503, detail=DB_UNAVAILABLE)
 
+        _setup_log.info("setup-admin: commit success")
+        _setup_log.info("setup-admin: refresh success (skipped; non-ORM insert path)")
         _setup_log.info("setup-admin: created first admin email=%s id=%s", email_norm, uid)
         return {"message": "Admin user created", "email": email_norm}
     except HTTPException:
         raise
     except Exception as e:
         _setup_log.exception(
-            "setup-admin: unexpected error email=%s: %s",
+            "setup-admin: unexpected error email=%s",
             email_norm,
-            e,
         )
         raise HTTPException(
             status_code=500,
@@ -9938,17 +9943,15 @@ async def startup_event():
 
         _jwt = get_jwt_secret()
         _log.info(
-            "JWT: signing secret ready | source=%s | len=%d",
+            "JWT: signing secret ready (source=%s len=%d)",
             jwt_secret_source(),
             len(_jwt),
         )
     except Exception as e:
-        _log.critical(
-            "JWT: failed to resolve JWT_SECRET — POST /api/auth/login will return 500 until "
-            "JWT_SECRET is set in the process environment (e.g. Render dashboard). Error: %s",
-            e,
-            exc_info=True,
-        )
+        _log.critical("JWT: failed to resolve JWT_SECRET", exc_info=True)
+        raise RuntimeError(
+            "JWT_SECRET is required. Set it in the process environment (e.g. Render dashboard)."
+        ) from e
     try:
         await seed_default_templates()
     except Exception as e:

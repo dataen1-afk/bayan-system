@@ -1,4 +1,4 @@
--- Service contracts (quotation / proposal PDF registry). Ensured at startup via database.connect_db().
+-- Service contracts (quotation / proposal PDF registry). Applied by database.bootstrap_postgresql_schema() / scripts/bootstrap_postgres_schema.py.
 CREATE TABLE IF NOT EXISTS contracts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     contract_number TEXT,

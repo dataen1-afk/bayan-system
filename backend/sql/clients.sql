@@ -1,4 +1,4 @@
--- Organization clients (PostgreSQL). Also ensured at startup via database.connect_db().
+-- Organization clients (PostgreSQL). Applied by database.bootstrap_postgresql_schema() / scripts/bootstrap_postgres_schema.py.
 CREATE TABLE IF NOT EXISTS clients (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     company_name TEXT,

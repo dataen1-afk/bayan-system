@@ -1,5 +1,12 @@
 """
-PostgreSQL startup: connect_db (CREATE TABLE + SELECT 1), seed default admin user.
+PostgreSQL startup: ``connect_db`` (connectivity check only by default), seed default admin.
+
+Schema DDL is **not** applied on every start. Run once per database:
+
+    python scripts/bootstrap_postgres_schema.py
+
+Optional: ``BAYAN_SCHEMA_BOOTSTRAP_ON_CONNECT=1`` runs bootstrap inside ``connect_db``
+(local empty DB only; avoid in production).
 
 If the database is unreachable at process start, startup logs and returns without
 raising so the ASGI app can still boot (health, OpenAPI). Auth will return 503

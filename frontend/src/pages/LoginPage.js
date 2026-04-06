@@ -62,7 +62,7 @@ const LoginPage = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('https://static.prod-images.emergentagent.com/jobs/b2f7052b-c928-43fa-8576-4632fce854a9/images/2981159434af46d8a59e2efde0e4758a357e7cff46c8567933938f350e67d0d0.png')`,
+          backgroundImage: `url('/login-background.png')`,
         }}
       />
       

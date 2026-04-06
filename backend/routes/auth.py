@@ -1,13 +1,14 @@
 """
 Authentication routes (PostgreSQL).
 """
+import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import or_, select
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,11 @@ from auth import (
 from models.user import UserRegister, UserLogin, User, TokenResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+_LOGIN_DB_MAX_ATTEMPTS = 3
+_LOGIN_DB_RETRY_DELAY_SEC = 0.5
+# Transient pool / network / Supabase pooler issues (not query semantics).
+_LOGIN_DB_RETRYABLE_EXC = (OSError, TimeoutError, OperationalError)
 
 
 def _row_to_user_doc(row: UserRow) -> dict:
@@ -109,57 +115,76 @@ async def login(credentials: UserLogin):
         _login_log.info(
             "login: acquiring AsyncSessionLocal (same engine/pool as db_startup.connect_db)"
         )
-        _session_opened = False
-        try:
-            async with AsyncSessionLocal() as session:
-                _session_opened = True
-                _login_log.info("login: AsyncSessionLocal acquired successfully")
-                result = await session.execute(
-                    select(UserRow).where(
-                        or_(UserRow.email == email_norm, UserRow.email == email_raw)
+        row = None
+        last_retryable_exc: BaseException | None = None
+        last_failure_phase = "session_acquire"
+        for attempt in range(1, _LOGIN_DB_MAX_ATTEMPTS + 1):
+            _session_opened = False
+            try:
+                async with AsyncSessionLocal() as session:
+                    _session_opened = True
+                    _login_log.info(
+                        "login: AsyncSessionLocal acquired successfully (attempt %s/%s)",
+                        attempt,
+                        _LOGIN_DB_MAX_ATTEMPTS,
                     )
+                    result = await session.execute(
+                        select(UserRow).where(
+                            or_(UserRow.email == email_norm, UserRow.email == email_raw)
+                        )
+                    )
+                    row = result.scalar_one_or_none()
+                last_retryable_exc = None
+                break
+            except _LOGIN_DB_RETRYABLE_EXC as e:
+                last_retryable_exc = e
+                phase = "query_or_orm" if _session_opened else "session_acquire"
+                last_failure_phase = phase
+                _login_log.warning(
+                    "login: connection-layer failure attempt %s/%s phase=%s exc_type=%s exc_msg=%s | %s",
+                    attempt,
+                    _LOGIN_DB_MAX_ATTEMPTS,
+                    phase,
+                    type(e).__name__,
+                    str(e),
+                    describe_database_url_sanitized(),
                 )
-                row = result.scalar_one_or_none()
-        except SQLAlchemyError as e:
-            phase = "query_or_orm" if _session_opened else "session_acquire"
+                if attempt < _LOGIN_DB_MAX_ATTEMPTS:
+                    _login_log.info(
+                        "login: retrying DB fetch in %.1fs (next attempt %s)",
+                        _LOGIN_DB_RETRY_DELAY_SEC,
+                        attempt + 1,
+                    )
+                    await asyncio.sleep(_LOGIN_DB_RETRY_DELAY_SEC)
+            except SQLAlchemyError as e:
+                phase = "query_or_orm" if _session_opened else "session_acquire"
+                _login_log.error(
+                    "bayan.login: OUTCOME=DB_FAILURE | async_session_opened=%s | failure_phase=%s | "
+                    "exc_type=%s | exc_msg=%s | errno=n/a | winerror=n/a | %s",
+                    _session_opened,
+                    phase,
+                    type(e).__name__,
+                    str(e),
+                    describe_database_url_sanitized(),
+                )
+                _login_log.exception("bayan.login: traceback email=%s", email_norm)
+                raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
+
+        if last_retryable_exc is not None:
+            e = last_retryable_exc
             _login_log.error(
-                "bayan.login: OUTCOME=DB_FAILURE | async_session_opened=%s | failure_phase=%s | "
-                "exc_type=%s | exc_msg=%s | errno=n/a | winerror=n/a | %s",
-                _session_opened,
-                phase,
+                "bayan.login: OUTCOME=DB_FAILURE after %s attempts | failure_phase=%s | "
+                "exc_type=%s | exc_msg=%s | %s",
+                _LOGIN_DB_MAX_ATTEMPTS,
+                last_failure_phase,
                 type(e).__name__,
                 str(e),
                 describe_database_url_sanitized(),
             )
-            _login_log.exception("bayan.login: traceback email=%s", email_norm)
-            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
-        except OSError as e:
-            phase = "query_or_orm" if _session_opened else "session_acquire"
-            _login_log.error(
-                "bayan.login: OUTCOME=DB_FAILURE | async_session_opened=%s | failure_phase=%s | "
-                "exc_type=%s | exc_msg=%s | errno=%s | winerror=%s | %s",
-                _session_opened,
-                phase,
-                type(e).__name__,
-                str(e),
-                getattr(e, "errno", None),
-                getattr(e, "winerror", None),
-                describe_database_url_sanitized(),
+            _login_log.exception(
+                "bayan.login: exhausted retries email=%s",
+                email_norm,
             )
-            _login_log.exception("bayan.login: traceback email=%s", email_norm)
-            raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
-        except TimeoutError as e:
-            phase = "query_or_orm" if _session_opened else "session_acquire"
-            _login_log.error(
-                "bayan.login: OUTCOME=DB_FAILURE | async_session_opened=%s | failure_phase=%s | "
-                "exc_type=%s | exc_msg=%s | errno=n/a | winerror=n/a | %s",
-                _session_opened,
-                phase,
-                type(e).__name__,
-                str(e),
-                describe_database_url_sanitized(),
-            )
-            _login_log.exception("bayan.login: traceback email=%s", email_norm)
             raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
 
         _login_log.info(

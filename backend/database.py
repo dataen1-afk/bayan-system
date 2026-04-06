@@ -110,6 +110,9 @@ DATABASE_URL = _async_url(DATABASE_URL_RAW)
 engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
     pool_pre_ping=True,
+    pool_recycle=300,
+    pool_size=5,
+    max_overflow=10,
     # asyncpg + pgBouncer (e.g. Supabase pooler): disable server-side prepared statement cache.
     connect_args={"statement_cache_size": 0},
 )

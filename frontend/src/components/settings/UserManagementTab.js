@@ -6,8 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogPortal,
 } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -140,8 +145,13 @@ const UserManagementTab = () => {
   };
 
   const handleEditUser = async () => {
-    if (!selectedUser || editUserSaving) return;
-    if (!selectedUser.id) {
+    if (editUserSaving) return;
+    if (!selectedUser) {
+      toast.error(isRTL ? 'لا يوجد مستخدم محدد' : 'No user selected. Close the dialog and try again.');
+      return;
+    }
+    const userId = selectedUser.id ?? selectedUser._id;
+    if (!userId) {
       toast.error(isRTL ? 'معرّف المستخدم غير صالح' : 'Cannot save: user id is missing');
       return;
     }
@@ -162,7 +172,7 @@ const UserManagementTab = () => {
         updateData.password = selectedUser.newPassword;
       }
 
-      await axios.put(`${API}/users/${selectedUser.id}`, updateData, {
+      await axios.put(`${API}/users/${userId}`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -679,15 +689,25 @@ const UserManagementTab = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit User Modal — native role <select> avoids Radix Select + Dialog swallowing Save clicks */}
+      {/* Edit User: modal={false} avoids Radix modal focus/pointer trap blocking footer clicks; backdrop added manually */}
       <Dialog
+        modal={false}
         open={showEditUserModal}
         onOpenChange={(open) => {
           setShowEditUserModal(open);
           if (!open) setEditUserSaving(false);
         }}
       >
-        <DialogContent className={`max-w-md ${isRTL ? 'rtl' : 'ltr'}`}>
+        {showEditUserModal ? (
+          <DialogPortal>
+            <div
+              role="presentation"
+              className="fixed inset-0 z-[10050] bg-black/80 animate-in fade-in-0"
+              onClick={() => setShowEditUserModal(false)}
+            />
+          </DialogPortal>
+        ) : null}
+        <DialogContent className={cn('z-[10051] max-w-md', isRTL ? 'rtl' : 'ltr')}>
           <DialogHeader>
             <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <UserCog className="w-5 h-5" />
@@ -696,10 +716,10 @@ const UserManagementTab = () => {
           </DialogHeader>
 
           <form
-            className="contents"
+            className="flex w-full flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              handleEditUser();
+              void handleEditUser();
             }}
           >
           {selectedUser && (
@@ -775,7 +795,11 @@ const UserManagementTab = () => {
                     'focus:outline-none focus:ring-1 focus:ring-ring',
                     isRTL && 'text-right'
                   )}
-                  value={selectedUser.role}
+                  value={
+                    roles.some((r) => r.id === selectedUser.role)
+                      ? selectedUser.role
+                      : (roles[0]?.id ?? '')
+                  }
                   onChange={(e) =>
                     setSelectedUser({ ...selectedUser, role: e.target.value })
                   }
@@ -803,7 +827,7 @@ const UserManagementTab = () => {
             <Button
               type="submit"
               disabled={editUserSaving}
-              className="bg-[#1e3a5f] hover:bg-[#152a45]"
+              className="relative z-[1] bg-[#1e3a5f] hover:bg-[#152a45]"
             >
               {editUserSaving
                 ? isRTL

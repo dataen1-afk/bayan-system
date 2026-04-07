@@ -15,12 +15,30 @@ import {
   DialogPortal,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { 
-  Users, UserPlus, Search, Edit, Shield, Mail, Phone, 
-  Building, CheckCircle, Trash2, Eye, EyeOff, UserCog, Crown
+import {
+  Users,
+  UserPlus,
+  Search,
+  Edit,
+  Shield,
+  Mail,
+  Phone,
+  Building,
+  CheckCircle,
+  Trash2,
+  Eye,
+  EyeOff,
+  UserCog,
+  Crown,
+  Loader2,
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 import { toast } from 'sonner';
@@ -63,6 +81,9 @@ const UserManagementPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [editUserSaving, setEditUserSaving] = useState(false);
+  const [createUserSaving, setCreateUserSaving] = useState(false);
+  const [updateRoleSaving, setUpdateRoleSaving] = useState(false);
+  const [deleteUserSaving, setDeleteUserSaving] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -100,13 +121,15 @@ const UserManagementPage = () => {
   };
 
   const handleCreateUser = async () => {
+    if (createUserSaving) return;
+    setCreateUserSaving(true);
     try {
       const token = localStorage.getItem('token');
       await axios.post(`${API}/users/create-staff`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      toast.success(isRTL ? 'تم إنشاء المستخدم بنجاح' : 'User created successfully');
+
+      toast.success(isRTL ? 'تمت الإضافة' : 'Added');
       setShowCreateModal(false);
       setFormData({
         name: '',
@@ -121,26 +144,31 @@ const UserManagementPage = () => {
     } catch (error) {
       console.error('Error creating user:', error);
       toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في إنشاء المستخدم' : 'Error creating user'));
+    } finally {
+      setCreateUserSaving(false);
     }
   };
 
   const handleUpdateRole = async () => {
-    if (!selectedUser) return;
-    
+    if (!selectedUser || updateRoleSaving) return;
+
+    setUpdateRoleSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/users/${selectedUser.id}/role`, 
+      await axios.put(`${API}/users/${selectedUser.id}/role`,
         { role: selectedUser.newRole },
-        { headers: { Authorization: `Bearer ${token}` }}
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      toast.success(isRTL ? 'تم تحديث الدور بنجاح' : 'Role updated successfully');
+
+      toast.success(isRTL ? 'تم التحديث' : 'Updated');
       setShowEditRoleModal(false);
       setSelectedUser(null);
       loadData();
     } catch (error) {
       console.error('Error updating role:', error);
       toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في تحديث الدور' : 'Error updating role'));
+    } finally {
+      setUpdateRoleSaving(false);
     }
   };
 
@@ -176,7 +204,7 @@ const UserManagementPage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success(isRTL ? 'تم تحديث المستخدم بنجاح' : 'User updated successfully');
+      toast.success(isRTL ? 'تم الحفظ' : 'Saved');
       setShowEditUserModal(false);
       setSelectedUser(null);
       loadData();
@@ -194,21 +222,29 @@ const UserManagementPage = () => {
   };
 
   const handleDeleteUser = async () => {
-    if (!selectedUser) return;
-    
+    if (!selectedUser || deleteUserSaving) return;
+    const userId = selectedUser.id ?? selectedUser._id;
+    if (!userId) {
+      toast.error(isRTL ? 'معرّف المستخدم غير صالح' : 'Cannot delete: user id is missing');
+      return;
+    }
+
+    setDeleteUserSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/users/${selectedUser.id}`, {
+      await axios.delete(`${API}/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      toast.success(isRTL ? 'تم حذف المستخدم بنجاح' : 'User deleted successfully');
+
+      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
       setShowDeleteConfirm(false);
       setSelectedUser(null);
       loadData();
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في حذف المستخدم' : 'Error deleting user'));
+    } finally {
+      setDeleteUserSaving(false);
     }
   };
 
@@ -479,7 +515,13 @@ const UserManagementPage = () => {
       </Card>
 
       {/* Create User Modal */}
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+      <Dialog
+        open={showCreateModal}
+        onOpenChange={(open) => {
+          setShowCreateModal(open);
+          if (!open) setCreateUserSaving(false);
+        }}
+      >
         <DialogContent className={`max-w-md ${isRTL ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
             <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -581,22 +623,48 @@ const UserManagementPage = () => {
           </div>
           
           <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
-            <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowCreateModal(false)}
+              disabled={createUserSaving}
+            >
               {isRTL ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button 
+            <Button
+              type="button"
               onClick={handleCreateUser}
               className="bg-[#1e3a5f] hover:bg-[#152a45]"
-              disabled={!formData.name || !formData.email || !formData.password}
+              disabled={
+                createUserSaving ||
+                !formData.name ||
+                !formData.email ||
+                !formData.password
+              }
             >
-              {isRTL ? 'إنشاء المستخدم' : 'Create User'}
+              {createUserSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {isRTL ? 'جاري الإضافة...' : 'Adding...'}
+                </>
+              ) : isRTL ? (
+                'إنشاء المستخدم'
+              ) : (
+                'Create User'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Role Modal */}
-      <Dialog open={showEditRoleModal} onOpenChange={setShowEditRoleModal}>
+      <Dialog
+        open={showEditRoleModal}
+        onOpenChange={(open) => {
+          setShowEditRoleModal(open);
+          if (!open) setUpdateRoleSaving(false);
+        }}
+      >
         <DialogContent className={`max-w-md ${isRTL ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
             <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -644,15 +712,34 @@ const UserManagementPage = () => {
           )}
           
           <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
-            <Button variant="outline" onClick={() => setShowEditRoleModal(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowEditRoleModal(false)}
+              disabled={updateRoleSaving}
+            >
               {isRTL ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button 
+            <Button
+              type="button"
               onClick={handleUpdateRole}
               className="bg-[#1e3a5f] hover:bg-[#152a45]"
-              disabled={!selectedUser || selectedUser.role === selectedUser.newRole}
+              disabled={
+                updateRoleSaving ||
+                !selectedUser ||
+                selectedUser.role === selectedUser.newRole
+              }
             >
-              {isRTL ? 'تحديث الدور' : 'Update Role'}
+              {updateRoleSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {isRTL ? 'جاري التحديث...' : 'Updating...'}
+                </>
+              ) : isRTL ? (
+                'تحديث الدور'
+              ) : (
+                'Update Role'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -798,13 +885,16 @@ const UserManagementPage = () => {
               disabled={editUserSaving}
               className="relative z-[1] bg-[#1e3a5f] hover:bg-[#152a45]"
             >
-              {editUserSaving
-                ? isRTL
-                  ? 'جاري الحفظ...'
-                  : 'Saving...'
-                : isRTL
-                  ? 'حفظ التغييرات'
-                  : 'Save Changes'}
+              {editUserSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {isRTL ? 'جاري الحفظ...' : 'Saving...'}
+                </>
+              ) : isRTL ? (
+                'حفظ التغييرات'
+              ) : (
+                'Save Changes'
+              )}
             </Button>
           </DialogFooter>
           </form>
@@ -812,7 +902,13 @@ const UserManagementPage = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialog
+        open={showDeleteConfirm}
+        onOpenChange={(open) => {
+          setShowDeleteConfirm(open);
+          if (!open) setDeleteUserSaving(false);
+        }}
+      >
         <AlertDialogContent className={isRTL ? 'rtl' : 'ltr'}>
           <AlertDialogHeader>
             <AlertDialogTitle className={`flex items-center gap-2 text-red-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -820,22 +916,33 @@ const UserManagementPage = () => {
               {isRTL ? 'تأكيد حذف المستخدم' : 'Confirm Delete User'}
             </AlertDialogTitle>
             <AlertDialogDescription className={isRTL ? 'text-right' : ''}>
-              {isRTL 
+              {isRTL
                 ? `هل أنت متأكد من حذف المستخدم "${selectedUser?.name || selectedUser?.email}"؟ لا يمكن التراجع عن هذا الإجراء.`
-                : `Are you sure you want to delete the user "${selectedUser?.name || selectedUser?.email}"? This action cannot be undone.`
-              }
+                : `Are you sure you want to delete the user "${selectedUser?.name || selectedUser?.email}"? This action cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
-            <AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteUserSaving}>
               {isRTL ? 'إلغاء' : 'Cancel'}
             </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteUser}
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void handleDeleteUser()}
+              disabled={deleteUserSaving}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isRTL ? 'حذف المستخدم' : 'Delete User'}
-            </AlertDialogAction>
+              {deleteUserSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {isRTL ? 'جاري الحذف...' : 'Deleting...'}
+                </>
+              ) : isRTL ? (
+                'حذف المستخدم'
+              ) : (
+                'Delete User'
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

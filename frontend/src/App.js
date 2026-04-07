@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import '@/App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import '@/i18n'; // Initialize i18n
 import { useTranslation } from 'react-i18next';
 import LoginPage from '@/pages/LoginPage';
@@ -80,7 +81,7 @@ export const AuthContext = React.createContext();
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     // Set initial direction based on stored or default language
@@ -115,12 +116,16 @@ function App() {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    toast.success(
+      i18n.language?.startsWith('ar') ? 'تم تسجيل الخروج بنجاح' : 'Signed out successfully'
+    );
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading...</div>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3 bg-slate-50 text-slate-600">
+        <Loader2 className="h-10 w-10 animate-spin text-[#1e3a5f]" aria-hidden />
+        <p className="text-lg">{t('loading')}</p>
       </div>
     );
   }

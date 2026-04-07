@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { formatApiErrorDetail } from '@/lib/apiErrors';
 
 const LoginPage = () => {
   const { t, i18n } = useTranslation();
@@ -50,7 +51,10 @@ const LoginPage = () => {
       login(response.data.token, response.data.user);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || t('errorLogin'));
+      const fb = t('errorLogin');
+      setError(
+        formatApiErrorDetail(err.response?.data?.detail, fb) || err.message || fb
+      );
     } finally {
       setLoading(false);
     }

@@ -43,21 +43,9 @@ import {
 import { AuthContext } from '@/App';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { formatApiErrorDetail } from '@/lib/apiErrors';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
-
-function formatApiErrorDetail(detail, fallback) {
-  if (detail == null || detail === '') return fallback;
-  if (typeof detail === 'string') return detail;
-  if (Array.isArray(detail)) {
-    const parts = detail.map((e) =>
-      e && typeof e === 'object' && e.msg != null ? String(e.msg) : JSON.stringify(e)
-    );
-    return parts.join('; ') || fallback;
-  }
-  if (typeof detail === 'object') return JSON.stringify(detail);
-  return String(detail);
-}
 
 const UserManagementTab = () => {
   const { t, i18n } = useTranslation();
@@ -143,7 +131,10 @@ const UserManagementTab = () => {
       loadData();
     } catch (error) {
       console.error('Error creating user:', error);
-      toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في إنشاء المستخدم' : 'Error creating user'));
+      const fb = isRTL ? 'خطأ في إنشاء المستخدم' : 'Error creating user';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     } finally {
       setCreateUserSaving(false);
     }
@@ -166,7 +157,10 @@ const UserManagementTab = () => {
       loadData();
     } catch (error) {
       console.error('Error updating role:', error);
-      toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في تحديث الدور' : 'Error updating role'));
+      const fb = isRTL ? 'خطأ في تحديث الدور' : 'Error updating role';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     } finally {
       setUpdateRoleSaving(false);
     }
@@ -242,7 +236,10 @@ const UserManagementTab = () => {
       loadData();
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error(error.response?.data?.detail || (isRTL ? 'خطأ في حذف المستخدم' : 'Error deleting user'));
+      const fb = isRTL ? 'خطأ في حذف المستخدم' : 'Error deleting user';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     } finally {
       setDeleteUserSaving(false);
     }

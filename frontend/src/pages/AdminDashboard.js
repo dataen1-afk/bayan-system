@@ -9,7 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LogOut, FileText, DollarSign, FileCheck, FolderOpen, BarChart3, Settings, Plus, Eye, X, Send, Copy, Mail, Link, CheckCircle, Download, Clock, Building2, User, Calendar, Phone } from 'lucide-react';
+import { LogOut, FileText, DollarSign, FileCheck, FolderOpen, BarChart3, Settings, Plus, Eye, X, Send, Copy, Mail, Link, CheckCircle, Download, Clock, Building2, User, Calendar, Phone, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { formatApiErrorDetail } from '@/lib/apiErrors';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Sidebar from '@/components/Sidebar';
 import ApplicationForm from '@/components/ApplicationForm';
@@ -55,7 +57,10 @@ const AdminDashboard = () => {
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [proposals, setProposals] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [applicationFormSaving, setApplicationFormSaving] = useState(false);
+  const [createFormSaving, setCreateFormSaving] = useState(false);
+  const [createQuotationSaving, setCreateQuotationSaving] = useState(false);
 
   // Application Form Modal state
   const [showApplicationForm, setShowApplicationForm] = useState(false);
@@ -151,6 +156,10 @@ const AdminDashboard = () => {
       setProposals(proposalsRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
+      const fb = isRTL ? 'تعذر تحميل البيانات' : 'Could not load dashboard data';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     } finally {
       setLoading(false);
     }
@@ -176,28 +185,42 @@ const AdminDashboard = () => {
 
   const handleCreateForm = async (e) => {
     e.preventDefault();
+    if (createFormSaving) return;
+    setCreateFormSaving(true);
     try {
       await axios.post(`${API}/forms`, newForm);
-      alert(t('formCreatedSuccess'));
+      toast.success(t('formCreatedSuccess'));
       setNewForm({ client_id: '', fields: [{ label: '', type: 'text', required: true }] });
       loadData();
     } catch (error) {
-      alert(t('errorCreatingForm') + ' ' + (error.response?.data?.detail || error.message));
+      const fb = t('errorCreatingForm');
+      toast.error(
+        `${fb} ${formatApiErrorDetail(error.response?.data?.detail, '') || error.message || ''}`.trim()
+      );
+    } finally {
+      setCreateFormSaving(false);
     }
   };
 
   const handleCreateQuotation = async (e) => {
     e.preventDefault();
+    if (createQuotationSaving) return;
+    setCreateQuotationSaving(true);
     try {
       await axios.post(`${API}/quotations`, {
         ...newQuotation,
         price: parseFloat(newQuotation.price)
       });
-      alert(t('quotationCreatedSuccess'));
+      toast.success(t('quotationCreatedSuccess'));
       setNewQuotation({ form_id: '', client_id: '', client_email: '', price: '', details: '' });
       loadData();
     } catch (error) {
-      alert(t('errorCreatingQuotation') + ' ' + (error.response?.data?.detail || error.message));
+      const fb = t('errorCreatingQuotation');
+      toast.error(
+        `${fb} ${formatApiErrorDetail(error.response?.data?.detail, '') || error.message || ''}`.trim()
+      );
+    } finally {
+      setCreateQuotationSaving(false);
     }
   };
 
@@ -214,7 +237,10 @@ const AdminDashboard = () => {
       link.click();
       link.remove();
     } catch (error) {
-      alert(t('errorDownloadingContract') + ' ' + error.message);
+      const fb = t('errorDownloadingContract');
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     }
   };
 
@@ -226,10 +252,12 @@ const AdminDashboard = () => {
 
   // Handle creating a new application form for a client
   const handleCreateApplicationForm = async () => {
+    if (applicationFormSaving) return;
     if (!newClientInfo.name || !newClientInfo.company_name || !newClientInfo.email || !newClientInfo.phone) {
-      alert(t('fillAllClientFields'));
+      toast.error(t('fillAllClientFields'));
       return;
     }
+    setApplicationFormSaving(true);
     try {
       const response = await axios.post(`${API}/application-forms`, {
         client_info: newClientInfo
@@ -241,7 +269,12 @@ const AdminDashboard = () => {
       setNewClientInfo({ name: '', company_name: '', email: '', phone: '', mobile: '' });
       loadData();
     } catch (error) {
-      alert(t('errorCreatingForm') + ' ' + (error.response?.data?.detail || error.message));
+      const fb = t('errorCreatingForm');
+      toast.error(
+        `${fb} ${formatApiErrorDetail(error.response?.data?.detail, '') || error.message || ''}`.trim()
+      );
+    } finally {
+      setApplicationFormSaving(false);
     }
   };
 
@@ -252,7 +285,7 @@ const AdminDashboard = () => {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch (error) {
-      alert(t('errorCopyingLink'));
+      toast.error(t('errorCopyingLink'));
     }
   };
 
@@ -260,10 +293,13 @@ const AdminDashboard = () => {
   const handleSendEmail = async (formId) => {
     setSendingEmail(true);
     try {
-      const response = await axios.post(`${API}/application-forms/${formId}/send-email`);
-      alert(t('emailSentSuccess'));
+      await axios.post(`${API}/application-forms/${formId}/send-email`);
+      toast.success(t('emailSentSuccess'));
     } catch (error) {
-      alert(t('errorSendingEmail') + ' ' + (error.response?.data?.detail || error.message));
+      const fb = t('errorSendingEmail');
+      toast.error(
+        `${fb} ${formatApiErrorDetail(error.response?.data?.detail, '') || error.message || ''}`.trim()
+      );
     } finally {
       setSendingEmail(false);
     }
@@ -279,9 +315,9 @@ const AdminDashboard = () => {
     const link = getFormLink(form);
     try {
       await navigator.clipboard.writeText(link);
-      alert(t('linkCopied'));
+      toast.success(t('linkCopied'));
     } catch (error) {
-      alert(t('errorCopyingLink'));
+      toast.error(t('errorCopyingLink'));
     }
   };
 
@@ -299,7 +335,7 @@ const AdminDashboard = () => {
       const proposal = proposalsRes.data.find(p => p.application_form_id === formId && p.status === 'agreement_signed');
       
       if (!proposal) {
-        alert(t('noAgreementFound'));
+        toast.error(t('noAgreementFound'));
         return;
       }
       
@@ -324,7 +360,10 @@ const AdminDashboard = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading contract:', error);
-      alert(t('errorDownloadingContract'));
+      const fb = t('errorDownloadingContract');
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     }
   };
 
@@ -345,7 +384,10 @@ const AdminDashboard = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading bilingual form:', error);
-      alert(t('errorDownloadingPDF') || 'Error downloading PDF');
+      const fb = t('errorDownloadingPDF') || 'Error downloading PDF';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     }
   };
 
@@ -366,7 +408,10 @@ const AdminDashboard = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading bilingual proposal:', error);
-      alert(t('errorDownloadingPDF') || 'Error downloading PDF');
+      const fb = t('errorDownloadingPDF') || 'Error downloading PDF';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     }
   };
 
@@ -433,6 +478,14 @@ const AdminDashboard = () => {
 
   // Render content based on active tab
   const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-600">
+          <Loader2 className="h-10 w-10 animate-spin text-bayan-navy" aria-hidden />
+          <p>{t('loading')}</p>
+        </div>
+      );
+    }
     switch (activeTab) {
       case 'dashboard':
         return (
@@ -1124,6 +1177,12 @@ const AdminDashboard = () => {
                           window.URL.revokeObjectURL(url);
                         } catch (error) {
                           console.error('Error downloading contract:', error);
+                          const fb = t('errorDownloadingContract');
+                          toast.error(
+                            formatApiErrorDetail(error.response?.data?.detail, fb) ||
+                              error.message ||
+                              fb
+                          );
                         }
                       }}
                       className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700"
@@ -1297,16 +1356,25 @@ const AdminDashboard = () => {
                 />
               </div>
               <div className={`flex gap-2 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Button variant="outline" onClick={() => setCreateFormModal(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setCreateFormModal(false)}
+                  disabled={applicationFormSaving}
+                >
                   {t('cancel')}
                 </Button>
-                <Button 
+                <Button
                   onClick={handleCreateApplicationForm}
                   className="bg-bayan-navy hover:bg-bayan-navy-light"
                   data-testid="confirm-create-form"
+                  disabled={applicationFormSaving}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('createForm')}
+                  {applicationFormSaving ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4 mr-2" />
+                  )}
+                  {applicationFormSaving ? t('loading') : t('createForm')}
                 </Button>
               </div>
             </CardContent>

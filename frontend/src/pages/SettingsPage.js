@@ -7,6 +7,8 @@ import { Settings, Users, Bell, Shield, Globe, Trash2, AlertTriangle, Database, 
 import { AuthContext } from '@/App';
 import UserManagementTab from '@/components/settings/UserManagementTab';
 import axios from 'axios';
+import { toast } from 'sonner';
+import { formatApiErrorDetail } from '@/lib/apiErrors';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -40,6 +42,10 @@ const SettingsPage = () => {
       setDataSummary(response.data);
     } catch (error) {
       console.error('Error fetching data summary:', error);
+      const fb = isRTL ? 'تعذر تحميل ملخص البيانات' : 'Could not load data summary';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     } finally {
       setIsLoading(false);
     }
@@ -53,13 +59,18 @@ const SettingsPage = () => {
       });
       setDeleteResult(response.data);
       setShowConfirmDelete(false);
+      toast.success(isRTL ? 'تم حذف البيانات' : 'Data cleared successfully');
       // Refresh the summary
       await fetchDataSummary();
     } catch (error) {
       console.error('Error clearing data:', error);
-      setDeleteResult({ 
-        message: isRTL ? 'حدث خطأ أثناء حذف البيانات' : 'Error clearing data',
-        error: error.response?.data?.detail || error.message 
+      const fb = isRTL ? 'حدث خطأ أثناء حذف البيانات' : 'Error clearing data';
+      const detailText =
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb;
+      toast.error(detailText);
+      setDeleteResult({
+        message: fb,
+        error: detailText,
       });
     } finally {
       setIsLoading(false);

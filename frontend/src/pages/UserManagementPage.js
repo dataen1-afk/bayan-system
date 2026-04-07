@@ -43,21 +43,9 @@ import {
 import { AuthContext } from '@/App';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { formatApiErrorDetail } from '@/lib/apiErrors';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
-
-function formatApiErrorDetail(detail, fallback) {
-  if (detail == null || detail === '') return fallback;
-  if (typeof detail === 'string') return detail;
-  if (Array.isArray(detail)) {
-    const parts = detail.map((e) =>
-      e && typeof e === 'object' && e.msg != null ? String(e.msg) : JSON.stringify(e)
-    );
-    return parts.join('; ') || fallback;
-  }
-  if (typeof detail === 'object') return JSON.stringify(detail);
-  return String(detail);
-}
 
 const UserManagementPage = () => {
   const { t, i18n } = useTranslation();

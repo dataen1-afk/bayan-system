@@ -11,6 +11,9 @@
 # production
 /build
 
+# Generated at build time (see scripts/write-build-info.cjs)
+public/build-info.json
+
 # misc
 .DS_Store
 .env.local

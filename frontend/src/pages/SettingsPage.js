@@ -14,7 +14,7 @@ const API = process.env.REACT_APP_BACKEND_URL;
 
 const SettingsPage = () => {
   const { t, i18n } = useTranslation();
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const isRTL = i18n.language?.startsWith('ar');
   
   // Check if current user is system admin
@@ -28,13 +28,13 @@ const SettingsPage = () => {
   const [clearAllLoading, setClearAllLoading] = useState(false);
   const [deleteResult, setDeleteResult] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [buildInfo, setBuildInfo] = useState(null);
 
   const fetchDataSummary = useCallback(async () => {
     try {
       setSummaryLoading(true);
-      const response = await axios.get(`${API}/api/admin/data-summary`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Authorization: use global axios interceptor (localStorage token). Do not pass Bearer undefined.
+      const response = await axios.get(`${API}/api/admin/data-summary`);
       setDataSummary(response.data);
     } catch (error) {
       console.error('Error fetching data summary:', error);
@@ -45,7 +45,7 @@ const SettingsPage = () => {
     } finally {
       setSummaryLoading(false);
     }
-  }, [token, isRTL]);
+  }, [isRTL]);
 
   // Fetch data summary when Data Management tab is selected
   useEffect(() => {
@@ -53,6 +53,17 @@ const SettingsPage = () => {
       fetchDataSummary();
     }
   }, [activeTab, isSystemAdmin, fetchDataSummary]);
+
+  useEffect(() => {
+    if (!isSystemAdmin) return;
+    const base = process.env.PUBLIC_URL || '';
+    fetch(`${base}/build-info.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && data.commit) setBuildInfo(data);
+      })
+      .catch(() => {});
+  }, [isSystemAdmin]);
 
   const handleTabChange = (value) => {
     setActiveTab(value);
@@ -64,9 +75,7 @@ const SettingsPage = () => {
   const handleClearAllData = async () => {
     try {
       setClearAllLoading(true);
-      const response = await axios.delete(`${API}/api/admin/clear-all-data`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.delete(`${API}/api/admin/clear-all-data`);
       setDeleteResult(response.data);
       setShowConfirmDelete(false);
       toast.success(isRTL ? 'تم حذف البيانات' : 'Data cleared successfully');
@@ -335,6 +344,21 @@ const SettingsPage = () => {
           </TabsContent>
         )}
       </Tabs>
+
+      {isSystemAdmin && buildInfo?.commit && (
+        <p
+          className={`text-xs text-slate-400 mt-8 border-t border-slate-200 pt-4 ${isRTL ? 'text-right' : 'text-left'}`}
+          dir="ltr"
+        >
+          {isRTL ? 'نسخة الواجهة:' : 'Frontend build:'}{' '}
+          <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{buildInfo.commit}</code>
+          {buildInfo.builtAt && (
+            <span className="ms-2 opacity-80">
+              ({new Date(buildInfo.builtAt).toLocaleString()})
+            </span>
+          )}
+        </p>
+      )}
     </div>
   );
 };

@@ -69,6 +69,7 @@ const UserManagementPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [editUserSaving, setEditUserSaving] = useState(false);
+  const [editUserError, setEditUserError] = useState('');
   const [createUserSaving, setCreateUserSaving] = useState(false);
   const [updateRoleSaving, setUpdateRoleSaving] = useState(false);
   const [deleteUserSaving, setDeleteUserSaving] = useState(false);
@@ -165,23 +166,35 @@ const UserManagementPage = () => {
 
   const handleEditUser = async () => {
     if (editUserSaving) return;
+    setEditUserError('');
     if (!selectedUser) {
-      toast.error(isRTL ? 'لا يوجد مستخدم محدد' : 'No user selected. Close the dialog and try again.');
+      const msg = isRTL ? 'لا يوجد مستخدم محدد' : 'No user selected. Close the dialog and try again.';
+      setEditUserError(msg);
+      toast.error(msg);
       return;
     }
     const userId = selectedUser.id ?? selectedUser._id;
     if (!userId) {
-      toast.error(isRTL ? 'معرّف المستخدم غير صالح' : 'Cannot save: user id is missing');
+      const msg = isRTL ? 'معرّف المستخدم غير صالح' : 'Cannot save: user id is missing';
+      setEditUserError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    const emailTrim = (selectedUser.email || '').trim();
+    if (emailTrim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+      const msg = isRTL ? 'صيغة البريد غير صالحة' : 'Please enter a valid email address.';
+      setEditUserError(msg);
+      toast.error(msg);
       return;
     }
 
     setEditUserSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const updateData = {
         name: selectedUser.name,
         name_ar: selectedUser.name_ar,
-        email: selectedUser.email,
+        email: emailTrim,
         phone: selectedUser.phone,
         department: selectedUser.department,
         role: selectedUser.role
@@ -191,22 +204,22 @@ const UserManagementPage = () => {
         updateData.password = selectedUser.newPassword;
       }
 
-      await axios.put(`${API}/users/${userId}`, updateData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/users/${userId}`, updateData);
 
       toast.success(isRTL ? 'تم الحفظ' : 'Saved');
+      setEditUserError('');
       setShowEditUserModal(false);
       setSelectedUser(null);
       loadData();
     } catch (error) {
       console.error('Error updating user:', error);
       const fallback = isRTL ? 'خطأ في تحديث المستخدم' : 'Error updating user';
-      toast.error(
+      const detail =
         formatApiErrorDetail(error.response?.data?.detail, fallback) ||
-          error.message ||
-          fallback
-      );
+        error.message ||
+        fallback;
+      setEditUserError(detail);
+      toast.error(detail);
     } finally {
       setEditUserSaving(false);
     }
@@ -463,6 +476,7 @@ const UserManagementPage = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
+                              setEditUserError('');
                               setSelectedUser({ ...u, newPassword: '' });
                               setShowEditUserModal(true);
                             }}
@@ -736,13 +750,16 @@ const UserManagementPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit User: modal={false} + manual backdrop avoids Radix modal trap blocking Save */}
+      {/* Edit User: manual backdrop + DialogContent hideOverlay avoids stacked Radix overlays / blocked submit */}
       <Dialog
         modal={false}
         open={showEditUserModal}
         onOpenChange={(open) => {
           setShowEditUserModal(open);
-          if (!open) setEditUserSaving(false);
+          if (!open) {
+            setEditUserSaving(false);
+            setEditUserError('');
+          }
         }}
       >
         {showEditUserModal ? (
@@ -750,11 +767,16 @@ const UserManagementPage = () => {
             <div
               role="presentation"
               className="fixed inset-0 z-[10050] bg-black/80 animate-in fade-in-0"
-              onClick={() => setShowEditUserModal(false)}
+              onClick={() => {
+                if (!editUserSaving) setShowEditUserModal(false);
+              }}
             />
           </DialogPortal>
         ) : null}
-        <DialogContent className={cn('z-[10051] max-w-md', isRTL ? 'rtl' : 'ltr')}>
+        <DialogContent
+          hideOverlay
+          className={cn('z-[10052] max-w-md', isRTL ? 'rtl' : 'ltr')}
+        >
           <DialogHeader>
             <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <UserCog className="w-5 h-5" />
@@ -764,6 +786,7 @@ const UserManagementPage = () => {
 
           <form
             className="flex w-full flex-col gap-4"
+            noValidate
             onSubmit={(e) => {
               e.preventDefault();
               void handleEditUser();
@@ -776,14 +799,22 @@ const UserManagementPage = () => {
                   <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
                   <Input
                     value={selectedUser.name || ''}
-                    onChange={(e) => setSelectedUser({...selectedUser, name: e.target.value})}
+                    disabled={editUserSaving}
+                    onChange={(e) => {
+                      setEditUserError('');
+                      setSelectedUser({ ...selectedUser, name: e.target.value });
+                    }}
                   />
                 </div>
                 <div>
                   <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
                   <Input
                     value={selectedUser.name_ar || ''}
-                    onChange={(e) => setSelectedUser({...selectedUser, name_ar: e.target.value})}
+                    disabled={editUserSaving}
+                    onChange={(e) => {
+                      setEditUserError('');
+                      setSelectedUser({ ...selectedUser, name_ar: e.target.value });
+                    }}
                     className="text-right"
                     dir="rtl"
                   />
@@ -794,8 +825,13 @@ const UserManagementPage = () => {
                 <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
                 <Input
                   type="email"
+                  autoComplete="off"
                   value={selectedUser.email || ''}
-                  onChange={(e) => setSelectedUser({...selectedUser, email: e.target.value})}
+                  disabled={editUserSaving}
+                  onChange={(e) => {
+                    setEditUserError('');
+                    setSelectedUser({ ...selectedUser, email: e.target.value });
+                  }}
                 />
               </div>
               
@@ -805,12 +841,17 @@ const UserManagementPage = () => {
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     value={selectedUser.newPassword || ''}
-                    onChange={(e) => setSelectedUser({...selectedUser, newPassword: e.target.value})}
+                    disabled={editUserSaving}
+                    onChange={(e) => {
+                      setEditUserError('');
+                      setSelectedUser({ ...selectedUser, newPassword: e.target.value });
+                    }}
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={editUserSaving}
                     className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 ${isRTL ? 'left-3' : 'right-3'}`}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -822,7 +863,11 @@ const UserManagementPage = () => {
                 <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
                 <Input
                   value={selectedUser.phone || ''}
-                  onChange={(e) => setSelectedUser({...selectedUser, phone: e.target.value})}
+                  disabled={editUserSaving}
+                  onChange={(e) => {
+                    setEditUserError('');
+                    setSelectedUser({ ...selectedUser, phone: e.target.value });
+                  }}
                 />
               </div>
               
@@ -830,7 +875,11 @@ const UserManagementPage = () => {
                 <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'القسم' : 'Department'}</Label>
                 <Input
                   value={selectedUser.department || ''}
-                  onChange={(e) => setSelectedUser({...selectedUser, department: e.target.value})}
+                  disabled={editUserSaving}
+                  onChange={(e) => {
+                    setEditUserError('');
+                    setSelectedUser({ ...selectedUser, department: e.target.value });
+                  }}
                 />
               </div>
               
@@ -842,14 +891,16 @@ const UserManagementPage = () => {
                     'focus:outline-none focus:ring-1 focus:ring-ring',
                     isRTL && 'text-right'
                   )}
+                  disabled={editUserSaving}
                   value={
                     roles.some((r) => r.id === selectedUser.role)
                       ? selectedUser.role
                       : (roles[0]?.id ?? '')
                   }
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, role: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setEditUserError('');
+                    setSelectedUser({ ...selectedUser, role: e.target.value });
+                  }}
                   aria-label={isRTL ? 'الدور' : 'Role'}
                 >
                   {roles.map((role) => (
@@ -861,6 +912,15 @@ const UserManagementPage = () => {
               </div>
             </div>
           )}
+
+          {editUserError ? (
+            <div
+              role="alert"
+              className={`rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 ${isRTL ? 'text-right' : 'text-left'}`}
+            >
+              {editUserError}
+            </div>
+          ) : null}
 
           <DialogFooter className={cn('pointer-events-auto', isRTL && 'flex-row-reverse')}>
             <Button
@@ -878,8 +938,8 @@ const UserManagementPage = () => {
             >
               {editUserSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {isRTL ? 'جاري الحفظ...' : 'Saving...'}
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
+                  <span>{isRTL ? 'جاري الحفظ...' : 'Saving...'}</span>
                 </>
               ) : isRTL ? (
                 'حفظ التغييرات'

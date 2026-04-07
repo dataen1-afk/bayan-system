@@ -8,7 +8,8 @@ from datetime import datetime, timezone
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from auth import require_admin
+from auth import get_current_user
+from role_permissions import UserRole
 from dashboard_pg import (
     count_by_auditor,
     count_by_status,
@@ -20,9 +21,31 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard Analytics"])
 
 DB_UNAVAILABLE_DETAIL = "Database temporarily unavailable. Please try again shortly."
 
+# Same policy as server.require_admin (management + functional managers), not auth.require_admin (admin-only).
+_DASHBOARD_MANAGEMENT_ROLES = (
+    UserRole.SYSTEM_ADMIN,
+    UserRole.CEO,
+    UserRole.GENERAL_MANAGER,
+    UserRole.ADMIN,
+)
+_DASHBOARD_MANAGER_ROLES = (
+    UserRole.QUALITY_MANAGER,
+    UserRole.CERTIFICATION_MANAGER,
+    UserRole.MARKETING_MANAGER,
+    UserRole.FINANCIAL_MANAGER,
+    UserRole.HR_MANAGER,
+)
+
+
+async def require_dashboard_access(current_user: dict = Depends(get_current_user)) -> dict:
+    role = current_user.get("role")
+    if role in _DASHBOARD_MANAGEMENT_ROLES or role in _DASHBOARD_MANAGER_ROLES:
+        return current_user
+    raise HTTPException(status_code=403, detail="Management access required")
+
 
 @router.get("/stats")
-async def get_dashboard_stats(current_user: dict = Depends(require_admin)):
+async def get_dashboard_stats(current_user: dict = Depends(require_dashboard_access)):
     """Get comprehensive dashboard statistics"""
     now = datetime.now(timezone.utc)
     try:
@@ -193,7 +216,7 @@ def _is_today(date_value, today_start):
 
 
 @router.get("/quick-actions")
-async def get_quick_actions(current_user: dict = Depends(require_admin)):
+async def get_quick_actions(current_user: dict = Depends(require_dashboard_access)):
     """Get counts for quick action badges"""
     try:
         pending_forms = await count_by_status("application_forms", "submitted")

@@ -45,17 +45,28 @@ const DashboardWidgets = ({ isRTL }) => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     loadStats();
   }, []);
 
   const loadStats = async () => {
+    setLoadError(null);
+    setLoading(true);
     try {
-      const response = await axios.get(`${API}/dashboard/stats`);
+      const response = await axios.get(`${API}/dashboard/stats`, { timeout: 60000 });
       setStats(response.data);
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+      const detail = error.response?.data?.detail;
+      const message =
+        typeof detail === 'string'
+          ? detail
+          : error.code === 'ECONNABORTED'
+            ? (isRTL ? 'انتهت مهلة التحميل. حاول مرة أخرى.' : 'Request timed out. Please try again.')
+            : (isRTL ? 'تعذر تحميل بيانات لوحة التحكم.' : 'Could not load dashboard data.');
+      setLoadError(message);
     } finally {
       setLoading(false);
     }
@@ -71,7 +82,26 @@ const DashboardWidgets = ({ isRTL }) => {
     );
   }
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <Card className="border-amber-200 bg-amber-50/80" dir={isRTL ? 'rtl' : 'ltr'}>
+        <CardHeader>
+          <CardTitle className="text-amber-900 text-base">
+            {isRTL ? 'تعذر عرض الإحصائيات' : 'Dashboard unavailable'}
+          </CardTitle>
+          <CardDescription className="text-amber-800">
+            {loadError ||
+              (isRTL ? 'لم يتم استلام بيانات من الخادم.' : 'No data was returned from the server.')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" className="border-amber-300" onClick={() => loadStats()}>
+            {isRTL ? 'إعادة المحاولة' : 'Retry'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const totalExpiring = (stats.certificates?.expiring_count?.['30_days'] || 0) +
                         (stats.certificates?.expiring_count?.['60_days'] || 0) +

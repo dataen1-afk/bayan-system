@@ -102,7 +102,10 @@ const UserManagementPage = () => {
       setRoles(rolesRes.data.roles || []);
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error(isRTL ? 'خطأ في تحميل البيانات' : 'Error loading data');
+      const fb = isRTL ? 'خطأ في تحميل البيانات' : 'Error loading data';
+      toast.error(
+        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
+      );
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,20 +22,16 @@ const SettingsPage = () => {
   
   const [activeTab, setActiveTab] = useState('users');
   const [dataSummary, setDataSummary] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  /** Summary card fetch (initial + refresh); separate from destructive clear so the UI never flashes "no data" before fetch. */
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  /** Clear-all request only (confirm step). */
+  const [clearAllLoading, setClearAllLoading] = useState(false);
   const [deleteResult, setDeleteResult] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
-  // Fetch data summary when Data Management tab is selected
-  useEffect(() => {
-    if (activeTab === 'data' && isSystemAdmin) {
-      fetchDataSummary();
-    }
-  }, [activeTab]);
-
-  const fetchDataSummary = async () => {
+  const fetchDataSummary = useCallback(async () => {
     try {
-      setIsLoading(true);
+      setSummaryLoading(true);
       const response = await axios.get(`${API}/api/admin/data-summary`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -47,20 +43,33 @@ const SettingsPage = () => {
         formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
       );
     } finally {
-      setIsLoading(false);
+      setSummaryLoading(false);
+    }
+  }, [token, isRTL]);
+
+  // Fetch data summary when Data Management tab is selected
+  useEffect(() => {
+    if (activeTab === 'data' && isSystemAdmin) {
+      fetchDataSummary();
+    }
+  }, [activeTab, isSystemAdmin, fetchDataSummary]);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    if (value === 'data' && isSystemAdmin) {
+      setSummaryLoading(true);
     }
   };
 
   const handleClearAllData = async () => {
     try {
-      setIsLoading(true);
+      setClearAllLoading(true);
       const response = await axios.delete(`${API}/api/admin/clear-all-data`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDeleteResult(response.data);
       setShowConfirmDelete(false);
       toast.success(isRTL ? 'تم حذف البيانات' : 'Data cleared successfully');
-      // Refresh the summary
       await fetchDataSummary();
     } catch (error) {
       console.error('Error clearing data:', error);
@@ -73,9 +82,11 @@ const SettingsPage = () => {
         error: detailText,
       });
     } finally {
-      setIsLoading(false);
+      setClearAllLoading(false);
     }
   };
+
+  const dataTabBusy = summaryLoading || clearAllLoading;
 
   return (
     <div className={`p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
@@ -91,7 +102,7 @@ const SettingsPage = () => {
       </div>
 
       {/* Settings Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className={`bg-slate-100 p-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <TabsTrigger 
             value="users" 
@@ -204,7 +215,7 @@ const SettingsPage = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isLoading ? (
+                  {summaryLoading ? (
                     <div className="text-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                       <p className="mt-2 text-slate-500">{isRTL ? 'جاري التحميل...' : 'Loading...'}</p>
@@ -292,20 +303,26 @@ const SettingsPage = () => {
                         <Button 
                           variant="destructive" 
                           onClick={handleClearAllData}
-                          disabled={isLoading}
+                          disabled={dataTabBusy}
                           className="gap-2"
                         >
-                          {isLoading ? (
+                          {clearAllLoading ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                           ) : (
                             <Trash2 className="w-4 h-4" />
                           )}
-                          {isRTL ? 'نعم، احذف الكل' : 'Yes, Delete All'}
+                          {clearAllLoading
+                            ? isRTL
+                              ? 'جاري الحذف...'
+                              : 'Deleting...'
+                            : isRTL
+                              ? 'نعم، احذف الكل'
+                              : 'Yes, Delete All'}
                         </Button>
                         <Button 
                           variant="outline" 
                           onClick={() => setShowConfirmDelete(false)}
-                          disabled={isLoading}
+                          disabled={dataTabBusy}
                         >
                           {isRTL ? 'إلغاء' : 'Cancel'}
                         </Button>

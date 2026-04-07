@@ -149,6 +149,7 @@ const LoginPage = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={loading}
                       data-testid="login-email-input"
                       className={`h-12 bg-white/10 border-white/30 text-white placeholder:text-white/40 focus:border-[#c9a55c] focus:ring-[#c9a55c]/30 rounded-xl ${isRTL ? 'pr-12 text-right' : 'pl-12'}`}
                     />
@@ -169,6 +170,7 @@ const LoginPage = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      disabled={loading}
                       data-testid="login-password-input"
                       className={`h-12 bg-white/10 border-white/30 text-white placeholder:text-white/40 focus:border-[#c9a55c] focus:ring-[#c9a55c]/30 rounded-xl ${isRTL ? 'pr-12 pl-12 text-right' : 'pl-12 pr-12'}`}
                     />

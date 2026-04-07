@@ -1,4 +1,4 @@
-// craco.config.js
+// craco.config.js — use `npm run build` / `craco build`; plain `react-scripts build` ignores this file and breaks `@/` imports.
 const path = require("path");
 require("dotenv").config();
 

@@ -179,7 +179,7 @@ const UserManagementTab = () => {
       toast.error(msg);
       return;
     }
-    const userId = selectedUser.id ?? selectedUser._id;
+    const userId = selectedUser.id ?? selectedUser._id ?? selectedUser.user_id;
     if (!userId) {
       const msg = isRTL ? 'معرّف المستخدم غير صالح' : 'Cannot save: user id is missing';
       setEditUserError(msg);
@@ -210,7 +210,8 @@ const UserManagementTab = () => {
         updateData.password = selectedUser.newPassword;
       }
 
-      await axios.put(`${API}/users/${userId}`, updateData);
+      const url = `${API}/users/${userId}`;
+      await axios.put(url, updateData);
 
       toast.success(isRTL ? 'تم الحفظ' : 'Saved');
       setEditUserError('');
@@ -517,6 +518,7 @@ const UserManagementTab = () => {
                             size="sm"
                             onClick={() => {
                               setEditUserError('');
+                              setEditUserSaving(false);
                               setSelectedUser({ ...u, newPassword: '' });
                               setShowEditUserModal(true);
                             }}
@@ -829,6 +831,7 @@ const UserManagementTab = () => {
             noValidate
             onSubmit={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               void handleEditUser();
             }}
           >
@@ -962,7 +965,10 @@ const UserManagementTab = () => {
             </div>
           ) : null}
 
-          <DialogFooter className={cn('pointer-events-auto', isRTL && 'flex-row-reverse')}>
+          <DialogFooter
+            className={cn('pointer-events-auto', isRTL && 'flex-row-reverse')}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <Button
               type="button"
               variant="outline"
@@ -971,10 +977,16 @@ const UserManagementTab = () => {
             >
               {isRTL ? 'إلغاء' : 'Cancel'}
             </Button>
+            {/* type="button" + explicit onClick: Radix Dialog / nested portals can swallow native form submit in some cases */}
             <Button
-              type="submit"
+              type="button"
               disabled={editUserSaving}
               className="relative z-[1] bg-[#1e3a5f] hover:bg-[#152a45]"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                void handleEditUser();
+              }}
             >
               {editUserSaving ? (
                 <>

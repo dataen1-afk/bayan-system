@@ -168,6 +168,9 @@ MANAGEMENT_ROLES = [UserRole.SYSTEM_ADMIN, UserRole.CEO, UserRole.GENERAL_MANAGE
 # System admin only - highest privilege
 SYSTEM_ADMIN_ROLES = [UserRole.SYSTEM_ADMIN]
 
+# User CRUD in Settings UI: frontend treats system_admin and admin as "can edit users"
+USER_ACCOUNT_ADMIN_ROLES = [UserRole.SYSTEM_ADMIN, UserRole.ADMIN]
+
 # Roles that can make certification decisions
 CERTIFICATION_DECISION_ROLES = [
     UserRole.CEO, UserRole.GENERAL_MANAGER, UserRole.QUALITY_MANAGER,
@@ -1764,6 +1767,16 @@ async def require_system_admin(current_user: dict = Depends(get_current_user)) -
         raise HTTPException(status_code=403, detail="System administrator access required")
     return current_user
 
+
+async def require_user_account_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    """system_admin or admin — matches Settings → Users edit/delete in the frontend."""
+    if current_user.get("role") not in USER_ACCOUNT_ADMIN_ROLES:
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required to manage user accounts",
+        )
+    return current_user
+
 async def send_email(to: str, subject: str, body: str):
     """Send email using SMTP"""
     try:
@@ -2000,7 +2013,7 @@ async def create_staff_user(user_data: dict, current_user: dict = Depends(requir
     return user_doc
 
 @api_router.put("/users/{user_id}")
-async def update_user(user_id: str, user_data: dict, current_user: dict = Depends(require_system_admin)):
+async def update_user(user_id: str, user_data: dict, current_user: dict = Depends(require_user_account_admin)):
     """Update a user's information (System Admin only)"""
     try:
         user = await users_pg.get_by_id(user_id, include_password=True)
@@ -2062,7 +2075,7 @@ async def update_user(user_id: str, user_data: dict, current_user: dict = Depend
     return {"message": "User updated successfully"}
 
 @api_router.delete("/users/{user_id}")
-async def delete_user(user_id: str, current_user: dict = Depends(require_system_admin)):
+async def delete_user(user_id: str, current_user: dict = Depends(require_user_account_admin)):
     """Delete a user (System Admin only)"""
     try:
         user = await users_pg.get_by_id(user_id, include_password=False)

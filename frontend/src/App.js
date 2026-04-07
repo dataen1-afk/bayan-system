@@ -78,35 +78,58 @@ const isStaff = (user) => user && STAFF_ROLES.includes(user.role);
 
 export const AuthContext = React.createContext();
 
+const DEBUG_BOOT = process.env.NODE_ENV === 'development';
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const { t, i18n } = useTranslation();
 
+  // Mount-only bootstrap: avoid [i18n] deps (would re-run /auth/me if i18n instance identity changes).
   useEffect(() => {
-    // Set initial direction based on stored or default language
+    const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
+    if (DEBUG_BOOT) {
+      console.info('[bayan-bootstrap] start');
+    }
+
     const storedLang = localStorage.getItem('language') || 'ar';
     i18n.changeLanguage(storedLang);
     document.documentElement.dir = storedLang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = storedLang;
-    
+
     const token = localStorage.getItem('token');
     if (token) {
-      // Verify token and get user info
-      axios.get(`${API}/auth/me`)
-        .then(response => {
+      if (DEBUG_BOOT) {
+        console.info(`[bayan-bootstrap] auth/me request start (+${(performance.now() - t0).toFixed(0)}ms)`);
+      }
+      axios
+        .get(`${API}/auth/me`)
+        .then((response) => {
           setUser(response.data);
+          if (DEBUG_BOOT) {
+            console.info(`[bayan-bootstrap] auth/me ok (+${(performance.now() - t0).toFixed(0)}ms)`);
+          }
         })
         .catch(() => {
           localStorage.removeItem('token');
+          if (DEBUG_BOOT) {
+            console.info(`[bayan-bootstrap] auth/me failed (+${(performance.now() - t0).toFixed(0)}ms)`);
+          }
         })
         .finally(() => {
           setLoading(false);
+          if (DEBUG_BOOT) {
+            console.info(`[bayan-bootstrap] shell ready (+${(performance.now() - t0).toFixed(0)}ms)`);
+          }
         });
     } else {
       setLoading(false);
+      if (DEBUG_BOOT) {
+        console.info(`[bayan-bootstrap] no token, shell ready (+${(performance.now() - t0).toFixed(0)}ms)`);
+      }
     }
-  }, [i18n]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional one-shot bootstrap
+  }, []);
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);

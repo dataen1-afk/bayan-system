@@ -57,7 +57,8 @@ const AdminDashboard = () => {
   const [quotations, setQuotations] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [proposals, setProposals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  /** True while forms/quotations/contracts/application-forms/proposals bulk fetch runs (does not block dashboard tab). */
+  const [listsLoading, setListsLoading] = useState(true);
   const [applicationFormSaving, setApplicationFormSaving] = useState(false);
   const [createFormSaving, setCreateFormSaving] = useState(false);
   const [createQuotationSaving, setCreateQuotationSaving] = useState(false);
@@ -136,11 +137,24 @@ const AdminDashboard = () => {
   }, [activeTab, navigate]);
 
   useEffect(() => {
-    loadData();
+    // Defer bulk list fetch until after first paint so the dashboard shell + welcome render immediately.
+    const id = window.requestAnimationFrame(() => {
+      loadData({ showLoading: true });
+    });
+    return () => window.cancelAnimationFrame(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only prefetch; loadData identity changes each render
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (opts = {}) => {
+    const { showLoading = true } = opts;
+    const debug = process.env.NODE_ENV === 'development';
+    const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
+    if (showLoading) {
+      setListsLoading(true);
+    }
+    if (debug) {
+      console.info('[bayan-dashboard] loadData start', { showLoading });
+    }
     try {
       const [formsRes, quotationsRes, contractsRes, applicationFormsRes, proposalsRes] = await Promise.all([
         axios.get(`${API}/forms`),
@@ -161,7 +175,14 @@ const AdminDashboard = () => {
         formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
       );
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setListsLoading(false);
+      }
+      if (debug) {
+        console.info(`[bayan-dashboard] loadData end (+${(performance.now() - t0).toFixed(0)}ms)`, {
+          showLoading,
+        });
+      }
     }
   };
 
@@ -191,7 +212,7 @@ const AdminDashboard = () => {
       await axios.post(`${API}/forms`, newForm);
       toast.success(t('formCreatedSuccess'));
       setNewForm({ client_id: '', fields: [{ label: '', type: 'text', required: true }] });
-      loadData();
+      loadData({ showLoading: false });
     } catch (error) {
       const fb = t('errorCreatingForm');
       toast.error(
@@ -213,7 +234,7 @@ const AdminDashboard = () => {
       });
       toast.success(t('quotationCreatedSuccess'));
       setNewQuotation({ form_id: '', client_id: '', client_email: '', price: '', details: '' });
-      loadData();
+      loadData({ showLoading: false });
     } catch (error) {
       const fb = t('errorCreatingQuotation');
       toast.error(
@@ -267,7 +288,7 @@ const AdminDashboard = () => {
       setShowFormLinkModal(true);
       setCreateFormModal(false);
       setNewClientInfo({ name: '', company_name: '', email: '', phone: '', mobile: '' });
-      loadData();
+      loadData({ showLoading: false });
     } catch (error) {
       const fb = t('errorCreatingForm');
       toast.error(
@@ -476,9 +497,11 @@ const AdminDashboard = () => {
     { value: 'agreement_signed', label: t('agreement_signed') || 'Agreement Signed' }
   ];
 
+  const listDataTabs = ['forms', 'quotations', 'contracts'];
+
   // Render content based on active tab
   const renderContent = () => {
-    if (loading) {
+    if (listDataTabs.includes(activeTab) && listsLoading) {
       return (
         <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-600">
           <Loader2 className="h-10 w-10 animate-spin text-bayan-navy" aria-hidden />

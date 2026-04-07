@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
@@ -56,6 +57,7 @@ const UserManagementTab = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [editUserSaving, setEditUserSaving] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -138,12 +140,13 @@ const UserManagementTab = () => {
   };
 
   const handleEditUser = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || editUserSaving) return;
     if (!selectedUser.id) {
       toast.error(isRTL ? 'معرّف المستخدم غير صالح' : 'Cannot save: user id is missing');
       return;
     }
 
+    setEditUserSaving(true);
     try {
       const token = localStorage.getItem('token');
       const updateData = {
@@ -175,6 +178,8 @@ const UserManagementTab = () => {
           error.message ||
           fallback
       );
+    } finally {
+      setEditUserSaving(false);
     }
   };
 
@@ -674,8 +679,14 @@ const UserManagementTab = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit User Modal (System Admin only) */}
-      <Dialog open={showEditUserModal} onOpenChange={setShowEditUserModal}>
+      {/* Edit User Modal — native role <select> avoids Radix Select + Dialog swallowing Save clicks */}
+      <Dialog
+        open={showEditUserModal}
+        onOpenChange={(open) => {
+          setShowEditUserModal(open);
+          if (!open) setEditUserSaving(false);
+        }}
+      >
         <DialogContent className={`max-w-md ${isRTL ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
             <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -683,7 +694,14 @@ const UserManagementTab = () => {
               {isRTL ? 'تعديل بيانات المستخدم' : 'Edit User Details'}
             </DialogTitle>
           </DialogHeader>
-          
+
+          <form
+            className="contents"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleEditUser();
+            }}
+          >
           {selectedUser && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -751,37 +769,52 @@ const UserManagementTab = () => {
               
               <div>
                 <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الدور' : 'Role'}</Label>
-                <Select 
-                  value={selectedUser.role} 
-                  onValueChange={(value) => setSelectedUser({...selectedUser, role: value})}
+                <select
+                  className={cn(
+                    'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background',
+                    'focus:outline-none focus:ring-1 focus:ring-ring',
+                    isRTL && 'text-right'
+                  )}
+                  value={selectedUser.role}
+                  onChange={(e) =>
+                    setSelectedUser({ ...selectedUser, role: e.target.value })
+                  }
+                  aria-label={isRTL ? 'الدور' : 'Role'}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map(role => (
-                      <SelectItem key={role.id} value={role.id}>
-                        {isRTL ? role.name_ar : role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {isRTL ? role.name_ar : role.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           )}
-          
-          <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
-            <Button type="button" variant="outline" onClick={() => setShowEditUserModal(false)}>
+
+          <DialogFooter className={cn('pointer-events-auto', isRTL && 'flex-row-reverse')}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowEditUserModal(false)}
+              disabled={editUserSaving}
+            >
               {isRTL ? 'إلغاء' : 'Cancel'}
             </Button>
             <Button
-              type="button"
-              onClick={handleEditUser}
+              type="submit"
+              disabled={editUserSaving}
               className="bg-[#1e3a5f] hover:bg-[#152a45]"
             >
-              {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
+              {editUserSaving
+                ? isRTL
+                  ? 'جاري الحفظ...'
+                  : 'Saving...'
+                : isRTL
+                  ? 'حفظ التغييرات'
+                  : 'Save Changes'}
             </Button>
           </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

@@ -39,6 +39,7 @@ import {
   UserCog,
   Crown,
   Loader2,
+  Download,
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 import { toast } from 'sonner';
@@ -46,6 +47,27 @@ import { cn } from '@/lib/utils';
 import { formatApiErrorDetail } from '@/lib/apiErrors';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
+const SUCCESS_TOAST_DURATION = 6000;
+
+/** Visible “request in flight” strip so users do not double-click (download icon + message). */
+function ProcessingNotice({ show, isRTL }) {
+  if (!show) return null;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm text-sky-950 ${isRTL ? 'flex-row-reverse text-right' : ''}`}
+    >
+      <Download className="h-4 w-4 shrink-0 animate-bounce text-sky-700" aria-hidden />
+      <span className="font-medium leading-snug">
+        {isRTL
+          ? 'جاري معالجة الطلب… يرجى الانتظار وعدم الضغط مرة أخرى.'
+          : 'Processing your request… Please wait. Do not press again.'}
+      </span>
+    </div>
+  );
+}
 
 const UserManagementTab = () => {
   const { t, i18n } = useTranslation();
@@ -121,7 +143,12 @@ const UserManagementTab = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success(isRTL ? 'تمت الإضافة' : 'Added');
+      toast.success(isRTL ? 'تمت إضافة المستخدم بنجاح' : 'User added successfully', {
+        description: isRTL
+          ? 'تم حفظ الحساب ويمكنك رؤيته في القائمة.'
+          : 'The account was saved and appears in the list.',
+        duration: SUCCESS_TOAST_DURATION,
+      });
       setShowCreateModal(false);
       setFormData({
         name: '',
@@ -150,21 +177,30 @@ const UserManagementTab = () => {
     setUpdateRoleSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/users/${selectedUser.id}/role`,
+      const roleUserId = selectedUser.id ?? selectedUser._id ?? selectedUser.user_id;
+      if (!roleUserId) {
+        throw new Error(isRTL ? 'معرّف المستخدم غير صالح' : 'Invalid user id');
+      }
+      await axios.put(`${API}/users/${roleUserId}/role`,
         { role: selectedUser.newRole },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+      toast.success(isRTL ? 'تم تحديث الدور بنجاح' : 'Role updated successfully', {
+        description: isRTL ? 'تم حفظ التغيير على الخادم.' : 'Changes were saved on the server.',
+        duration: SUCCESS_TOAST_DURATION,
+      });
       setShowEditRoleModal(false);
       setSelectedUser(null);
       loadData();
     } catch (error) {
       console.error('Error updating role:', error);
       const fb = isRTL ? 'خطأ في تحديث الدور' : 'Error updating role';
-      toast.error(
-        formatApiErrorDetail(error.response?.data?.detail, fb) || error.message || fb
-      );
+      const msg =
+        error?.response?.data != null
+          ? formatApiErrorDetail(error.response.data.detail, fb)
+          : error?.message || fb;
+      toast.error(msg);
     } finally {
       setUpdateRoleSaving(false);
     }
@@ -213,7 +249,10 @@ const UserManagementTab = () => {
       const url = `${API}/users/${userId}`;
       await axios.put(url, updateData);
 
-      toast.success(isRTL ? 'تم الحفظ' : 'Saved');
+      toast.success(isRTL ? 'تم حفظ بيانات المستخدم' : 'User details saved', {
+        description: isRTL ? 'تم تحديث الملف الشخصي بنجاح.' : 'Profile was updated successfully.',
+        duration: SUCCESS_TOAST_DURATION,
+      });
       setEditUserError('');
       setShowEditUserModal(false);
       setSelectedUser(null);
@@ -234,7 +273,7 @@ const UserManagementTab = () => {
 
   const handleDeleteUser = async () => {
     if (!selectedUser || deleteUserSaving) return;
-    const userId = selectedUser.id ?? selectedUser._id;
+    const userId = selectedUser.id ?? selectedUser._id ?? selectedUser.user_id;
     if (!userId) {
       toast.error(isRTL ? 'معرّف المستخدم غير صالح' : 'Cannot delete: user id is missing');
       return;
@@ -247,7 +286,10 @@ const UserManagementTab = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
+      toast.success(isRTL ? 'تم حذف المستخدم' : 'User deleted', {
+        description: isRTL ? 'تمت إزالة الحساب من النظام.' : 'The account was removed from the system.',
+        duration: SUCCESS_TOAST_DURATION,
+      });
       setShowDeleteConfirm(false);
       setSelectedUser(null);
       loadData();
@@ -576,6 +618,8 @@ const UserManagementTab = () => {
               {isRTL ? 'إضافة مستخدم جديد' : 'Add New User'}
             </DialogTitle>
           </DialogHeader>
+
+          <ProcessingNotice show={createUserSaving} isRTL={isRTL} />
           
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -583,6 +627,7 @@ const UserManagementTab = () => {
                 <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
                 <Input
                   value={formData.name}
+                  disabled={createUserSaving}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   placeholder="John Doe"
                 />
@@ -591,6 +636,7 @@ const UserManagementTab = () => {
                 <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
                 <Input
                   value={formData.name_ar}
+                  disabled={createUserSaving}
                   onChange={(e) => setFormData({...formData, name_ar: e.target.value})}
                   placeholder="جون دو"
                   className="text-right"
@@ -604,6 +650,7 @@ const UserManagementTab = () => {
               <Input
                 type="email"
                 value={formData.email}
+                disabled={createUserSaving}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 placeholder="user@example.com"
               />
@@ -615,12 +662,14 @@ const UserManagementTab = () => {
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
+                  disabled={createUserSaving}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={createUserSaving}
                   className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 ${isRTL ? 'left-3' : 'right-3'}`}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -632,6 +681,7 @@ const UserManagementTab = () => {
               <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
               <Input
                 value={formData.phone}
+                disabled={createUserSaving}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 placeholder="+966 5xxxxxxxx"
               />
@@ -641,6 +691,7 @@ const UserManagementTab = () => {
               <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'القسم' : 'Department'}</Label>
               <Input
                 value={formData.department}
+                disabled={createUserSaving}
                 onChange={(e) => setFormData({...formData, department: e.target.value})}
                 placeholder={isRTL ? 'مثال: قسم الجودة' : 'e.g., Quality Department'}
               />
@@ -650,6 +701,7 @@ const UserManagementTab = () => {
               <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الدور' : 'Role'}</Label>
               <Select 
                 value={formData.role} 
+                disabled={createUserSaving}
                 onValueChange={(value) => setFormData({...formData, role: value})}
               >
                 <SelectTrigger>
@@ -691,7 +743,8 @@ const UserManagementTab = () => {
             >
               {createUserSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Download className="h-4 w-4 shrink-0 animate-bounce" aria-hidden />
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
                   {isRTL ? 'جاري الإضافة...' : 'Adding...'}
                 </>
               ) : isRTL ? (
@@ -719,6 +772,8 @@ const UserManagementTab = () => {
               {isRTL ? 'تعديل دور المستخدم' : 'Edit User Role'}
             </DialogTitle>
           </DialogHeader>
+
+          <ProcessingNotice show={updateRoleSaving} isRTL={isRTL} />
           
           {selectedUser && (
             <div className="space-y-4 py-4">
@@ -739,6 +794,7 @@ const UserManagementTab = () => {
                 <Label className={isRTL ? 'text-right block' : ''}>{isRTL ? 'الدور الجديد' : 'New Role'}</Label>
                 <Select 
                   value={selectedUser.newRole} 
+                  disabled={updateRoleSaving}
                   onValueChange={(value) => setSelectedUser({...selectedUser, newRole: value})}
                 >
                   <SelectTrigger>
@@ -779,7 +835,8 @@ const UserManagementTab = () => {
             >
               {updateRoleSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Download className="h-4 w-4 shrink-0 animate-bounce" aria-hidden />
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
                   {isRTL ? 'جاري التحديث...' : 'Updating...'}
                 </>
               ) : isRTL ? (
@@ -825,6 +882,8 @@ const UserManagementTab = () => {
               {isRTL ? 'تعديل بيانات المستخدم' : 'Edit User Details'}
             </DialogTitle>
           </DialogHeader>
+
+          <ProcessingNotice show={editUserSaving} isRTL={isRTL} />
 
           <form
             className="flex w-full flex-col gap-4"
@@ -990,6 +1049,7 @@ const UserManagementTab = () => {
             >
               {editUserSaving ? (
                 <>
+                  <Download className="h-4 w-4 shrink-0 animate-bounce" aria-hidden />
                   <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
                   <span>{isRTL ? 'جاري الحفظ...' : 'Saving...'}</span>
                 </>
@@ -1025,6 +1085,9 @@ const UserManagementTab = () => {
               }
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="px-6 pb-2">
+            <ProcessingNotice show={deleteUserSaving} isRTL={isRTL} />
+          </div>
           <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
             <AlertDialogCancel disabled={deleteUserSaving}>
               {isRTL ? 'إلغاء' : 'Cancel'}
@@ -1038,7 +1101,8 @@ const UserManagementTab = () => {
             >
               {deleteUserSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Download className="h-4 w-4 shrink-0 animate-bounce" aria-hidden />
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
                   {isRTL ? 'جاري الحذف...' : 'Deleting...'}
                 </>
               ) : isRTL ? (

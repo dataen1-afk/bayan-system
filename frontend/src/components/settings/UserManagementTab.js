@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogPortal,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -50,21 +49,24 @@ const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
 const SUCCESS_TOAST_DURATION = 6000;
 
-/** Visible “request in flight” strip so users do not double-click (download icon + message). */
-function ProcessingNotice({ show, isRTL }) {
+/** Visible “request in flight” strip (spinner + icon + message) so loading paints before network. */
+function ProcessingNotice({ show, isRTL, message }) {
   if (!show) return null;
+  const text =
+    message ||
+    (isRTL
+      ? 'جاري معالجة الطلب… يرجى الانتظار وعدم الضغط مرة أخرى.'
+      : 'Processing your request… Please wait. Do not press again.');
   return (
     <div
       role="status"
-      aria-live="polite"
-      className={`flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm text-sky-950 ${isRTL ? 'flex-row-reverse text-right' : ''}`}
+      aria-live="assertive"
+      aria-busy="true"
+      className={`flex w-full items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm text-sky-950 shadow-sm ${isRTL ? 'flex-row-reverse text-right' : ''}`}
     >
+      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-sky-700" aria-hidden />
       <Download className="h-4 w-4 shrink-0 animate-bounce text-sky-700" aria-hidden />
-      <span className="font-medium leading-snug">
-        {isRTL
-          ? 'جاري معالجة الطلب… يرجى الانتظار وعدم الضغط مرة أخرى.'
-          : 'Processing your request… Please wait. Do not press again.'}
-      </span>
+      <span className="min-w-0 flex-1 font-medium leading-snug">{text}</span>
     </div>
   );
 }
@@ -207,7 +209,17 @@ const UserManagementTab = () => {
   };
 
   const handleEditUser = async () => {
-    if (editUserSaving) return;
+    if (editUserSaving) {
+      toast.message(
+        isRTL ? 'يتم الحفظ بالفعل' : 'Already saving',
+        {
+          description: isRTL
+            ? 'انتظر حتى تنتهي العملية الحالية.'
+            : 'Please wait for the current save to finish.',
+        }
+      );
+      return;
+    }
     setEditUserError('');
     if (!selectedUser) {
       const msg = isRTL ? 'لا يوجد مستخدم محدد' : 'No user selected. Close the dialog and try again.';
@@ -849,9 +861,8 @@ const UserManagementTab = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit User: modal={false} avoids Radix modal focus/pointer trap blocking footer clicks; backdrop added manually */}
+      {/* Edit User: same Radix modal stack as Create User / Edit Role (single portal). Dual-portal + modal={false} broke hit-testing on Save in production. */}
       <Dialog
-        modal={false}
         open={showEditUserModal}
         onOpenChange={(open) => {
           setShowEditUserModal(open);
@@ -861,21 +872,7 @@ const UserManagementTab = () => {
           }
         }}
       >
-        {showEditUserModal ? (
-          <DialogPortal>
-            <div
-              role="presentation"
-              className="fixed inset-0 z-[10050] bg-black/80 animate-in fade-in-0"
-              onClick={() => {
-                if (!editUserSaving) setShowEditUserModal(false);
-              }}
-            />
-          </DialogPortal>
-        ) : null}
-        <DialogContent
-          hideOverlay
-          className={cn('z-[10052] max-w-md', isRTL ? 'rtl' : 'ltr')}
-        >
+        <DialogContent className={cn('max-w-md', isRTL ? 'rtl' : 'ltr')}>
           <DialogHeader>
             <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <UserCog className="w-5 h-5" />
@@ -883,7 +880,15 @@ const UserManagementTab = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <ProcessingNotice show={editUserSaving} isRTL={isRTL} />
+          <ProcessingNotice
+            show={editUserSaving}
+            isRTL={isRTL}
+            message={
+              isRTL
+                ? 'جاري حفظ التغييرات وإرسالها للخادم… يرجى الانتظار.'
+                : 'Saving changes and sending to the server… Please wait.'
+            }
+          />
 
           <form
             className="flex w-full flex-col gap-4"
@@ -1024,10 +1029,7 @@ const UserManagementTab = () => {
             </div>
           ) : null}
 
-          <DialogFooter
-            className={cn('pointer-events-auto', isRTL && 'flex-row-reverse')}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
+          <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
             <Button
               type="button"
               variant="outline"
@@ -1036,11 +1038,10 @@ const UserManagementTab = () => {
             >
               {isRTL ? 'إلغاء' : 'Cancel'}
             </Button>
-            {/* type="button" + explicit onClick: Radix Dialog / nested portals can swallow native form submit in some cases */}
             <Button
               type="button"
               disabled={editUserSaving}
-              className="relative z-[1] bg-[#1e3a5f] hover:bg-[#152a45]"
+              className="bg-[#1e3a5f] hover:bg-[#152a45]"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1049,9 +1050,9 @@ const UserManagementTab = () => {
             >
               {editUserSaving ? (
                 <>
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
                   <Download className="h-4 w-4 shrink-0 animate-bounce" aria-hidden />
-                  <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
-                  <span>{isRTL ? 'جاري الحفظ...' : 'Saving...'}</span>
+                  <span>{isRTL ? 'جاري الحفظ…' : 'Saving…'}</span>
                 </>
               ) : isRTL ? (
                 'حفظ التغييرات'

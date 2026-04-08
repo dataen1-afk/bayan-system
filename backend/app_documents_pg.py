@@ -186,6 +186,14 @@ def materialize(doc_id: str, payload: Any, row_created_at: datetime | None) -> d
     p: dict[str, Any] = dict(payload) if isinstance(payload, dict) else {}
     if doc_id and not p.get("id"):
         p["id"] = doc_id
+    # Row `created_at` must be merged when payload omits it (matches dashboard_pg._materialize).
+    if row_created_at is not None and p.get("created_at") is None:
+        if row_created_at.tzinfo is not None:
+            p["created_at"] = row_created_at.isoformat()
+        else:
+            p["created_at"] = (
+                row_created_at.replace(tzinfo=None).isoformat() + "Z"
+            )
     return p
 
 

@@ -3,6 +3,8 @@ Dashboard Analytics API - Provides statistics for admin dashboard widgets.
 
 Reads from PostgreSQL ``app_documents`` (no Mongo ``db``).
 """
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
 
@@ -18,6 +20,8 @@ from dashboard_pg import (
 )
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard Analytics"])
+
+logger = logging.getLogger(__name__)
 
 DB_UNAVAILABLE_DETAIL = "Database temporarily unavailable. Please try again shortly."
 
@@ -58,7 +62,8 @@ async def get_dashboard_stats(current_user: dict = Depends(require_dashboard_acc
         )
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         recent_notifications = await list_notifications_since(today_start, 20)
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        logger.warning("dashboard DB error: %s", e, exc_info=True)
         raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
 
     expiring_30 = []
@@ -150,7 +155,8 @@ async def get_dashboard_stats(current_user: dict = Depends(require_dashboard_acc
                     "stage2_audits": stage2_count,
                 }
             )
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        logger.warning("dashboard DB error: %s", e, exc_info=True)
         raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
 
     auditor_workload.sort(key=lambda x: x["total_tasks"], reverse=True)
@@ -224,7 +230,8 @@ async def get_quick_actions(current_user: dict = Depends(require_dashboard_acces
             "approval_workflows", "in_progress"
         )
         pending_reviews = await count_by_status("technical_reviews", "pending")
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        logger.warning("dashboard DB error: %s", e, exc_info=True)
         raise HTTPException(status_code=503, detail=DB_UNAVAILABLE_DETAIL)
 
     return {

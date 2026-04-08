@@ -20,7 +20,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 from sqlalchemy import Boolean, DateTime, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.engine import make_url
@@ -35,7 +35,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 ROOT_DIR = Path(__file__).parent
 _ENV_PATH = ROOT_DIR / ".env"
-load_dotenv(_ENV_PATH)
+
+# Captured before this file's dotenv merge (server.py already ran load_dotenv earlier).
+_DATABASE_URL_KEY_IN_OSENV_BEFORE_THIS_FILE_DOTENV = "DATABASE_URL" in os.environ
+
+# Never override process env (e.g. Render dashboard DATABASE_URL must win over backend/.env).
+load_dotenv(_ENV_PATH, override=False)
 
 _schema_bootstrap_log = logging.getLogger("bayan.schema_bootstrap")
 _db_diag_log = logging.getLogger("bayan.database")
@@ -122,6 +127,110 @@ if not DATABASE_URL_RAW:
 DATABASE_URL = _merge_asyncpg_pooler_query_params(_async_url(DATABASE_URL_RAW))
 
 
+def _url_parts_for_log(url_str: str) -> dict:
+    """Parse URL for safe startup diagnostics (no password emitted)."""
+    if not (url_str or "").strip():
+        return {"parse_ok": False, "parse_error": "empty"}
+    try:
+        s = url_str.strip()
+        if s.startswith("postgres://"):
+            s = "postgresql://" + s[len("postgres://") :]
+        s = s.replace("postgresql+asyncpg://", "postgresql://")
+        u = make_url(s)
+        pwd = u.password or ""
+        un = u.username
+        return {
+            "parse_ok": True,
+            "username": un,
+            "username_has_dot": bool(un and "." in un),
+            "host": u.host,
+            "port": u.port,
+            "database": u.database,
+            "password_len": len(pwd),
+        }
+    except Exception as ex:
+        return {"parse_ok": False, "parse_error": f"{type(ex).__name__}: {ex}"}
+
+
+def _log_database_url_startup_diagnostics() -> None:
+    """
+    Temporary: trace why runtime auth sees user ``postgres`` vs pooler user.
+    Remove after Render/Supabase URL is confirmed.
+    """
+    vals = dotenv_values(_ENV_PATH) if _ENV_PATH.is_file() else {}
+    file_durl = (vals.get("DATABASE_URL") or "").strip()
+    file_has = bool(file_durl)
+    file_parts = _url_parts_for_log(file_durl) if file_has else {}
+    raw_parts = _url_parts_for_log(DATABASE_URL_RAW)
+    final_parts = _url_parts_for_log(DATABASE_URL)
+
+    render = str(os.environ.get("RENDER", "")).strip().lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    )
+
+    _db_diag_log.warning(
+        "DATABASE_URL diag (temporary): "
+        "database_url_key_in_environ_before_database_py_load_dotenv=%s | "
+        "backend_dotenv_path=%s | backend_dotenv_file_exists=%s | "
+        "backend_dotenv_defines_nonempty_DATABASE_URL=%s | render_detected=%s | "
+        "load_dotenv_used_override_false=True",
+        _DATABASE_URL_KEY_IN_OSENV_BEFORE_THIS_FILE_DOTENV,
+        str(_ENV_PATH.resolve()),
+        _ENV_PATH.is_file(),
+        file_has,
+        render,
+    )
+
+    if raw_parts.get("parse_ok"):
+        _db_diag_log.warning(
+            "DATABASE_URL diag (temporary) RAW os.environ value after all load_dotenv through database.py: "
+            "username=%r username_has_dot=%s host=%r port=%s database=%r password_len=%s",
+            raw_parts.get("username"),
+            raw_parts.get("username_has_dot"),
+            raw_parts.get("host"),
+            raw_parts.get("port"),
+            raw_parts.get("database"),
+            raw_parts.get("password_len"),
+        )
+    else:
+        _db_diag_log.warning(
+            "DATABASE_URL diag (temporary) RAW parse failed: %s",
+            raw_parts.get("parse_error"),
+        )
+
+    if final_parts.get("parse_ok"):
+        _db_diag_log.warning(
+            "DATABASE_URL diag (temporary) FINAL string passed to create_async_engine: "
+            "username=%r username_has_dot=%s host=%r port=%s database=%r password_len=%s",
+            final_parts.get("username"),
+            final_parts.get("username_has_dot"),
+            final_parts.get("host"),
+            final_parts.get("port"),
+            final_parts.get("database"),
+            final_parts.get("password_len"),
+        )
+    else:
+        _db_diag_log.warning(
+            "DATABASE_URL diag (temporary) FINAL parse failed: %s",
+            final_parts.get("parse_error"),
+        )
+
+    if file_has and file_parts.get("parse_ok") and raw_parts.get("parse_ok"):
+        if file_parts.get("username") != raw_parts.get("username"):
+            _db_diag_log.warning(
+                "DATABASE_URL diag (temporary): username in backend/.env (%r) != "
+                "effective username from os.environ (%r). "
+                "With override=False, the value already in os.environ when server.py "
+                "called load_dotenv is kept; a committed .env cannot replace Render's "
+                "DATABASE_URL if Render injected it before the process started.",
+                file_parts.get("username"),
+                raw_parts.get("username"),
+            )
+
+
 def _asyncpg_connect_args() -> dict:
     """
     Pass-through to asyncpg ``connect()`` (via SQLAlchemy).
@@ -166,6 +275,8 @@ engine: AsyncEngine = create_async_engine(
     max_overflow=10,
     connect_args=_asyncpg_connect_args(),
 )
+
+_log_database_url_startup_diagnostics()
 
 AsyncSessionLocal = async_sessionmaker(
     engine,

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   FileText, CheckCircle, XCircle, Building, Calendar,
   User, Users, Clock, AlertCircle, ClipboardList
 } from 'lucide-react';
@@ -11,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function PublicStage2PlanReviewPage() {
   const { accessToken } = useParams();
@@ -32,7 +33,7 @@ export default function PublicStage2PlanReviewPage() {
   
   const fetchPlan = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/public/stage2-audit-plans/${accessToken}`);
+      const response = await axios.get(`${API}/public/stage2-audit-plans/${accessToken}`);
       setPlan(response.data);
       if (response.data.client_accepted || response.data.status === 'changes_requested') {
         setSubmitted(true);
@@ -47,7 +48,7 @@ export default function PublicStage2PlanReviewPage() {
   const handleAccept = async () => {
     setSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/public/stage2-audit-plans/${accessToken}/respond`, {
+      await axios.post(`${API}/public/stage2-audit-plans/${accessToken}/respond`, {
         accepted: true,
         change_requests: ''
       });
@@ -68,7 +69,7 @@ export default function PublicStage2PlanReviewPage() {
     
     setSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/public/stage2-audit-plans/${accessToken}/respond`, {
+      await axios.post(`${API}/public/stage2-audit-plans/${accessToken}/respond`, {
         accepted: false,
         change_requests: changeRequests
       });

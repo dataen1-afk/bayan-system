@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import { API } from '@/lib/apiConfig';
 import { 
   FileText, Plus, Download, Eye, Trash2, Save, Send,
   CheckCircle, Clock, AlertCircle, Building, Calendar,
@@ -14,7 +15,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function JobOrdersPage() {
   const { t, i18n } = useTranslation();
@@ -49,9 +50,9 @@ export default function JobOrdersPage() {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [ordersRes, programsRes, auditorsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/job-orders`, { headers }),
-        axios.get(`${API_URL}/api/audit-programs`, { headers }),
-        axios.get(`${API_URL}/api/auditors`, { headers })
+        axios.get(`${API}/job-orders`, { headers }),
+        axios.get(`${API}/audit-programs`, { headers }),
+        axios.get(`${API}/auditors`, { headers })
       ]);
       
       setJobOrders(ordersRes.data);
@@ -73,7 +74,7 @@ export default function JobOrdersPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/job-orders`,
+        `${API}/job-orders`,
         createForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -96,7 +97,7 @@ export default function JobOrdersPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/job-orders/${orderId}/approve`,
+        `${API}/job-orders/${orderId}/approve`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -110,7 +111,7 @@ export default function JobOrdersPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_URL}/api/job-orders/${order.id}/send-to-auditor`,
+        `${API}/job-orders/${order.id}/send-to-auditor`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -128,7 +129,7 @@ export default function JobOrdersPage() {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/job-orders/${id}`, {
+      await axios.delete(`${API}/job-orders/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
@@ -141,7 +142,7 @@ export default function JobOrdersPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_URL}/api/job-orders/${order.id}/pdf`,
+        `${API}/job-orders/${order.id}/pdf`,
         { 
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'

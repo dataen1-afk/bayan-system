@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   MessageSquare, 
   Mail, 
   User, 
@@ -38,7 +39,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const ContactMessagesPage = () => {
   const { t, i18n } = useTranslation();

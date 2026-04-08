@@ -9,13 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   ArrowLeft, Plus, Award, Download, Eye, QrCode, CheckCircle, AlertCircle,
   XCircle, Clock, Search, Filter, Building2, Calendar, FileText
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const CertificatesPage = () => {
   const { t, i18n } = useTranslation();

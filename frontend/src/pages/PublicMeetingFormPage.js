@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   FileText, CheckCircle, Building, Calendar,
   Users, Clock, AlertCircle, Plus, Trash2
 } from 'lucide-react';
@@ -12,7 +13,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function PublicMeetingFormPage() {
   const { accessToken } = useParams();
@@ -36,7 +37,7 @@ export default function PublicMeetingFormPage() {
   
   const fetchMeeting = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/public/opening-closing-meetings/${accessToken}`);
+      const response = await axios.get(`${API}/public/opening-closing-meetings/${accessToken}`);
       setMeeting(response.data);
       
       // Initialize attendees from response or create 5 empty slots
@@ -96,7 +97,7 @@ export default function PublicMeetingFormPage() {
     
     setSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/public/opening-closing-meetings/${accessToken}/submit`, {
+      await axios.post(`${API}/public/opening-closing-meetings/${accessToken}/submit`, {
         attendees: attendees,
         opening_meeting_notes: openingMeetingNotes,
         closing_meeting_notes: closingMeetingNotes

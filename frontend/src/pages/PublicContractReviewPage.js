@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   CheckCircle, Building, FileText, Users, AlertCircle, Send
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -10,7 +11,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function PublicContractReviewPage() {
   const { accessToken } = useParams();
@@ -33,7 +34,7 @@ export default function PublicContractReviewPage() {
   
   const fetchReview = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/public/contract-reviews/${accessToken}`);
+      const response = await axios.get(`${API}/public/contract-reviews/${accessToken}`);
       setReview(response.data);
       
       if (response.data.client_submitted) {
@@ -58,7 +59,7 @@ export default function PublicContractReviewPage() {
     
     try {
       await axios.put(
-        `${API_URL}/api/public/contract-reviews/${accessToken}`,
+        `${API}/public/contract-reviews/${accessToken}`,
         formData
       );
       setSubmitted(true);

@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, ArrowRight, Save, Send, FileText, Building, DollarSign, Clock, Check } from 'lucide-react';
+import { API } from '@/lib/apiConfig';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const CreateProposalPage = () => {
   const { formId } = useParams();

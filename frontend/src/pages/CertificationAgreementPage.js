@@ -11,8 +11,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle, AlertCircle, Loader2, FileText, Building, Shield, Clock, Users, MapPin, FileSignature, Pen } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import SignaturePad from '@/components/SignaturePad';
+import { API } from '@/lib/apiConfig';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const CertificationAgreementPage = () => {
   const { accessToken } = useParams();

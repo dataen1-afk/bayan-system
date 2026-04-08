@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   Package, FileText, Plus, Trash2, ArrowLeft, Loader2, 
   Check, DollarSign, Edit, Save, X
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const TemplatesPage = () => {
   const { t, i18n } = useTranslation();

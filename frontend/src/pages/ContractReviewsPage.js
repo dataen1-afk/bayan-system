@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   FileText, Plus, Download, Send, Eye, Trash2, 
   CheckCircle, Clock, AlertCircle, Users, Calendar,
   Building, ClipboardList, UserCheck, X
@@ -14,7 +15,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function ContractReviewsPage() {
   const { t, i18n } = useTranslation();
@@ -62,9 +63,9 @@ export default function ContractReviewsPage() {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [reviewsRes, agreementsRes, auditorsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/contract-reviews`, { headers }),
-        axios.get(`${API_URL}/api/certification-agreements`, { headers }),
-        axios.get(`${API_URL}/api/auditors`, { headers })
+        axios.get(`${API}/contract-reviews`, { headers }),
+        axios.get(`${API}/certification-agreements`, { headers }),
+        axios.get(`${API}/auditors`, { headers })
       ]);
       
       setReviews(reviewsRes.data);
@@ -83,7 +84,7 @@ export default function ContractReviewsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/contract-reviews`,
+        `${API}/contract-reviews`,
         { agreement_id: selectedAgreementId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -102,7 +103,7 @@ export default function ContractReviewsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API_URL}/api/contract-reviews/${selectedReview.id}/admin`,
+        `${API}/contract-reviews/${selectedReview.id}/admin`,
         editForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -118,7 +119,7 @@ export default function ContractReviewsPage() {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/contract-reviews/${id}`, {
+      await axios.delete(`${API}/contract-reviews/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
@@ -131,7 +132,7 @@ export default function ContractReviewsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_URL}/api/contract-reviews/${review.id}/send-link`,
+        `${API}/contract-reviews/${review.id}/send-link`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -150,7 +151,7 @@ export default function ContractReviewsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_URL}/api/contract-reviews/${review.id}/pdf`,
+        `${API}/contract-reviews/${review.id}/pdf`,
         { 
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   FileText, CheckCircle, XCircle, Building, Calendar,
   User, AlertCircle, Shield, Lock
 } from 'lucide-react';
@@ -11,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function PublicJobOrderConfirmPage() {
   const { accessToken } = useParams();
@@ -32,7 +33,7 @@ export default function PublicJobOrderConfirmPage() {
   
   const fetchJobOrder = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/public/job-orders/${accessToken}`);
+      const response = await axios.get(`${API}/public/job-orders/${accessToken}`);
       setJobOrder(response.data);
       if (response.data.auditor_confirmed || response.data.status === 'rejected') {
         setSubmitted(true);
@@ -47,7 +48,7 @@ export default function PublicJobOrderConfirmPage() {
   const handleConfirm = async () => {
     setSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/public/job-orders/${accessToken}/confirm`, {
+      await axios.post(`${API}/public/job-orders/${accessToken}/confirm`, {
         confirmed: true,
         unable_reason: ''
       });
@@ -68,7 +69,7 @@ export default function PublicJobOrderConfirmPage() {
     
     setSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/public/job-orders/${accessToken}/confirm`, {
+      await axios.post(`${API}/public/job-orders/${accessToken}/confirm`, {
         confirmed: false,
         unable_reason: rejectReason
       });

@@ -8,14 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   ArrowLeft, Plus, X, FileText, DollarSign, Clock, CheckCircle, AlertCircle,
   Send, Eye, Trash2, CreditCard, Building2, Calendar, Search, Filter,
   TrendingUp, TrendingDown, Receipt
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const formatCurrency = (amount, currency = 'SAR') => {
   return new Intl.NumberFormat('en-US', { 

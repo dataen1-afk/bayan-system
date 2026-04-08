@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   Calendar, ArrowLeft, Plus, X, MapPin, Clock, Users, Building2,
   ChevronLeft, ChevronRight, Loader2, AlertCircle, CheckCircle,
   Edit2, Trash2, Eye, Link2, Unlink, MessageSquare, RefreshCw
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 // Calendar helper functions
 const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();

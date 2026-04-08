@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   ArrowRightLeft, Plus, Eye, Edit, Trash2, Download, CheckCircle, XCircle,
   Building, Calendar, FileText, AlertTriangle, Clock
 } from 'lucide-react';
@@ -26,7 +27,7 @@ import {
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function PreTransferReviewPage() {
   const { t, i18n } = useTranslation();
@@ -93,7 +94,7 @@ export default function PreTransferReviewPage() {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/pre-transfer-reviews`, { headers });
+      const response = await axios.get(`${API}/pre-transfer-reviews`, { headers });
       setReviewsList(response.data);
     } catch (error) {
       console.error('Error fetching pre-transfer reviews:', error);
@@ -110,7 +111,7 @@ export default function PreTransferReviewPage() {
         return;
       }
       
-      await axios.post(`${API_URL}/api/pre-transfer-reviews`, formData, { headers });
+      await axios.post(`${API}/pre-transfer-reviews`, formData, { headers });
       toast.success(isRTL ? 'تم إنشاء مراجعة النقل' : 'Pre-transfer review created');
       setShowCreateModal(false);
       resetForm();
@@ -125,7 +126,7 @@ export default function PreTransferReviewPage() {
     if (!selectedReview) return;
     
     try {
-      await axios.put(`${API_URL}/api/pre-transfer-reviews/${selectedReview.id}`, selectedReview, { headers });
+      await axios.put(`${API}/pre-transfer-reviews/${selectedReview.id}`, selectedReview, { headers });
       toast.success(isRTL ? 'تم تحديث مراجعة النقل' : 'Pre-transfer review updated');
       setShowEditModal(false);
       fetchReviews();
@@ -139,7 +140,7 @@ export default function PreTransferReviewPage() {
     if (!window.confirm(isRTL ? 'هل أنت متأكد من الحذف؟' : 'Are you sure you want to delete?')) return;
     
     try {
-      await axios.delete(`${API_URL}/api/pre-transfer-reviews/${id}`, { headers });
+      await axios.delete(`${API}/pre-transfer-reviews/${id}`, { headers });
       toast.success(isRTL ? 'تم حذف مراجعة النقل' : 'Pre-transfer review deleted');
       fetchReviews();
     } catch (error) {
@@ -152,7 +153,7 @@ export default function PreTransferReviewPage() {
     if (!selectedReview || !decisionData.transfer_decision) return;
     
     try {
-      await axios.post(`${API_URL}/api/pre-transfer-reviews/${selectedReview.id}/make-decision`, decisionData, { headers });
+      await axios.post(`${API}/pre-transfer-reviews/${selectedReview.id}/make-decision`, decisionData, { headers });
       toast.success(isRTL ? 'تم تسجيل القرار' : 'Decision recorded');
       setShowDecisionModal(false);
       fetchReviews();
@@ -164,7 +165,7 @@ export default function PreTransferReviewPage() {
 
   const handleDownloadPDF = async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/api/pre-transfer-reviews/${id}/pdf`, {
+      const response = await axios.get(`${API}/pre-transfer-reviews/${id}/pdf`, {
         headers,
         responseType: 'blob'
       });

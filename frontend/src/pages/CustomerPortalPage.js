@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { API } from '@/lib/apiConfig';
 import {
   Accordion,
   AccordionContent,
@@ -26,7 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 // Animation variants
 const fadeInUp = {

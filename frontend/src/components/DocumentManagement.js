@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   FileText, ArrowLeft, Plus, X, Download, Trash2, 
   Upload, File, Image, FileArchive, Loader2, AlertCircle,
   Eye, Paperclip
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes';

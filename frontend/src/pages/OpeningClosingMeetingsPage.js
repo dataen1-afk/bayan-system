@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   FileText, Plus, Download, Eye, Trash2, Send,
   CheckCircle, Clock, Building, Calendar,
   Users, Copy
@@ -12,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function OpeningClosingMeetingsPage() {
   const { t, i18n } = useTranslation();
@@ -38,8 +39,8 @@ export default function OpeningClosingMeetingsPage() {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [meetingsRes, plansRes] = await Promise.all([
-        axios.get(`${API_URL}/api/opening-closing-meetings`, { headers }),
-        axios.get(`${API_URL}/api/stage1-audit-plans`, { headers })
+        axios.get(`${API}/opening-closing-meetings`, { headers }),
+        axios.get(`${API}/stage1-audit-plans`, { headers })
       ]);
       
       setMeetings(meetingsRes.data);
@@ -61,7 +62,7 @@ export default function OpeningClosingMeetingsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/opening-closing-meetings`,
+        `${API}/opening-closing-meetings`,
         { stage1_plan_id: selectedStage1Id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -79,7 +80,7 @@ export default function OpeningClosingMeetingsPage() {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/opening-closing-meetings/${id}`, {
+      await axios.delete(`${API}/opening-closing-meetings/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
@@ -92,7 +93,7 @@ export default function OpeningClosingMeetingsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_URL}/api/opening-closing-meetings/${meeting.id}/send-to-client`,
+        `${API}/opening-closing-meetings/${meeting.id}/send-to-client`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -110,7 +111,7 @@ export default function OpeningClosingMeetingsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_URL}/api/opening-closing-meetings/${meeting.id}/pdf`,
+        `${API}/opening-closing-meetings/${meeting.id}/pdf`,
         { 
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'

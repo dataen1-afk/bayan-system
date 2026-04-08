@@ -8,14 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   ArrowLeft, Plus, X, Users, User, Mail, Phone, Award, Calendar,
   Search, Filter, Edit, Trash2, CheckCircle, Clock, AlertCircle,
   Briefcase, Star, Shield
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const AuditorsPage = () => {
   const { t, i18n } = useTranslation();

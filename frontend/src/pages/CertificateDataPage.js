@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   Award, Plus, Eye, Edit, Trash2, Download, Send, CheckCircle,
   FileCheck, Calendar, User, Building, Tag, ExternalLink
 } from 'lucide-react';
@@ -25,7 +26,7 @@ import {
 } from '../components/ui/select';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function CertificateDataPage() {
   const { t, i18n } = useTranslation();
@@ -69,7 +70,7 @@ export default function CertificateDataPage() {
 
   const fetchRecords = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/certificate-data`, { headers });
+      const response = await axios.get(`${API}/certificate-data`, { headers });
       setRecordsList(response.data);
     } catch (error) {
       console.error('Error fetching certificate data:', error);
@@ -81,7 +82,7 @@ export default function CertificateDataPage() {
 
   const fetchNCReports = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/nonconformity-reports`, { headers });
+      const response = await axios.get(`${API}/nonconformity-reports`, { headers });
       setNCReports(response.data.filter(r => r.status === 'closed'));
     } catch (error) {
       console.error('Error fetching NC reports:', error);
@@ -90,7 +91,7 @@ export default function CertificateDataPage() {
 
   const fetchStage2Reports = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/stage2-audit-reports`, { headers });
+      const response = await axios.get(`${API}/stage2-audit-reports`, { headers });
       setStage2Reports(response.data.filter(r => r.status === 'approved'));
     } catch (error) {
       console.error('Error fetching Stage 2 reports:', error);
@@ -108,7 +109,7 @@ export default function CertificateDataPage() {
         payload = formData;
       }
       
-      const response = await axios.post(`${API_URL}/api/certificate-data`, payload, { headers });
+      const response = await axios.post(`${API}/certificate-data`, payload, { headers });
       setRecordsList([response.data, ...recordsList]);
       setShowCreateModal(false);
       resetForm();
@@ -124,7 +125,7 @@ export default function CertificateDataPage() {
     
     try {
       const response = await axios.put(
-        `${API_URL}/api/certificate-data/${selectedRecord.id}`,
+        `${API}/certificate-data/${selectedRecord.id}`,
         formData,
         { headers }
       );
@@ -141,7 +142,7 @@ export default function CertificateDataPage() {
     if (!window.confirm(t('certData.confirmDelete'))) return;
     
     try {
-      await axios.delete(`${API_URL}/api/certificate-data/${recordId}`, { headers });
+      await axios.delete(`${API}/certificate-data/${recordId}`, { headers });
       setRecordsList(recordsList.filter(r => r.id !== recordId));
       toast.success(t('certData.deleteSuccess'));
     } catch (error) {
@@ -153,7 +154,7 @@ export default function CertificateDataPage() {
   const handleSendToClient = async (recordId) => {
     try {
       const response = await axios.post(
-        `${API_URL}/api/certificate-data/${recordId}/send-to-client`,
+        `${API}/certificate-data/${recordId}/send-to-client`,
         {},
         { headers }
       );
@@ -180,7 +181,7 @@ export default function CertificateDataPage() {
   const handleIssueCertificate = async (recordId) => {
     try {
       const response = await axios.post(
-        `${API_URL}/api/certificate-data/${recordId}/issue-certificate`,
+        `${API}/certificate-data/${recordId}/issue-certificate`,
         {},
         { headers }
       );
@@ -195,7 +196,7 @@ export default function CertificateDataPage() {
   const handleDownloadPDF = async (recordId) => {
     try {
       const response = await axios.get(
-        `${API_URL}/api/certificate-data/${recordId}/pdf`,
+        `${API}/certificate-data/${recordId}/pdf`,
         { headers, responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));

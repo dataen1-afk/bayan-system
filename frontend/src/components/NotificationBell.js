@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Check, CheckCheck, FileText, DollarSign, FileSignature, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { API } from '@/lib/apiConfig';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const NotificationBell = () => {
   const { t, i18n } = useTranslation();

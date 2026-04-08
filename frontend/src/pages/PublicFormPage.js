@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ApplicationForm from '@/components/ApplicationForm';
+import { API } from '@/lib/apiConfig';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const PublicFormPage = () => {
   const { accessToken } = useParams();

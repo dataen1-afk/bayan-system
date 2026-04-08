@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   AlertTriangle, Plus, Eye, Edit, Trash2, Download, CheckCircle, XCircle,
   FileWarning, Calendar, User, Building, Tag, ClipboardCheck
 } from 'lucide-react';
@@ -26,7 +27,7 @@ import {
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function NonconformityReportsPage() {
   const { t, i18n } = useTranslation();
@@ -83,7 +84,7 @@ export default function NonconformityReportsPage() {
 
   const fetchReports = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/nonconformity-reports`, { headers });
+      const response = await axios.get(`${API}/nonconformity-reports`, { headers });
       setReportsList(response.data);
     } catch (error) {
       console.error('Error fetching nonconformity reports:', error);
@@ -95,7 +96,7 @@ export default function NonconformityReportsPage() {
 
   const fetchStage2Reports = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/stage2-audit-reports`, { headers });
+      const response = await axios.get(`${API}/stage2-audit-reports`, { headers });
       setStage2Reports(response.data.filter(r => r.status === 'approved'));
     } catch (error) {
       console.error('Error fetching Stage 2 reports:', error);
@@ -108,7 +109,7 @@ export default function NonconformityReportsPage() {
         ? { stage2_report_id: selectedReportId }
         : formData;
       
-      const response = await axios.post(`${API_URL}/api/nonconformity-reports`, payload, { headers });
+      const response = await axios.post(`${API}/nonconformity-reports`, payload, { headers });
       setReportsList([response.data, ...reportsList]);
       setShowCreateModal(false);
       resetForm();
@@ -124,7 +125,7 @@ export default function NonconformityReportsPage() {
     
     try {
       const response = await axios.put(
-        `${API_URL}/api/nonconformity-reports/${selectedReport.id}`,
+        `${API}/nonconformity-reports/${selectedReport.id}`,
         formData,
         { headers }
       );
@@ -141,7 +142,7 @@ export default function NonconformityReportsPage() {
     if (!window.confirm(t('ncReports.confirmDelete'))) return;
     
     try {
-      await axios.delete(`${API_URL}/api/nonconformity-reports/${reportId}`, { headers });
+      await axios.delete(`${API}/nonconformity-reports/${reportId}`, { headers });
       setReportsList(reportsList.filter(r => r.id !== reportId));
       toast.success(t('ncReports.deleteSuccess'));
     } catch (error) {
@@ -152,7 +153,7 @@ export default function NonconformityReportsPage() {
 
   const handleCloseReport = async (reportId) => {
     try {
-      await axios.post(`${API_URL}/api/nonconformity-reports/${reportId}/close`, {}, { headers });
+      await axios.post(`${API}/nonconformity-reports/${reportId}/close`, {}, { headers });
       setReportsList(reportsList.map(r => 
         r.id === reportId ? { ...r, status: 'closed' } : r
       ));
@@ -166,7 +167,7 @@ export default function NonconformityReportsPage() {
   const handleDownloadPDF = async (reportId) => {
     try {
       const response = await axios.get(
-        `${API_URL}/api/nonconformity-reports/${reportId}/pdf`,
+        `${API}/nonconformity-reports/${reportId}/pdf`,
         { headers, responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -187,7 +188,7 @@ export default function NonconformityReportsPage() {
     
     try {
       await axios.post(
-        `${API_URL}/api/nonconformity-reports/${selectedReport.id}/add-nc`,
+        `${API}/nonconformity-reports/${selectedReport.id}/add-nc`,
         ncFormData,
         { headers }
       );
@@ -206,7 +207,7 @@ export default function NonconformityReportsPage() {
     
     try {
       await axios.put(
-        `${API_URL}/api/nonconformity-reports/${selectedReport.id}/nc/${editingNC.id}`,
+        `${API}/nonconformity-reports/${selectedReport.id}/nc/${editingNC.id}`,
         ncFormData,
         { headers }
       );
@@ -225,7 +226,7 @@ export default function NonconformityReportsPage() {
     if (!window.confirm(t('ncReports.confirmDeleteNC'))) return;
     
     try {
-      await axios.delete(`${API_URL}/api/nonconformity-reports/${reportId}/nc/${ncId}`, { headers });
+      await axios.delete(`${API}/nonconformity-reports/${reportId}/nc/${ncId}`, { headers });
       await fetchReports();
       toast.success(t('ncReports.ncDeleteSuccess'));
     } catch (error) {

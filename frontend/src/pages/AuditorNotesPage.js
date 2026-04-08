@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   FileText, Plus, Eye, Edit, Trash2, Download, CheckCircle,
   ClipboardList, Calendar, User, MapPin, Building, Tag
 } from 'lucide-react';
@@ -25,7 +26,7 @@ import {
 } from '../components/ui/select';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function AuditorNotesPage() {
   const { t, i18n } = useTranslation();
@@ -64,7 +65,7 @@ export default function AuditorNotesPage() {
 
   const fetchNotes = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/auditor-notes`, { headers });
+      const response = await axios.get(`${API}/auditor-notes`, { headers });
       setNotesList(response.data);
     } catch (error) {
       console.error('Error fetching auditor notes:', error);
@@ -76,7 +77,7 @@ export default function AuditorNotesPage() {
 
   const fetchStage2Reports = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/stage2-audit-reports`, { headers });
+      const response = await axios.get(`${API}/stage2-audit-reports`, { headers });
       // Filter to show only approved reports
       setStage2Reports(response.data.filter(r => r.status === 'approved'));
     } catch (error) {
@@ -90,7 +91,7 @@ export default function AuditorNotesPage() {
         ? { stage2_report_id: selectedReportId }
         : formData;
       
-      const response = await axios.post(`${API_URL}/api/auditor-notes`, payload, { headers });
+      const response = await axios.post(`${API}/auditor-notes`, payload, { headers });
       setNotesList([response.data, ...notesList]);
       setShowCreateModal(false);
       resetForm();
@@ -106,7 +107,7 @@ export default function AuditorNotesPage() {
     
     try {
       const response = await axios.put(
-        `${API_URL}/api/auditor-notes/${selectedNotes.id}`,
+        `${API}/auditor-notes/${selectedNotes.id}`,
         formData,
         { headers }
       );
@@ -123,7 +124,7 @@ export default function AuditorNotesPage() {
     if (!window.confirm(t('auditorNotes.confirmDelete'))) return;
     
     try {
-      await axios.delete(`${API_URL}/api/auditor-notes/${notesId}`, { headers });
+      await axios.delete(`${API}/auditor-notes/${notesId}`, { headers });
       setNotesList(notesList.filter(n => n.id !== notesId));
       toast.success(t('auditorNotes.deleteSuccess'));
     } catch (error) {
@@ -134,7 +135,7 @@ export default function AuditorNotesPage() {
 
   const handleComplete = async (notesId) => {
     try {
-      await axios.post(`${API_URL}/api/auditor-notes/${notesId}/complete`, {}, { headers });
+      await axios.post(`${API}/auditor-notes/${notesId}/complete`, {}, { headers });
       setNotesList(notesList.map(n => 
         n.id === notesId ? { ...n, status: 'completed' } : n
       ));
@@ -148,7 +149,7 @@ export default function AuditorNotesPage() {
   const handleDownloadPDF = async (notesId) => {
     try {
       const response = await axios.get(
-        `${API_URL}/api/auditor-notes/${notesId}/pdf`,
+        `${API}/auditor-notes/${notesId}/pdf`,
         { headers, responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));

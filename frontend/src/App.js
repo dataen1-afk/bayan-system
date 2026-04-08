@@ -51,10 +51,9 @@ import ContactMessagesPage from '@/pages/ContactMessagesPage';
 import ApprovalsPage from '@/pages/ApprovalsPage';
 import SettingsPage from '@/pages/SettingsPage';
 import AdminLayout from '@/components/AdminLayout';
+import { API } from '@/lib/apiConfig';
 
-// No trailing slash; no /api suffix (added below).
-const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/+$/, '');
-export const API = `${BACKEND_URL}/api`;
+export { API };
 
 // Set up axios defaults
 axios.interceptors.request.use((config) => {

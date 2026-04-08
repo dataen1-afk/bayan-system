@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   MessageSquare, Plus, Eye, Edit, Trash2, Download, Send, CheckCircle,
   Star, Calendar, User, Building, ExternalLink, ClipboardCheck
 } from 'lucide-react';
@@ -25,7 +26,7 @@ import {
 } from '../components/ui/select';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function CustomerFeedbackPage() {
   const { t, i18n } = useTranslation();
@@ -81,7 +82,7 @@ export default function CustomerFeedbackPage() {
 
   const fetchFeedback = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/customer-feedback`, { headers });
+      const response = await axios.get(`${API}/customer-feedback`, { headers });
       setFeedbackList(response.data);
     } catch (error) {
       console.error('Error fetching feedback:', error);
@@ -93,7 +94,7 @@ export default function CustomerFeedbackPage() {
 
   const fetchCertificates = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/certificates`, { headers });
+      const response = await axios.get(`${API}/certificates`, { headers });
       setCertificates(response.data.filter(c => c.status === 'active'));
     } catch (error) {
       console.error('Error fetching certificates:', error);
@@ -107,7 +108,7 @@ export default function CustomerFeedbackPage() {
         return;
       }
       
-      const response = await axios.post(`${API_URL}/api/customer-feedback`, formData, { headers });
+      const response = await axios.post(`${API}/customer-feedback`, formData, { headers });
       toast.success(isRTL ? 'تم إنشاء نموذج الملاحظات' : 'Feedback form created');
       
       // Show the public URL
@@ -128,7 +129,7 @@ export default function CustomerFeedbackPage() {
     if (!window.confirm(isRTL ? 'هل أنت متأكد من الحذف؟' : 'Are you sure you want to delete?')) return;
     
     try {
-      await axios.delete(`${API_URL}/api/customer-feedback/${id}`, { headers });
+      await axios.delete(`${API}/customer-feedback/${id}`, { headers });
       toast.success(isRTL ? 'تم حذف الملاحظات' : 'Feedback deleted');
       fetchFeedback();
     } catch (error) {
@@ -141,7 +142,7 @@ export default function CustomerFeedbackPage() {
     if (!selectedFeedback) return;
     
     try {
-      await axios.post(`${API_URL}/api/customer-feedback/${selectedFeedback.id}/review`, reviewData, { headers });
+      await axios.post(`${API}/customer-feedback/${selectedFeedback.id}/review`, reviewData, { headers });
       toast.success(isRTL ? 'تم مراجعة الملاحظات' : 'Feedback reviewed');
       setShowReviewModal(false);
       fetchFeedback();
@@ -153,7 +154,7 @@ export default function CustomerFeedbackPage() {
 
   const handleDownloadPDF = async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/api/customer-feedback/${id}/pdf`, {
+      const response = await axios.get(`${API}/customer-feedback/${id}/pdf`, {
         headers,
         responseType: 'blob'
       });

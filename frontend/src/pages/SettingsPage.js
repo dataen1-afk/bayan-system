@@ -9,8 +9,7 @@ import UserManagementTab from '@/components/settings/UserManagementTab';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { formatApiErrorDetail } from '@/lib/apiErrors';
-
-const API = process.env.REACT_APP_BACKEND_URL;
+import { BACKEND_ORIGIN } from '@/lib/apiConfig';
 
 const SettingsPage = () => {
   const { t, i18n } = useTranslation();
@@ -34,7 +33,7 @@ const SettingsPage = () => {
     try {
       setSummaryLoading(true);
       // Authorization: use global axios interceptor (localStorage token). Do not pass Bearer undefined.
-      const response = await axios.get(`${API}/api/admin/data-summary`);
+      const response = await axios.get(`${BACKEND_ORIGIN}/api/admin/data-summary`);
       setDataSummary(response.data);
     } catch (error) {
       console.error('Error fetching data summary:', error);
@@ -75,7 +74,7 @@ const SettingsPage = () => {
   const handleClearAllData = async () => {
     try {
       setClearAllLoading(true);
-      const response = await axios.delete(`${API}/api/admin/clear-all-data`);
+      const response = await axios.delete(`${BACKEND_ORIGIN}/api/admin/clear-all-data`);
       setDeleteResult(response.data);
       setShowConfirmDelete(false);
       toast.success(isRTL ? 'تم حذف البيانات' : 'Data cleared successfully');

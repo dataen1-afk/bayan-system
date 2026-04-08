@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { API } from '@/lib/apiConfig';
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { formatApiErrorDetail } from '@/lib/apiErrors';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const SUCCESS_TOAST_DURATION = 6000;
 

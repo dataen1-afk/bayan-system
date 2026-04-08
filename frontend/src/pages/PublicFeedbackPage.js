@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   Star, Building, Calendar, User, CheckCircle, Send, AlertCircle
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -12,7 +13,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function PublicFeedbackPage() {
   const { accessToken } = useParams();
@@ -38,7 +39,7 @@ export default function PublicFeedbackPage() {
 
   const fetchFeedback = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/public/feedback/${accessToken}`);
+      const response = await axios.get(`${API}/public/feedback/${accessToken}`);
       setFeedback(response.data);
       
       // Initialize ratings
@@ -82,7 +83,7 @@ export default function PublicFeedbackPage() {
         rating: rating
       }));
 
-      const response = await axios.post(`${API_URL}/api/public/feedback/${accessToken}/submit`, {
+      const response = await axios.post(`${API}/public/feedback/${accessToken}/submit`, {
         questions: questionsData,
         want_same_team: wantSameTeam,
         suggestions: suggestions,

@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle, AlertCircle, Loader2, FileText, Calendar, Users, Building, DollarSign, Clock, X, Edit3, Download } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { API } from '@/lib/apiConfig';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const PublicProposalPage = () => {
   const { accessToken } = useParams();

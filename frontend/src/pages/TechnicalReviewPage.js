@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   ClipboardCheck, Plus, Eye, Edit, Trash2, Download, CheckCircle, XCircle,
   FileCheck, Calendar, User, Building, Tag, Award, AlertTriangle, Clock
 } from 'lucide-react';
@@ -26,7 +27,7 @@ import {
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function TechnicalReviewPage() {
   const { t, i18n } = useTranslation();
@@ -93,7 +94,7 @@ export default function TechnicalReviewPage() {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/technical-reviews`, { headers });
+      const response = await axios.get(`${API}/technical-reviews`, { headers });
       setReviewsList(response.data);
     } catch (error) {
       console.error('Error fetching technical reviews:', error);
@@ -105,7 +106,7 @@ export default function TechnicalReviewPage() {
 
   const fetchStage2Reports = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/stage2-audit-reports`, { headers });
+      const response = await axios.get(`${API}/stage2-audit-reports`, { headers });
       setStage2Reports(response.data.filter(r => r.status === 'approved'));
     } catch (error) {
       console.error('Error fetching Stage 2 reports:', error);
@@ -124,7 +125,7 @@ export default function TechnicalReviewPage() {
         return;
       }
       
-      await axios.post(`${API_URL}/api/technical-reviews`, payload, { headers });
+      await axios.post(`${API}/technical-reviews`, payload, { headers });
       toast.success(isRTL ? 'تم إنشاء المراجعة الفنية' : 'Technical review created');
       setShowCreateModal(false);
       resetForm();
@@ -139,7 +140,7 @@ export default function TechnicalReviewPage() {
     if (!selectedReview) return;
     
     try {
-      await axios.put(`${API_URL}/api/technical-reviews/${selectedReview.id}`, selectedReview, { headers });
+      await axios.put(`${API}/technical-reviews/${selectedReview.id}`, selectedReview, { headers });
       toast.success(isRTL ? 'تم تحديث المراجعة الفنية' : 'Technical review updated');
       setShowEditModal(false);
       fetchReviews();
@@ -153,7 +154,7 @@ export default function TechnicalReviewPage() {
     if (!window.confirm(isRTL ? 'هل أنت متأكد من الحذف؟' : 'Are you sure you want to delete?')) return;
     
     try {
-      await axios.delete(`${API_URL}/api/technical-reviews/${id}`, { headers });
+      await axios.delete(`${API}/technical-reviews/${id}`, { headers });
       toast.success(isRTL ? 'تم حذف المراجعة الفنية' : 'Technical review deleted');
       fetchReviews();
     } catch (error) {
@@ -166,7 +167,7 @@ export default function TechnicalReviewPage() {
     if (!selectedReview || !decisionData.certification_decision) return;
     
     try {
-      await axios.post(`${API_URL}/api/technical-reviews/${selectedReview.id}/make-decision`, decisionData, { headers });
+      await axios.post(`${API}/technical-reviews/${selectedReview.id}/make-decision`, decisionData, { headers });
       toast.success(isRTL ? 'تم تسجيل القرار' : 'Decision recorded');
       setShowDecisionModal(false);
       fetchReviews();
@@ -180,7 +181,7 @@ export default function TechnicalReviewPage() {
     if (!selectedReview) return;
     
     try {
-      const response = await axios.post(`${API_URL}/api/technical-reviews/${selectedReview.id}/approve`, approvalData, { headers });
+      const response = await axios.post(`${API}/technical-reviews/${selectedReview.id}/approve`, approvalData, { headers });
       
       if (response.data.certificate) {
         toast.success(
@@ -202,7 +203,7 @@ export default function TechnicalReviewPage() {
 
   const handleDownloadPDF = async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/api/technical-reviews/${id}/pdf`, {
+      const response = await axios.get(`${API}/technical-reviews/${id}/pdf`, {
         headers,
         responseType: 'blob'
       });

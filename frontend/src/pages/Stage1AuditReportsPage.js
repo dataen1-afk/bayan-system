@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   FileText, Plus, Download, Eye, Trash2, Save,
   CheckCircle, Clock, AlertCircle, Building, Calendar,
   Users, X, Check, ClipboardCheck, FileCheck
@@ -14,7 +15,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function Stage1AuditReportsPage({ embedded = false }) {
   const { t, i18n } = useTranslation();
@@ -55,9 +56,9 @@ export default function Stage1AuditReportsPage({ embedded = false }) {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [reportsRes, plansRes, meetingsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/stage1-audit-reports`, { headers }),
-        axios.get(`${API_URL}/api/stage1-audit-plans`, { headers }),
-        axios.get(`${API_URL}/api/opening-closing-meetings`, { headers })
+        axios.get(`${API}/stage1-audit-reports`, { headers }),
+        axios.get(`${API}/stage1-audit-plans`, { headers }),
+        axios.get(`${API}/opening-closing-meetings`, { headers })
       ]);
       
       setReports(reportsRes.data);
@@ -79,7 +80,7 @@ export default function Stage1AuditReportsPage({ embedded = false }) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/stage1-audit-reports`,
+        `${API}/stage1-audit-reports`,
         { 
           stage1_plan_id: selectedStage1Id,
           meeting_id: selectedMeetingId || null
@@ -102,7 +103,7 @@ export default function Stage1AuditReportsPage({ embedded = false }) {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API_URL}/api/stage1-audit-reports/${selectedReport.id}`,
+        `${API}/stage1-audit-reports/${selectedReport.id}`,
         editForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -118,7 +119,7 @@ export default function Stage1AuditReportsPage({ embedded = false }) {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/stage1-audit-reports/${id}`, {
+      await axios.delete(`${API}/stage1-audit-reports/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
@@ -131,7 +132,7 @@ export default function Stage1AuditReportsPage({ embedded = false }) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/stage1-audit-reports/${reportId}/complete`,
+        `${API}/stage1-audit-reports/${reportId}/complete`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -146,7 +147,7 @@ export default function Stage1AuditReportsPage({ embedded = false }) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/stage1-audit-reports/${reportId}/approve`,
+        `${API}/stage1-audit-reports/${reportId}/approve`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -161,7 +162,7 @@ export default function Stage1AuditReportsPage({ embedded = false }) {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_URL}/api/stage1-audit-reports/${report.id}/pdf`,
+        `${API}/stage1-audit-reports/${report.id}/pdf`,
         { 
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'

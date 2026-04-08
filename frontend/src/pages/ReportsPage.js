@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   BarChart3, TrendingUp, FileText, DollarSign, CheckCircle, 
   XCircle, Clock, ArrowLeft, RefreshCw, Loader2, Filter,
   Calendar, AlertCircle, Download, FileSpreadsheet
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const ReportsPage = () => {
   const { t, i18n } = useTranslation();

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   Users, Plus, Eye, Edit, Trash2, Download, RefreshCw,
   Building, Calendar, FileText, AlertTriangle, CheckCircle,
   Clock, XCircle, FileSpreadsheet
@@ -27,7 +28,7 @@ import {
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function CertifiedClientsPage() {
   const { t, i18n } = useTranslation();
@@ -81,7 +82,7 @@ export default function CertifiedClientsPage() {
   const fetchClients = async () => {
     try {
       const params = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
-      const response = await axios.get(`${API_URL}/api/certified-clients${params}`, { headers });
+      const response = await axios.get(`${API}/certified-clients${params}`, { headers });
       setClientsList(response.data);
     } catch (error) {
       console.error('Error fetching certified clients:', error);
@@ -93,7 +94,7 @@ export default function CertifiedClientsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/certified-clients/stats/overview`, { headers });
+      const response = await axios.get(`${API}/certified-clients/stats/overview`, { headers });
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -107,7 +108,7 @@ export default function CertifiedClientsPage() {
         return;
       }
       
-      await axios.post(`${API_URL}/api/certified-clients`, formData, { headers });
+      await axios.post(`${API}/certified-clients`, formData, { headers });
       toast.success(isRTL ? 'تم إضافة العميل المعتمد' : 'Certified client added');
       setShowCreateModal(false);
       resetForm();
@@ -123,7 +124,7 @@ export default function CertifiedClientsPage() {
     if (!selectedClient) return;
     
     try {
-      await axios.put(`${API_URL}/api/certified-clients/${selectedClient.id}`, selectedClient, { headers });
+      await axios.put(`${API}/certified-clients/${selectedClient.id}`, selectedClient, { headers });
       toast.success(isRTL ? 'تم تحديث بيانات العميل' : 'Client updated successfully');
       setShowEditModal(false);
       fetchClients();
@@ -138,7 +139,7 @@ export default function CertifiedClientsPage() {
     if (!window.confirm(isRTL ? 'هل أنت متأكد من الحذف؟' : 'Are you sure you want to delete?')) return;
     
     try {
-      await axios.delete(`${API_URL}/api/certified-clients/${id}`, { headers });
+      await axios.delete(`${API}/certified-clients/${id}`, { headers });
       toast.success(isRTL ? 'تم حذف العميل' : 'Client deleted');
       fetchClients();
       fetchStats();
@@ -151,7 +152,7 @@ export default function CertifiedClientsPage() {
   const handleSyncFromCertificates = async () => {
     setSyncing(true);
     try {
-      const response = await axios.post(`${API_URL}/api/certified-clients/sync-from-certificates`, {}, { headers });
+      const response = await axios.post(`${API}/certified-clients/sync-from-certificates`, {}, { headers });
       toast.success(response.data.message);
       fetchClients();
       fetchStats();
@@ -165,7 +166,7 @@ export default function CertifiedClientsPage() {
 
   const handleExportExcel = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/certified-clients/export/excel`, {
+      const response = await axios.get(`${API}/certified-clients/export/excel`, {
         headers,
         responseType: 'blob'
       });
@@ -186,7 +187,7 @@ export default function CertifiedClientsPage() {
 
   const handleDownloadPDF = async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/api/certified-clients/${id}/pdf`, {
+      const response = await axios.get(`${API}/certified-clients/${id}/pdf`, {
         headers,
         responseType: 'blob'
       });

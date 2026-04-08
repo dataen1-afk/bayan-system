@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   UserX, Plus, Eye, Edit, Trash2, Download, RefreshCw,
   AlertTriangle, CheckCircle, XCircle, Clock, FileSpreadsheet,
   RotateCcw, Ban
@@ -26,7 +27,7 @@ import {
 } from '../components/ui/select';
 import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function SuspendedClientsPage() {
   const { t, i18n } = useTranslation();
@@ -83,7 +84,7 @@ export default function SuspendedClientsPage() {
   const fetchClients = async () => {
     try {
       const params = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
-      const response = await axios.get(`${API_URL}/api/suspended-clients${params}`, { headers });
+      const response = await axios.get(`${API}/suspended-clients${params}`, { headers });
       setClientsList(response.data);
     } catch (error) {
       console.error('Error fetching suspended clients:', error);
@@ -95,7 +96,7 @@ export default function SuspendedClientsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/suspended-clients/stats/overview`, { headers });
+      const response = await axios.get(`${API}/suspended-clients/stats/overview`, { headers });
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -104,7 +105,7 @@ export default function SuspendedClientsPage() {
 
   const fetchCertifiedClients = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/certified-clients?status=active`, { headers });
+      const response = await axios.get(`${API}/certified-clients?status=active`, { headers });
       setCertifiedClients(response.data);
     } catch (error) {
       console.error('Error fetching certified clients:', error);
@@ -122,7 +123,7 @@ export default function SuspendedClientsPage() {
         return;
       }
       
-      await axios.post(`${API_URL}/api/suspended-clients`, formData, { headers });
+      await axios.post(`${API}/suspended-clients`, formData, { headers });
       toast.success(isRTL ? 'تم إضافة العميل المعلق' : 'Suspended client added');
       setShowCreateModal(false);
       resetForm();
@@ -138,7 +139,7 @@ export default function SuspendedClientsPage() {
     if (!selectedClient) return;
     
     try {
-      await axios.put(`${API_URL}/api/suspended-clients/${selectedClient.id}`, selectedClient, { headers });
+      await axios.put(`${API}/suspended-clients/${selectedClient.id}`, selectedClient, { headers });
       toast.success(isRTL ? 'تم تحديث بيانات العميل' : 'Client updated successfully');
       setShowEditModal(false);
       fetchClients();
@@ -153,7 +154,7 @@ export default function SuspendedClientsPage() {
     if (!window.confirm(isRTL ? 'هل أنت متأكد من الحذف؟' : 'Are you sure you want to delete?')) return;
     
     try {
-      await axios.delete(`${API_URL}/api/suspended-clients/${id}`, { headers });
+      await axios.delete(`${API}/suspended-clients/${id}`, { headers });
       toast.success(isRTL ? 'تم حذف العميل' : 'Client deleted');
       fetchClients();
       fetchStats();
@@ -168,7 +169,7 @@ export default function SuspendedClientsPage() {
     
     try {
       await axios.post(
-        `${API_URL}/api/suspended-clients/${selectedClient.id}/lift-suspension?action=${liftData.action}&reason=${encodeURIComponent(liftData.reason)}`,
+        `${API}/suspended-clients/${selectedClient.id}/lift-suspension?action=${liftData.action}&reason=${encodeURIComponent(liftData.reason)}`,
         {},
         { headers }
       );
@@ -186,7 +187,7 @@ export default function SuspendedClientsPage() {
   const handleSyncFromCertified = async () => {
     setSyncing(true);
     try {
-      const response = await axios.post(`${API_URL}/api/suspended-clients/sync-from-certified`, {}, { headers });
+      const response = await axios.post(`${API}/suspended-clients/sync-from-certified`, {}, { headers });
       toast.success(response.data.message);
       fetchClients();
       fetchStats();
@@ -200,7 +201,7 @@ export default function SuspendedClientsPage() {
 
   const handleExportExcel = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/suspended-clients/export/excel`, {
+      const response = await axios.get(`${API}/suspended-clients/export/excel`, {
         headers,
         responseType: 'blob'
       });
@@ -221,7 +222,7 @@ export default function SuspendedClientsPage() {
 
   const handleDownloadPDF = async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/api/suspended-clients/${id}/pdf`, {
+      const response = await axios.get(`${API}/suspended-clients/${id}/pdf`, {
         headers,
         responseType: 'blob'
       });

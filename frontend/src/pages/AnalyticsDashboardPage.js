@@ -5,14 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   ArrowLeft, BarChart3, TrendingUp, TrendingDown, FileText, DollarSign, 
   Award, Calendar, Users, CheckCircle, Clock, Target, RefreshCw,
   ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const AnalyticsDashboardPage = () => {
   const { t, i18n } = useTranslation();

@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import { API } from '@/lib/apiConfig';
+import {
   ArrowLeft, Bell, AlertTriangle, AlertCircle, Info, Award, Calendar,
   Clock, Building2, ChevronRight, RefreshCw
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+
 
 const ExpirationAlertsPage = () => {
   const { t, i18n } = useTranslation();

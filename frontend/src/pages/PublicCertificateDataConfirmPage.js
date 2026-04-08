@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import { API } from '@/lib/apiConfig';
 import {
   Building2,
   CheckCircle,
@@ -20,7 +21,7 @@ import { toast } from 'sonner';
 import SignaturePad from '@/components/SignaturePad';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 
 export default function PublicCertificateDataConfirmPage() {
   const { accessToken } = useParams();
@@ -44,7 +45,7 @@ export default function PublicCertificateDataConfirmPage() {
     setError(null);
     try {
       const response = await axios.get(
-        `${API_URL}/api/public/certificate-data/${accessToken}`
+        `${API}/public/certificate-data/${accessToken}`
       );
       setRecord(response.data);
     } catch (err) {
@@ -90,7 +91,7 @@ export default function PublicCertificateDataConfirmPage() {
     setSubmitting(true);
     try {
       await axios.post(
-        `${API_URL}/api/public/certificate-data/${accessToken}/confirm`,
+        `${API}/public/certificate-data/${accessToken}/confirm`,
         {
           client_signature: signatureData,
           client_stamp: stampData,

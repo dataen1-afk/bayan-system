@@ -3,8 +3,11 @@ PostgreSQL via SQLAlchemy 2.x async + asyncpg.
 
 ``DATABASE_URL`` must be set (e.g. postgresql://… or postgres://… from Supabase).
 ``postgres://`` is normalized to ``postgresql://``, then to ``postgresql+asyncpg://``
-for asyncpg. ``connect_args`` include ``statement_cache_size: 0`` (IES / Supabase pooler) and
-optional ``timeout`` from env ``DB_CONNECT_TIMEOUT`` (seconds for asyncpg connect).
+for asyncpg. ``connect_args`` disable asyncpg's statement LRU (``statement_cache_size: 0``),
+use unique prepared-statement names for PgBouncer/Supavisor (``prepared_statement_name_func``),
+and the engine URL merges ``prepared_statement_cache_size=0`` for SQLAlchemy's asyncpg
+prepared-statement cache when not already set. Optional ``timeout`` from env
+``DB_CONNECT_TIMEOUT`` (seconds for asyncpg connect).
 
 Legacy code still imports ``db`` for Mongo-style collections; those attributes
 return stubs that raise until each area is migrated.
@@ -20,6 +23,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy import Boolean, DateTime, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -43,8 +47,6 @@ def describe_database_url_sanitized() -> str:
     Never includes password or username.
     """
     try:
-        from sqlalchemy.engine import make_url
-
         parsed = DATABASE_URL_RAW.strip()
         if parsed.startswith("postgres://"):
             parsed = "postgresql://" + parsed[len("postgres://") :]
@@ -69,8 +71,6 @@ def _resolve_db_display_name() -> tuple[str, str]:
     if not raw_url:
         return "unset", "DATABASE_URL missing"
     try:
-        from sqlalchemy.engine import make_url
-
         parsed = raw_url.strip()
         if parsed.startswith("postgres://"):
             parsed = "postgresql://" + parsed[len("postgres://") :]
@@ -99,24 +99,47 @@ def _async_url(url: str) -> str:
     )
 
 
+def _merge_asyncpg_pooler_query_params(async_url: str) -> str:
+    """
+    Supabase transaction pooler / PgBouncer: SQLAlchemy's asyncpg dialect keeps its own
+    prepared-statement cache (``prepared_statement_cache_size``, default 100). Merge
+    ``prepared_statement_cache_size=0`` into the URL when absent so we do not override
+    an explicit value in ``DATABASE_URL``.
+    """
+    u = make_url(async_url)
+    q = dict(u.query)
+    if "prepared_statement_cache_size" not in q:
+        q["prepared_statement_cache_size"] = "0"
+    return str(u.set(query=q))
+
+
 DATABASE_URL_RAW = os.environ.get("DATABASE_URL", "").strip()
 if not DATABASE_URL_RAW:
     raise RuntimeError(
         "DATABASE_URL is required (e.g. postgresql://user:pass@host:5432/bayan_system)"
     )
 
-DATABASE_URL = _async_url(DATABASE_URL_RAW)
+DATABASE_URL = _merge_asyncpg_pooler_query_params(_async_url(DATABASE_URL_RAW))
 
 
 def _asyncpg_connect_args() -> dict:
     """
     Pass-through to asyncpg ``connect()`` (via SQLAlchemy).
 
+    ``statement_cache_size=0``: asyncpg must not reuse named prepared statements across
+    PgBouncer transaction pooling (``InvalidSQLStatementNameError``).
+
+    ``prepared_statement_name_func``: SQLAlchemy/asyncpg still prepares statements; fresh
+    names avoid collisions when the pooler assigns a new server session.
+
     ``DB_CONNECT_TIMEOUT``: seconds to wait when opening a connection (asyncpg
     ``timeout``). If unset or invalid, asyncpg's default (60s) applies by omitting
     the argument.
     """
-    args: dict = {"statement_cache_size": 0}
+    args: dict = {
+        "statement_cache_size": 0,
+        "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+    }
     raw = os.environ.get("DB_CONNECT_TIMEOUT", "").strip()
     if not raw:
         return args

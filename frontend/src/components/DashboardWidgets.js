@@ -56,7 +56,17 @@ const DashboardWidgets = ({ isRTL }) => {
     setLoading(true);
     try {
       const response = await axios.get(`${API}/dashboard/stats`, { timeout: 60000 });
-      setStats(response.data);
+      const data = response.data;
+      if (data == null || typeof data !== 'object' || Array.isArray(data)) {
+        setStats(null);
+        setLoadError(
+          isRTL
+            ? 'استجابة غير صالحة من الخادم.'
+            : 'Invalid response from server (expected JSON object).'
+        );
+        return;
+      }
+      setStats(data);
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
       const detail = error.response?.data?.detail;
@@ -74,9 +84,16 @@ const DashboardWidgets = ({ isRTL }) => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
-        {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} className="h-48 bg-slate-100 rounded-xl"></div>
+      <div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse"
+        data-testid="dashboard-widgets-loading"
+        aria-busy="true"
+      >
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={i}
+            className="h-48 min-h-[12rem] rounded-xl border-2 border-slate-300 bg-slate-200"
+          />
         ))}
       </div>
     );
@@ -107,9 +124,15 @@ const DashboardWidgets = ({ isRTL }) => {
                         (stats.certificates?.expiring_count?.['60_days'] || 0) +
                         (stats.certificates?.expiring_count?.['90_days'] || 0);
 
-  const revenueProgress = stats.revenue?.monthly_target > 0 
-    ? Math.min((stats.revenue?.monthly / stats.revenue?.monthly_target) * 100, 100) 
+  const rawProgress =
+    stats.revenue?.monthly_target > 0
+      ? (stats.revenue?.monthly / stats.revenue?.monthly_target) * 100
+      : 0;
+  const revenueProgress = Number.isFinite(rawProgress)
+    ? Math.min(Math.max(0, rawProgress), 100)
     : 0;
+
+  const auditorWorkload = Array.isArray(stats.auditor_workload) ? stats.auditor_workload : [];
 
   return (
     <div className="space-y-6">
@@ -134,7 +157,7 @@ const DashboardWidgets = ({ isRTL }) => {
                 variant="outline" 
                 size="sm" 
                 className="w-full justify-between border-blue-200 hover:bg-blue-50"
-                onClick={() => navigate('/admin?tab=forms')}
+                onClick={() => navigate('/dashboard?tab=forms')}
               >
                 <span className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
@@ -372,10 +395,10 @@ const DashboardWidgets = ({ isRTL }) => {
           </div>
         </CardHeader>
         <CardContent>
-          {stats.auditor_workload?.length > 0 ? (
+          {auditorWorkload.length > 0 ? (
             <div className="space-y-3">
-              {stats.auditor_workload.slice(0, 6).map((auditor, idx) => {
-                const maxTasks = Math.max(...stats.auditor_workload.map(a => a.total_tasks), 1);
+              {auditorWorkload.slice(0, 6).map((auditor, idx) => {
+                const maxTasks = Math.max(...auditorWorkload.map((a) => a.total_tasks || 0), 1);
                 const percentage = (auditor.total_tasks / maxTasks) * 100;
                 const colors = [
                   'bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 

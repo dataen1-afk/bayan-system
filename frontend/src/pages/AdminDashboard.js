@@ -21,6 +21,48 @@ import StatusTimeline from '@/components/StatusTimeline';
 import DataTable from '@/components/DataTable';
 import DashboardWidgets from '@/components/DashboardWidgets';
 
+/** Catches render errors in stats/widgets so the rest of the dashboard shell still works. */
+class DashboardPanelBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('[DashboardPanelBoundary]', error, errorInfo);
+  }
+
+  render() {
+    const { isRTL, children } = this.props;
+    if (this.state.hasError) {
+      return (
+        <Card className="border-red-200 bg-red-50" dir={isRTL ? 'rtl' : 'ltr'}>
+          <CardHeader>
+            <CardTitle className="text-red-900 text-base">
+              {isRTL ? 'تعذر عرض لوحة البيانات' : 'Dashboard panel failed to render'}
+            </CardTitle>
+            <CardDescription className="text-red-800">
+              {isRTL
+                ? 'حدث خطأ أثناء عرض الإحصائيات. حدّث الصفحة أو تواصل مع الدعم.'
+                : 'An error occurred while rendering statistics. Refresh the page or contact support.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+              {isRTL ? 'تحديث الصفحة' : 'Refresh page'}
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+    return children;
+  }
+}
+
 // Format currency with Western Arabic numerals and SAR
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US', { 
@@ -517,7 +559,9 @@ const AdminDashboard = () => {
           {isRTL ? 'نظرة عامة على أنشطة المنصة' : 'Overview of platform activities'}
         </p>
       </div>
-      <DashboardWidgets isRTL={isRTL} />
+      <DashboardPanelBoundary isRTL={isRTL}>
+        <DashboardWidgets isRTL={isRTL} />
+      </DashboardPanelBoundary>
     </div>
   );
 
@@ -1300,7 +1344,7 @@ const AdminDashboard = () => {
         />
         
         {/* Main Content - Full width utilization */}
-        <main className="flex-1 p-4 lg:p-6 min-h-screen">
+        <main className="flex-1 min-w-0 p-4 lg:p-6 min-h-screen">
           <div className="w-full">
             {/* Page Title */}
             <div className={`mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>

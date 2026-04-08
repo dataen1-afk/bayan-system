@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { API, AuthContext } from '@/App';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { AuthContext } from '@/App';
+import { API } from '@/lib/apiConfig';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,6 +42,7 @@ const formatDate = (dateString) => {
 const AdminDashboard = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isRTL, setIsRTL] = useState(() => {
     return i18n.language?.startsWith('ar') || document.documentElement.dir === 'rtl';
@@ -110,11 +112,16 @@ const AdminDashboard = () => {
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     const highlightParam = searchParams.get('highlight');
-    
+
     if (tabParam && ['forms', 'quotations', 'contracts'].includes(tabParam)) {
       setActiveTab(tabParam);
+    } else if (tabParam === 'dashboard') {
+      setActiveTab('dashboard');
+    } else if (!tabParam && location.pathname === '/dashboard') {
+      // e.g. browser back to /dashboard without ?tab= — avoid stale activeTab leaving wrong/blank content
+      setActiveTab('dashboard');
     }
-    
+
     if (highlightParam) {
       setHighlightedId(highlightParam);
       // Clear the highlight after 3 seconds
@@ -125,7 +132,7 @@ const AdminDashboard = () => {
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, location.pathname]);
 
   // Handle navigation for reports and templates tabs
   useEffect(() => {
@@ -499,6 +506,21 @@ const AdminDashboard = () => {
 
   const listDataTabs = ['forms', 'quotations', 'contracts'];
 
+  /** Default home tab: widgets fetch /dashboard/stats only (not bulk lists). */
+  const dashboardTabContent = (
+    <div className="space-y-6">
+      <div className={isRTL ? 'text-right' : 'text-left'}>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          {isRTL ? 'مرحباً بك' : 'Welcome Back'}, {user?.name}
+        </h2>
+        <p className="text-slate-500">
+          {isRTL ? 'نظرة عامة على أنشطة المنصة' : 'Overview of platform activities'}
+        </p>
+      </div>
+      <DashboardWidgets isRTL={isRTL} />
+    </div>
+  );
+
   // Render content based on active tab
   const renderContent = () => {
     if (listDataTabs.includes(activeTab) && listsLoading) {
@@ -511,19 +533,7 @@ const AdminDashboard = () => {
     }
     switch (activeTab) {
       case 'dashboard':
-        return (
-          <div className="space-y-6">
-            <div className={isRTL ? 'text-right' : 'text-left'}>
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                {isRTL ? 'مرحباً بك' : 'Welcome Back'}, {user?.name}
-              </h2>
-              <p className="text-slate-500">
-                {isRTL ? 'نظرة عامة على أنشطة المنصة' : 'Overview of platform activities'}
-              </p>
-            </div>
-            <DashboardWidgets isRTL={isRTL} />
-          </div>
-        );
+        return dashboardTabContent;
       case 'forms':
         // Calculate quick stats for forms
         const totalForms = applicationForms.length;
@@ -1248,7 +1258,8 @@ const AdminDashboard = () => {
         );
 
       default:
-        return null;
+        // Unknown/stale ?tab= value used to yield a blank main area; keep shell fast but never hide dashboard.
+        return dashboardTabContent;
     }
   };
 
